@@ -28,8 +28,6 @@ val githubAccessToken: String = rootProject.findProperty("githubAccessToken") as
     ?: error("GitHub Access Token not found")
 
 buildscript {
-    apply(from = "manifest.gradle")
-
     repositories {
         google()
         mavenCentral()
@@ -70,6 +68,7 @@ allprojects {
 
 val groupId = "io.github.lemkinator"
 val artifact = "common-utils"
+val versionName = "0.0.1"
 
 subprojects {
     afterEvaluate {
@@ -77,8 +76,8 @@ subprojects {
             return@afterEvaluate
         }
         group = groupId
-        version = rootProject.version.toString()
-        println("Publishing $group:$name:$version")
+        version = versionName
+        println("Publishing $group:$artifact:$version")
         project.extensions.configure<PublishingExtension>("publishing") {
             publications {
                 create<MavenPublication>("mavenJava") {
