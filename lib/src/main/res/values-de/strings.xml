@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_email_app_installed">Keine E-Mail-App installiert…</string>
+    <string name="no_browser_app_installed">Keine Browser-App installiert…</string>
+
+    <string name="warning">Warnung</string>
+    <string name="info">Info</string>
+    <string name="experimental">Experimentell</string>
+    <string name="delete">Löschen</string>
+    <string name="copied_to_clipboard">In Zwischenablage kopiert</string>
+
+    <!--sesl???-->
+    <string name="search">Suche</string>
+    <string name="settings">Einstellungen</string>
+    <string name="sesl_cancel">Abbrechen</string>
+    <string name="sesl_navigate_up">Zurück</string>
+
+    <!--OOBE-->
+    <string name="tos">Nutzungsbedingungen</string>
+    <string name="oobe_tos_text">Durch die Nutzung der App stimmen Sie den %1$s zu.</string>
+    <string name="continue_button_text">Weiter</string>
+
+    <!--Help-->
+    <string name="help">Hilfe</string>
+    <string name="contact_me">Kontaktier mich (E-Mail)</string>
+
+    <!--About-->
+    <string name="open_in_playstore">In Play Store öffnen</string>
+
+    <!--AboutMe-->
+    <string name="about_me">Über mich</string>
+    <string name="write_email">E-Mail schreiben</string>
+    <string name="website">Webseite</string>
+    <string name="support_me_text">Falls du mich in irgendeiner Weise unterstützen möchtest, dann sende mir gerne eine E-Mail</string>
+    <string name="support_me">Unterstütz mich</string>
+    <string name="rate_app">App im Play-Store Bewerten</string>
+    <string name="write_review">Bewertung schreiben</string>
+    <string name="share">Teilen</string>
+    <string name="share_app">OneURL teilen</string>
+    <string name="useful_links">Nützliche Links</string>
+
+    <!--Settings-->
+    <string name="design">Design</string>
+    <string name="system_default">Systemeinstellung</string>
+    <string name="general">Allgemein</string>
+    <string name="language">Sprache</string>
+    <string name="change_language">App Sprache ändern</string>
+    <string name="change_language_not_supported_by_device">Das Ändern der Sprache wird von diesem Gerät nicht unterstützt.</string>
+    <string name="delete_appdata_and_exit">App-Daten löschen und Beenden</string>
+    <string name="delete_appdata_and_exit_warning">Achtung: Dadurch werden alle persönlichen Daten gelöscht. Fortfahren? </string>
+    <string name="dev_options">Developer options</string>
+    <string name="more_information">Mehr Informationen</string>
+    <string name="privacy_policy">Datenschutzrichtlinie</string>
+    <string name="report_bug">Bug oder Verbesserung melden</string>
+</resources>

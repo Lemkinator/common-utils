@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="playstore_link" translatable="false">https://play.google.com/store/apps/details?id=</string>
+    <string name="playstore_app_link" translatable="false">market://details?id=</string>
+
+    <string name="ok" translatable="false" tools:ignore="ButtonCase,Typos">Ok</string>
+    <string name="quick_share" translatable="false">Quick Share</string>
+    <string name="playstore" translatable="false">Play Store</string>
+    <string name="github" translatable="false">Github</string>
+    <string name="instagram" translatable="false">Instagram</string>
+    <string name="tiktok" translatable="false">TikTok</string>
+
+    <string name="no_email_app_installed">No e-mail app installed…</string>
+    <string name="no_browser_app_installed">No browser app installed…</string>
+
+    <string name="warning">Warning</string>
+    <string name="info">Info</string>
+    <string name="experimental">Experimental</string>
+    <string name="delete">Delete</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+
+    <!--sesl???-->
+    <string name="search">Search</string>
+    <string name="settings">Settings</string>
+    <string name="sesl_cancel">Cancel</string>
+    <string name="sesl_navigate_up">Back</string>
+
+    <!--OOBE-->
+    <string name="tos">Terms of Service</string>
+    <string name="oobe_tos_text">By continuing, you agree to the %1$s.</string>
+    <string name="continue_button_text">Continue</string>
+
+    <!--Help-->
+    <string name="help">Help</string>
+    <string name="contact_me">Contact me (e-mail)</string>
+
+    <!--About-->
+    <string name="open_in_playstore">Open in Play Store</string>
+
+    <!--AboutMe-->
+    <string name="about_me">About me</string>
+    <string name="write_email">Write an e-mail</string>
+    <string name="website">Website</string>
+    <string name="support_me_text">If you want to support me in any way, feel free to send me an e-mail</string>
+    <string name="support_me">Support me</string>
+    <string name="rate_app">Rate app in Play Store</string>
+    <string name="write_review">Write a review</string>
+    <string name="share">Share</string>
+    <string name="share_app">Share this app</string>
+    <string name="useful_links">Useful links</string>
+
+    <!--Settings-->
+    <string name="design">Design</string>
+    <string name="system_default">System default</string>
+    <string name="general">General</string>
+    <string name="language">Language</string>
+    <string name="change_language">Change app language</string>
+    <string name="change_language_not_supported_by_device">Change language is not supported by your device.</string>
+    <string name="delete_appdata_and_exit">Delete App-Data and exit</string>
+    <string name="delete_appdata_and_exit_warning">Attention: This will delete all personal data. Continue? </string>
+    <string name="dev_options">Developer options</string>
+    <string name="more_information">More Information</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="report_bug">Report bug or improvement</string>
+
+</resources>
