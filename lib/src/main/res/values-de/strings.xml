@@ -2,18 +2,22 @@
 <resources>
     <string name="no_email_app_installed">Keine E-Mail-App installiert…</string>
     <string name="no_browser_app_installed">Keine Browser-App installiert…</string>
+    <string name="error_cant_open_url">Fehler: URL konnte nicht geöffnet werden.</string>
 
     <string name="warning">Warnung</string>
     <string name="info">Info</string>
+    <string name="error">Fehler</string>
+    <string name="error_unknown">Unbekannter Fehler</string>
     <string name="experimental">Experimentell</string>
     <string name="delete">Löschen</string>
     <string name="copied_to_clipboard">In Zwischenablage kopiert</string>
+    <string name="no_entry">Kein Eintrag</string>
+    <string name="custom">Benutzerdefiniert</string>
 
     <!--sesl???-->
     <string name="search">Suche</string>
     <string name="settings">Einstellungen</string>
     <string name="sesl_cancel">Abbrechen</string>
-    <string name="sesl_navigate_up">Zurück</string>
 
     <!--OOBE-->
     <string name="tos">Nutzungsbedingungen</string>
