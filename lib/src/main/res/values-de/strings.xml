@@ -3,6 +3,9 @@
     <string name="no_email_app_installed">Keine E-Mail-App installiert…</string>
     <string name="no_browser_app_installed">Keine Browser-App installiert…</string>
     <string name="error_cant_open_url">Fehler: URL konnte nicht geöffnet werden.</string>
+    <string name="image_saved">Bild gespeichert</string>
+    <string name="error_saving_image">Fehler beim Speichern des Bildes</string>
+    <string name="error_creating_file">Fehler beim Erstellen der Datei</string>
 
     <string name="warning">Warnung</string>
     <string name="info">Info</string>

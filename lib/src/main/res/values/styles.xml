@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="DrawerDividerStyle">
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:layout_marginBottom">6dp</item>
@@ -13,7 +14,7 @@
     <!-- OOBE -->
     <style name="OOBE.TextView.ToS" parent="TextAppearance.AppCompat">
         <item name="android:textSize">14.0sp</item>
-        <item name="android:textColor">@color/commonutils_primary_text_icon_color_themed</item>
+        <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
         <item name="android:textColorLink">@color/commonutils_primary_color_themed</item>
         <item name="android:lineSpacingExtra">3.0dp</item>
         <item name="android:maxLines">3</item>

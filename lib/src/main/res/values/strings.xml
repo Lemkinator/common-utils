@@ -20,6 +20,9 @@
     <string name="no_email_app_installed">No e-mail app installed…</string>
     <string name="no_browser_app_installed">No browser app installed…</string>
     <string name="error_cant_open_url">Error: URL could not be opened.</string>
+    <string name="image_saved">Image saved</string>
+    <string name="error_saving_image">Error saving image</string>
+    <string name="error_creating_file">Error creating file</string>
 
     <string name="warning">Warning</string>
     <string name="info">Info</string>

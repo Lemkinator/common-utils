@@ -49,14 +49,17 @@ fun Context.copyToClipboard(text: String, label: String): Boolean {
     return true
 }
 
-fun Bitmap.copyToClipboard(context: Context, label: String, shareFileName: String): Boolean {
-    val cacheFile = File(context.cacheDir, shareFileName)
-    compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
-    val clip = ClipData.newUri(context.contentResolver, label, cacheFile.getFileUri(context))
-    (context.getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
-    context.toast(R.string.copied_to_clipboard)
+fun Context.copyToClipboard(bitmap: Bitmap, label: String, shareFileName: String): Boolean {
+    val cacheFile = File(cacheDir, shareFileName)
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
+    val clip = ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this))
+    (getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
+    toast(R.string.copied_to_clipboard)
     return true
 }
+
+fun Bitmap.copyToClipboard(context: Context, label: String, shareFileName: String): Boolean =
+    context.copyToClipboard(this, label, shareFileName)
 
 fun Bitmap.share(context: Context, shareFileName: String) {
     val cacheFile = File(context.cacheDir, shareFileName)
