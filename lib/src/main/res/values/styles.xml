@@ -1,5 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="ButtonStyle.Colored" parent="OneUI.ButtonStyleColored">
+        <item name="android:backgroundTint">@color/primary_color_themed</item>
+        <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
+        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color</item>
+        <item name="tint">@color/commonutils_primary_text_icon_color</item>
+    </style>
+
+    <style name="ButtonStyle.Transparent" parent="OneUI.ButtonStyleTransparent">
+        <item name="android:backgroundTint">@android:color/transparent</item>
+        <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
+        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color</item>
+        <item name="tint">@color/commonutils_primary_text_icon_color</item>
+    </style>
+
+    <style name="ButtonStyle.Transparent.Colored" parent="OneUI.ButtonStyleTransparent">
+        <item name="android:backgroundTint">@android:color/transparent</item>
+        <item name="android:textColor">@color/primary_color_themed</item>
+        <item name="android:drawableTint">@color/primary_color_themed</item>
+        <item name="tint">@color/primary_color_themed</item>
+    </style>
+
+    <style name="ButtonStyle.Filled" parent="Widget.AppCompat.Button">
+        <item name="android:backgroundTint">@color/commonutils_filled_background_color</item>
+        <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
+        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color</item>
+        <item name="tint">@color/commonutils_primary_text_icon_color</item>
+    </style>
+
+    <style name="ButtonStyle.Filled.Themed" parent="ButtonStyle.Filled">
+        <item name="android:backgroundTint">@color/commonutils_filled_background_color_themed</item>
+        <item name="android:textColor">@color/commonutils_primary_text_icon_color_themed</item>
+        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color_themed</item>
+        <item name="tint">@color/commonutils_primary_text_icon_color_themed</item>
+    </style>
 
     <style name="DrawerDividerStyle">
         <item name="android:layout_marginTop">6dp</item>
@@ -15,7 +49,7 @@
     <style name="OOBE.TextView.ToS" parent="TextAppearance.AppCompat">
         <item name="android:textSize">14.0sp</item>
         <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
-        <item name="android:textColorLink">@color/commonutils_primary_color_themed</item>
+        <item name="android:textColorLink">@color/primary_color_themed</item>
         <item name="android:lineSpacingExtra">3.0dp</item>
         <item name="android:maxLines">3</item>
         <item name="android:ellipsize">end</item>
@@ -25,7 +59,7 @@
         <item name="android:paddingStart">16.0dp</item>
         <item name="android:paddingEnd">16.0dp</item>
         <item name="android:background">@drawable/oobe_button_background</item>
-        <item name="android:backgroundTint">@color/commonutils_primary_color_themed</item>
+        <item name="android:backgroundTint">@color/primary_color_themed</item>
         <item name="android:textSize">18.0sp</item>
         <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
     </style>
