@@ -14,6 +14,13 @@
         <item name="tint">@color/commonutils_primary_text_icon_color</item>
     </style>
 
+    <style name="ButtonStyle.Transparent.Themed" parent="OneUI.ButtonStyleTransparent">
+        <item name="android:backgroundTint">@android:color/transparent</item>
+        <item name="android:textColor">@color/commonutils_primary_text_icon_color_themed</item>
+        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color_themed</item>
+        <item name="tint">@color/commonutils_primary_text_icon_color_themed</item>
+    </style>
+
     <style name="ButtonStyle.Transparent.Colored" parent="OneUI.ButtonStyleTransparent">
         <item name="android:backgroundTint">@android:color/transparent</item>
         <item name="android:textColor">@color/primary_color_themed</item>
