@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <color name="primary_color">#0074d4</color>
     <color name="primary_color_themed">@color/primary_color</color>
+
+    <color name="sesl_blue_color_light" tools:ignore="PrivateResource">@color/primary_color_themed</color>
 
     <color name="commonutils_primary_text_icon_color">#010101</color>
     <color name="commonutils_primary_text_icon_color_themed">@color/sesl_action_bar_text_color_title_light</color>
