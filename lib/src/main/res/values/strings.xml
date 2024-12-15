@@ -33,6 +33,10 @@
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="no_entry">No entry</string>
     <string name="custom">Custom</string>
+    <string name="dont_show_again">Don\'t show again</string>
+
+    <string name="openInStore">Open in Store</string>
+    <string name="openOnPhone">Open on Phone</string>
 
     <!--sesl???-->
     <string name="search">Search</string>
@@ -46,6 +50,7 @@
 
     <!--Help-->
     <string name="help">Help</string>
+    <string name="contact">Contact</string>
     <string name="contact_me">Contact me (e-mail)</string>
 
     <!--About-->
@@ -62,6 +67,7 @@
     <string name="share">Share</string>
     <string name="share_app">Share this app</string>
     <string name="useful_links">Useful links</string>
+    <string name="credits">Credits</string>
 
     <!--Settings-->
     <string name="design">Design</string>
@@ -76,5 +82,22 @@
     <string name="more_information">More Information</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="report_bug">Report bug or improvement</string>
+
+    <string name="history">History</string>
+    <string name="history_summary">View/enable/disable history</string>
+    <string name="delete_history">Delete history</string>
+    <string name="delete_history_message">Are you sure you want to delete the history?</string>
+
+    <string name="phone_settings">Phone settings</string>
+    <string name="mute_all_audio_streams">Mute all audio streams</string>
+    <string name="dnd">Do not disturb</string>
+    <string name="dnd_description">Enable/disable Do not disturb mode</string>
+    <string name="dnd_activated">Do not disturb mode activated</string>
+    <string name="dnd_deactivated">Do not disturb mode deactivated</string>
+    <string name="mute">Mute</string>
+    <string name="failed_to_mute_streams">Oops, I failed to mute all streams…</string>
+    <string name="need_access">Permission needed</string>
+    <string name="need_access_dnd">To enable the "Do not disturb" mode, the app needs the "Do not disturb" permission</string>
+    <string name="grant_access">Grant permission</string>
 
 </resources>
