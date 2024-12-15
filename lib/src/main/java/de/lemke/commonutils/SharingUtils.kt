@@ -34,14 +34,19 @@ fun Context.shareApp() {
     }, null))
 }
 
-fun Context.shareText(text: String) {
+fun Fragment.shareText(text: String, title: String? = null) = requireContext().shareText(text, title)
+
+fun Context.shareText(text: String, title: String? = null) {
     Intent().apply {
         action = ACTION_SEND
         putExtra(Intent.EXTRA_TEXT, text)
+        putExtra(Intent.EXTRA_TITLE, title)
         type = MIME_TYPE_TEXT
-        startActivity(Intent.createChooser(this, null))
+        startActivity(Intent.createChooser(this, title))
     }
 }
+
+fun Fragment.copyToClipboard(text: String, label: String) = requireContext().copyToClipboard(text, label)
 
 fun Context.copyToClipboard(text: String, label: String): Boolean {
     (getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText(label, text))
