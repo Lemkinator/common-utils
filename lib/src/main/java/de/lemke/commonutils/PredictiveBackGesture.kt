@@ -8,15 +8,62 @@ import android.os.Build
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.view.WindowManager
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT
 import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.util.SeslMisc
 import androidx.core.view.animation.PathInterpolatorCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlin.apply
 import kotlin.run
+
+inline fun Fragment.addOnBackLogic(
+    backPressLogicEnabled: Boolean,
+    crossinline onBackPressedLogic: () -> Unit = {}
+) = addOnBackLogic(MutableStateFlow(backPressLogicEnabled), onBackPressedLogic)
+
+inline fun Fragment.addOnBackLogic(
+    backPressLogicEnabled: StateFlow<Boolean>,
+    crossinline onBackPressedLogic: () -> Unit = {}
+) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val onBackInvokedCallback = OnBackInvokedCallback {
+            onBackPressedLogic.invoke()
+        }
+        requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
+        lifecycleScope.launch {
+            backPressLogicEnabled
+                .flowWithLifecycle(lifecycle)
+                .collectLatest { register ->
+                    if (register) {
+                        requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
+                    } else {
+                        requireActivity().onBackInvokedDispatcher.unregisterOnBackInvokedCallback(onBackInvokedCallback)
+                    }
+                }
+        }
+    } else {
+        val onBackPressedCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                onBackPressedLogic.invoke()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
+        lifecycleScope.launch {
+            backPressLogicEnabled.flowWithLifecycle(lifecycle).collectLatest { enable ->
+                onBackPressedCallback.isEnabled = enable
+            }
+        }
+    }
+}
 
 /**
  * Interpolator for gesture animations.
