@@ -4,6 +4,7 @@
     <color name="primary_color_themed">@color/primary_color</color>
 
     <color name="sesl_blue_color_light" tools:ignore="PrivateResource">@color/primary_color_themed</color>
+    <color name="sesl_blue_color_dark" tools:ignore="PrivateResource">@color/primary_color_themed</color>
 
     <color name="commonutils_primary_text_icon_color">#010101</color>
     <color name="commonutils_primary_text_icon_color_themed">@color/sesl_action_bar_text_color_title_light</color>
