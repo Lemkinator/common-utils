@@ -31,7 +31,7 @@ fun Context.toast(@StringRes stringResId: Int) {
 
 fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
 
-
+fun Fragment.hideSoftInput(windowToken: IBinder? = null, flags: Int? = null) = requireActivity().hideSoftInput(windowToken, flags)
 
 fun Activity.hideSoftInput(windowToken: IBinder? = null, flags: Int? = null) {
     (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
