@@ -68,7 +68,7 @@ allprojects {
 
 val groupId = "io.github.lemkinator"
 val artifact = "common-utils"
-val versionName = "0.4.5"
+val versionName = "0.5.2"
 
 subprojects {
     afterEvaluate {
@@ -77,7 +77,7 @@ subprojects {
         }
         group = groupId
         version = versionName
-        println("Publishing $group:$artifact:$version")
+        println("Evaluated $group:$artifact:$version")
         project.extensions.configure<PublishingExtension>("publishing") {
             publications {
                 create<MavenPublication>("mavenJava") {
