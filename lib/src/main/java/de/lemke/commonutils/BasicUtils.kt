@@ -64,19 +64,13 @@ const val COMMONUTILS_KEY_IS_SEARCH_MODE = "commonutils_isSearchMode"
 const val COMMONUTILS_KEY_IS_ACTION_MODE = "commonutils_isActionMode"
 const val COMMONUTILS_KEY_SELECTED_IDS = "commonutils_selectedIds"
 
+fun Bundle.saveSearchAndActionMode(isSearchMode: Boolean = false) = saveSearchAndActionMode(isSearchMode, false, longArrayOf())
+
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
     selectedIds: ScatterSet<Long> = emptyScatterSet<Long>()
-) {
-    if (isSearchMode) {
-        putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true)
-    }
-    if (isActionMode) {
-        putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true)
-        putLongArray(COMMONUTILS_KEY_SELECTED_IDS, selectedIds.asSet().toLongArray())
-    }
-}
+) = saveSearchAndActionMode(isSearchMode, isActionMode, selectedIds.asSet().toLongArray())
 
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
