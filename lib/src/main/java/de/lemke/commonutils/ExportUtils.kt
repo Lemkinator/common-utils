@@ -93,3 +93,4 @@ fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?) {
         toast(R.string.error_creating_file)
     }
 }
+

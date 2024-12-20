@@ -169,3 +169,4 @@ inline fun String.toSafeFileName(extension: String): String =
         .replace("_+".toRegex(), "_")
         .replace("^_".toRegex(), "") +
             extension
+

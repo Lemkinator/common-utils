@@ -215,3 +215,4 @@ val AppCompatActivity.defaultWindowBackground: Int
     } else {
         androidx.appcompat.R.color.sesl_round_and_bgcolor_dark
     }
+

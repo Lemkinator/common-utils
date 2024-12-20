@@ -40,3 +40,4 @@ fun Fragment.sendEmailBugReport(email: String, subject: String, noEmailAppInstal
         "I can’t imagine a better app than this — it’s perfect and doesn’t need any improvements. But here’s a bug report anyway: ",
         noEmailAppInstalledText
     )
+

@@ -14,22 +14,24 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.collection.ScatterSet
+import androidx.collection.emptyScatterSet
 import androidx.fragment.app.Fragment
 import dev.oneuiproject.oneui.utils.DialogUtils
 
 private const val TAG = "BasicUtils"
 
+fun Fragment.toast(msg: String) = requireContext().toast(msg)
+
 fun Context.toast(msg: String) {
     Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 }
 
-fun Fragment.toast(msg: String) = requireContext().toast(msg)
+fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
 
 fun Context.toast(@StringRes stringResId: Int) {
     Toast.makeText(this, stringResId, Toast.LENGTH_SHORT).show()
 }
-
-fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
 
 fun Fragment.hideSoftInput(windowToken: IBinder? = null, flags: Int? = null) = requireActivity().hideSoftInput(windowToken, flags)
 
@@ -58,17 +60,35 @@ fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null
     return true
 }
 
+const val COMMONUTILS_KEY_IS_SEARCH_MODE = "commonutils_isSearchMode"
+const val COMMONUTILS_KEY_IS_ACTION_MODE = "commonutils_isActionMode"
+const val COMMONUTILS_KEY_SELECTED_IDS = "commonutils_selectedIds"
+
+fun Bundle.saveSearchAndActionMode(
+    isSearchMode: Boolean = false,
+    isActionMode: Boolean = false,
+    selectedIds: ScatterSet<Long> = emptyScatterSet<Long>()
+) {
+    if (isSearchMode) {
+        putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true)
+    }
+    if (isActionMode) {
+        putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true)
+        putLongArray(COMMONUTILS_KEY_SELECTED_IDS, selectedIds.asSet().toLongArray())
+    }
+}
+
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
     selectedIds: LongArray = longArrayOf()
 ) {
     if (isSearchMode) {
-        putBoolean("common-utils_isSearchMode", true)
+        putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true)
     }
     if (isActionMode) {
-        putBoolean("common-utils_isActionMode", true)
-        putLongArray("common-utils_selectedIds", selectedIds)
+        putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true)
+        putLongArray(COMMONUTILS_KEY_SELECTED_IDS, selectedIds)
     }
 }
 
@@ -80,11 +100,12 @@ inline fun Bundle?.restoreSearchAndActionMode(
     if (this == null) {
         bundleIsNull()
     } else {
-        if (getBoolean("common-utils_isSearchMode")) {
+        if (getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE)) {
             onSearchMode()
         }
-        if (getBoolean("common-utils_isActionMode")) {
-            onActionMode(getLongArray("common-utils_selectedIds")?.toTypedArray() ?: emptyArray())
+        if (getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE)) {
+            onActionMode(getLongArray(COMMONUTILS_KEY_SELECTED_IDS)?.toTypedArray() ?: emptyArray())
         }
     }
 }
+

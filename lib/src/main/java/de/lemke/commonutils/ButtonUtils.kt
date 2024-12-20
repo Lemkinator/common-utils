@@ -7,6 +7,7 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
 import androidx.core.widget.TextViewCompat
 
+private const val TAG = "ButtonUtils"
 fun AppCompatButton.setStyle(style: Int) = when (style) {
     R.style.ButtonStyle_Colored -> {
         backgroundTintList = ContextCompat.getColorStateList(context, R.color.primary_color_themed)
@@ -16,6 +17,7 @@ fun AppCompatButton.setStyle(style: Int) = when (style) {
         )
         setTextColor(ContextCompat.getColor(context, R.color.commonutils_primary_text_icon_color))
     }
+
     R.style.ButtonStyle_Transparent -> {
         backgroundTintList = ContextCompat.getColorStateList(context, android.R.color.transparent)
         TextViewCompat.setCompoundDrawableTintList(
@@ -24,6 +26,7 @@ fun AppCompatButton.setStyle(style: Int) = when (style) {
         )
         setTextColor(ContextCompat.getColorStateList(context, R.color.commonutils_primary_text_icon_color))
     }
+
     R.style.ButtonStyle_Transparent_Colored -> {
         backgroundTintList = ContextCompat.getColorStateList(context, android.R.color.transparent)
         TextViewCompat.setCompoundDrawableTintList(
@@ -32,6 +35,7 @@ fun AppCompatButton.setStyle(style: Int) = when (style) {
         )
         setTextColor(ContextCompat.getColorStateList(context, R.color.primary_color_themed))
     }
+
     R.style.ButtonStyle_Filled -> {
         backgroundTintList = ContextCompat.getColorStateList(context, R.color.commonutils_filled_background_color)
         TextViewCompat.setCompoundDrawableTintList(
@@ -40,6 +44,7 @@ fun AppCompatButton.setStyle(style: Int) = when (style) {
         )
         setTextColor(ContextCompat.getColor(context, R.color.commonutils_primary_text_icon_color))
     }
+
     R.style.ButtonStyle_Filled_Themed -> {
         backgroundTintList = ContextCompat.getColorStateList(context, R.color.commonutils_filled_background_color_themed)
         TextViewCompat.setCompoundDrawableTintList(
@@ -48,5 +53,7 @@ fun AppCompatButton.setStyle(style: Int) = when (style) {
         )
         setTextColor(ContextCompat.getColor(context, R.color.commonutils_primary_text_icon_color_themed))
     }
-    else -> Log.e("ButtonUtils", "Unknown style $style")
+
+    else -> Log.e(TAG, "Unknown style $style")
 }
+
