@@ -1,18 +1,11 @@
 package de.lemke.commonutils.widget
 
 import android.content.Context
-import android.view.View
-import android.view.ViewGroup
-import de.lemke.commonutils.R
+import android.util.AttributeSet
 
-class TouchBlockingView(context: Context) : View(context) {
+open class TouchBlockingView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : DimmingView(context, attrs) {
     init {
-        layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
         isClickable = true
         isFocusable = true
-        setBackgroundColor(context.getColor(R.color.commonutils_dimmed_background))
     }
 }

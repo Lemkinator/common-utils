@@ -18,6 +18,4 @@
 
     <color name="transparent_window_bg_color">#3B000000</color>
     <color name="color_drawer_list_item_background">#0d010102</color>
-
-    <color name="commonutils_dimmed_background">#90000000</color>
 </resources>
