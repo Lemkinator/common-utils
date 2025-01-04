@@ -66,41 +66,37 @@ fun Context.copyToClipboard(bitmap: Bitmap, label: String, shareFileName: String
 fun Bitmap.copyToClipboard(context: Context, label: String, shareFileName: String): Boolean =
     context.copyToClipboard(this, label, shareFileName)
 
-fun Bitmap.share(context: Context, shareFileName: String) {
+fun Fragment.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null) =
+    bitmap.share(requireContext(), shareFileName, shareText)
+
+fun Context.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null) =
+    bitmap.share(this, shareFileName, shareText)
+
+fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = null) {
     val cacheFile = File(context.cacheDir, shareFileName)
     compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
-    val sendIntent = Intent().apply {
+    val uri = cacheFile.getFileUri(context)
+    Intent(ACTION_SEND).apply {
+        clipData = ClipData.newRawUri(shareFileName, uri)
+        putExtra(Intent.EXTRA_STREAM, uri)
+        shareText?.let { putExtra(Intent.EXTRA_TEXT, it) }
+        type = MIME_TYPE_PNG
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        action = ACTION_SEND
+        context.startActivity(Intent.createChooser(this, null))
+    }
+}
+
+fun Fragment.quickShareBitmap(bitmap: Bitmap, shareFileName: String) = bitmap.quickShare(requireContext(), shareFileName)
+
+fun Context.quickShareBitmap(bitmap: Bitmap, shareFileName: String) = bitmap.quickShare(this, shareFileName)
+
+fun Bitmap.quickShare(context: Context, shareFileName: String) {
+    val cacheFile = File(context.cacheDir, shareFileName)
+    compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
+    context.createBaseIntent().apply {
+        type = MIME_TYPE_PNG
         putExtra(Intent.EXTRA_STREAM, cacheFile.getFileUri(context))
-        type = MIME_TYPE_PNG
-    }
-    context.startActivity(Intent.createChooser(sendIntent, null))
-}
-
-fun Fragment.shareBitmap(bitmap: Bitmap, shareFileName: String) = requireContext().shareBitmap(bitmap, shareFileName)
-
-fun Context.shareBitmap(bitmap: Bitmap, shareFileName: String) {
-    val cacheFile = File(cacheDir, shareFileName)
-    bitmap.compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
-    Intent().apply {
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        action = ACTION_SEND
-        putExtra(Intent.EXTRA_STREAM, cacheFile.getFileUri(this@shareBitmap))
-        type = MIME_TYPE_PNG
-        startActivity(Intent.createChooser(this, null))
-    }
-}
-
-fun Fragment.quickShareBitmap(bitmap: Bitmap, shareFileName: String) = requireContext().quickShareBitmap(bitmap, shareFileName)
-
-fun Context.quickShareBitmap(bitmap: Bitmap, shareFileName: String) {
-    val cacheFile = File(cacheDir, shareFileName)
-    bitmap.compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
-    createBaseIntent().apply {
-        type = MIME_TYPE_PNG
-        putExtra(Intent.EXTRA_STREAM, cacheFile.getFileUri(this@quickShareBitmap))
-        start(this@quickShareBitmap)
+        start(context)
     }
 }
 

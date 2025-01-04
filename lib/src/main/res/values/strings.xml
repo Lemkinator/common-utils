@@ -29,6 +29,7 @@
     <string name="error">Error</string>
     <string name="error_unknown">Unknown error</string>
     <string name="experimental">Experimental</string>
+    <string name="new_badge_text">NEW</string>
     <string name="delete">Delete</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="no_entry">No entry</string>
@@ -84,7 +85,6 @@
     <string name="report_bug">Report bug or improvement</string>
 
     <string name="history">History</string>
-    <string name="history_summary">View/enable/disable history</string>
     <string name="delete_history">Delete history</string>
     <string name="delete_history_message">Are you sure you want to delete the history?</string>
 
