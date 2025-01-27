@@ -15,9 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 private const val SAMSUNG_QUICK_SHARE_PACKAGE = "com.samsung.android.app.sharelive"
 private const val MIME_TYPE_TEXT = "text/plain"
@@ -171,12 +168,4 @@ fun Context.isSamsungQuickShareAvailable(): Boolean {
 }
 
 inline fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", this)
-
-inline fun String.toSafeFileName(extension: String): String =
-    "${this}_${SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault()).format(Date())}"
-        .replace("https://", "")
-        .replace("[^a-zA-Z0-9]+".toRegex(), "_")
-        .replace("_+".toRegex(), "_")
-        .replace("^_".toRegex(), "") +
-            extension
 

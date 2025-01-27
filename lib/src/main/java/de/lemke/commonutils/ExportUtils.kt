@@ -7,13 +7,16 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
 import java.io.File
-import java.io.IOException
 import java.io.OutputStream
 import java.nio.file.Files
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private const val TAG = "ExportUtils"
 private const val MIME_TYPE_PNG = "image/png"
@@ -28,17 +31,17 @@ enum class SaveLocation {
 
     companion object {
         val default = CUSTOM
-
         fun fromStringOrDefault(string: String?): SaveLocation = entries.firstOrNull { it.toString() == string } ?: default
+
+        val entryValues = entries.map { it.name }.toTypedArray()
+        fun getLocalizedEntries(context: Context) = entries.map { it.toLocalizedString(context) }.toTypedArray()
     }
 
-    fun toLocalizedString(context: Context): String {
-        return when (this) {
-            CUSTOM -> context.getString(R.string.custom)
-            DOWNLOADS -> "Downloads"
-            PICTURES -> "Pictures"
-            DCIM -> "DCIM"
-        }
+    fun toLocalizedString(context: Context): String = when (this) {
+        CUSTOM -> context.getString(R.string.custom)
+        DOWNLOADS -> "Downloads"
+        PICTURES -> "Pictures"
+        DCIM -> "DCIM"
     }
 }
 
@@ -54,35 +57,35 @@ fun Context.exportBitmap(
     bitmap: Bitmap,
     filename: String,
     activityResultLauncher: ActivityResultLauncher<Intent>?
-): Boolean = if (saveLocation != SaveLocation.CUSTOM) {
-        try {
-            val dir: String = when (saveLocation) {
-                SaveLocation.DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
-                SaveLocation.PICTURES -> Environment.DIRECTORY_PICTURES
-                SaveLocation.DCIM -> Environment.DIRECTORY_DCIM
-                else -> Environment.DIRECTORY_DOWNLOADS // should never happen
-            }
-            Files.newOutputStream(File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath())
-                .use<OutputStream, Boolean> { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-            toast(getString(R.string.image_saved) + ": ${saveLocation.toLocalizedString(this)}")
-            true
-        } catch (e: IOException) {
-            e.printStackTrace()
-            toast(R.string.error_creating_file)
-            false
+): Boolean = if (saveLocation != SaveLocation.CUSTOM && Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+    try {
+        val dir: String = when (saveLocation) {
+            SaveLocation.DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
+            SaveLocation.PICTURES -> Environment.DIRECTORY_PICTURES
+            SaveLocation.DCIM -> Environment.DIRECTORY_DCIM
+            else -> Environment.DIRECTORY_DOWNLOADS // should never happen
         }
-    } else try {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = MIME_TYPE_PNG
-        intent.putExtra(Intent.EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
-        activityResultLauncher?.launch(intent)
+        Files.newOutputStream(File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath())
+            .use<OutputStream, Boolean> { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        toast(getString(R.string.image_saved) + ": ${saveLocation.toLocalizedString(this)}")
         true
     } catch (e: Exception) {
         e.printStackTrace()
-        toast(R.string.error_saving_content_is_not_supported_on_device)
+        toast(R.string.error_creating_file)
         false
     }
+} else try {
+    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+    intent.addCategory(Intent.CATEGORY_OPENABLE)
+    intent.type = MIME_TYPE_PNG
+    intent.putExtra(Intent.EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
+    activityResultLauncher?.launch(intent)
+    true
+} catch (e: Exception) {
+    e.printStackTrace()
+    toast(R.string.error_saving_content_is_not_supported_on_device)
+    false
+}
 
 fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?): Boolean = try {
     contentResolver.openOutputStream(uri!!)!!.use { outputStream ->
@@ -99,4 +102,12 @@ fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?): Boolean = try {
     toast(R.string.error_creating_file)
     false
 }
+
+inline fun String.toSafeFileName(extension: String): String =
+    "${this}_${SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault()).format(Date())}"
+        .replace("https://", "")
+        .replace("[^a-zA-Z0-9]+".toRegex(), "_")
+        .replace("_+".toRegex(), "_")
+        .replace("^_".toRegex(), "") +
+            extension
 
