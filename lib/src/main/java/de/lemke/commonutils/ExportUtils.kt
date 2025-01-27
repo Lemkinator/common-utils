@@ -42,13 +42,19 @@ enum class SaveLocation {
     }
 }
 
+fun Fragment.exportBitmap(
+    saveLocation: SaveLocation,
+    bitmap: Bitmap,
+    filename: String,
+    activityResultLauncher: ActivityResultLauncher<Intent>?
+): Boolean = requireContext().exportBitmap(saveLocation, bitmap, filename, activityResultLauncher)
+
 fun Context.exportBitmap(
     saveLocation: SaveLocation,
     bitmap: Bitmap,
     filename: String,
     activityResultLauncher: ActivityResultLauncher<Intent>?
-) {
-    if (saveLocation != SaveLocation.CUSTOM) {
+): Boolean = if (saveLocation != SaveLocation.CUSTOM) {
         try {
             val dir: String = when (saveLocation) {
                 SaveLocation.DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
@@ -59,9 +65,11 @@ fun Context.exportBitmap(
             Files.newOutputStream(File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath())
                 .use<OutputStream, Boolean> { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
             toast(getString(R.string.image_saved) + ": ${saveLocation.toLocalizedString(this)}")
+            true
         } catch (e: IOException) {
             e.printStackTrace()
             toast(R.string.error_creating_file)
+            false
         }
     } else try {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
@@ -69,31 +77,26 @@ fun Context.exportBitmap(
         intent.type = MIME_TYPE_PNG
         intent.putExtra(Intent.EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
         activityResultLauncher?.launch(intent)
+        true
     } catch (e: Exception) {
         e.printStackTrace()
         toast(R.string.error_saving_content_is_not_supported_on_device)
+        false
     }
-}
 
-fun Fragment.exportBitmap(
-    saveLocation: SaveLocation,
-    bitmap: Bitmap,
-    filename: String,
-    activityResultLauncher: ActivityResultLauncher<Intent>?
-) = requireContext().exportBitmap(saveLocation, bitmap, filename, activityResultLauncher)
-
-fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?) {
-    try {
-        contentResolver.openOutputStream(uri!!)!!.use { outputStream ->
-            if (bitmap?.compress(Bitmap.CompressFormat.PNG, 100, outputStream) == true) {
-                toast(R.string.image_saved)
-            } else {
-                toast(R.string.error_saving_image)
-            }
+fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?): Boolean = try {
+    contentResolver.openOutputStream(uri!!)!!.use { outputStream ->
+        if (bitmap?.compress(Bitmap.CompressFormat.PNG, 100, outputStream) == true) {
+            toast(R.string.image_saved)
+            true
+        } else {
+            toast(R.string.error_saving_image)
+            false
         }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        toast(R.string.error_creating_file)
     }
+} catch (e: Exception) {
+    e.printStackTrace()
+    toast(R.string.error_creating_file)
+    false
 }
 

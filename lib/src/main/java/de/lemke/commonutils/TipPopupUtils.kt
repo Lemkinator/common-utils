@@ -17,8 +17,7 @@ fun View.showTouchBlockingTipPopup(
     @StringRes messageResId: Int,
     @StringRes actionTextResId: Int? = null,
     action: () -> Unit = {}
-) =
-    showTouchBlockingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
+) = showTouchBlockingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
 fun View.showTouchBlockingTipPopup(message: String, actionText: String? = null, action: () -> Unit = {}) {
     val rootView = context.activity?.window?.decorView?.rootView as ViewGroup
@@ -33,8 +32,7 @@ fun View.showDimmingTipPopup(
     @StringRes messageResId: Int,
     @StringRes actionTextResId: Int? = null,
     action: () -> Unit = {}
-) =
-    showDimmingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
+) = showDimmingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
 fun View.showDimmingTipPopup(message: String, actionText: String? = null, action: () -> Unit = {}) {
     val rootView = context.activity?.window?.decorView?.rootView as ViewGroup

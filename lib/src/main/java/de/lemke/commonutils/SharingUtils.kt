@@ -24,29 +24,27 @@ private const val MIME_TYPE_TEXT = "text/plain"
 private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
 
-fun Fragment.shareApp() = requireContext().shareApp()
+fun Fragment.shareApp(): Boolean = requireContext().shareApp()
 
-fun Context.shareApp() {
-    safeStartActivity(Intent.createChooser(Intent().apply {
-        action = ACTION_SEND
-        type = MIME_TYPE_TEXT
-        putExtra(Intent.EXTRA_TEXT, getString(R.string.playstore_link) + packageName)
-    }, null))
-}
+fun Context.shareApp(): Boolean = safeStartActivity(Intent.createChooser(Intent().apply {
+    action = ACTION_SEND
+    type = MIME_TYPE_TEXT
+    putExtra(Intent.EXTRA_TEXT, getString(R.string.playstore_link) + packageName)
+}, null))
 
-fun Fragment.shareText(text: String, title: String? = null) = requireContext().shareText(text, title)
+fun Fragment.shareText(text: String, title: String? = null): Boolean = requireContext().shareText(text, title)
 
-fun Context.shareText(text: String, title: String? = null) {
+fun Context.shareText(text: String, title: String? = null): Boolean {
     Intent().apply {
         action = ACTION_SEND
         putExtra(Intent.EXTRA_TEXT, text)
         putExtra(Intent.EXTRA_TITLE, title)
         type = MIME_TYPE_TEXT
-        safeStartActivity(Intent.createChooser(this, title))
+        return safeStartActivity(Intent.createChooser(this, title))
     }
 }
 
-fun Fragment.copyToClipboard(text: String, label: String) = requireContext().copyToClipboard(text, label)
+fun Fragment.copyToClipboard(text: String, label: String): Boolean = requireContext().copyToClipboard(text, label)
 
 fun Context.copyToClipboard(text: String, label: String): Boolean {
     (getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText(label, text))
@@ -66,13 +64,13 @@ fun Context.copyToClipboard(bitmap: Bitmap, label: String, shareFileName: String
 fun Bitmap.copyToClipboard(context: Context, label: String, shareFileName: String): Boolean =
     context.copyToClipboard(this, label, shareFileName)
 
-fun Fragment.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null) =
+fun Fragment.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null): Boolean =
     bitmap.share(requireContext(), shareFileName, shareText)
 
-fun Context.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null) =
+fun Context.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null): Boolean =
     bitmap.share(this, shareFileName, shareText)
 
-fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = null) = try {
+fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = null): Boolean = try {
     val cacheFile = File(context.cacheDir, shareFileName)
     compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
     val uri = cacheFile.getFileUri(context)
@@ -84,35 +82,35 @@ fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = n
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         context.safeStartActivity(Intent.createChooser(this, null))
     }
+    true
 } catch (e: Exception) {
     e.printStackTrace()
     context.toast(R.string.error_share_content_not_supported_on_device)
+    false
 }
 
-fun Fragment.quickShareBitmap(bitmap: Bitmap, shareFileName: String) = bitmap.quickShare(requireContext(), shareFileName)
+fun Fragment.quickShareBitmap(bitmap: Bitmap, shareFileName: String): Boolean = bitmap.quickShare(requireContext(), shareFileName)
 
-fun Context.quickShareBitmap(bitmap: Bitmap, shareFileName: String) = bitmap.quickShare(this, shareFileName)
+fun Context.quickShareBitmap(bitmap: Bitmap, shareFileName: String): Boolean = bitmap.quickShare(this, shareFileName)
 
-fun Bitmap.quickShare(context: Context, shareFileName: String) {
+fun Bitmap.quickShare(context: Context, shareFileName: String): Boolean {
     val cacheFile = File(context.cacheDir, shareFileName)
     compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
     context.createBaseIntent().apply {
         type = MIME_TYPE_PNG
         putExtra(Intent.EXTRA_STREAM, cacheFile.getFileUri(context))
-        start(context)
+        return start(context)
     }
 }
 
-inline fun File.share(context: Context) {
-    listOf(this).share(context)
-}
+inline fun File.share(context: Context): Boolean = listOf(this).share(context)
 
-fun List<File>.share(context: Context) {
+fun List<File>.share(context: Context): Boolean {
     val contentUris = map { f -> f.getFileUri(context) }
 
     if (contentUris.isEmpty()) {
         Log.e(TAG, "No file to share.")
-        return
+        return false
     }
 
     context.createBaseIntent().apply {
@@ -124,7 +122,7 @@ fun List<File>.share(context: Context) {
             putExtra(Intent.EXTRA_STREAM, ArrayList(contentUris))
         }
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        start(context)
+        return start(context)
     }
 }
 
@@ -137,24 +135,27 @@ private inline fun Context.createBaseIntent() =
         }
     }
 
-private inline fun Intent.start(context: Context) {
+private inline fun Intent.start(context: Context): Boolean {
     try {
         context.startActivity(this)
+        return true
     } catch (e: Exception) {
         Log.e(TAG, "Failed to start activity with specific package: ${e.message}")
         // Fallback to default chooser if specific package fails
         `package` = null
-        context.safeStartActivity(this)
+        return context.safeStartActivity(this)
     }
 }
 
-private inline fun Context.safeStartActivity(intent: Intent) {
+private inline fun Context.safeStartActivity(intent: Intent): Boolean {
     try {
         startActivity(intent)
+        return true
     } catch (e: Exception) {
         e.printStackTrace()
         Log.e(TAG, "Failed to start activity: ${e.message}")
         toast(R.string.error_share_content_not_supported_on_device)
+        return false
     }
 }
 
