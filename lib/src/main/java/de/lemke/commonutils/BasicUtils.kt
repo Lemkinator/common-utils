@@ -33,15 +33,6 @@ fun Context.toast(@StringRes stringResId: Int) {
     Toast.makeText(this, stringResId, Toast.LENGTH_SHORT).show()
 }
 
-fun Fragment.hideSoftInput(windowToken: IBinder? = null, flags: Int? = null) = requireActivity().hideSoftInput(windowToken, flags)
-
-fun Activity.hideSoftInput(windowToken: IBinder? = null, flags: Int? = null) {
-    (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
-        windowToken ?: currentFocus?.windowToken,
-        flags ?: InputMethodManager.HIDE_NOT_ALWAYS
-    )
-}
-
 fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, ok: String? = null): Boolean {
     val dialog = AlertDialog.Builder(requireContext())
         .setTitle(title ?: getString(R.string.delete_appdata_and_exit))
