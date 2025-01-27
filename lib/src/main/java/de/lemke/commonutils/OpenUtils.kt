@@ -40,10 +40,13 @@ fun Context.openApp(packageName: String, tryLocalFirst: Boolean) {
     else openAppWithPackageNameOnStore(packageName)
 }
 
-private fun Context.openAppWithPackageName(packageName: String) {
+private fun Context.openAppWithPackageName(packageName: String) = try {
     val intent = packageManager.getLaunchIntentForPackage(packageName)
     if (intent != null) startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     else openAppWithPackageNameOnStore(packageName)
+} catch (e: Exception) {
+    e.printStackTrace()
+    toast(getString(R.string.error_cant_open_app))
 }
 
 private fun Context.openAppWithPackageNameOnStore(packageName: String) {
@@ -58,6 +61,7 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String) {
             startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (e: Exception) {
             e.printStackTrace()
+            toast(getString(R.string.error_cant_open_app))
         }
     }
 }
@@ -80,8 +84,13 @@ fun Fragment.openAppLocaleSettings(notSupportedMessage: String? = null): Boolean
     return true
 }
 
-fun Context.openApplicationSettings() = startActivity(
-    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
-        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-)
+fun Context.openApplicationSettings() = try {
+    startActivity(
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    )
+} catch (e: Exception) {
+    e.printStackTrace()
+    toast(R.string.error_cant_open_app_settings)
+}
 

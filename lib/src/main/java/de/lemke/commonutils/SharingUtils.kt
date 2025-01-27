@@ -27,7 +27,7 @@ private const val TAG = "SharingUtils"
 fun Fragment.shareApp() = requireContext().shareApp()
 
 fun Context.shareApp() {
-    startActivity(Intent.createChooser(Intent().apply {
+    safeStartActivity(Intent.createChooser(Intent().apply {
         action = ACTION_SEND
         type = MIME_TYPE_TEXT
         putExtra(Intent.EXTRA_TEXT, getString(R.string.playstore_link) + packageName)
@@ -42,7 +42,7 @@ fun Context.shareText(text: String, title: String? = null) {
         putExtra(Intent.EXTRA_TEXT, text)
         putExtra(Intent.EXTRA_TITLE, title)
         type = MIME_TYPE_TEXT
-        startActivity(Intent.createChooser(this, title))
+        safeStartActivity(Intent.createChooser(this, title))
     }
 }
 
@@ -72,7 +72,7 @@ fun Fragment.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: Strin
 fun Context.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null) =
     bitmap.share(this, shareFileName, shareText)
 
-fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = null) {
+fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = null) = try {
     val cacheFile = File(context.cacheDir, shareFileName)
     compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
     val uri = cacheFile.getFileUri(context)
@@ -82,8 +82,11 @@ fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = n
         shareText?.let { putExtra(Intent.EXTRA_TEXT, it) }
         type = MIME_TYPE_PNG
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        context.startActivity(Intent.createChooser(this, null))
+        context.safeStartActivity(Intent.createChooser(this, null))
     }
+} catch (e: Exception) {
+    e.printStackTrace()
+    context.toast(R.string.error_share_content_not_supported_on_device)
 }
 
 fun Fragment.quickShareBitmap(bitmap: Bitmap, shareFileName: String) = bitmap.quickShare(requireContext(), shareFileName)
@@ -141,7 +144,17 @@ private inline fun Intent.start(context: Context) {
         Log.e(TAG, "Failed to start activity with specific package: ${e.message}")
         // Fallback to default chooser if specific package fails
         `package` = null
-        context.startActivity(Intent.createChooser(this, null))
+        context.safeStartActivity(this)
+    }
+}
+
+private inline fun Context.safeStartActivity(intent: Intent) {
+    try {
+        startActivity(intent)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Log.e(TAG, "Failed to start activity: ${e.message}")
+        toast(R.string.error_share_content_not_supported_on_device)
     }
 }
 

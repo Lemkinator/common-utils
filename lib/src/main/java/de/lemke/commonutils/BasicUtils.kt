@@ -2,15 +2,11 @@
 
 package de.lemke.commonutils
 
-import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Context.ACTIVITY_SERVICE
-import android.content.Context.INPUT_METHOD_SERVICE
 import android.content.DialogInterface
 import android.os.Bundle
-import android.os.IBinder
-import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
@@ -22,16 +18,9 @@ import dev.oneuiproject.oneui.utils.DialogUtils
 private const val TAG = "BasicUtils"
 
 fun Fragment.toast(msg: String) = requireContext().toast(msg)
-
-fun Context.toast(msg: String) {
-    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-}
-
+fun Context.toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
-
-fun Context.toast(@StringRes stringResId: Int) {
-    Toast.makeText(this, stringResId, Toast.LENGTH_SHORT).show()
-}
+fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, Toast.LENGTH_SHORT).show()
 
 fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, ok: String? = null): Boolean {
     val dialog = AlertDialog.Builder(requireContext())

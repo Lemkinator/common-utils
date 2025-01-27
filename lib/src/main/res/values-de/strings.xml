@@ -3,9 +3,13 @@
     <string name="no_email_app_installed">Keine E-Mail-App installiert…</string>
     <string name="no_browser_app_installed">Keine Browser-App installiert…</string>
     <string name="error_cant_open_url">Fehler: URL konnte nicht geöffnet werden.</string>
+    <string name="error_cant_open_app">Fehler: App konnte nicht geöffnet werden.</string>
+    <string name="error_cant_open_app_settings">Fehler: App-Einstellungen konnten nicht geöffnet werden.</string>
     <string name="image_saved">Bild gespeichert</string>
     <string name="error_saving_image">Fehler beim Speichern des Bildes</string>
     <string name="error_creating_file">Fehler beim Erstellen der Datei</string>
+    <string name="error_share_content_not_supported_on_device">Fehler: Das Teilen von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
+    <string name="error_saving_content_is_not_supported_on_device">Fehler: Das Speichern von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
 
     <string name="warning">Warnung</string>
     <string name="info">Info</string>

@@ -63,12 +63,15 @@ fun Context.exportBitmap(
             e.printStackTrace()
             toast(R.string.error_creating_file)
         }
-    } else {
+    } else try {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = MIME_TYPE_PNG
         intent.putExtra(Intent.EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
         activityResultLauncher?.launch(intent)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        toast(R.string.error_saving_content_is_not_supported_on_device)
     }
 }
 
