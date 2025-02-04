@@ -68,7 +68,7 @@ allprojects {
 
 val groupId = "io.github.lemkinator"
 val artifact = "common-utils"
-val versionName = "0.6.6"
+val versionName = "0.6.7"
 
 subprojects {
     afterEvaluate {
@@ -84,6 +84,35 @@ subprojects {
                     artifactId = artifact
                     afterEvaluate {
                         from(components["release"])
+                    }
+                    pom {
+                        name = artifact
+                        url = "https://github.com/Lemkinator/common-utils"
+                        developers {
+                            developer {
+                                id = "Lemkinator"
+                                name = "Leonard Lemke"
+                                email = "leo@leonard-lemke.com"
+                                url = "https://www.leonard-lemke.com"
+                                timezone = "Europe/Berlin"
+                            }
+                        }
+                        scm {
+                            connection = "scm:git:git://github.com/Lemkinator/common-utils.git"
+                            developerConnection = "scm:git:ssh://github.com/Lemkinator/common-utils.git"
+                            url = "https://github.com/Lemkinator/common-utils"
+                        }
+                        issueManagement{
+                            system = "GitHub Issues"
+                            url = "https://github.com/Lemkinator/common-utils/issues"
+                        }
+                        licenses {
+                            license {
+                                name = "Apache-2.0"
+                                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                                distribution = "repo"
+                            }
+                        }
                     }
                 }
             }
