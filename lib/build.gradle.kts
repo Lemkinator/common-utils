@@ -42,7 +42,7 @@ dependencies {
     implementation("sesl.androidx.appcompat:appcompat:1.7.0+1.0.34-sesl6+rev8")
     //SESL6(OneUI 6) Material Components + Design Lib + Icons
     implementation("sesl.com.google.android.material:material:1.12.0+1.0.23-sesl6+rev3")
-    implementation("io.github.tribalfs:oneui-design:0.5.2+oneui6")
+    implementation("io.github.tribalfs:oneui-design:0.5.3+oneui6")
     implementation("io.github.oneuiproject:icons:1.1.0")
 
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
