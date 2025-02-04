@@ -60,7 +60,7 @@
 
     <!--About-->
     <string name="open_in_playstore">Open in Play Store</string>
-    <string name="openSourceLicenses">Open source licenses</string>
+    <string name="open_source_licenses">Open source licenses</string>
 
     <!--AboutMe-->
     <string name="about_me">About me</string>
