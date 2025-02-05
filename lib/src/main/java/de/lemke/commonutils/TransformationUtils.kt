@@ -5,10 +5,14 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Intent
+import android.graphics.Color
+import android.transition.TransitionManager
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.view.Window
 import androidx.core.view.ViewCompat
+import androidx.core.view.isVisible
 import com.google.android.material.transition.platform.MaterialArcMotion
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
@@ -95,4 +99,48 @@ fun View.transformToActivity(
         .putExtra(DURATION_KEY, duration)
         .putExtra(FADE_MODE_KEY, fadeMode)
     context.startActivity(intent, bundle)
+}
+
+/**
+ * Creates a configured MaterialContainerTransform for a view transition.
+ * @receiver View The view to transition from.
+ * @param endView The view to transition to.
+ * @param duration The duration of the transition in milliseconds. Default is 400L.
+ * @param fadeMode The fade mode for the transition. Default is MaterialContainerTransform.FADE_MODE_CROSS.
+ * @return MaterialContainerTransform The configured container transform.
+ */
+private fun View.getContainerTransform(
+    endView: View,
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE
+) = MaterialContainerTransform().apply {
+    this.startView = this@getContainerTransform
+    this.endView = endView
+    this.duration = duration
+    this.fadeMode = fadeMode
+    scrimColor = Color.TRANSPARENT
+    pathMotion = MaterialArcMotion()
+    addTarget(endView)
+}
+
+/**
+ * Transitions from this view to the target view. Existing transition in the parent view will be stopped.
+ * @receiver View The view to transition from.
+ * @param targetView The view to transition to.
+ * @param duration The duration of the transition in milliseconds. Default is 400L.
+ * @param fadeMode The fade mode for the transition. Default is MaterialContainerTransform.FADE_MODE_CROSS.
+ */
+fun View.transformTo(
+    targetView: View,
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE
+) {
+    (parent as ViewGroup).also { container ->
+        container.post {
+            TransitionManager.endTransitions(container)
+            isVisible = false
+            targetView.isVisible = true
+            TransitionManager.beginDelayedTransition(container, getContainerTransform(targetView, duration, fadeMode))
+        }
+    }
 }
