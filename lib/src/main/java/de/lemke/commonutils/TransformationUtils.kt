@@ -81,15 +81,31 @@ fun Activity.prepareActivityTransformationBetween() {
 /**
  * Extension function to start an activity with a shared element transition from a view.
  * @receiver View The view to transition from.
- * @param intent The intent to start the new activity.
- * @param transitionName The name of the shared element transition. Default is "activityTransitionName".
+ * @param cls The class of the activity to start.
+ * @param transitionName The name of the shared element transition.
  * Transition names should be unique within the view hierarchy.
- * @param duration The duration of the transition in milliseconds. Default is 400L.
- * @param fadeMode The fade mode for the transition. Default is MaterialContainerTransform.FADE_MODE_CROSS.
+ * @param duration The duration of the transition in milliseconds.
+ * @param fadeMode The fade mode for the transition.
+ */
+fun View.transformToActivity(
+    cls: Class<*>,
+    transitionName: String = DEFAULT_TRANSITION_NAME,
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE
+) = transformToActivity(Intent(context, cls), transitionName, duration, fadeMode)
+
+/**
+ * Extension function to start an activity with a shared element transition from a view.
+ * @receiver View The view to transition from.
+ * @param intent The intent to start the new activity.
+ * @param transitionName The name of the shared element transition.
+ * Transition names should be unique within the view hierarchy.
+ * @param duration The duration of the transition in milliseconds.
+ * @param fadeMode The fade mode for the transition.
  */
 fun View.transformToActivity(
     intent: Intent,
-    transitionName: String = DEFAULT_TRANSITION_NAME, //transitionNames should be unique within the view hierarchy
+    transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE
 ) {
@@ -105,8 +121,8 @@ fun View.transformToActivity(
  * Creates a configured MaterialContainerTransform for a view transition.
  * @receiver View The view to transition from.
  * @param endView The view to transition to.
- * @param duration The duration of the transition in milliseconds. Default is 400L.
- * @param fadeMode The fade mode for the transition. Default is MaterialContainerTransform.FADE_MODE_CROSS.
+ * @param duration The duration of the transition in milliseconds.
+ * @param fadeMode The fade mode for the transition.
  * @return MaterialContainerTransform The configured container transform.
  */
 private fun View.getContainerTransform(
