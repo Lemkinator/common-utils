@@ -28,16 +28,11 @@ fun Context.sendEmail(emails: Array<String>, subject: String, text: String, noEm
 }
 
 fun Context.sendEmailHelp(email: String, subject: String, noEmailAppInstalledText: String? = null): Boolean =
-    sendEmail(email, subject, "By far, this is the greatest app I’ve ever used!", noEmailAppInstalledText)
+    sendEmail(email, subject, getString(R.string.help_email_text), noEmailAppInstalledText)
 
 fun Context.sendEmailAboutMe(email: String, subject: String, noEmailAppInstalledText: String? = null): Boolean =
-    sendEmail(email, subject, "This is the best app I’ve ever seen in my life!", noEmailAppInstalledText)
+    sendEmail(email, subject, getString(R.string.about_email_text), noEmailAppInstalledText)
 
 fun Fragment.sendEmailBugReport(email: String, subject: String, noEmailAppInstalledText: String? = null): Boolean =
-    requireContext().sendEmail(
-        email,
-        subject,
-        "I can’t imagine a better app than this — it’s perfect and doesn’t need any improvements. But here’s a bug report anyway: ",
-        noEmailAppInstalledText
-    )
+    requireContext().sendEmail(email, subject, getString(R.string.bug_report_email_text), noEmailAppInstalledText)
 

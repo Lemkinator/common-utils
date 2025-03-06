@@ -72,17 +72,7 @@
     <string name="more_information">Mehr Informationen</string>
     <string name="privacy_policy">Datenschutzrichtlinie</string>
     <string name="report_bug">Bug oder Verbesserung melden</string>
-    llieren.
 
-    WSA installieren
-
-
-
-    Google Account
-
-
-
-    Google Play Store
     <string name="history">Verlauf</string>
     <string name="delete_history">Verlauf löschen</string>
     <string name="delete_history_message">Verlauf wirklich löschen?</string>
@@ -98,4 +88,8 @@
     <string name="need_access">Berechtigung benötigt</string>
     <string name="need_access_dnd">Um den \"Bitte-Nicht-Stören\"-Modus zu aktivieren, benötigt die App die \"Nicht-Stören\"-Berechtigung</string>
     <string name="grant_access">Berechtigung erteilen</string>
+
+    <string name="help_email_text">Wow, das ist mit Abstand die beste App, die ich je benutzt habe!</string>
+    <string name="about_email_text">Das ist die beste App, die ich je in meinem Leben gesehen habe!</string>
+    <string name="bug_report_email_text">Ich kann mir keine bessere App als diese vorstellen - sie ist perfekt und braucht keine Verbesserungen. Aber hier ist trotzdem ein Fehlerbericht: </string>
 </resources>

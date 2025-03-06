@@ -106,4 +106,8 @@
     <string name="need_access_dnd">To enable the "Do not disturb" mode, the app needs the "Do not disturb" permission</string>
     <string name="grant_access">Grant permission</string>
 
+    <string name="help_email_text">By far, this is the greatest app I’ve ever used!</string>
+    <string name="about_email_text">This is the best app I’ve ever seen in my life!</string>
+    <string name="bug_report_email_text">I can’t imagine a better app than this — it’s perfect and doesn’t need any improvements. But here’s a bug report anyway: </string>
+
 </resources>
