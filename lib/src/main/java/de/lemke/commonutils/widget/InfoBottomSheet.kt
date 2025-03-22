@@ -9,27 +9,32 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import de.lemke.commonutils.databinding.WidgetInfoBottomsheetBinding
-import kotlin.apply
 
-class InfoBottomSheet: BottomSheetDialogFragment() {
+class InfoBottomSheet : BottomSheetDialogFragment() {
     private lateinit var binding: WidgetInfoBottomsheetBinding
 
     companion object {
-        fun newInstance(
-            title: String,
-            message: String,
-            textGravity: Int = Gravity.CENTER
-        ): InfoBottomSheet {
-            return InfoBottomSheet().apply{
-                arguments = Bundle().apply {
-                    putString(KEY_TITLE, title)
-                    putString(KEY_MESSAGE, message)
-                    putInt(KEY_TEXT_GRAVITY, textGravity)
-                }
+        fun FragmentActivity.showInfoBottomSheet(title: String, message: String, textGravity: Int = Gravity.CENTER) =
+            showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
+
+        fun Fragment.showInfoBottomSheet(title: String, message: String, textGravity: Int = Gravity.CENTER) =
+            showInfoBottomSheet(childFragmentManager, title, message, textGravity)
+
+        fun showInfoBottomSheet(fragmentManager: FragmentManager, title: String, message: String, textGravity: Int = Gravity.CENTER) =
+            newInstance(title, message, textGravity).show(fragmentManager, InfoBottomSheet::class.java.simpleName)
+
+        private fun newInstance(title: String, message: String, textGravity: Int = Gravity.CENTER) = InfoBottomSheet().apply {
+            arguments = Bundle().apply {
+                putString(KEY_TITLE, title)
+                putString(KEY_MESSAGE, message)
+                putInt(KEY_TEXT_GRAVITY, textGravity)
             }
         }
 
@@ -46,7 +51,7 @@ class InfoBottomSheet: BottomSheetDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View = WidgetInfoBottomsheetBinding.inflate(inflater, container, false).also { binding = it }.root
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
