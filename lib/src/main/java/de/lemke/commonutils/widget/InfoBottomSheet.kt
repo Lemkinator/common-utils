@@ -2,13 +2,13 @@
 
 package de.lemke.commonutils.widget
 
-import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
@@ -20,9 +20,50 @@ import de.lemke.commonutils.databinding.WidgetInfoBottomsheetBinding
 class InfoBottomSheet : BottomSheetDialogFragment() {
     private lateinit var binding: WidgetInfoBottomsheetBinding
 
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        //onDismissListener?.onDismiss(dialog)
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        WidgetInfoBottomsheetBinding.inflate(inflater, container, false).also { binding = it }.root
+
+    override fun onCreateDialog(savedInstanceState: Bundle?) = (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
+        behavior.skipCollapsed = true
+        setOnShowListener { behavior.state = BottomSheetBehavior.STATE_EXPANDED }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        arguments?.getInt(KEY_TEXT_GRAVITY)?.also {
+            binding.widgetInfoTitle.gravity = it
+            binding.widgetInfoMessage.gravity = it
+        }
+        arguments?.getString(KEY_TITLE).also {
+            if (it.isNullOrBlank()) binding.widgetInfoTitle.visibility = View.GONE
+            else binding.widgetInfoTitle.text = it
+        }
+        arguments?.getString(KEY_MESSAGE).also {
+            if (it.isNullOrBlank()) binding.widgetInfoMessage.visibility = View.GONE
+            else binding.widgetInfoMessage.text = it
+        }
+    }
+
     companion object {
+        fun FragmentActivity.showInfoBottomSheet(
+            @StringRes titleResId: Int,
+            @StringRes messageResId: Int,
+            textGravity: Int = Gravity.CENTER,
+        ) = showInfoBottomSheet(supportFragmentManager, getString(titleResId), getString(messageResId), textGravity)
+
         fun FragmentActivity.showInfoBottomSheet(title: String, message: String, textGravity: Int = Gravity.CENTER) =
             showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
+
+        fun Fragment.showInfoBottomSheet(
+            @StringRes titleResId: Int,
+            @StringRes messageResId: Int,
+            textGravity: Int = Gravity.CENTER,
+        ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
         fun Fragment.showInfoBottomSheet(title: String, message: String, textGravity: Int = Gravity.CENTER) =
             showInfoBottomSheet(childFragmentManager, title, message, textGravity)
@@ -41,32 +82,5 @@ class InfoBottomSheet : BottomSheetDialogFragment() {
         const val KEY_TITLE = "key_title"
         const val KEY_MESSAGE = "key_message"
         const val KEY_TEXT_GRAVITY = "key_text_gravity"
-    }
-
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        //onDismissListener?.onDismiss(dialog)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View = WidgetInfoBottomsheetBinding.inflate(inflater, container, false).also { binding = it }.root
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
-            behavior.skipCollapsed = true
-            setOnShowListener { behavior.state = BottomSheetBehavior.STATE_EXPANDED }
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val textGravity = arguments?.getInt(KEY_TEXT_GRAVITY) ?: Gravity.CENTER
-        binding.widgetInfoTitle.text = arguments?.getString(KEY_TITLE) ?: ""
-        binding.widgetInfoTitle.gravity = textGravity
-        binding.widgetInfoMessage.text = arguments?.getString(KEY_MESSAGE) ?: ""
-        binding.widgetInfoMessage.gravity = textGravity
     }
 }
