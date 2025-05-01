@@ -37,7 +37,6 @@
     <!--OOBE-->
     <string name="tos">Nutzungsbedingungen</string>
     <string name="oobe_tos_text">Durch die Nutzung der App stimmen Sie den %1$s zu.</string>
-    <string name="continue_button_text">Weiter</string>
 
     <!--Help-->
     <string name="help">Hilfe</string>

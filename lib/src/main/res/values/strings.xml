@@ -54,7 +54,6 @@
     <!--OOBE-->
     <string name="tos">Terms of Service</string>
     <string name="oobe_tos_text">By continuing, you agree to the %1$s.</string>
-    <string name="continue_button_text">Continue</string>
 
     <!--Help-->
     <string name="help">Help</string>
