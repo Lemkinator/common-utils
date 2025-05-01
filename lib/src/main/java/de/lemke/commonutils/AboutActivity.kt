@@ -3,7 +3,7 @@ package de.lemke.commonutils
 import android.content.Intent
 import android.graphics.Color
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
+import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
@@ -12,7 +12,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
@@ -27,8 +27,10 @@ import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAI
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
 import de.lemke.commonutils.databinding.ActivityAboutBinding
 import dev.oneuiproject.oneui.layout.AppInfoLayout.OnClickListener
-import dev.oneuiproject.oneui.layout.AppInfoLayout.Status
+import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
+import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoConnection
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoUpdate
+import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NotUpdatable
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.UpdateAvailable
 import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
@@ -47,7 +49,7 @@ class AboutActivity : AppCompatActivity() {
         setContentView(binding.root)
         setCustomBackPressAnimation(binding.root)
         appUpdateManager = AppUpdateManagerFactory.create(this)
-        binding.appInfoLayout.updateStatus = Status.Loading
+        binding.appInfoLayout.updateStatus = Loading
         setVersionText()
         setOptionalText()
         binding.appInfoLayout.setMainButtonClickListener(object : OnClickListener {
@@ -56,13 +58,13 @@ class AboutActivity : AppCompatActivity() {
             }
 
             override fun onRetryClicked(v: View) {
-                binding.appInfoLayout.updateStatus = Status.Loading
+                binding.appInfoLayout.updateStatus = Loading
                 checkUpdate()
             }
         })
         binding.aboutButtonOpenInStore.setOnClickListener { openApp(packageName, false) }
         binding.aboutButtonOpenSourceLicenses.setOnClickListener { startActivity(Intent(this, OssLicensesMenuActivity::class.java)) }
-        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        activityResultLauncher = registerForActivityResult(StartIntentSenderForResult()) { result ->
             when (result.resultCode) {
                 // For immediate updates, you might not receive RESULT_OK because
                 // the update should already be finished by the time control is given back to your app.
@@ -125,8 +127,8 @@ class AboutActivity : AppCompatActivity() {
         Log.i(TAG, "Checking for updates")
         val connectivityManager = getSystemService(ConnectivityManager::class.java)
         val caps = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        if (caps == null || !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
-            binding.appInfoLayout.updateStatus = Status.NoConnection
+        if (caps == null || !caps.hasCapability(NET_CAPABILITY_VALIDATED)) {
+            binding.appInfoLayout.updateStatus = NoConnection
             return
         }
 
@@ -139,7 +141,7 @@ class AboutActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener { appUpdateInfo: Exception ->
-                binding.appInfoLayout.updateStatus = Status.NotUpdatable
+                binding.appInfoLayout.updateStatus = NotUpdatable
                 Log.w(TAG, appUpdateInfo.message.toString())
             }
     }
@@ -149,7 +151,7 @@ class AboutActivity : AppCompatActivity() {
             Log.i(TAG, "Starting update flow")
             appUpdateManager.startUpdateFlowForResult(appUpdateInfo, activityResultLauncher, AppUpdateOptions.newBuilder(IMMEDIATE).build())
         } catch (e: Exception) {
-            binding.appInfoLayout.updateStatus = Status.NotUpdatable
+            binding.appInfoLayout.updateStatus = NotUpdatable
             e.printStackTrace()
         }
     }

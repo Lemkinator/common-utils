@@ -3,9 +3,11 @@ package de.lemke.commonutils
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.res.Configuration
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Build
 import android.os.Bundle
-import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -63,7 +65,7 @@ class AboutMeActivity : AppCompatActivity() {
 
     @SuppressLint("RestrictedApi")
     private fun refreshAppBar(config: Configuration) {
-        if (config.orientation != Configuration.ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
+        if (config.orientation != ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
             binding.aboutAppBar.apply {
                 seslSetCustomHeightProportion(true, 0.5f)//expanded
                 addOnOffsetChangedListener(appBarListener)
@@ -71,7 +73,7 @@ class AboutMeActivity : AppCompatActivity() {
             }
             binding.aboutSwipeUpContainer.apply {
                 updateLayoutParams { height = resources.displayMetrics.heightPixels / 2 }
-                visibility = View.VISIBLE
+                visibility = VISIBLE
             }
         } else {
             binding.aboutAppBar.apply {
@@ -80,7 +82,7 @@ class AboutMeActivity : AppCompatActivity() {
                 removeOnOffsetChangedListener(appBarListener)
             }
             binding.aboutBottomContainer.alpha = 1f
-            binding.aboutSwipeUpContainer.visibility = View.GONE
+            binding.aboutSwipeUpContainer.visibility = GONE
             setBottomContentEnabled(true)
         }
     }
