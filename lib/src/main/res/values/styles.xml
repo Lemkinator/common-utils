@@ -8,39 +8,45 @@
         <item name="android:navigationBarColor">@color/oui_round_and_bgcolor</item>
     </style>
 
-    <style name="ButtonStyle.Colored" parent="OneUI.ButtonStyleColored">
+    <style name="ButtonStyle" parent="Widget.AppCompat.Button.Custom">
+        <item name="android:ellipsize">end</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:maxLines">2</item>
+
+        <item name="android:textSize">17sp</item>
+        <item name="buttonCornerRadius">26dp</item>
+
+        <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
+        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color</item>
+        <item name="tint">@color/commonutils_primary_text_icon_color</item>
+    </style>
+
+    <style name="ButtonStyle.Colored" parent="ButtonStyle">
         <item name="android:backgroundTint">@color/primary_color_themed</item>
-        <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
-        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color</item>
-        <item name="tint">@color/commonutils_primary_text_icon_color</item>
     </style>
 
-    <style name="ButtonStyle.Transparent" parent="OneUI.ButtonStyleTransparent">
+    <style name="ButtonStyle.Transparent" parent="ButtonStyle">
         <item name="android:backgroundTint">@android:color/transparent</item>
-        <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
-        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color</item>
-        <item name="tint">@color/commonutils_primary_text_icon_color</item>
     </style>
 
-    <style name="ButtonStyle.Transparent.Themed" parent="OneUI.ButtonStyleTransparent">
-        <item name="android:backgroundTint">@android:color/transparent</item>
+    <style name="ButtonStyle.Transparent.Themed" parent="ButtonStyle.Transparent">
         <item name="android:textColor">@color/commonutils_primary_text_icon_color_themed</item>
         <item name="android:drawableTint">@color/commonutils_primary_text_icon_color_themed</item>
         <item name="tint">@color/commonutils_primary_text_icon_color_themed</item>
     </style>
 
-    <style name="ButtonStyle.Transparent.Colored" parent="OneUI.ButtonStyleTransparent">
-        <item name="android:backgroundTint">@android:color/transparent</item>
+    <style name="ButtonStyle.Transparent.Colored" parent="ButtonStyle.Transparent">
         <item name="android:textColor">@color/primary_color_themed</item>
         <item name="android:drawableTint">@color/primary_color_themed</item>
         <item name="tint">@color/primary_color_themed</item>
     </style>
 
-    <style name="ButtonStyle.Filled" parent="Widget.AppCompat.Button">
+    <style name="ButtonStyle.Filled" parent="ButtonStyle">
         <item name="android:backgroundTint">@color/commonutils_filled_background_color</item>
-        <item name="android:textColor">@color/commonutils_primary_text_icon_color</item>
-        <item name="android:drawableTint">@color/commonutils_primary_text_icon_color</item>
-        <item name="tint">@color/commonutils_primary_text_icon_color</item>
     </style>
 
     <style name="ButtonStyle.Filled.Themed" parent="ButtonStyle.Filled">
