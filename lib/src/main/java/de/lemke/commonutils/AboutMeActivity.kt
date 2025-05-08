@@ -6,12 +6,11 @@ import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Build
 import android.os.Bundle
-import android.view.View.GONE
-import android.view.View.VISIBLE
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
@@ -73,7 +72,7 @@ class AboutMeActivity : AppCompatActivity() {
             }
             binding.aboutSwipeUpContainer.apply {
                 updateLayoutParams { height = resources.displayMetrics.heightPixels / 2 }
-                visibility = VISIBLE
+                isVisible = true
             }
         } else {
             binding.aboutAppBar.apply {
@@ -82,7 +81,7 @@ class AboutMeActivity : AppCompatActivity() {
                 removeOnOffsetChangedListener(appBarListener)
             }
             binding.aboutBottomContainer.alpha = 1f
-            binding.aboutSwipeUpContainer.visibility = GONE
+            binding.aboutSwipeUpContainer.isVisible = false
             setBottomContentEnabled(true)
         }
     }

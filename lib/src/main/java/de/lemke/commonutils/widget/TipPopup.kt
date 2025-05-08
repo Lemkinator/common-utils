@@ -4,11 +4,13 @@ package de.lemke.commonutils.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Context.WINDOW_SERVICE
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
@@ -16,12 +18,15 @@ import android.provider.Settings
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Log
-import android.util.TypedValue
+import android.util.TypedValue.COMPLEX_UNIT_PX
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_OUTSIDE
-import android.view.Surface
+import android.view.Surface.ROTATION_0
+import android.view.Surface.ROTATION_180
+import android.view.Surface.ROTATION_270
+import android.view.Surface.ROTATION_90
 import android.view.View
 import android.view.View.MeasureSpec.UNSPECIFIED
 import android.view.View.OnTouchListener
@@ -50,6 +55,10 @@ import de.lemke.commonutils.widget.TipPopup.Direction.BOTTOM_RIGHT
 import de.lemke.commonutils.widget.TipPopup.Direction.DEFAULT
 import de.lemke.commonutils.widget.TipPopup.Direction.TOP_LEFT
 import de.lemke.commonutils.widget.TipPopup.Direction.TOP_RIGHT
+import de.lemke.commonutils.widget.TipPopup.State.EXPANDED
+import de.lemke.commonutils.widget.TipPopup.State.HINT
+import de.lemke.commonutils.widget.TipPopup.Type.BALLOON_ACTION
+import de.lemke.commonutils.widget.TipPopup.Type.BALLOON_SIMPLE
 import dev.oneuiproject.oneui.ktx.doOnEnd
 import dev.oneuiproject.oneui.ktx.setListener
 import dev.oneuiproject.oneui.utils.DeviceLayoutUtil
@@ -60,12 +69,13 @@ import dev.oneuiproject.oneui.utils.internal.CachedInterpolatorFactory.Type.SINE
 import dev.oneuiproject.oneui.utils.internal.CachedInterpolatorFactory.Type.SINE_IN_OUT_70
 import kotlin.math.ceil
 import kotlin.math.floor
+import dev.oneuiproject.oneui.design.R as designR
 
 class TipPopup(private val parentView: View) {
 
     private val context: Context = parentView.context
     private val resources: Resources = context.resources
-    private val windowManager: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val windowManager: WindowManager = context.getSystemService(WINDOW_SERVICE) as WindowManager
 
     private val actionView: Button
     var messageText: CharSequence? = null
@@ -77,8 +87,8 @@ class TipPopup(private val parentView: View) {
     private var arrowDirection: Direction = DEFAULT
     private var arrowPositionX: Int = -1
     private var arrowPositionY: Int = -1
-    private val arrowHeight = resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_balloon_arrow_height)
-    private val arrowWidth = resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_balloon_arrow_width)
+    private val arrowHeight = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_arrow_height)
+    private val arrowWidth = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_arrow_width)
 
     private val messageView: TextView
 
@@ -121,17 +131,17 @@ class TipPopup(private val parentView: View) {
     private var onDismissListener: OnDismissListener? = null
     private var onStateChangeListener: OnStateChangeListener? = null
 
-    private var scaleMargin = resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_scale_margin)
-    private var sideMargin = resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_side_margin)
+    private var scaleMargin = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_scale_margin)
+    private var sideMargin = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_side_margin)
 
-    private var state: State = State.HINT
-    private var type: Type = Type.BALLOON_SIMPLE
+    private var state: State = HINT
+    private var type: Type = BALLOON_SIMPLE
 
     private val displayFrame: Rect = Rect()
     private val horizontalTextMargin =
-        resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_balloon_message_margin_horizontal)
+        resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_message_margin_horizontal)
     private val verticalTextMargin =
-        resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_balloon_message_margin_vertical)
+        resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_message_margin_vertical)
 
     /**
      * Choose either [BOTTOM_LEFT], [BOTTOM_RIGHT], [DEFAULT], [TOP_LEFT] or [TOP_RIGHT].
@@ -174,11 +184,11 @@ class TipPopup(private val parentView: View) {
         initInterpolator()
 
         LayoutInflater.from(context).apply {
-            bubbleView = inflate(dev.oneuiproject.oneui.design.R.layout.sem_tip_popup_bubble, null)
-            balloonView = inflate(dev.oneuiproject.oneui.design.R.layout.sem_tip_popup_balloon, null).also {
+            bubbleView = inflate(designR.layout.sem_tip_popup_bubble, null)
+            balloonView = inflate(designR.layout.sem_tip_popup_balloon, null).also {
                 messageView =
-                    (it.findViewById<TextView>(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_message)).apply { isVisible = false }
-                actionView = (it.findViewById<Button>(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_action)).apply { isVisible = false }
+                    (it.findViewById<TextView>(designR.id.sem_tip_popup_message)).apply { isVisible = false }
+                actionView = (it.findViewById<Button>(designR.id.sem_tip_popup_action)).apply { isVisible = false }
             }
         }
 
@@ -186,7 +196,7 @@ class TipPopup(private val parentView: View) {
         initBalloonPopup()
 
         bubblePopup!!.setOnDismissListener {
-            if (state == State.HINT) {
+            if (state == HINT) {
                 state = State.DISMISSED
                 onStateChangeListener?.onStateChanged(state)
                 onDismissListener?.onDismiss()
@@ -213,13 +223,13 @@ class TipPopup(private val parentView: View) {
         balloonView.accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(
                 host: View,
-                info: AccessibilityNodeInfo
+                info: AccessibilityNodeInfo,
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
                 info.addAction(
                     AccessibilityAction(
                         ACTION_CLICK,
-                        context.getString(dev.oneuiproject.oneui.design.R.string.oui_common_close)
+                        context.getString(designR.string.oui_common_close)
                     )
                 )
             }
@@ -243,11 +253,11 @@ class TipPopup(private val parentView: View) {
     }
 
     private fun initBubblePopup() {
-        bubbleBackground = bubbleView.findViewById(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_bubble_bg)
-        bubbleIcon = bubbleView.findViewById(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_bubble_icon)
+        bubbleBackground = bubbleView.findViewById(designR.id.sem_tip_popup_bubble_bg)
+        bubbleIcon = bubbleView.findViewById(designR.id.sem_tip_popup_bubble_icon)
 
-        bubbleWidth = resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_bubble_width)
-        bubbleHeight = resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_bubble_height)
+        bubbleWidth = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_bubble_width)
+        bubbleHeight = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_bubble_height)
 
         bubblePopup = TipWindowBubble(bubbleView, bubbleWidth, bubbleHeight, false).apply {
             isTouchable = true
@@ -258,15 +268,13 @@ class TipPopup(private val parentView: View) {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initBalloonPopup() {
-        balloonBubble = balloonView.findViewById<FrameLayout>(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_balloon_bubble)
-            .apply { isVisible = true }
-        balloonBubbleHint = balloonView.findViewById(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_balloon_bubble_hint)
-        balloonBubbleIcon = balloonView.findViewById(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_balloon_bubble_icon)
-        balloonPanel = balloonView.findViewById<FrameLayout>(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_balloon_panel)
-            .apply { isVisible = false }
-        balloonContent = balloonView.findViewById(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_balloon_content)
-        balloonBg1 = balloonView.findViewById(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_balloon_bg_01)
-        balloonBg2 = balloonView.findViewById(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_balloon_bg_02)
+        balloonBubble = balloonView.findViewById<FrameLayout>(designR.id.sem_tip_popup_balloon_bubble).apply { isVisible = true }
+        balloonBubbleHint = balloonView.findViewById(designR.id.sem_tip_popup_balloon_bubble_hint)
+        balloonBubbleIcon = balloonView.findViewById(designR.id.sem_tip_popup_balloon_bubble_icon)
+        balloonPanel = balloonView.findViewById<FrameLayout>(designR.id.sem_tip_popup_balloon_panel).apply { isVisible = false }
+        balloonContent = balloonView.findViewById(designR.id.sem_tip_popup_balloon_content)
+        balloonBg1 = balloonView.findViewById(designR.id.sem_tip_popup_balloon_bg_01)
+        balloonBg2 = balloonView.findViewById(designR.id.sem_tip_popup_balloon_bg_02)
 
         balloonPopup = TipWindowBalloon(balloonView, balloonWidth, balloonHeight, true).apply {
             isFocusable = true
@@ -341,11 +349,11 @@ class TipPopup(private val parentView: View) {
 
     fun setExpanded(expanded: Boolean) {
         if (expanded) {
-            state = State.EXPANDED
+            state = EXPANDED
             scaleMargin = 0
             return
         }
-        scaleMargin = resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_scale_margin)
+        scaleMargin = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_scale_margin)
     }
 
     fun setTargetPosition(x: Int, y: Int) {
@@ -383,13 +391,13 @@ class TipPopup(private val parentView: View) {
         setBubblePanel()
         setBalloonPanel()
 
-        if (state == State.HINT) {
+        if (state == HINT) {
             bubblePopup!!.update(bubblePopupX, bubblePopupY, bubblePopup!!.width, bubblePopup!!.height)
             if (resetHintTimer) {
                 debugLog("Timer Reset!")
                 scheduleTimeout()
             }
-        } else if (state == State.EXPANDED) {
+        } else if (state == EXPANDED) {
             balloonPopup!!.update(
                 balloonPopupX,
                 balloonPopupY,
@@ -411,7 +419,7 @@ class TipPopup(private val parentView: View) {
         bubblePopup!!.isClippingEnabled = enabled
         balloonPopup!!.isClippingEnabled = enabled
         forceRealDisplay = !enabled
-        sideMargin = if (enabled) resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_side_margin) else 0
+        sideMargin = if (enabled) resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_side_margin) else 0
         debugLog("clipping enabled : $enabled")
     }
 
@@ -429,25 +437,25 @@ class TipPopup(private val parentView: View) {
         }
         val currentFontScale = resources.configuration.fontScale
         val messageTextSize =
-            resources.getDimensionPixelOffset(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_balloon_message_text_size)
-        val actionTextSize = resources.getDimensionPixelOffset(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_balloon_action_text_size)
+            resources.getDimensionPixelOffset(designR.dimen.sem_tip_popup_balloon_message_text_size)
+        val actionTextSize = resources.getDimensionPixelOffset(designR.dimen.sem_tip_popup_balloon_action_text_size)
         if (currentFontScale > 1.2f) {
-            messageView.setTextSize(TypedValue.COMPLEX_UNIT_PX, floor(ceil(messageTextSize / currentFontScale) * 1.2f))
-            actionView.setTextSize(TypedValue.COMPLEX_UNIT_PX, floor(ceil(actionTextSize / currentFontScale) * 1.2f))
+            messageView.setTextSize(COMPLEX_UNIT_PX, floor(ceil(messageTextSize / currentFontScale) * 1.2f))
+            actionView.setTextSize(COMPLEX_UNIT_PX, floor(ceil(actionTextSize / currentFontScale) * 1.2f))
         }
         messageView.text = messageText
         if (TextUtils.isEmpty(actionText) || actionClickListener == null) {
-            actionView.visibility = View.GONE
+            actionView.isVisible = false
             actionView.setOnClickListener(null)
-            type = Type.BALLOON_SIMPLE
+            type = BALLOON_SIMPLE
         } else {
-            actionView.visibility = View.VISIBLE
+            actionView.isVisible = true
             actionView.text = actionText
             actionView.setOnClickListener { view ->
                 actionClickListener?.onClick(view)
                 dismiss(true)
             }
-            type = Type.BALLOON_ACTION
+            type = BALLOON_ACTION
         }
         bubbleIcon?.contentDescription = hintDescription
         if (bubbleIcon == null || bubbleBackground == null || balloonBubble == null || balloonBg1 == null || balloonBg2 == null) return
@@ -462,9 +470,9 @@ class TipPopup(private val parentView: View) {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun showInternal() {
-        if (state != State.EXPANDED) {
-            state = State.HINT
-            onStateChangeListener?.onStateChanged(State.HINT)?.also {
+        if (state != EXPANDED) {
+            state = HINT
+            onStateChangeListener?.onStateChanged(HINT)?.also {
                 debugLog("mIsShowing : $isShowing")
             }
 
@@ -473,7 +481,7 @@ class TipPopup(private val parentView: View) {
             }
 
             bubbleView.setOnTouchListener { _, _ ->
-                state = State.EXPANDED
+                state = EXPANDED
                 onStateChangeListener?.onStateChanged(state)
                 balloonPopup?.showAtLocation(
                     parentView,
@@ -489,16 +497,16 @@ class TipPopup(private val parentView: View) {
                 false
             }
         } else {
-            balloonBubble!!.visibility = View.GONE
-            balloonPanel!!.visibility = View.VISIBLE
-            messageView.visibility = View.VISIBLE
+            balloonBubble!!.isVisible = false
+            balloonPanel!!.isVisible = true
+            messageView.isVisible = true
             onStateChangeListener?.onStateChanged(state)
             balloonPopup?.showAtLocation(parentView, 0, balloonPopupX, balloonPopupY)
             animateBalloonScaleUp()
         }
         balloonView.setOnTouchListener(object : OnTouchListener {
             override fun onTouch(v: View, event: MotionEvent): Boolean {
-                if (type == Type.BALLOON_SIMPLE) {
+                if (type == BALLOON_SIMPLE) {
                     dismiss(true)
                     return false
                 }
@@ -521,11 +529,11 @@ class TipPopup(private val parentView: View) {
                 val i2 = scaleMargin
                 bubblePopupX = i - (i2 * 2)
                 bubblePopupY = bubbleY - (i2 * 2)
-                bubbleBackground!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_background_03)
+                bubbleBackground!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_03)
                 if (isRTL && locale != "iw_IL") {
-                    bubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon_rtl)
+                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon_rtl)
                 } else {
-                    bubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon)
+                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
                 }
             }
 
@@ -535,11 +543,11 @@ class TipPopup(private val parentView: View) {
                 paramBubblePanel.gravity = 83
                 bubblePopupX = bubbleX
                 bubblePopupY = bubbleY - (scaleMargin * 2)
-                bubbleBackground!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_background_04)
+                bubbleBackground!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_04)
                 if (isRTL && locale != "iw_IL") {
-                    bubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon_rtl)
+                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon_rtl)
                 } else {
-                    bubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon)
+                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
                 }
             }
 
@@ -549,11 +557,11 @@ class TipPopup(private val parentView: View) {
                 paramBubblePanel.gravity = 53
                 bubblePopupX = bubbleX - (scaleMargin * 2)
                 bubblePopupY = bubbleY
-                bubbleBackground!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_background_01)
+                bubbleBackground!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_01)
                 if (isRTL && locale != "iw_IL") {
-                    bubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon_rtl)
+                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon_rtl)
                 } else {
-                    bubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon)
+                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
                 }
             }
 
@@ -562,11 +570,11 @@ class TipPopup(private val parentView: View) {
                 paramBubblePanel.gravity = 51
                 bubblePopupX = bubbleX
                 bubblePopupY = bubbleY
-                bubbleBackground!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_background_02)
+                bubbleBackground!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_02)
                 if (isRTL && locale != "iw_IL") {
-                    bubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon_rtl)
+                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon_rtl)
                 } else {
-                    bubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon)
+                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
                 }
             }
 
@@ -598,13 +606,13 @@ class TipPopup(private val parentView: View) {
             windowManager.defaultDisplay.getRealMetrics(realMetrics)
             val scaleFactor2 = ceil(realMetrics.density.toDouble()).toInt()
             val minBackgroundWidth =
-                resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_balloon_background_minwidth)
+                resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_background_minwidth)
             debugLog("leftMargin[$leftMargin]")
             debugLog("rightMargin[$rightMargin] balloonWidth[$balloonWidth]")
             val horizontalContentMargin =
-                horizontalTextMargin - resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_button_padding_horizontal)
+                horizontalTextMargin - resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_button_padding_horizontal)
             val verticalButtonPadding = if (actionView.visibility == 0) resources.getDimensionPixelSize(
-                dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_button_padding_vertical
+                designR.dimen.sem_tip_popup_button_padding_vertical
             ) else 0
             val paramBalloonBubble = balloonBubble!!.layoutParams as FrameLayout.LayoutParams
             val paramBalloonPanel = balloonPanel!!.layoutParams as FrameLayout.LayoutParams
@@ -623,8 +631,8 @@ class TipPopup(private val parentView: View) {
                     val i5 = arrowPositionX - balloonX
                     val i6 = scaleMargin
                     tipWindow!!.setPivot((i5 + i6).toFloat(), (balloonHeight + i6).toFloat())
-                    balloonBubbleHint!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_background_03)
-                    balloonBubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon)
+                    balloonBubbleHint!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_03)
+                    balloonBubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
                     f = 180.0f
                     balloonBg1!!.rotationX = f
                     balloonBg2!!.rotationX = f
@@ -640,12 +648,7 @@ class TipPopup(private val parentView: View) {
                         debugLog("updated !! leftMargin[$scaledLeftMargin],  rightMargin[$minBackgroundWidth]")
                     } else {
                         paramBalloonBg1.setMargins(0, 0, rightMargin - i7, 0)
-                        paramBalloonBg2.setMargins(
-                            (bubbleWidth + leftMargin) - scaleFactor,
-                            0,
-                            0,
-                            0
-                        )
+                        paramBalloonBg2.setMargins((bubbleWidth + leftMargin) - scaleFactor, 0, 0, 0)
                     }
                     val i8 = verticalTextMargin
                     paramBalloonContent = paramBalloonContent2
@@ -662,8 +665,8 @@ class TipPopup(private val parentView: View) {
                     val i9 = arrowPositionX - balloonX
                     val i10 = scaleMargin
                     tipWindow2!!.setPivot((i9 + i10).toFloat(), (balloonHeight + i10).toFloat())
-                    balloonBubbleHint!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_background_04)
-                    balloonBubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon)
+                    balloonBubbleHint!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_04)
+                    balloonBubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
                     f2 = 180.0f
                     balloonBg1!!.rotation = f2
                     balloonBg2!!.rotation = f2
@@ -695,8 +698,8 @@ class TipPopup(private val parentView: View) {
                     val i12 = arrowPositionX - balloonX
                     val i13 = scaleMargin
                     tipWindow3!!.setPivot((i12 + i13).toFloat(), i13.toFloat())
-                    balloonBubbleHint!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_background_01)
-                    balloonBubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon)
+                    balloonBubbleHint!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_01)
+                    balloonBubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
                     paramBalloonBg2.gravity = 53
                     paramBalloonBg1.gravity = 53
                     paramBalloonBubble.gravity = 53
@@ -718,8 +721,8 @@ class TipPopup(private val parentView: View) {
                     val i16 = arrowPositionX - balloonX
                     val i17 = scaleMargin
                     tipWindow4!!.setPivot((i16 + i17).toFloat(), i17.toFloat())
-                    balloonBubbleHint!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_background_02)
-                    balloonBubbleIcon!!.setImageResource(dev.oneuiproject.oneui.design.R.drawable.sem_tip_popup_hint_icon)
+                    balloonBubbleHint!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_02)
+                    balloonBubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
                     balloonBg1!!.rotationY = 180.0f
                     balloonBg2!!.rotationY = 180.0f
                     paramBalloonBg2.gravity = 51
@@ -860,13 +863,13 @@ class TipPopup(private val parentView: View) {
             measuredHeight + (verticalTextMargin * 2) + arrowHeight
         }
 
-        if (type == Type.BALLOON_ACTION) {
+        if (type == BALLOON_ACTION) {
             actionView.apply {
                 measure(UNSPECIFIED, UNSPECIFIED)
                 balloonWidth = balloonWidth.coerceAtLeast(
-                    measuredWidth + (resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_button_padding_horizontal) * 2)
+                    measuredWidth + (resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_button_padding_horizontal) * 2)
                 )
-                balloonHeight += (measuredHeight - resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_button_padding_vertical))
+                balloonHeight += (measuredHeight - resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_button_padding_vertical))
             }
         }
     }
@@ -982,7 +985,8 @@ class TipPopup(private val parentView: View) {
             }
 
             BOTTOM_RIGHT,
-            DEFAULT -> {
+            DEFAULT,
+                -> {
                 pivotX = 0.0f
                 pivotY = 0.0f
             }
@@ -1018,8 +1022,7 @@ class TipPopup(private val parentView: View) {
                 pivotY = 0.0f
             }
 
-            BOTTOM_RIGHT,
-            DEFAULT -> {
+            BOTTOM_RIGHT, DEFAULT -> {
                 pivotX = 0.0f
                 pivotY = 0.0f
             }
@@ -1119,7 +1122,7 @@ class TipPopup(private val parentView: View) {
     private fun animateBalloonScaleUp() {
         val pivotPanelX: Float
         val pivotPanelY: Float
-        val questionHeight = resources.getDimensionPixelSize(dev.oneuiproject.oneui.design.R.dimen.sem_tip_popup_bubble_height)
+        val questionHeight = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_bubble_height)
         val panelScale = (questionHeight / balloonHeight).toFloat()
 
         when (arrowDirection) {
@@ -1174,14 +1177,7 @@ class TipPopup(private val parentView: View) {
     }
 
     private val isNavigationbarHide: Boolean
-        get() {
-            val context: Context = context
-            return Settings.Global.getInt(
-                context.contentResolver,
-                "navigationbar_hide_bar_enabled",
-                0
-            ) == 1
-        }
+        get() = Settings.Global.getInt(context.contentResolver, "navigationbar_hide_bar_enabled", 0) == 1
 
     private val navagationbarHeight: Int get() = DeviceLayoutUtil.getNavigationBarHeight(resources)
 
@@ -1229,7 +1225,7 @@ class TipPopup(private val parentView: View) {
         } else {
             debugLog("phone")
             when (displayRotation) {
-                Surface.ROTATION_0 -> {
+                ROTATION_0 -> {
                     if (realMetrics.widthPixels == displayMetrics.widthPixels
                         && realMetrics.heightPixels - displayMetrics.heightPixels == navigationbarHeight
                         && navigationbarHide
@@ -1238,7 +1234,7 @@ class TipPopup(private val parentView: View) {
                     }
                 }
 
-                Surface.ROTATION_90 -> {
+                ROTATION_90 -> {
                     if (realMetrics.heightPixels == displayMetrics.heightPixels
                         && realMetrics.widthPixels - displayMetrics.widthPixels == navigationbarHeight
                         && navigationbarHide
@@ -1246,7 +1242,7 @@ class TipPopup(private val parentView: View) {
                         screenRect.right += navigationbarHeight
                     }
                     val windowInsets = ViewCompat.getRootWindowInsets(parentView)
-                    if (windowInsets != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                    if (windowInsets != null && SDK_INT >= Build.VERSION_CODES.P
                         && windowInsets.displayCutout != null
                     ) {
                         with(windowInsets.displayCutout!!) {
@@ -1257,7 +1253,7 @@ class TipPopup(private val parentView: View) {
                     }
                 }
 
-                Surface.ROTATION_180 -> {
+                ROTATION_180 -> {
                     if (realMetrics.widthPixels == displayMetrics.widthPixels
                         && realMetrics.heightPixels - displayMetrics.heightPixels == navigationbarHeight
                     ) {
@@ -1274,7 +1270,7 @@ class TipPopup(private val parentView: View) {
                     }
                 }
 
-                Surface.ROTATION_270 -> {
+                ROTATION_270 -> {
                     if (realMetrics.heightPixels == displayMetrics.heightPixels
                         && realMetrics.widthPixels - displayMetrics.widthPixels == navigationbarHeight
                     ) {
@@ -1303,7 +1299,7 @@ class TipPopup(private val parentView: View) {
         contentView: View,
         width: Int,
         height: Int,
-        focusable: Boolean
+        focusable: Boolean,
     ) : PopupWindow(contentView, width, height, focusable) {
         var mIsDismissing = false
         private var mIsUsingDismissAnimation = true
@@ -1361,7 +1357,7 @@ class TipPopup(private val parentView: View) {
         TipWindow(contentView, width, height, focusable) {
 
         override fun animateViewOut() {
-            val messageView = contentView.findViewById<View>(dev.oneuiproject.oneui.design.R.id.sem_tip_popup_message)
+            val messageView = contentView.findViewById<View>(designR.id.sem_tip_popup_message)
 
             val animAlpha = AlphaAnimation(1.0f, 0.0f).apply {
                 duration = ANIMATION_DURATION_EXPAND_SCALE
@@ -1385,23 +1381,17 @@ class TipPopup(private val parentView: View) {
         }
     }
 
-    private val isRTL: Boolean
-        get() = context.resources.configuration.layoutDirection == 1
+    private val isRTL: Boolean get() = context.resources.configuration.layoutDirection == 1
 
-    private val locale: String
-        get() = ConfigurationCompat.getLocales(context.resources.configuration).get(0).toString()
+    private val locale: String get() = ConfigurationCompat.getLocales(context.resources.configuration).get(0).toString()
 
     private fun debugLog(msg: String) {
         Log.d(TAG, " #### $msg")
     }
 
-    fun semGetBubblePopupWindow(): PopupWindow? {
-        return bubblePopup
-    }
+    fun semGetBubblePopupWindow(): PopupWindow? = bubblePopup
 
-    fun semGetBalloonPopupWindow(): PopupWindow? {
-        return balloonPopup
-    }
+    fun semGetBalloonPopupWindow(): PopupWindow? = balloonPopup
 
     companion object {
         private const val ANIMATION_DURATION_BOUNCE_SCALE1 = 167L

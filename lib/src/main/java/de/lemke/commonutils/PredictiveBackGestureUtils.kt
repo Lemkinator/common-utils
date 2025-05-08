@@ -5,15 +5,18 @@ package de.lemke.commonutils
 import android.annotation.SuppressLint
 import android.graphics.Outline
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.TIRAMISU
 import android.view.View
 import android.view.ViewOutlineProvider
-import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT
 import androidx.activity.BackEventCompat
+import androidx.activity.BackEventCompat.Companion.EDGE_LEFT
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.util.SeslMisc
+import androidx.appcompat.util.SeslMisc.isLightTheme
 import androidx.core.view.animation.PathInterpolatorCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
@@ -22,22 +25,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlin.apply
-import kotlin.run
+import androidx.appcompat.R as appcompatR
 
 inline fun Fragment.addOnBackLogic(
     backPressLogicEnabled: Boolean,
-    crossinline onBackPressedLogic: () -> Unit = {}
+    crossinline onBackPressedLogic: () -> Unit = {},
 ) = addOnBackLogic(MutableStateFlow(backPressLogicEnabled), onBackPressedLogic)
 
 inline fun Fragment.addOnBackLogic(
     backPressLogicEnabled: StateFlow<Boolean>,
-    crossinline onBackPressedLogic: () -> Unit = {}
+    crossinline onBackPressedLogic: () -> Unit = {},
 ) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        val onBackInvokedCallback = OnBackInvokedCallback {
-            onBackPressedLogic.invoke()
-        }
+    if (SDK_INT >= TIRAMISU) {
+        val onBackInvokedCallback = OnBackInvokedCallback { onBackPressedLogic.invoke() }
         requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
         lifecycleScope.launch {
             backPressLogicEnabled
@@ -58,9 +58,7 @@ inline fun Fragment.addOnBackLogic(
         }
         requireActivity().onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
         lifecycleScope.launch {
-            backPressLogicEnabled.flowWithLifecycle(lifecycle).collectLatest { enable ->
-                onBackPressedCallback.isEnabled = enable
-            }
+            backPressLogicEnabled.flowWithLifecycle(lifecycle).collectLatest { enable -> onBackPressedCallback.isEnabled = enable }
         }
     }
 }
@@ -105,7 +103,7 @@ class BackAnimationOutlineProvider() : ViewOutlineProvider() {
 inline fun AppCompatActivity.setCustomAnimatedOnBackPressedLogic(
     animatedView: View,
     backPressLogicEnabled: Boolean,
-    crossinline onBackPressedLogic: () -> Unit = {}
+    crossinline onBackPressedLogic: () -> Unit = {},
 ) = setCustomAnimatedOnBackPressedLogic(animatedView, MutableStateFlow(backPressLogicEnabled), onBackPressedLogic)
 
 /**
@@ -126,7 +124,7 @@ fun AppCompatActivity.setCustomBackPressAnimation(animatedView: View) = setCusto
 inline fun AppCompatActivity.setCustomAnimatedOnBackPressedLogic(
     animatedView: View,
     backPressLogicEnabled: StateFlow<Boolean>? = null,
-    crossinline onBackPressedLogic: () -> Unit = {}
+    crossinline onBackPressedLogic: () -> Unit = {},
 ) {
     setWindowTransparent(true)
     val predictiveBackMargin = resources.getDimension(R.dimen.predictive_back_margin)
@@ -161,7 +159,7 @@ inline fun AppCompatActivity.setCustomAnimatedOnBackPressedLogic(
                 // Shift horizontally.
                 val maxTranslationX = (animatedView.width / 20) - predictiveBackMargin
                 animatedView.translationX = progress * maxTranslationX *
-                        (if (backEvent.swipeEdge == BackEventCompat.EDGE_LEFT) 1 else -1)
+                        (if (backEvent.swipeEdge == EDGE_LEFT) 1 else -1)
 
                 // Shift vertically.
                 val maxTranslationY = (animatedView.height / 20) - predictiveBackMargin
@@ -193,26 +191,18 @@ inline fun AppCompatActivity.setCustomAnimatedOnBackPressedLogic(
 fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
     window.apply {
         if (transparent) {
-            clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            clearFlags(FLAG_DIM_BEHIND)
             setBackgroundDrawableResource(R.color.transparent_window_bg_color)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                setTranslucent(true)
-            }
+            if (SDK_INT >= Build.VERSION_CODES.R) setTranslucent(true)
         } else {
-            addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            addFlags(FLAG_DIM_BEHIND)
             setBackgroundDrawableResource(defaultWindowBackground)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                setTranslucent(false)
-            }
+            if (SDK_INT >= Build.VERSION_CODES.R) setTranslucent(false)
         }
     }
 }
 
 val AppCompatActivity.defaultWindowBackground: Int
     @SuppressLint("RestrictedApi", "PrivateResource")
-    get() = if (SeslMisc.isLightTheme(this)) {
-        androidx.appcompat.R.color.sesl_round_and_bgcolor_light
-    } else {
-        androidx.appcompat.R.color.sesl_round_and_bgcolor_dark
-    }
+    get() = if (isLightTheme(this)) appcompatR.color.sesl_round_and_bgcolor_light else appcompatR.color.sesl_round_and_bgcolor_dark
 

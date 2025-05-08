@@ -12,7 +12,10 @@ import androidx.core.view.children
 import androidx.core.view.updateLayoutParams
 import dev.oneuiproject.oneui.ktx.dpToPx
 import dev.oneuiproject.oneui.layout.Badge
-import dev.oneuiproject.oneui.layout.DrawerLayout
+import dev.oneuiproject.oneui.layout.DrawerLayout.DrawerState.CLOSE
+import dev.oneuiproject.oneui.layout.DrawerLayout.DrawerState.CLOSING
+import dev.oneuiproject.oneui.layout.DrawerLayout.DrawerState.OPEN
+import dev.oneuiproject.oneui.layout.DrawerLayout.DrawerState.OPENING
 import dev.oneuiproject.oneui.layout.NavDrawerLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +31,7 @@ private const val TAG = "DrawerUtils"
 fun NavDrawerLayout.setup(
     aboutApp: String,
     drawerItemTitles: List<TextView>,
-    drawerListView: LinearLayout
+    drawerListView: LinearLayout,
 ) {
     setupHeaderAndNavRail(aboutApp)
 
@@ -36,9 +39,9 @@ fun NavDrawerLayout.setup(
     if (isLargeScreenMode) {
         setDrawerStateListener {
             when (it) {
-                DrawerLayout.DrawerState.OPEN -> offsetUpdaterJob?.cancel().also { updateOffset(drawerItemTitles, drawerListView, 1f) }
-                DrawerLayout.DrawerState.CLOSE -> offsetUpdaterJob?.cancel().also { updateOffset(drawerItemTitles, drawerListView, 0f) }
-                DrawerLayout.DrawerState.CLOSING, DrawerLayout.DrawerState.OPENING -> startOffsetUpdater(drawerItemTitles, drawerListView)
+                OPEN -> offsetUpdaterJob?.cancel().also { updateOffset(drawerItemTitles, drawerListView, 1f) }
+                CLOSE -> offsetUpdaterJob?.cancel().also { updateOffset(drawerItemTitles, drawerListView, 0f) }
+                CLOSING, OPENING -> startOffsetUpdater(drawerItemTitles, drawerListView)
             }
         }
         //Set initial offset

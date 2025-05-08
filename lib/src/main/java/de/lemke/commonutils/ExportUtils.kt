@@ -5,9 +5,14 @@ package de.lemke.commonutils
 
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_CREATE_DOCUMENT
+import android.content.Intent.CATEGORY_OPENABLE
+import android.content.Intent.EXTRA_TITLE
 import android.graphics.Bitmap
+import android.graphics.Bitmap.CompressFormat.PNG
 import android.net.Uri
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
@@ -49,15 +54,15 @@ fun Fragment.exportBitmap(
     saveLocation: SaveLocation,
     bitmap: Bitmap,
     filename: String,
-    activityResultLauncher: ActivityResultLauncher<Intent>?
+    activityResultLauncher: ActivityResultLauncher<Intent>?,
 ): Boolean = requireContext().exportBitmap(saveLocation, bitmap, filename, activityResultLauncher)
 
 fun Context.exportBitmap(
     saveLocation: SaveLocation,
     bitmap: Bitmap,
     filename: String,
-    activityResultLauncher: ActivityResultLauncher<Intent>?
-): Boolean = if (saveLocation != SaveLocation.CUSTOM && Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+    activityResultLauncher: ActivityResultLauncher<Intent>?,
+): Boolean = if (saveLocation != SaveLocation.CUSTOM && SDK_INT > Build.VERSION_CODES.Q) {
     try {
         val dir: String = when (saveLocation) {
             SaveLocation.DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
@@ -66,7 +71,7 @@ fun Context.exportBitmap(
             else -> Environment.DIRECTORY_DOWNLOADS // should never happen
         }
         Files.newOutputStream(File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath())
-            .use<OutputStream, Boolean> { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            .use<OutputStream, Boolean> { bitmap.compress(PNG, 100, it) }
         toast(getString(R.string.image_saved) + ": ${saveLocation.toLocalizedString(this)}")
         true
     } catch (e: Exception) {
@@ -75,10 +80,10 @@ fun Context.exportBitmap(
         false
     }
 } else try {
-    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-    intent.addCategory(Intent.CATEGORY_OPENABLE)
+    val intent = Intent(ACTION_CREATE_DOCUMENT)
+    intent.addCategory(CATEGORY_OPENABLE)
     intent.type = MIME_TYPE_PNG
-    intent.putExtra(Intent.EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
+    intent.putExtra(EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
     activityResultLauncher?.launch(intent)
     true
 } catch (e: Exception) {
@@ -89,7 +94,7 @@ fun Context.exportBitmap(
 
 fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?): Boolean = try {
     contentResolver.openOutputStream(uri!!)!!.use { outputStream ->
-        if (bitmap?.compress(Bitmap.CompressFormat.PNG, 100, outputStream) == true) {
+        if (bitmap?.compress(PNG, 100, outputStream) == true) {
             toast(R.string.image_saved)
             true
         } else {

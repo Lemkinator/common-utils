@@ -5,7 +5,7 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.Color.TRANSPARENT
 import android.transition.TransitionManager
 import android.util.Log
 import android.view.View
@@ -15,6 +15,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import com.google.android.material.transition.platform.MaterialArcMotion
 import com.google.android.material.transition.platform.MaterialContainerTransform
+import com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_CROSS
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import dev.oneuiproject.oneui.ktx.activity
 
@@ -24,7 +25,7 @@ private const val DEFAULT_TRANSITION_NAME = "commonUtilsActivityTransitionName"
 private const val DURATION_KEY = "commonUtilsDurationKey"
 private const val DEFAULT_DURATION = 400L
 private const val FADE_MODE_KEY = "commonUtilsFadeModeKey"
-private const val DEFAULT_FADE_MODE = MaterialContainerTransform.FADE_MODE_CROSS
+private const val DEFAULT_FADE_MODE = FADE_MODE_CROSS
 
 /**
  * Extension function to get a configured MaterialContainerTransform for the Activity.
@@ -91,7 +92,7 @@ fun View.transformToActivity(
     cls: Class<*>,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
-    fadeMode: Int = DEFAULT_FADE_MODE
+    fadeMode: Int = DEFAULT_FADE_MODE,
 ) = transformToActivity(Intent(context, cls), transitionName, duration, fadeMode)
 
 /**
@@ -107,7 +108,7 @@ fun View.transformToActivity(
     intent: Intent,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
-    fadeMode: Int = DEFAULT_FADE_MODE
+    fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
     this.transitionName = transitionName
     val bundle = ActivityOptions.makeSceneTransitionAnimation(context.activity, this, transitionName).toBundle()
@@ -128,13 +129,13 @@ fun View.transformToActivity(
 private fun View.getContainerTransform(
     endView: View,
     duration: Long = DEFAULT_DURATION,
-    fadeMode: Int = DEFAULT_FADE_MODE
+    fadeMode: Int = DEFAULT_FADE_MODE,
 ) = MaterialContainerTransform().apply {
     this.startView = this@getContainerTransform
     this.endView = endView
     this.duration = duration
     this.fadeMode = fadeMode
-    scrimColor = Color.TRANSPARENT
+    scrimColor = TRANSPARENT
     pathMotion = MaterialArcMotion()
     addTarget(endView)
 }
@@ -149,7 +150,7 @@ private fun View.getContainerTransform(
 fun View.transformTo(
     targetView: View,
     duration: Long = DEFAULT_DURATION,
-    fadeMode: Int = DEFAULT_FADE_MODE
+    fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
     (parent as ViewGroup).also { container ->
         container.post {

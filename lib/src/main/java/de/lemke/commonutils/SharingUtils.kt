@@ -5,13 +5,19 @@ package de.lemke.commonutils
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Context.CLIPBOARD_SERVICE
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
+import android.content.Intent.ACTION_SEND_MULTIPLE
+import android.content.Intent.EXTRA_STREAM
+import android.content.Intent.EXTRA_TEXT
+import android.content.Intent.EXTRA_TITLE
+import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Bitmap.CompressFormat.PNG
 import android.net.Uri
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import java.io.File
@@ -26,7 +32,7 @@ fun Fragment.shareApp(): Boolean = requireContext().shareApp()
 fun Context.shareApp(): Boolean = safeStartActivity(Intent.createChooser(Intent().apply {
     action = ACTION_SEND
     type = MIME_TYPE_TEXT
-    putExtra(Intent.EXTRA_TEXT, getString(R.string.playstore_link) + packageName)
+    putExtra(EXTRA_TEXT, getString(R.string.playstore_link) + packageName)
 }, null))
 
 fun Fragment.shareText(text: String, title: String? = null): Boolean = requireContext().shareText(text, title)
@@ -34,8 +40,8 @@ fun Fragment.shareText(text: String, title: String? = null): Boolean = requireCo
 fun Context.shareText(text: String, title: String? = null): Boolean {
     Intent().apply {
         action = ACTION_SEND
-        putExtra(Intent.EXTRA_TEXT, text)
-        putExtra(Intent.EXTRA_TITLE, title)
+        putExtra(EXTRA_TEXT, text)
+        putExtra(EXTRA_TITLE, title)
         type = MIME_TYPE_TEXT
         return safeStartActivity(Intent.createChooser(this, title))
     }
@@ -44,16 +50,16 @@ fun Context.shareText(text: String, title: String? = null): Boolean {
 fun Fragment.copyToClipboard(text: String, label: String): Boolean = requireContext().copyToClipboard(text, label)
 
 fun Context.copyToClipboard(text: String, label: String): Boolean {
-    (getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText(label, text))
+    (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText(label, text))
     toast(R.string.copied_to_clipboard)
     return true
 }
 
 fun Context.copyToClipboard(bitmap: Bitmap, label: String, shareFileName: String): Boolean {
     val cacheFile = File(cacheDir, shareFileName)
-    bitmap.compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
+    bitmap.compress(PNG, 100, cacheFile.outputStream())
     val clip = ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this))
-    (getSystemService(AppCompatActivity.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
+    (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
     toast(R.string.copied_to_clipboard)
     return true
 }
@@ -69,14 +75,14 @@ fun Context.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String
 
 fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = null): Boolean = try {
     val cacheFile = File(context.cacheDir, shareFileName)
-    compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
+    compress(PNG, 100, cacheFile.outputStream())
     val uri = cacheFile.getFileUri(context)
     Intent(ACTION_SEND).apply {
         clipData = ClipData.newRawUri(shareFileName, uri)
-        putExtra(Intent.EXTRA_STREAM, uri)
-        shareText?.let { putExtra(Intent.EXTRA_TEXT, it) }
+        putExtra(EXTRA_STREAM, uri)
+        shareText?.let { putExtra(EXTRA_TEXT, it) }
         type = MIME_TYPE_PNG
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        addFlags(FLAG_GRANT_READ_URI_PERMISSION)
         context.safeStartActivity(Intent.createChooser(this, null))
     }
     true
@@ -92,10 +98,10 @@ fun Context.quickShareBitmap(bitmap: Bitmap, shareFileName: String): Boolean = b
 
 fun Bitmap.quickShare(context: Context, shareFileName: String): Boolean {
     val cacheFile = File(context.cacheDir, shareFileName)
-    compress(Bitmap.CompressFormat.PNG, 100, cacheFile.outputStream())
+    compress(PNG, 100, cacheFile.outputStream())
     context.createBaseIntent().apply {
         type = MIME_TYPE_PNG
-        putExtra(Intent.EXTRA_STREAM, cacheFile.getFileUri(context))
+        putExtra(EXTRA_STREAM, cacheFile.getFileUri(context))
         return start(context)
     }
 }
@@ -113,19 +119,19 @@ fun List<File>.share(context: Context): Boolean {
     context.createBaseIntent().apply {
         type = MIME_TYPE_PNG
         if (contentUris.size == 1) {
-            putExtra(Intent.EXTRA_STREAM, contentUris[0])
+            putExtra(EXTRA_STREAM, contentUris[0])
         } else {
-            action = Intent.ACTION_SEND_MULTIPLE
-            putExtra(Intent.EXTRA_STREAM, ArrayList(contentUris))
+            action = ACTION_SEND_MULTIPLE
+            putExtra(EXTRA_STREAM, ArrayList(contentUris))
         }
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        addFlags(FLAG_GRANT_READ_URI_PERMISSION)
         return start(context)
     }
 }
 
 private inline fun Context.createBaseIntent() =
     Intent().apply {
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        addFlags(FLAG_GRANT_READ_URI_PERMISSION)
         action = ACTION_SEND
         if (isSamsungQuickShareAvailable()) {
             `package` = SAMSUNG_QUICK_SHARE_PACKAGE

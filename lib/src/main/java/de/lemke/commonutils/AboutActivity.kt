@@ -1,7 +1,7 @@
 package de.lemke.commonutils
 
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.Color.TRANSPARENT
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
 import android.os.Bundle
@@ -104,7 +104,7 @@ class AboutActivity : AppCompatActivity() {
         binding.appInfoLayout.addOptionalText("").apply {
             text = optionalText
             movementMethod = LinkMovementMethod.getInstance()
-            highlightColor = Color.TRANSPARENT
+            highlightColor = TRANSPARENT
             setLinkTextColor(getColor(R.color.primary_color_themed))
         }
     }

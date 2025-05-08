@@ -4,6 +4,10 @@ package de.lemke.commonutils
 
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_SENDTO
+import android.content.Intent.EXTRA_EMAIL
+import android.content.Intent.EXTRA_SUBJECT
+import android.content.Intent.EXTRA_TEXT
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 
@@ -13,11 +17,11 @@ fun Context.sendEmail(email: String, subject: String, text: String, noEmailAppIn
     sendEmail(arrayOf(email), subject, text, noEmailAppInstalledText)
 
 fun Context.sendEmail(emails: Array<String>, subject: String, text: String, noEmailAppInstalledText: String? = null): Boolean = try {
-    Intent(Intent.ACTION_SENDTO).apply {
+    Intent(ACTION_SENDTO).apply {
         data = "mailto:".toUri()
-        putExtra(Intent.EXTRA_EMAIL, emails)
-        putExtra(Intent.EXTRA_SUBJECT, subject)
-        putExtra(Intent.EXTRA_TEXT, text)
+        putExtra(EXTRA_EMAIL, emails)
+        putExtra(EXTRA_SUBJECT, subject)
+        putExtra(EXTRA_TEXT, text)
         startActivity(this)
     }
     true

@@ -4,15 +4,16 @@ package de.lemke.commonutils.widget
 
 import android.content.DialogInterface
 import android.os.Bundle
-import android.view.Gravity
+import android.view.Gravity.CENTER
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import de.lemke.commonutils.databinding.WidgetInfoBottomsheetBinding
@@ -30,7 +31,7 @@ class InfoBottomSheet : BottomSheetDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
         behavior.skipCollapsed = true
-        setOnShowListener { behavior.state = BottomSheetBehavior.STATE_EXPANDED }
+        setOnShowListener { behavior.state = STATE_EXPANDED }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -40,11 +41,11 @@ class InfoBottomSheet : BottomSheetDialogFragment() {
             binding.widgetInfoMessage.gravity = it
         }
         arguments?.getString(KEY_TITLE).also {
-            if (it.isNullOrBlank()) binding.widgetInfoTitle.visibility = View.GONE
+            if (it.isNullOrBlank()) binding.widgetInfoTitle.isVisible = false
             else binding.widgetInfoTitle.text = it
         }
         arguments?.getString(KEY_MESSAGE).also {
-            if (it.isNullOrBlank()) binding.widgetInfoMessage.visibility = View.GONE
+            if (it.isNullOrBlank()) binding.widgetInfoMessage.isVisible = false
             else binding.widgetInfoMessage.text = it
         }
     }
@@ -53,25 +54,25 @@ class InfoBottomSheet : BottomSheetDialogFragment() {
         fun FragmentActivity.showInfoBottomSheet(
             @StringRes titleResId: Int,
             @StringRes messageResId: Int,
-            textGravity: Int = Gravity.CENTER,
+            textGravity: Int = CENTER,
         ) = showInfoBottomSheet(supportFragmentManager, getString(titleResId), getString(messageResId), textGravity)
 
-        fun FragmentActivity.showInfoBottomSheet(title: String, message: String, textGravity: Int = Gravity.CENTER) =
+        fun FragmentActivity.showInfoBottomSheet(title: String, message: String, textGravity: Int = CENTER) =
             showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
 
         fun Fragment.showInfoBottomSheet(
             @StringRes titleResId: Int,
             @StringRes messageResId: Int,
-            textGravity: Int = Gravity.CENTER,
+            textGravity: Int = CENTER,
         ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
-        fun Fragment.showInfoBottomSheet(title: String, message: String, textGravity: Int = Gravity.CENTER) =
+        fun Fragment.showInfoBottomSheet(title: String, message: String, textGravity: Int = CENTER) =
             showInfoBottomSheet(childFragmentManager, title, message, textGravity)
 
-        fun showInfoBottomSheet(fragmentManager: FragmentManager, title: String, message: String, textGravity: Int = Gravity.CENTER) =
+        fun showInfoBottomSheet(fragmentManager: FragmentManager, title: String, message: String, textGravity: Int = CENTER) =
             newInstance(title, message, textGravity).show(fragmentManager, InfoBottomSheet::class.java.simpleName)
 
-        private fun newInstance(title: String, message: String, textGravity: Int = Gravity.CENTER) = InfoBottomSheet().apply {
+        private fun newInstance(title: String, message: String, textGravity: Int = CENTER) = InfoBottomSheet().apply {
             arguments = Bundle().apply {
                 putString(KEY_TITLE, title)
                 putString(KEY_MESSAGE, message)

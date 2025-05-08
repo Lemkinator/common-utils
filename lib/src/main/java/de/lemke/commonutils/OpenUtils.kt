@@ -5,8 +5,13 @@ package de.lemke.commonutils
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.provider.Settings
+import android.content.Intent.ACTION_VIEW
+import android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.TIRAMISU
+import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+import android.provider.Settings.ACTION_APP_LOCALE_SETTINGS
 import android.util.Log
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.annotation.RequiresApi
@@ -24,7 +29,7 @@ fun Context.openURL(url: String?, cantOpenURLMessage: String? = null, noBrowserI
         toast(cantOpenURLMessage ?: getString(R.string.error_cant_open_url))
         false
     } else {
-        startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+        startActivity(Intent(ACTION_VIEW, url.toUri()))
         true
     }
 } catch (e: ActivityNotFoundException) {
@@ -46,7 +51,7 @@ fun Context.openApp(packageName: String, tryLocalFirst: Boolean): Boolean =
 private fun Context.openAppWithPackageName(packageName: String): Boolean = try {
     val intent = packageManager.getLaunchIntentForPackage(packageName)
     if (intent != null) {
-        startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
         true
     } else openAppWithPackageNameOnStore(packageName)
 } catch (e: Exception) {
@@ -56,16 +61,16 @@ private fun Context.openAppWithPackageName(packageName: String): Boolean = try {
 }
 
 private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean {
-    val intent = Intent(Intent.ACTION_VIEW)
+    val intent = Intent(ACTION_VIEW)
     intent.data = (getString(R.string.playstore_app_link) + packageName).toUri()
     try {
-        startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
         return true
     } catch (anfe: ActivityNotFoundException) {
         anfe.printStackTrace()
         intent.data = (getString(R.string.playstore_link) + packageName).toUri()
         try {
-            startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
             return true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -75,17 +80,17 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean 
     }
 }
 
-@ChecksSdkIntAtLeast(api = Build.VERSION_CODES.TIRAMISU)
-fun areAppLocalSettingsSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+@ChecksSdkIntAtLeast(api = TIRAMISU)
+fun areAppLocalSettingsSupported(): Boolean = SDK_INT >= TIRAMISU
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@RequiresApi(TIRAMISU)
 fun Fragment.openAppLocaleSettings(notSupportedMessage: String? = null): Boolean {
     if (!areAppLocalSettingsSupported()) {
         toast(notSupportedMessage ?: getString(R.string.change_language_not_supported_by_device))
         return false
     }
     try {
-        startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, "package:${requireContext().packageName}".toUri()))
+        startActivity(Intent(ACTION_APP_LOCALE_SETTINGS, "package:${requireContext().packageName}".toUri()))
         return true
     } catch (e: ActivityNotFoundException) {
         e.printStackTrace()
@@ -96,8 +101,8 @@ fun Fragment.openAppLocaleSettings(notSupportedMessage: String? = null): Boolean
 
 fun Context.openApplicationSettings(): Boolean = try {
     startActivity(
-        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
-            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        Intent(ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
+            .setFlags(FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK)
     )
     true
 } catch (e: Exception) {

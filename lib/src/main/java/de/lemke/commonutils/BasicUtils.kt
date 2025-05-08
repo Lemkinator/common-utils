@@ -6,21 +6,24 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Context.ACTIVITY_SERVICE
 import android.content.DialogInterface
+import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Bundle
 import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.collection.ScatterSet
 import androidx.collection.emptyScatterSet
 import androidx.fragment.app.Fragment
 import dev.oneuiproject.oneui.utils.DialogUtils
+import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "BasicUtils"
 
 fun Fragment.toast(msg: String) = requireContext().toast(msg)
-fun Context.toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+fun Context.toast(msg: String) = Toast.makeText(this, msg, LENGTH_SHORT).show()
 fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
-fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, Toast.LENGTH_SHORT).show()
+fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
 
 fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, ok: String? = null): Boolean {
     val dialog = AlertDialog.Builder(requireContext())
@@ -34,8 +37,8 @@ fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null
     dialog.show()
     DialogUtils.setDialogButtonTextColor(
         dialog,
-        DialogInterface.BUTTON_POSITIVE,
-        resources.getColor(dev.oneuiproject.oneui.design.R.color.oui_functional_red_color, requireContext().theme)
+        BUTTON_POSITIVE,
+        resources.getColor(designR.color.oui_functional_red_color, requireContext().theme)
     )
     return true
 }

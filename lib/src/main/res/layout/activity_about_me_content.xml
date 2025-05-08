@@ -20,7 +20,7 @@
         <dev.oneuiproject.oneui.widget.RoundedLinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/oui_background_color"
+            android:background="?android:colorBackground"
             android:orientation="vertical">
 
             <dev.oneuiproject.oneui.widget.CardItemView
@@ -49,7 +49,7 @@
         <dev.oneuiproject.oneui.widget.RoundedLinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/oui_background_color"
+            android:background="?android:colorBackground"
             android:orientation="horizontal">
 
             <dev.oneuiproject.oneui.widget.CardItemView
