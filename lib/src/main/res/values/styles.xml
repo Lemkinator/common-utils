@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="AppThemeOSL" parent="Theme.AppCompat.DayNight">
-        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:ignore="NewApi">true</item>
+<resources>
+
+    <style name="AppTheme.OSL" parent="Theme.AppCompat.DayNight">
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@color/oui_round_and_bgcolor</item>
         <item name="android:windowBackground">@color/oui_round_and_bgcolor</item>
