@@ -27,6 +27,7 @@
                 android:layout_marginTop="@dimen/sesl_action_bar_height_with_padding"
                 android:gravity="center"
                 android:orientation="vertical"
+                android:paddingHorizontal="10dp"
                 app:isCustomTitle="true"
                 tools:ignore="PrivateResource">
 
@@ -42,7 +43,7 @@
                     android:layout_marginTop="8dp"
                     android:gravity="center"
                     android:text="@string/leo"
-                    android:textColor="@color/oui_appinfolayout_app_label_text_color"
+                    android:textColor="@color/oui_des_appinfolayout_app_label_text_color"
                     android:textSize="30sp"
                     app:fontFamily="@font/samsungsharpsans_bold" />
 
@@ -52,10 +53,11 @@
                     android:layout_marginTop="8dp"
                     android:gravity="center"
                     android:text="@string/leo_job"
-                    android:textColor="@color/oui_appinfolayout_sub_text_color"
+                    android:textColor="@color/oui_des_appinfolayout_sub_text_color"
                     android:textSize="14sp" />
 
                 <LinearLayout
+                    android:id="@+id/aboutHeaderIcons"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -126,6 +128,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        android:paddingHorizontal="10dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.core.widget.NestedScrollView
@@ -158,14 +161,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/leo"
-                        android:textColor="@color/oui_appinfolayout_app_label_text_color"
+                        android:textColor="@color/oui_des_appinfolayout_app_label_text_color"
                         android:textSize="18sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/leo_job"
-                        android:textColor="@color/oui_appinfolayout_sub_text_color" />
+                        android:textColor="@color/oui_des_appinfolayout_sub_text_color" />
 
                 </LinearLayout>
 
@@ -192,7 +195,7 @@
             android:layout_gravity="center"
             android:alpha=".50"
             app:lottie_autoPlay="true"
-            app:lottie_colorFilter="@color/oui_appinfolayout_sub_text_color"
+            app:lottie_colorFilter="@color/oui_des_appinfolayout_sub_text_color"
             app:lottie_loop="true"
             app:lottie_rawRes="@raw/lottie_swipe_up_anim" />
 

@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.util.Log
-import android.view.View
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -26,7 +25,7 @@ import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_T
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
 import de.lemke.commonutils.databinding.ActivityAboutBinding
-import dev.oneuiproject.oneui.layout.AppInfoLayout.OnClickListener
+import dev.oneuiproject.oneui.ktx.onMultiClick
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoConnection
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoUpdate
@@ -40,28 +39,25 @@ class AboutActivity : AppCompatActivity() {
     private lateinit var appUpdateManager: AppUpdateManager
     private lateinit var appUpdateInfo: AppUpdateInfo
     private lateinit var activityResultLauncher: ActivityResultLauncher<IntentSenderRequest>
-    private var clicks = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         prepareActivityTransformationTo()
         super.onCreate(savedInstanceState)
         binding = ActivityAboutBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setCustomBackPressAnimation(binding.root)
+        setCustomBackAnimation(binding.root)
+        binding.appInfoLayout.apply {
+            updateStatus = Loading
+            setMainButtonClickListener {
+                if (updateStatus == NoConnection) {
+                    binding.appInfoLayout.updateStatus = Loading
+                    checkUpdate()
+                } else startUpdateFlow()
+            }
+        }
         appUpdateManager = AppUpdateManagerFactory.create(this)
-        binding.appInfoLayout.updateStatus = Loading
         setVersionText()
         setOptionalText()
-        binding.appInfoLayout.setMainButtonClickListener(object : OnClickListener {
-            override fun onUpdateClicked(v: View) {
-                startUpdateFlow()
-            }
-
-            override fun onRetryClicked(v: View) {
-                binding.appInfoLayout.updateStatus = Loading
-                checkUpdate()
-            }
-        })
         binding.aboutButtonOpenInStore.setOnClickListener { openApp(packageName, false) }
         binding.aboutButtonOpenSourceLicenses.setOnClickListener { startActivity(Intent(this, OssLicensesMenuActivity::class.java)) }
         activityResultLauncher = registerForActivityResult(StartIntentSenderForResult()) { result ->
@@ -79,24 +75,18 @@ class AboutActivity : AppCompatActivity() {
     private fun setVersionText() {
         val version: TextView = binding.appInfoLayout.findViewById(designR.id.app_info_version)
         lifecycleScope.launch { setVersionTextView(version) }
-        version.setOnClickListener {
-            clicks++
-            if (clicks > 5) {
-                clicks = 0
-                lifecycleScope.launch {
-                    devModeEnabled = !devModeEnabled
-                    setVersionTextView(version)
-                    onDevModeChanged(devModeEnabled)
-                }
+        version.onMultiClick {
+            lifecycleScope.launch {
+                devModeEnabled = !devModeEnabled
+                setVersionTextView(version)
+                onDevModeChanged(devModeEnabled)
             }
         }
     }
 
-    private fun setVersionTextView(textView: TextView) {
-        if (appVersion.isNotBlank()) {
-            textView.text = getString(designR.string.version_info, appVersion + if (devModeEnabled) " (dev)" else "")
-        } else lifecycleScope.launch {
-            textView.text = getString(designR.string.version_info, getAppVersion() + if (devModeEnabled) " (dev)" else "")
+    private suspend fun setVersionTextView(textView: TextView) {
+        appVersion.ifBlank { getAppVersion() }.let { appVersion ->
+            textView.text = getString(designR.string.oui_des_version_info, appVersion + if (devModeEnabled) " (dev)" else "")
         }
     }
 

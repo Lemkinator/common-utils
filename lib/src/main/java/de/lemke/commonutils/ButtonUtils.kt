@@ -1,7 +1,7 @@
 @file:Suppress("unused")
 
 package de.lemke.commonutils
-
+/*
 import android.util.Log
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
@@ -43,3 +43,4 @@ fun AppCompatButton.setStyle(style: Int) = when (style) {
     else -> Log.e(TAG, "Unknown style $style")
 }
 
+*/

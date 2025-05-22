@@ -4,49 +4,58 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
-import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.animation.PathInterpolatorCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.databinding.ActivityAboutMeBinding
+import dev.oneuiproject.oneui.ktx.invokeOnBack
 import dev.oneuiproject.oneui.ktx.isInMultiWindowModeCompat
 import dev.oneuiproject.oneui.ktx.semSetToolTipText
+import dev.oneuiproject.oneui.ktx.setEnableRecursive
+import dev.oneuiproject.oneui.utils.DeviceLayoutUtil.isPortrait
 import dev.oneuiproject.oneui.widget.AdaptiveCoordinatorLayout.Companion.MARGIN_PROVIDER_ADP_DEFAULT
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.abs
+import dev.oneuiproject.oneui.design.R as designR
 
 class AboutMeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutMeBinding
     private val appBarListener: AboutAppBarListener = AboutAppBarListener()
+    private val progressInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
+    private val callbackIsActive = MutableStateFlow(false)
+    private val crossActivityCallbackIsActive = MutableStateFlow(true)
+    private var isBackProgressing = false
+    private var isExpanding = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         prepareActivityTransformationTo()
         super.onCreate(savedInstanceState)
         binding = ActivityAboutMeBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setCustomBackPressAnimation(binding.root)
         binding.root.configureAdaptiveMargin(MARGIN_PROVIDER_ADP_DEFAULT, binding.aboutBottomContainer)
+        setContentView(binding.root)
+        setCustomBackAnimation(binding.root, crossActivityCallbackIsActive)
         applyInsetIfNeeded()
         setupToolbar()
 
         initContent()
         refreshAppBar(resources.configuration)
         setupOnClickListeners()
+        initOnBackPressed()
     }
 
     private fun applyInsetIfNeeded() {
-        if (Build.VERSION.SDK_INT >= 30 && !window.decorView.fitsSystemWindows) {
+        if (SDK_INT >= 30 && !window.decorView.fitsSystemWindows) {
             binding.root.setOnApplyWindowInsetsListener { _, insets ->
-                val systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                binding.root.setPadding(
-                    systemBarsInsets.left, systemBarsInsets.top,
-                    systemBarsInsets.right, systemBarsInsets.bottom
-                )
+                val systemBarsInsets = insets.getInsets(systemBars())
+                binding.root.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom)
                 insets
             }
         }
@@ -60,6 +69,40 @@ class AboutMeActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowTitleEnabled(false)
         }
+    }
+
+    private fun initOnBackPressed() {
+        invokeOnBack(
+            triggerStateFlow = callbackIsActive,
+            onBackPressed = {
+                binding.aboutAppBar.setExpanded(true)
+                isBackProgressing = false
+                isExpanding = false
+            },
+            onBackStarted = { isBackProgressing = true },
+            onBackProgressed = {
+                val interpolatedProgress = progressInterpolator.getInterpolation(it.progress)
+                if (interpolatedProgress > .5 && !isExpanding) {
+                    isExpanding = true
+                    binding.aboutAppBar.setExpanded(true, true)
+                } else if (interpolatedProgress < .3 && isExpanding) {
+                    isExpanding = false
+                    binding.aboutAppBar.setExpanded(false, true)
+                }
+            },
+            onBackCancelled = {
+                binding.aboutAppBar.setExpanded(false)
+                isBackProgressing = false
+                isExpanding = false
+            }
+        )
+        updateCallbackState()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        refreshAppBar(newConfig)
+        updateCallbackState()
     }
 
     @SuppressLint("RestrictedApi")
@@ -86,11 +129,6 @@ class AboutMeActivity : AppCompatActivity() {
         }
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        refreshAppBar(newConfig)
-    }
-
     private fun initContent() {
         val icon = AppCompatResources.getDrawable(this, R.drawable.me4_round)
         binding.aboutHeaderIcon.setImageDrawable(icon)
@@ -103,17 +141,8 @@ class AboutMeActivity : AppCompatActivity() {
     }
 
     private fun setBottomContentEnabled(enabled: Boolean) {
-        binding.aboutHeaderGithub.isEnabled = !enabled
-        binding.aboutHeaderWebsite.isEnabled = !enabled
-        binding.aboutHeaderPlayStore.isEnabled = !enabled
-        binding.aboutHeaderInsta.isEnabled = !enabled
-        binding.aboutHeaderTiktok.isEnabled = !enabled
-        binding.aboutBottomContent.aboutBottomRateApp.isEnabled = enabled
-        binding.aboutBottomContent.aboutBottomShareApp.isEnabled = enabled
-        binding.aboutBottomContent.aboutBottomWriteEmail.isEnabled = enabled
-        binding.aboutBottomContent.aboutBottomRelativeTiktok.isEnabled = enabled
-        binding.aboutBottomContent.aboutBottomRelativeWebsite.isEnabled = enabled
-        binding.aboutBottomContent.aboutBottomRelativePlayStore.isEnabled = enabled
+        binding.aboutHeaderIcons.setEnableRecursive(!enabled)
+        binding.aboutBottomContent.aboutBottomScrollView.setEnableRecursive(enabled)
     }
 
     private fun openURL(url: String) = openURL(url, cantOpenURLMessage, noBrowserInstalledMessage)
@@ -125,7 +154,7 @@ class AboutMeActivity : AppCompatActivity() {
             .setPositiveButton(getString(R.string.yes)) { _, _ ->
                 openURL(getString(R.string.playstore_developer_page_link))
             }
-            .setNegativeButton(getString(R.string.sesl_cancel), null)
+            .setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
             .show()
     }
 
@@ -168,7 +197,15 @@ class AboutMeActivity : AppCompatActivity() {
             val layoutPosition = abs(appBarLayout.top).toFloat()
             val bottomAlpha = (150.0f / alphaRange * (layoutPosition - binding.aboutCTL.height * 0.35f)).coerceIn(0f, 255f)
             binding.aboutBottomContainer.alpha = bottomAlpha / 255
+            updateCallbackState(appBarLayout.getTotalScrollRange() + verticalOffset == 0)
         }
+    }
+
+    private fun updateCallbackState(enable: Boolean? = null) {
+        if (isBackProgressing) return
+        callbackIsActive.value =
+            (enable ?: (binding.aboutAppBar.seslIsCollapsed() && isPortrait(resources.configuration) && !isInMultiWindowModeCompat))
+        crossActivityCallbackIsActive.value = !callbackIsActive.value
     }
 
     companion object {

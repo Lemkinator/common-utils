@@ -18,13 +18,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
+            android:paddingHorizontal="10dp"
             android:paddingBottom="24dp">
 
             <TextView
                 android:id="@+id/widgetInfoTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="24dp"
                 android:gravity="center"
                 android:textColor="?android:textColorPrimary"
                 android:textSize="20sp" />
@@ -33,7 +33,6 @@
                 android:id="@+id/widgetInfoMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="24dp"
                 android:layout_marginVertical="20dp"
                 android:gravity="center"
                 android:textColor="?android:textColorPrimary"

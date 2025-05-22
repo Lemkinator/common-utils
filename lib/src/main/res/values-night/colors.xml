@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="commonutils_primary_text_icon_color">#fffafafa</color>
-    <color name="commonutils_primary_text_icon_color_themed">@color/sesl_action_bar_text_color_title_dark</color>
     <color name="commonutils_secondary_text_icon_color">#ff999999</color>
-    <color name="commonutils_secondary_text_icon_color_themed">@color/sesl_list_subheader_text_color_dark</color>
+
     <!--color name="commonutils_filled_background_color">#373737</color-->
-    <color name="commonutils_filled_background_color">#17171a</color>
-    <color name="commonutils_filled_background_color_themed">@color/oui_background_color</color>
+    <!--color name="commonutils_filled_background_color">#17171a</color>
+    <color name="commonutils_filled_background_color_themed">@color/oui_des_background_color</color-->
+
     <color name="transparent_window_bg_color">#47333333</color>
-    <color name="color_drawer_list_item_background">#2d2d30</color>
 </resources>

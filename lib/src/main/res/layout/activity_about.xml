@@ -7,12 +7,18 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/aboutButtonOpenInStore"
-        style="@style/OneUI.AppInfoButton"
-        android:text="@string/open_in_playstore" />
+        style="@style/OneUI.ContainedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/open_in_playstore"
+        android:theme="@style/OneUI.ContainedButtonTheme" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/aboutButtonOpenSourceLicenses"
-        style="@style/OneUI.AppInfoButton"
-        android:text="@string/open_source_licenses" />
+        style="@style/OneUI.ContainedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/open_source_licenses"
+        android:theme="@style/OneUI.ContainedButtonTheme" />
 
 </dev.oneuiproject.oneui.layout.AppInfoLayout>

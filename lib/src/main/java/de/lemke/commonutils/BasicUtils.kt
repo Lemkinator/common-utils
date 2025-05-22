@@ -6,7 +6,6 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Context.ACTIVITY_SERVICE
 import android.content.DialogInterface
-import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Bundle
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -15,7 +14,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.collection.ScatterSet
 import androidx.collection.emptyScatterSet
 import androidx.fragment.app.Fragment
-import dev.oneuiproject.oneui.utils.DialogUtils
 import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "BasicUtils"
@@ -26,20 +24,13 @@ fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringR
 fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
 
 fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, ok: String? = null): Boolean {
-    val dialog = AlertDialog.Builder(requireContext())
+    AlertDialog.Builder(requireContext())
         .setTitle(title ?: getString(R.string.delete_appdata_and_exit))
         .setMessage(message ?: getString(R.string.delete_appdata_and_exit_warning))
-        .setNegativeButton(cancel ?: getString(R.string.sesl_cancel), null)
-        .setPositiveButton(ok ?: getString(R.string.ok)) { _: DialogInterface, _: Int ->
+        .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
+        .setPositiveButton(ok ?: getString(designR.string.oui_des_common_button_yes)) { _: DialogInterface, _: Int ->
             (requireContext().getSystemService(ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
-        }
-        .create()
-    dialog.show()
-    DialogUtils.setDialogButtonTextColor(
-        dialog,
-        BUTTON_POSITIVE,
-        resources.getColor(designR.color.oui_functional_red_color, requireContext().theme)
-    )
+        }.show()
     return true
 }
 
@@ -52,13 +43,13 @@ fun Bundle.saveSearchAndActionMode(isSearchMode: Boolean = false) = saveSearchAn
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
-    selectedIds: ScatterSet<Long> = emptyScatterSet<Long>()
+    selectedIds: ScatterSet<Long> = emptyScatterSet<Long>(),
 ) = saveSearchAndActionMode(isSearchMode, isActionMode, selectedIds.asSet().toLongArray())
 
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
-    selectedIds: LongArray = longArrayOf()
+    selectedIds: LongArray = longArrayOf(),
 ) {
     if (isSearchMode) {
         putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true)
@@ -72,7 +63,7 @@ fun Bundle.saveSearchAndActionMode(
 inline fun Bundle?.restoreSearchAndActionMode(
     crossinline onSearchMode: () -> Unit = {},
     crossinline onActionMode: (selectedIds: Array<Long>) -> Unit = {},
-    crossinline bundleIsNull: () -> Unit = {}
+    crossinline bundleIsNull: () -> Unit = {},
 ) {
     if (this == null) {
         bundleIsNull()

@@ -21,12 +21,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "21"
     }
 
     buildFeatures {
@@ -35,19 +35,20 @@ android {
 }
 
 dependencies {
-    //SESL6(OneUI 6) Android Jetpack
-    implementation("sesl.androidx.core:core:1.15.0+1.0.11-sesl6+rev0")
-    implementation("sesl.androidx.core:core-ktx:1.15.0+1.0.0-sesl6+rev0")
-    implementation("sesl.androidx.appcompat:appcompat:1.7.0+1.0.34-sesl6+rev8")
-    //SESL6(OneUI 6) Material Components + Design Lib + Icons
-    implementation("sesl.com.google.android.material:material:1.12.0+1.0.23-sesl6+rev3")
-    implementation("io.github.tribalfs:oneui-design:0.5.13+oneui6")
+    //SESL Android Jetpack
+    implementation("sesl.androidx.core:core:1.16.0+1.0.15-sesl7+rev0")
+    implementation("sesl.androidx.core:core-ktx:1.16.0+1.0.0-sesl7+rev0")
+    implementation("sesl.androidx.appcompat:appcompat:1.7.0+1.0.47000-sesl7+rev1")
+    //SESL Material Components + Design Lib + Icons
+    implementation("sesl.com.google.android.material:material:1.12.0+1.0.39-sesl7+rev4")
+    implementation("io.github.tribalfs:oneui-design:0.5.16+oneui7")
     implementation("io.github.oneuiproject:icons:1.1.0")
 
     implementation("com.airbnb.android:lottie:6.6.6")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.0")
     implementation("com.google.android.gms:play-services-oss-licenses:17.1.0")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+    implementation("com.google.android.play:review-ktx:2.0.2")
 }
 
 configurations.implementation {

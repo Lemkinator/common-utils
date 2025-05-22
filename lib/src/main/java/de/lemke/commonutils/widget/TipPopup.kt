@@ -87,12 +87,12 @@ class TipPopup(private val parentView: View) {
     private var arrowDirection: Direction = DEFAULT
     private var arrowPositionX: Int = -1
     private var arrowPositionY: Int = -1
-    private val arrowHeight = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_arrow_height)
-    private val arrowWidth = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_arrow_width)
+    private val arrowHeight = resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_balloon_arrow_height)
+    private val arrowWidth = resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_balloon_arrow_width)
 
     private val messageView: TextView
 
-    var backgroundColor: Int = context.getColor(R.color.commonutils_filled_background_color)
+    var backgroundColor: Int = context.getColor(designR.color.oui_des_background_color)
     private var balloonBg1: ImageView? = null
     private var balloonBg2: ImageView? = null
     private var balloonBubble: FrameLayout? = null
@@ -131,17 +131,17 @@ class TipPopup(private val parentView: View) {
     private var onDismissListener: OnDismissListener? = null
     private var onStateChangeListener: OnStateChangeListener? = null
 
-    private var scaleMargin = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_scale_margin)
-    private var sideMargin = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_side_margin)
+    private var scaleMargin = resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_scale_margin)
+    private var sideMargin = resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_side_margin)
 
     private var state: State = HINT
     private var type: Type = BALLOON_SIMPLE
 
     private val displayFrame: Rect = Rect()
     private val horizontalTextMargin =
-        resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_message_margin_horizontal)
+        resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_balloon_message_margin_horizontal)
     private val verticalTextMargin =
-        resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_message_margin_vertical)
+        resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_balloon_message_margin_vertical)
 
     /**
      * Choose either [BOTTOM_LEFT], [BOTTOM_RIGHT], [DEFAULT], [TOP_LEFT] or [TOP_RIGHT].
@@ -184,11 +184,11 @@ class TipPopup(private val parentView: View) {
         initInterpolator()
 
         LayoutInflater.from(context).apply {
-            bubbleView = inflate(designR.layout.sem_tip_popup_bubble, null)
-            balloonView = inflate(designR.layout.sem_tip_popup_balloon, null).also {
+            bubbleView = inflate(designR.layout.oui_des_tip_popup_bubble, null)
+            balloonView = inflate(designR.layout.oui_des_tip_popup_balloon, null).also {
                 messageView =
-                    (it.findViewById<TextView>(designR.id.sem_tip_popup_message)).apply { isVisible = false }
-                actionView = (it.findViewById<Button>(designR.id.sem_tip_popup_action)).apply { isVisible = false }
+                    (it.findViewById<TextView>(designR.id.oui_des_tip_popup_message)).apply { isVisible = false }
+                actionView = (it.findViewById<Button>(designR.id.oui_des_tip_popup_action)).apply { isVisible = false }
             }
         }
 
@@ -229,7 +229,7 @@ class TipPopup(private val parentView: View) {
                 info.addAction(
                     AccessibilityAction(
                         ACTION_CLICK,
-                        context.getString(designR.string.oui_common_close)
+                        context.getString(designR.string.oui_des_common_close)
                     )
                 )
             }
@@ -253,11 +253,11 @@ class TipPopup(private val parentView: View) {
     }
 
     private fun initBubblePopup() {
-        bubbleBackground = bubbleView.findViewById(designR.id.sem_tip_popup_bubble_bg)
-        bubbleIcon = bubbleView.findViewById(designR.id.sem_tip_popup_bubble_icon)
+        bubbleBackground = bubbleView.findViewById(designR.id.oui_des_tip_popup_bubble_bg)
+        bubbleIcon = bubbleView.findViewById(designR.id.oui_des_tip_popup_bubble_icon)
 
-        bubbleWidth = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_bubble_width)
-        bubbleHeight = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_bubble_height)
+        bubbleWidth = resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_bubble_width)
+        bubbleHeight = resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_bubble_height)
 
         bubblePopup = TipWindowBubble(bubbleView, bubbleWidth, bubbleHeight, false).apply {
             isTouchable = true
@@ -268,13 +268,13 @@ class TipPopup(private val parentView: View) {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initBalloonPopup() {
-        balloonBubble = balloonView.findViewById<FrameLayout>(designR.id.sem_tip_popup_balloon_bubble).apply { isVisible = true }
-        balloonBubbleHint = balloonView.findViewById(designR.id.sem_tip_popup_balloon_bubble_hint)
-        balloonBubbleIcon = balloonView.findViewById(designR.id.sem_tip_popup_balloon_bubble_icon)
-        balloonPanel = balloonView.findViewById<FrameLayout>(designR.id.sem_tip_popup_balloon_panel).apply { isVisible = false }
-        balloonContent = balloonView.findViewById(designR.id.sem_tip_popup_balloon_content)
-        balloonBg1 = balloonView.findViewById(designR.id.sem_tip_popup_balloon_bg_01)
-        balloonBg2 = balloonView.findViewById(designR.id.sem_tip_popup_balloon_bg_02)
+        balloonBubble = balloonView.findViewById<FrameLayout>(designR.id.oui_des_tip_popup_balloon_bubble).apply { isVisible = true }
+        balloonBubbleHint = balloonView.findViewById(designR.id.oui_des_tip_popup_balloon_bubble_hint)
+        balloonBubbleIcon = balloonView.findViewById(designR.id.oui_des_tip_popup_balloon_bubble_icon)
+        balloonPanel = balloonView.findViewById<FrameLayout>(designR.id.oui_des_tip_popup_balloon_panel).apply { isVisible = false }
+        balloonContent = balloonView.findViewById(designR.id.oui_des_tip_popup_balloon_content)
+        balloonBg1 = balloonView.findViewById(designR.id.oui_des_tip_popup_balloon_bg_01)
+        balloonBg2 = balloonView.findViewById(designR.id.oui_des_tip_popup_balloon_bg_02)
 
         balloonPopup = TipWindowBalloon(balloonView, balloonWidth, balloonHeight, true).apply {
             isFocusable = true
@@ -353,7 +353,7 @@ class TipPopup(private val parentView: View) {
             scaleMargin = 0
             return
         }
-        scaleMargin = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_scale_margin)
+        scaleMargin = resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_scale_margin)
     }
 
     fun setTargetPosition(x: Int, y: Int) {
@@ -419,7 +419,7 @@ class TipPopup(private val parentView: View) {
         bubblePopup!!.isClippingEnabled = enabled
         balloonPopup!!.isClippingEnabled = enabled
         forceRealDisplay = !enabled
-        sideMargin = if (enabled) resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_side_margin) else 0
+        sideMargin = if (enabled) resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_side_margin) else 0
         debugLog("clipping enabled : $enabled")
     }
 
@@ -437,8 +437,8 @@ class TipPopup(private val parentView: View) {
         }
         val currentFontScale = resources.configuration.fontScale
         val messageTextSize =
-            resources.getDimensionPixelOffset(designR.dimen.sem_tip_popup_balloon_message_text_size)
-        val actionTextSize = resources.getDimensionPixelOffset(designR.dimen.sem_tip_popup_balloon_action_text_size)
+            resources.getDimensionPixelOffset(designR.dimen.oui_des_tip_popup_balloon_message_text_size)
+        val actionTextSize = resources.getDimensionPixelOffset(designR.dimen.oui_des_tip_popup_balloon_action_text_size)
         if (currentFontScale > 1.2f) {
             messageView.setTextSize(COMPLEX_UNIT_PX, floor(ceil(messageTextSize / currentFontScale) * 1.2f))
             actionView.setTextSize(COMPLEX_UNIT_PX, floor(ceil(actionTextSize / currentFontScale) * 1.2f))
@@ -529,11 +529,11 @@ class TipPopup(private val parentView: View) {
                 val i2 = scaleMargin
                 bubblePopupX = i - (i2 * 2)
                 bubblePopupY = bubbleY - (i2 * 2)
-                bubbleBackground!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_03)
+                bubbleBackground!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_bg03)
                 if (isRTL && locale != "iw_IL") {
-                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon_rtl)
+                    bubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon_rtl)
                 } else {
-                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
+                    bubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon)
                 }
             }
 
@@ -543,11 +543,11 @@ class TipPopup(private val parentView: View) {
                 paramBubblePanel.gravity = 83
                 bubblePopupX = bubbleX
                 bubblePopupY = bubbleY - (scaleMargin * 2)
-                bubbleBackground!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_04)
+                bubbleBackground!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_bg04)
                 if (isRTL && locale != "iw_IL") {
-                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon_rtl)
+                    bubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon_rtl)
                 } else {
-                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
+                    bubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon)
                 }
             }
 
@@ -557,11 +557,11 @@ class TipPopup(private val parentView: View) {
                 paramBubblePanel.gravity = 53
                 bubblePopupX = bubbleX - (scaleMargin * 2)
                 bubblePopupY = bubbleY
-                bubbleBackground!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_01)
+                bubbleBackground!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_bg01)
                 if (isRTL && locale != "iw_IL") {
-                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon_rtl)
+                    bubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon_rtl)
                 } else {
-                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
+                    bubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon)
                 }
             }
 
@@ -570,11 +570,11 @@ class TipPopup(private val parentView: View) {
                 paramBubblePanel.gravity = 51
                 bubblePopupX = bubbleX
                 bubblePopupY = bubbleY
-                bubbleBackground!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_02)
+                bubbleBackground!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_bg02)
                 if (isRTL && locale != "iw_IL") {
-                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon_rtl)
+                    bubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon_rtl)
                 } else {
-                    bubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
+                    bubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon)
                 }
             }
 
@@ -606,13 +606,13 @@ class TipPopup(private val parentView: View) {
             windowManager.defaultDisplay.getRealMetrics(realMetrics)
             val scaleFactor2 = ceil(realMetrics.density.toDouble()).toInt()
             val minBackgroundWidth =
-                resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_balloon_background_minwidth)
+                resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_balloon_background_minwidth)
             debugLog("leftMargin[$leftMargin]")
             debugLog("rightMargin[$rightMargin] balloonWidth[$balloonWidth]")
             val horizontalContentMargin =
-                horizontalTextMargin - resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_button_padding_horizontal)
+                horizontalTextMargin - resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_button_padding_horizontal)
             val verticalButtonPadding = if (actionView.visibility == 0) resources.getDimensionPixelSize(
-                designR.dimen.sem_tip_popup_button_padding_vertical
+                designR.dimen.oui_des_tip_popup_button_padding_vertical
             ) else 0
             val paramBalloonBubble = balloonBubble!!.layoutParams as FrameLayout.LayoutParams
             val paramBalloonPanel = balloonPanel!!.layoutParams as FrameLayout.LayoutParams
@@ -631,8 +631,8 @@ class TipPopup(private val parentView: View) {
                     val i5 = arrowPositionX - balloonX
                     val i6 = scaleMargin
                     tipWindow!!.setPivot((i5 + i6).toFloat(), (balloonHeight + i6).toFloat())
-                    balloonBubbleHint!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_03)
-                    balloonBubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
+                    balloonBubbleHint!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_bg03)
+                    balloonBubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon)
                     f = 180.0f
                     balloonBg1!!.rotationX = f
                     balloonBg2!!.rotationX = f
@@ -665,8 +665,8 @@ class TipPopup(private val parentView: View) {
                     val i9 = arrowPositionX - balloonX
                     val i10 = scaleMargin
                     tipWindow2!!.setPivot((i9 + i10).toFloat(), (balloonHeight + i10).toFloat())
-                    balloonBubbleHint!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_04)
-                    balloonBubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
+                    balloonBubbleHint!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_bg04)
+                    balloonBubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon)
                     f2 = 180.0f
                     balloonBg1!!.rotation = f2
                     balloonBg2!!.rotation = f2
@@ -698,8 +698,8 @@ class TipPopup(private val parentView: View) {
                     val i12 = arrowPositionX - balloonX
                     val i13 = scaleMargin
                     tipWindow3!!.setPivot((i12 + i13).toFloat(), i13.toFloat())
-                    balloonBubbleHint!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_01)
-                    balloonBubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
+                    balloonBubbleHint!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_bg01)
+                    balloonBubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon)
                     paramBalloonBg2.gravity = 53
                     paramBalloonBg1.gravity = 53
                     paramBalloonBubble.gravity = 53
@@ -721,8 +721,8 @@ class TipPopup(private val parentView: View) {
                     val i16 = arrowPositionX - balloonX
                     val i17 = scaleMargin
                     tipWindow4!!.setPivot((i16 + i17).toFloat(), i17.toFloat())
-                    balloonBubbleHint!!.setImageResource(designR.drawable.sem_tip_popup_hint_background_02)
-                    balloonBubbleIcon!!.setImageResource(designR.drawable.sem_tip_popup_hint_icon)
+                    balloonBubbleHint!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_bg02)
+                    balloonBubbleIcon!!.setImageResource(designR.drawable.oui_des_tip_popup_hint_icon)
                     balloonBg1!!.rotationY = 180.0f
                     balloonBg2!!.rotationY = 180.0f
                     paramBalloonBg2.gravity = 51
@@ -867,9 +867,9 @@ class TipPopup(private val parentView: View) {
             actionView.apply {
                 measure(UNSPECIFIED, UNSPECIFIED)
                 balloonWidth = balloonWidth.coerceAtLeast(
-                    measuredWidth + (resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_button_padding_horizontal) * 2)
+                    measuredWidth + (resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_button_padding_horizontal) * 2)
                 )
-                balloonHeight += (measuredHeight - resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_button_padding_vertical))
+                balloonHeight += (measuredHeight - resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_button_padding_vertical))
             }
         }
     }
@@ -1122,7 +1122,7 @@ class TipPopup(private val parentView: View) {
     private fun animateBalloonScaleUp() {
         val pivotPanelX: Float
         val pivotPanelY: Float
-        val questionHeight = resources.getDimensionPixelSize(designR.dimen.sem_tip_popup_bubble_height)
+        val questionHeight = resources.getDimensionPixelSize(designR.dimen.oui_des_tip_popup_bubble_height)
         val panelScale = (questionHeight / balloonHeight).toFloat()
 
         when (arrowDirection) {
@@ -1176,17 +1176,17 @@ class TipPopup(private val parentView: View) {
         actionView.startAnimation(animationText)
     }
 
-    private val isNavigationbarHide: Boolean
+    private val isNavigationBarHide: Boolean
         get() = Settings.Global.getInt(context.contentResolver, "navigationbar_hide_bar_enabled", 0) == 1
 
-    private val navagationbarHeight: Int get() = DeviceLayoutUtil.getNavigationBarHeight(resources)
+    private val navigationBarHeight: Int get() = DeviceLayoutUtil.getNavigationBarHeight(resources)
 
     private val isTablet: Boolean get() = DeviceLayoutUtil.isTabletLayout(resources)
 
     private fun getDisplayFrame(screenRect: Rect) {
         //var displayCutout: DisplayCutout
-        val navigationbarHeight = navagationbarHeight
-        val navigationbarHide = isNavigationbarHide
+        val navigationBarHeight = navigationBarHeight
+        val navigationBarHide = isNavigationBarHide
 
         @Suppress("DEPRECATION")
         val displayRotation = windowManager.defaultDisplay.rotation
@@ -1217,29 +1217,29 @@ class TipPopup(private val parentView: View) {
         if (isTablet) {
             debugLog("tablet")
             if ((realMetrics.widthPixels == displayMetrics.widthPixels)
-                && (realMetrics.heightPixels - displayMetrics.heightPixels == navigationbarHeight)
-                && navigationbarHide
+                && (realMetrics.heightPixels - displayMetrics.heightPixels == navigationBarHeight)
+                && navigationBarHide
             ) {
-                screenRect.bottom += navigationbarHeight
+                screenRect.bottom += navigationBarHeight
             }
         } else {
             debugLog("phone")
             when (displayRotation) {
                 ROTATION_0 -> {
                     if (realMetrics.widthPixels == displayMetrics.widthPixels
-                        && realMetrics.heightPixels - displayMetrics.heightPixels == navigationbarHeight
-                        && navigationbarHide
+                        && realMetrics.heightPixels - displayMetrics.heightPixels == navigationBarHeight
+                        && navigationBarHide
                     ) {
-                        screenRect.bottom += navigationbarHeight
+                        screenRect.bottom += navigationBarHeight
                     }
                 }
 
                 ROTATION_90 -> {
                     if (realMetrics.heightPixels == displayMetrics.heightPixels
-                        && realMetrics.widthPixels - displayMetrics.widthPixels == navigationbarHeight
-                        && navigationbarHide
+                        && realMetrics.widthPixels - displayMetrics.widthPixels == navigationBarHeight
+                        && navigationBarHide
                     ) {
-                        screenRect.right += navigationbarHeight
+                        screenRect.right += navigationBarHeight
                     }
                     val windowInsets = ViewCompat.getRootWindowInsets(parentView)
                     if (windowInsets != null && SDK_INT >= Build.VERSION_CODES.P
@@ -1255,35 +1255,35 @@ class TipPopup(private val parentView: View) {
 
                 ROTATION_180 -> {
                     if (realMetrics.widthPixels == displayMetrics.widthPixels
-                        && realMetrics.heightPixels - displayMetrics.heightPixels == navigationbarHeight
+                        && realMetrics.heightPixels - displayMetrics.heightPixels == navigationBarHeight
                     ) {
-                        if (navigationbarHide) {
-                            screenRect.bottom += navigationbarHeight
+                        if (navigationBarHide) {
+                            screenRect.bottom += navigationBarHeight
                         } else {
-                            screenRect.top += navigationbarHeight
-                            screenRect.bottom += navigationbarHeight
+                            screenRect.top += navigationBarHeight
+                            screenRect.bottom += navigationBarHeight
                         }
-                    } else if (realMetrics.widthPixels == displayMetrics.widthPixels && bounds.top == navigationbarHeight) {
+                    } else if (realMetrics.widthPixels == displayMetrics.widthPixels && bounds.top == navigationBarHeight) {
                         debugLog("Top Docked")
-                        screenRect.top += navigationbarHeight
-                        screenRect.bottom += navigationbarHeight
+                        screenRect.top += navigationBarHeight
+                        screenRect.bottom += navigationBarHeight
                     }
                 }
 
                 ROTATION_270 -> {
                     if (realMetrics.heightPixels == displayMetrics.heightPixels
-                        && realMetrics.widthPixels - displayMetrics.widthPixels == navigationbarHeight
+                        && realMetrics.widthPixels - displayMetrics.widthPixels == navigationBarHeight
                     ) {
-                        if (navigationbarHide) {
-                            screenRect.right += navigationbarHeight
+                        if (navigationBarHide) {
+                            screenRect.right += navigationBarHeight
                         } else {
-                            screenRect.left += navigationbarHeight
-                            screenRect.right += navigationbarHeight
+                            screenRect.left += navigationBarHeight
+                            screenRect.right += navigationBarHeight
                         }
-                    } else if (realMetrics.heightPixels == displayMetrics.heightPixels && bounds.left == navigationbarHeight) {
+                    } else if (realMetrics.heightPixels == displayMetrics.heightPixels && bounds.left == navigationBarHeight) {
                         debugLog("Left Docked")
-                        screenRect.left += navigationbarHeight
-                        screenRect.right += navigationbarHeight
+                        screenRect.left += navigationBarHeight
+                        screenRect.right += navigationBarHeight
                     }
                 }
             }
@@ -1357,7 +1357,7 @@ class TipPopup(private val parentView: View) {
         TipWindow(contentView, width, height, focusable) {
 
         override fun animateViewOut() {
-            val messageView = contentView.findViewById<View>(designR.id.sem_tip_popup_message)
+            val messageView = contentView.findViewById<View>(designR.id.oui_des_tip_popup_message)
 
             val animAlpha = AlphaAnimation(1.0f, 0.0f).apply {
                 duration = ANIMATION_DURATION_EXPAND_SCALE

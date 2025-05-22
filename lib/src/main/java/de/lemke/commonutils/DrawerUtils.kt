@@ -54,7 +54,7 @@ fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setHeaderButtonIcon(AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline))
     setHeaderButtonTooltip(aboutApp)
     setHeaderButtonOnClickListener {
-        findViewById<ImageButton>(designR.id.drawer_header_button).transformToActivity(AboutActivity::class.java)
+        findViewById<ImageButton>(designR.id.oui_des_drawer_header_button).transformToActivity(AboutActivity::class.java)
     }
     setNavRailContentMinSideMargin(14)
     closeNavRailOnBack = true
