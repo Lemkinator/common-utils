@@ -6,7 +6,7 @@
     <application>
         <activity
             android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-            android:label="@string/oss_license_title"
+            android:label="@string/open_source_licenses"
             android:theme="@style/AppTheme.OSL" />
         <activity
             android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"

@@ -18,11 +18,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:paddingHorizontal="10dp"
-            android:paddingBottom="24dp">
+            android:padding="24dp">
 
             <TextView
-                android:id="@+id/widgetInfoTitle"
+                android:id="@+id/infoTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -30,7 +29,7 @@
                 android:textSize="20sp" />
 
             <TextView
-                android:id="@+id/widgetInfoMessage"
+                android:id="@+id/infoMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="20dp"

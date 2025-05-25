@@ -3,12 +3,10 @@
 package de.lemke.commonutils
 
 import android.annotation.SuppressLint
-import android.content.Context.MODE_PRIVATE
 import android.graphics.Outline
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.TIRAMISU
-import android.util.Log
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND
@@ -21,17 +19,13 @@ import androidx.appcompat.R.color.sesl_round_and_bgcolor_dark
 import androidx.appcompat.R.color.sesl_round_and_bgcolor_light
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.util.SeslMisc.isLightTheme
-import androidx.core.content.edit
 import androidx.core.view.animation.PathInterpolatorCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.lang.System.currentTimeMillis
-import java.util.concurrent.TimeUnit.MILLISECONDS
 
 private const val tag = "PredictiveBackGestureUtils"
 
@@ -149,46 +143,3 @@ fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
 val AppCompatActivity.defaultWindowBackground: Int
     @SuppressLint("RestrictedApi", "PrivateResource")
     get() = if (isLightTheme(this)) sesl_round_and_bgcolor_light else sesl_round_and_bgcolor_dark
-
-
-fun AppCompatActivity.getLastInAppReview() = getSharedPreferences(tag, MODE_PRIVATE).getLong("lastInAppReview", currentTimeMillis())
-fun AppCompatActivity.setInAppReview() = getSharedPreferences(tag, MODE_PRIVATE).edit { putLong("lastInAppReview", currentTimeMillis()) }
-fun AppCompatActivity.canShowInAppReview() = try {
-    val daysSinceLastReview = MILLISECONDS.toDays(currentTimeMillis() - getLastInAppReview())
-    Log.d(tag, "Days since last review: $daysSinceLastReview")
-    daysSinceLastReview >= 14
-} catch (e: Exception) {
-    e.printStackTrace()
-    false
-}
-
-fun AppCompatActivity.showInAppReviewOrFinish() {
-    try {
-        if (canShowInAppReview()) {
-            Log.d(tag, "In app review requested less than 14 days ago, skipping")
-            finishAfterTransition()
-            return
-        }
-        Log.d(tag, "trying to show in app review")
-        setInAppReview()
-        val manager = ReviewManagerFactory.create(this)
-        val request = manager.requestReviewFlow()
-        request.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Log.d(tag, "Review task successful")
-                val reviewInfo = task.result
-                val flow = manager.launchReviewFlow(this, reviewInfo)
-                flow.addOnCompleteListener {
-                    Log.d(tag, "Review flow complete")
-                    finishAfterTransition()
-                }
-            } else {
-                Log.e(tag, "Review task failed: ${task.exception?.message}")
-                finishAfterTransition()
-            }
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        finishAfterTransition()
-    }
-}

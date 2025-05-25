@@ -37,16 +37,16 @@ class InfoBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         arguments?.getInt(KEY_TEXT_GRAVITY)?.also {
-            binding.widgetInfoTitle.gravity = it
-            binding.widgetInfoMessage.gravity = it
+            binding.infoTitle.gravity = it
+            binding.infoMessage.gravity = it
         }
         arguments?.getString(KEY_TITLE).also {
-            if (it.isNullOrBlank()) binding.widgetInfoTitle.isVisible = false
-            else binding.widgetInfoTitle.text = it
+            if (it.isNullOrBlank()) binding.infoTitle.isVisible = false
+            else binding.infoTitle.text = it
         }
         arguments?.getString(KEY_MESSAGE).also {
-            if (it.isNullOrBlank()) binding.widgetInfoMessage.isVisible = false
-            else binding.widgetInfoMessage.text = it
+            if (it.isNullOrBlank()) binding.infoMessage.isVisible = false
+            else binding.infoMessage.text = it
         }
     }
 
@@ -54,23 +54,23 @@ class InfoBottomSheet : BottomSheetDialogFragment() {
         fun FragmentActivity.showInfoBottomSheet(
             @StringRes titleResId: Int,
             @StringRes messageResId: Int,
-            textGravity: Int = CENTER,
-        ) = showInfoBottomSheet(supportFragmentManager, getString(titleResId), getString(messageResId), textGravity)
+            textGravity: Int? = null,
+        ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
-        fun FragmentActivity.showInfoBottomSheet(title: String, message: String, textGravity: Int = CENTER) =
+        fun FragmentActivity.showInfoBottomSheet(title: String, message: String, textGravity: Int? = null) =
             showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
 
         fun Fragment.showInfoBottomSheet(
             @StringRes titleResId: Int,
             @StringRes messageResId: Int,
-            textGravity: Int = CENTER,
+            textGravity: Int? = null,
         ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
-        fun Fragment.showInfoBottomSheet(title: String, message: String, textGravity: Int = CENTER) =
+        fun Fragment.showInfoBottomSheet(title: String, message: String, textGravity: Int? = null) =
             showInfoBottomSheet(childFragmentManager, title, message, textGravity)
 
-        fun showInfoBottomSheet(fragmentManager: FragmentManager, title: String, message: String, textGravity: Int = CENTER) =
-            newInstance(title, message, textGravity).show(fragmentManager, InfoBottomSheet::class.java.simpleName)
+        fun showInfoBottomSheet(fragmentManager: FragmentManager, title: String, message: String, textGravity: Int? = null) =
+            newInstance(title, message, textGravity ?: CENTER).show(fragmentManager, InfoBottomSheet::class.java.simpleName)
 
         private fun newInstance(title: String, message: String, textGravity: Int = CENTER) = InfoBottomSheet().apply {
             arguments = Bundle().apply {

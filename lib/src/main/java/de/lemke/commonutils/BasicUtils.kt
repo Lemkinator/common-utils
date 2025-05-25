@@ -5,7 +5,7 @@ package de.lemke.commonutils
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Context.ACTIVITY_SERVICE
-import android.content.DialogInterface
+import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Bundle
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -14,6 +14,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.collection.ScatterSet
 import androidx.collection.emptyScatterSet
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import dev.oneuiproject.oneui.ktx.setOnClickListenerWithProgress
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "BasicUtils"
@@ -24,13 +28,22 @@ fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringR
 fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
 
 fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, ok: String? = null): Boolean {
-    AlertDialog.Builder(requireContext())
+    val dialog = AlertDialog.Builder(requireContext())
         .setTitle(title ?: getString(R.string.delete_appdata_and_exit))
         .setMessage(message ?: getString(R.string.delete_appdata_and_exit_warning))
         .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
-        .setPositiveButton(ok ?: getString(designR.string.oui_des_common_button_yes)) { _: DialogInterface, _: Int ->
-            (requireContext().getSystemService(ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
-        }.show()
+        .setPositiveButton(ok ?: getString(designR.string.oui_des_common_button_yes), null)
+        .create()
+    dialog.show()
+    dialog.getButton(BUTTON_POSITIVE).apply {
+        setTextColor(requireContext().getColor(designR.color.oui_des_functional_red_color))
+        setOnClickListenerWithProgress { button, progressBar ->
+            lifecycleScope.launch {
+                delay(500)
+                (requireContext().getSystemService(ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
+            }
+        }
+    }
     return true
 }
 
