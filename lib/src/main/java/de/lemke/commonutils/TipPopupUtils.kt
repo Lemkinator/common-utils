@@ -6,9 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
 import de.lemke.commonutils.widget.DimmingView
-import de.lemke.commonutils.widget.TipPopup
 import de.lemke.commonutils.widget.TouchBlockingView
 import dev.oneuiproject.oneui.ktx.activity
+import dev.oneuiproject.oneui.widget.TipPopup
+import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "TipPopupUtils"
 
@@ -44,9 +45,10 @@ private fun View.showTipPopup(
     message: String,
     actionText: String?,
     action: () -> Unit,
-) = TipPopup(this).apply {
+) = TipPopup(this, TipPopup.Mode.NORMAL).apply {
     setMessage(message)
     setExpanded(true)
+    setBackgroundColorWithAlpha(context.getColor(designR.color.oui_des_background_color))
     setOnDismissListener { rootView.removeView(backgroundView) }
     setAction(actionText ?: context.getString(R.string.ok)) { rootView.removeView(backgroundView); action() }
     show()
