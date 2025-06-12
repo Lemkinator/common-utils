@@ -38,7 +38,7 @@ dependencies {
     //SESL Android Jetpack
     implementation("sesl.androidx.core:core:1.16.0+1.0.15-sesl7+rev0")
     implementation("sesl.androidx.core:core-ktx:1.16.0+1.0.0-sesl7+rev0")
-    implementation("sesl.androidx.appcompat:appcompat:1.7.0+1.0.47000-sesl7+rev1")
+    implementation("sesl.androidx.appcompat:appcompat:1.7.1+1.0.47000-sesl7+rev0")
     //SESL Material Components + Design Lib + Icons
     implementation("sesl.com.google.android.material:material:1.12.0+1.0.39-sesl7+rev4")
     implementation("io.github.tribalfs:oneui-design:0.5.16+oneui7")
