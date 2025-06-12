@@ -1,0 +1,47 @@
+name: Publish Common Utils Package
+
+on:
+  push:
+    branches: [main]
+    paths: ['build.gradle.kts']
+
+jobs:
+  check-and-publish:
+    env:
+      GH_USERNAME: ${{ secrets.GH_USERNAME }}
+      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Check if version changed
+        id: check_version
+        run: |
+          # Get the previous commit hash on main
+          PREV_COMMIT=$(git rev-parse HEAD^)
+          # Extract the line from both versions
+          OLD_LINE=$(git show $PREV_COMMIT:build.gradle.kts | grep 'versionName =')
+          NEW_LINE=$(grep 'versionName =' build.gradle.kts)
+          echo "Old: $OLD_LINE"
+          echo "New: $NEW_LINE"
+          if [ "$OLD_LINE" != "$NEW_LINE" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to GitHub Packages
+        if: steps.check_version.outputs.changed == 'true'
+        run: |
+          chmod +x ./gradlew
+          ./gradlew publishAllPublicationsToGitHubPackagesRepository
