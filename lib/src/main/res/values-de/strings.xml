@@ -24,6 +24,7 @@
     <string name="no_entry">Kein Eintrag</string>
     <string name="custom">Benutzerdefiniert</string>
     <string name="reset">Zurücksetzen</string>
+    <string name="tip">Tipp</string>
     <string name="dont_show_again">Nicht mehr anzeigen</string>
 
     <string name="openInStore">Im Store Öffnen</string>

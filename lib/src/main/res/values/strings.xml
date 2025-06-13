@@ -41,6 +41,7 @@
     <string name="no_entry">No entry</string>
     <string name="custom">Custom</string>
     <string name="reset">Reset</string>
+    <string name="tip">Tip</string>
     <string name="dont_show_again">Don\'t show again</string>
 
     <string name="openInStore">Open in Store</string>
