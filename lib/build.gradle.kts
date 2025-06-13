@@ -41,7 +41,7 @@ dependencies {
     implementation("sesl.androidx.appcompat:appcompat:1.7.1+1.0.47000-sesl7+rev0")
     //SESL Material Components + Design Lib + Icons
     implementation("sesl.com.google.android.material:material:1.12.0+1.0.39-sesl7+rev5")
-    implementation("io.github.tribalfs:oneui-design:0.6.3+oneui7")
+    implementation("io.github.tribalfs:oneui-design:0.6.4+oneui7")
     implementation("io.github.oneuiproject:icons:1.1.0")
 
     implementation("com.airbnb.android:lottie:6.6.6")
