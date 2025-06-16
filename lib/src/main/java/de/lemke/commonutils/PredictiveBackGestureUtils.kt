@@ -103,7 +103,7 @@ fun AppCompatActivity.setCustomBackAnimation(
 
             // Shift horizontally.
             val maxTranslationX = (animatedView.width / 20) - predictiveBackMargin
-            animatedView.translationX = progress * maxTranslationX * (if (backEvent.swipeEdge == EDGE_LEFT) 1 else -1)
+            animatedView.translationX = progress * maxTranslationX * if (backEvent.swipeEdge == EDGE_LEFT) 1 else -1
 
             // Shift vertically.
             val maxTranslationY = (animatedView.height / 20) - predictiveBackMargin
