@@ -204,7 +204,7 @@ class AboutMeActivity : AppCompatActivity() {
     private fun updateCallbackState(enable: Boolean? = null) {
         if (isBackProgressing) return
         callbackIsActive.value =
-            (enable ?: (binding.aboutAppBar.seslIsCollapsed() && isPortrait(resources.configuration) && !isInMultiWindowModeCompat))
+            enable ?: (binding.aboutAppBar.seslIsCollapsed() && isPortrait(resources.configuration) && !isInMultiWindowModeCompat)
         crossActivityCallbackIsActive.value = !callbackIsActive.value
     }
 
