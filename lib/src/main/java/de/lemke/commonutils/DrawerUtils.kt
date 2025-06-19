@@ -5,6 +5,7 @@ package de.lemke.commonutils
 import android.widget.ImageButton
 import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
+import de.lemke.commonutils.ui.activity.AboutActivity
 import dev.oneuiproject.oneui.layout.NavDrawerLayout
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import dev.oneuiproject.oneui.R as iconsR

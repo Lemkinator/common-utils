@@ -5,8 +5,8 @@ package de.lemke.commonutils
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
-import de.lemke.commonutils.widget.DimmingView
-import de.lemke.commonutils.widget.TouchBlockingView
+import de.lemke.commonutils.ui.widget.DimmingView
+import de.lemke.commonutils.ui.widget.TouchBlockingView
 import dev.oneuiproject.oneui.ktx.activity
 import dev.oneuiproject.oneui.widget.TipPopup
 import dev.oneuiproject.oneui.design.R as designR

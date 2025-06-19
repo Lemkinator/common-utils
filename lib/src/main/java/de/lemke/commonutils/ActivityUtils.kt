@@ -4,6 +4,8 @@ package de.lemke.commonutils
 
 import android.app.Activity
 import android.text.SpannableString
+import de.lemke.commonutils.ui.activity.AboutActivity
+import de.lemke.commonutils.ui.activity.AboutMeActivity
 
 private const val TAG = "ActivityUtils"
 

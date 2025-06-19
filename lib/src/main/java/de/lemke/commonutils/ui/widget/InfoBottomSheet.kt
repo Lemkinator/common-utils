@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package de.lemke.commonutils.widget
+package de.lemke.commonutils.ui.widget
 
 import android.content.DialogInterface
 import android.os.Bundle

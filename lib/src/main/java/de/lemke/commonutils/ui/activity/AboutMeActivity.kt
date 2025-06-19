@@ -1,4 +1,4 @@
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.activity
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -15,7 +15,14 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
+import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityAboutMeBinding
+import de.lemke.commonutils.openApp
+import de.lemke.commonutils.openURL
+import de.lemke.commonutils.prepareActivityTransformationTo
+import de.lemke.commonutils.sendEmailAboutMe
+import de.lemke.commonutils.setCustomBackAnimation
+import de.lemke.commonutils.shareApp
 import dev.oneuiproject.oneui.ktx.invokeOnBack
 import dev.oneuiproject.oneui.ktx.isInMultiWindowModeCompat
 import dev.oneuiproject.oneui.ktx.semSetToolTipText

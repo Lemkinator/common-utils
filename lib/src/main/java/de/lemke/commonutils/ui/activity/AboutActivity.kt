@@ -1,4 +1,4 @@
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.activity
 
 import android.content.Intent
 import android.graphics.Color.TRANSPARENT
@@ -24,7 +24,11 @@ import com.google.android.play.core.install.model.AppUpdateType.IMMEDIATE
 import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
+import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityAboutBinding
+import de.lemke.commonutils.openApp
+import de.lemke.commonutils.prepareActivityTransformationTo
+import de.lemke.commonutils.setCustomBackAnimation
 import dev.oneuiproject.oneui.ktx.onMultiClick
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoConnection

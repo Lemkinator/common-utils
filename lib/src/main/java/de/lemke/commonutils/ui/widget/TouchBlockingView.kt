@@ -1,4 +1,4 @@
-package de.lemke.commonutils.widget
+package de.lemke.commonutils.ui.widget
 
 import android.content.Context
 import android.util.AttributeSet
