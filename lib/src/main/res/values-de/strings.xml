@@ -17,6 +17,8 @@
     <string name="info">Info</string>
     <string name="error">Fehler</string>
     <string name="error_unknown">Unbekannter Fehler</string>
+    <string name="light">Hell</string>
+    <string name="dark">Dunkel</string>
     <string name="experimental">Experimentell</string>
     <string name="new_badge_text">NEU</string>
     <string name="delete">Löschen</string>
