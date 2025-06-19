@@ -27,16 +27,16 @@ fun Context.sendEmail(emails: Array<String>, subject: String, text: String, noEm
     true
 } catch (e: Exception) {
     e.printStackTrace()
-    toast(noEmailAppInstalledText ?: getString(R.string.no_email_app_installed))
+    toast(noEmailAppInstalledText ?: getString(R.string.commonutils_no_email_app_installed))
     false
 }
 
 fun Context.sendEmailHelp(email: String, subject: String, noEmailAppInstalledText: String? = null): Boolean =
-    sendEmail(email, subject, getString(R.string.help_email_text), noEmailAppInstalledText)
+    sendEmail(email, subject, getString(R.string.commonutils_help_email_text), noEmailAppInstalledText)
 
 fun Context.sendEmailAboutMe(email: String, subject: String, noEmailAppInstalledText: String? = null): Boolean =
-    sendEmail(email, subject, getString(R.string.about_email_text), noEmailAppInstalledText)
+    sendEmail(email, subject, getString(R.string.commonutils_about_email_text), noEmailAppInstalledText)
 
 fun Fragment.sendEmailBugReport(email: String, subject: String, noEmailAppInstalledText: String? = null): Boolean =
-    requireContext().sendEmail(email, subject, getString(R.string.bug_report_email_text), noEmailAppInstalledText)
+    requireContext().sendEmail(email, subject, getString(R.string.commonutils_bug_report_email_text), noEmailAppInstalledText)
 

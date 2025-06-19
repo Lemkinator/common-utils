@@ -43,7 +43,7 @@ enum class SaveLocation {
     }
 
     fun toLocalizedString(context: Context): String = when (this) {
-        CUSTOM -> context.getString(R.string.custom)
+        CUSTOM -> context.getString(R.string.commonutils_custom)
         DOWNLOADS -> "Downloads"
         PICTURES -> "Pictures"
         DCIM -> "DCIM"
@@ -72,11 +72,11 @@ fun Context.exportBitmap(
         }
         Files.newOutputStream(File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath())
             .use<OutputStream, Boolean> { bitmap.compress(PNG, 100, it) }
-        toast(getString(R.string.image_saved) + ": ${saveLocation.toLocalizedString(this)}")
+        toast(getString(R.string.commonutils_image_saved) + ": ${saveLocation.toLocalizedString(this)}")
         true
     } catch (e: Exception) {
         e.printStackTrace()
-        toast(R.string.error_creating_file)
+        toast(R.string.commonutils_error_creating_file)
         false
     }
 } else try {
@@ -88,23 +88,23 @@ fun Context.exportBitmap(
     true
 } catch (e: Exception) {
     e.printStackTrace()
-    toast(R.string.error_saving_content_is_not_supported_on_device)
+    toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
     false
 }
 
 fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?): Boolean = try {
     contentResolver.openOutputStream(uri!!)!!.use { outputStream ->
         if (bitmap?.compress(PNG, 100, outputStream) == true) {
-            toast(R.string.image_saved)
+            toast(R.string.commonutils_image_saved)
             true
         } else {
-            toast(R.string.error_saving_image)
+            toast(R.string.commonutils_error_saving_image)
             false
         }
     }
 } catch (e: Exception) {
     e.printStackTrace()
-    toast(R.string.error_creating_file)
+    toast(R.string.commonutils_error_creating_file)
     false
 }
 

@@ -29,10 +29,10 @@ fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResI
 
 fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, delete: String? = null): Boolean {
     val dialog = AlertDialog.Builder(requireContext())
-        .setTitle(title ?: getString(R.string.delete_appdata_and_exit))
-        .setMessage(message ?: getString(R.string.delete_appdata_and_exit_warning))
+        .setTitle(title ?: getString(R.string.commonutils_delete_appdata_and_exit))
+        .setMessage(message ?: getString(R.string.commonutils_delete_appdata_and_exit_warning))
         .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
-        .setPositiveButton(delete ?: getString(R.string.delete), null)
+        .setPositiveButton(delete ?: getString(R.string.commonutils_delete), null)
         .create()
     dialog.show()
     dialog.getButton(BUTTON_POSITIVE).apply {

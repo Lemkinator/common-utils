@@ -25,6 +25,7 @@ import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_T
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
 import de.lemke.commonutils.R
+import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.databinding.ActivityAboutBinding
 import de.lemke.commonutils.openApp
 import de.lemke.commonutils.prepareActivityTransformationTo
@@ -80,17 +81,17 @@ class AboutActivity : AppCompatActivity() {
         val version: TextView = binding.appInfoLayout.findViewById(designR.id.app_info_version)
         lifecycleScope.launch { setVersionTextView(version) }
         version.onMultiClick {
-            lifecycleScope.launch {
-                devModeEnabled = !devModeEnabled
-                setVersionTextView(version)
-                onDevModeChanged(devModeEnabled)
-            }
+            commonUtilsSettings.devModeEnabled = !commonUtilsSettings.devModeEnabled
+            setVersionTextView(version)
         }
     }
 
-    private suspend fun setVersionTextView(textView: TextView) {
-        appVersion.ifBlank { getAppVersion() }.let { appVersion ->
-            textView.text = getString(designR.string.oui_des_version_info, appVersion + if (devModeEnabled) " (dev)" else "")
+    private fun setVersionTextView(textView: TextView) {
+        lifecycleScope.launch {
+            appVersion.ifBlank { getAppVersion() }.let { appVersion ->
+                textView.text =
+                    getString(designR.string.oui_des_version_info, appVersion + if (commonUtilsSettings.devModeEnabled) " (dev)" else "")
+            }
         }
     }
 
@@ -155,7 +156,5 @@ class AboutActivity : AppCompatActivity() {
         var appVersion = ""
         var getAppVersion = suspend { "" }
         var optionalText = SpannableString("")
-        var devModeEnabled = false
-        var onDevModeChanged: suspend (Boolean) -> Unit = {}
     }
 }

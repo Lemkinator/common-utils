@@ -1,100 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="no_email_app_installed">Keine E-Mail-App installiert…</string>
-    <string name="no_browser_app_installed">Keine Browser-App installiert…</string>
-    <string name="error_cant_open_url">Fehler: URL konnte nicht geöffnet werden.</string>
-    <string name="error_cant_open_app">Fehler: App konnte nicht geöffnet werden.</string>
-    <string name="error_cant_open_app_settings">Fehler: App-Einstellungen konnten nicht geöffnet werden.</string>
-    <string name="image_saved">Bild gespeichert</string>
-    <string name="error_saving_image">Fehler beim Speichern des Bildes</string>
-    <string name="error_creating_file">Fehler beim Erstellen der Datei</string>
-    <string name="error_share_content_not_supported_on_device">Fehler: Das Teilen von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
-    <string name="error_saving_content_is_not_supported_on_device">Fehler: Das Speichern von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
-
-    <string name="yes">Ja</string>
-    <string name="no">Nein</string>
-    <string name="warning">Warnung</string>
-    <string name="info">Info</string>
-    <string name="error">Fehler</string>
-    <string name="error_unknown">Unbekannter Fehler</string>
-    <string name="light">Hell</string>
-    <string name="dark">Dunkel</string>
-    <string name="experimental">Experimentell</string>
-    <string name="new_badge_text">NEU</string>
-    <string name="delete">Löschen</string>
-    <string name="copied_to_clipboard">In Zwischenablage kopiert</string>
-    <string name="no_entry">Kein Eintrag</string>
-    <string name="custom">Benutzerdefiniert</string>
-    <string name="reset">Zurücksetzen</string>
-    <string name="tip">Tipp</string>
-    <string name="dont_show_again">Nicht mehr anzeigen</string>
-
-    <string name="openInStore">Im Store Öffnen</string>
-    <string name="openOnPhone">Auf Telefon Öffnen</string>
-
     <!--sesl???-->
-    <string name="search">Suche</string>
-    <string name="settings">Einstellungen</string>
+    <string name="commonutils_search">Suche</string>
+    <string name="commonutils_settings">Einstellungen</string>
 
     <!--OOBE-->
-    <string name="tos">Nutzungsbedingungen</string>
-    <string name="tos_content">Es ist nicht gestattet, diese App entgegen den guten Sitten oder den geltenden Gesetzen zu verwenden. \n\nSie verpflichten sich außerdem, diese App nicht für Zwecke zu verwenden, die nach dem Recht der Vereinigten Staaten verboten sind, insbesondere nicht für die Entwicklung, Konstruktion, Herstellung oder Produktion von Raketen, chemischen oder biologischen Waffen. \nDiese Einschränkung gilt jedoch nicht für den Fall, dass eine weit verbreitete Virusinfektion auftritt (die von den United States Centers for Disease Control oder einer Nachfolgeorganisation bestätigt wurde), die durch Bisse oder Kontakt mit Körperflüssigkeiten übertragen wird und dazu führt, dass menschliche Leichen wiederbelebt werden und versuchen, lebendes menschliches Fleisch, Blut, Gehirn oder Nervengewebe zu verzehren, und die wahrscheinlich zum Untergang der organisierten Zivilisation führen wird. \n\nEine besondere Gegenleistung, die eine finanzielle Entschädigung beinhalten kann, wird einer begrenzten Anzahl von Nutzern angeboten, die diesen Abschnitt der Nutzungsbedingungen lesen und mich unter eine-email-an-diese-adresse-zu-schreiben-wird-sie-10-euro-kosten@leonard-lemke.com kontaktieren. Dieses Angebot kann jederzeit und ohne Vorankündigung zurückgezogen werden. \n\nWeitere Fragen werden unter diese-email-ist-viel-zu-lang-und-hoffentlich-koennen-sie-nicht-kopieren-und-einfuegen@leonard-lemke.com beantwortet.</string>
-    <string name="oobe_tos_text">Durch die Nutzung der App stimmen Sie den %1$s zu.</string>
+    <string name="commonutils_tos">Nutzungsbedingungen</string>
+    <string name="commonutils_tos_content">Es ist nicht gestattet, diese App entgegen den guten Sitten oder den geltenden Gesetzen zu verwenden. \n\nSie verpflichten sich außerdem, diese App nicht für Zwecke zu verwenden, die nach dem Recht der Vereinigten Staaten verboten sind, insbesondere nicht für die Entwicklung, Konstruktion, Herstellung oder Produktion von Raketen, chemischen oder biologischen Waffen. \nDiese Einschränkung gilt jedoch nicht für den Fall, dass eine weit verbreitete Virusinfektion auftritt (die von den United States Centers for Disease Control oder einer Nachfolgeorganisation bestätigt wurde), die durch Bisse oder Kontakt mit Körperflüssigkeiten übertragen wird und dazu führt, dass menschliche Leichen wiederbelebt werden und versuchen, lebendes menschliches Fleisch, Blut, Gehirn oder Nervengewebe zu verzehren, und die wahrscheinlich zum Untergang der organisierten Zivilisation führen wird. \n\nEine besondere Gegenleistung, die eine finanzielle Entschädigung beinhalten kann, wird einer begrenzten Anzahl von Nutzern angeboten, die diesen Abschnitt der Nutzungsbedingungen lesen und mich unter eine-email-an-diese-adresse-zu-schreiben-wird-sie-10-euro-kosten@leonard-lemke.com kontaktieren. Dieses Angebot kann jederzeit und ohne Vorankündigung zurückgezogen werden. \n\nWeitere Fragen werden unter diese-email-ist-viel-zu-lang-und-hoffentlich-koennen-sie-nicht-kopieren-und-einfuegen@leonard-lemke.com beantwortet.</string>
+    <string name="commonutils_oobe_tos_text">Durch die Nutzung der App stimmen Sie den %1$s zu.</string>
 
     <!--Help-->
-    <string name="help">Hilfe</string>
-    <string name="contact_me">Kontaktier mich (E-Mail)</string>
+    <string name="commonutils_help">Hilfe</string>
+    <string name="commonutils_contact_me">Kontaktier mich (E-Mail)</string>
 
     <!--About-->
-    <string name="open_in_playstore">In Play Store öffnen</string>
-    <string name="open_source_licenses">Open-Source-Lizenzen</string>
+    <string name="commonutils_open_in_playstore">In Play Store öffnen</string>
+    <string name="commonutils_open_source_licenses">Open-Source-Lizenzen</string>
 
     <!--AboutMe-->
-    <string name="about_me">Über mich</string>
-    <string name="write_email">E-Mail schreiben</string>
-    <string name="website">Webseite</string>
-    <string name="support_me_text">Falls du mich in irgendeiner Weise unterstützen möchtest, dann sende mir gerne eine E-Mail</string>
-    <string name="support_me">Unterstütz mich</string>
-    <string name="rate_app">App im Play-Store Bewerten</string>
-    <string name="write_review">Bewertung schreiben</string>
-    <string name="share">Teilen</string>
-    <string name="share_app">App teilen</string>
-    <string name="useful_links">Nützliche Links</string>
-    <string name="credits">Credits</string>
-    <string name="playstore_ad">WERBUNG!!!&#129313;&#129396;</string>
-    <string name="playstore_redirect_message">Laut Google Play handelt es sich hierbei um \"Irreführende Werbung, welche die Benutzeroberfläche einer App-Funktion simuliert oder nachahmt\"… Weil App-Updates andernfalls von Google Play abgelehnt werden, hier ein Hinweis: Dieser Button führt (überaschenderweise?&#129313;) zu meiner Entwicklerseite bei Google Play, fortfahren?</string>
+    <string name="commonutils_about_me">Über mich</string>
+    <string name="commonutils_write_email">E-Mail schreiben</string>
+    <string name="commonutils_website">Webseite</string>
+    <string name="commonutils_support_me_text">Falls du mich in irgendeiner Weise unterstützen möchtest, dann sende mir gerne eine E-Mail</string>
+    <string name="commonutils_support_me">Unterstütz mich</string>
+    <string name="commonutils_rate_app">App im Play-Store Bewerten</string>
+    <string name="commonutils_write_review">Bewertung schreiben</string>
+    <string name="commonutils_share">Teilen</string>
+    <string name="commonutils_share_app">App teilen</string>
+    <string name="commonutils_useful_links">Nützliche Links</string>
+    <string name="commonutils_credits">Credits</string>
+    <string name="commonutils_playstore_ad">WERBUNG!!!&#129313;&#129396;</string>
+    <string name="commonutils_playstore_redirect_message">Laut Google Play handelt es sich hierbei um \"Irreführende Werbung, welche die Benutzeroberfläche einer App-Funktion simuliert oder nachahmt\"… Weil App-Updates andernfalls von Google Play abgelehnt werden, hier ein Hinweis: Dieser Button führt (überaschenderweise?&#129313;) zu meiner Entwicklerseite bei Google Play, fortfahren?</string>
 
     <!--Settings-->
-    <string name="design">Design</string>
-    <string name="system_default">Systemeinstellung</string>
-    <string name="general">Allgemein</string>
-    <string name="language">Sprache</string>
-    <string name="change_language">App Sprache ändern</string>
-    <string name="change_language_not_supported_by_device">Das Ändern der Sprache wird von diesem Gerät nicht unterstützt.</string>
-    <string name="delete_appdata_and_exit">App-Daten löschen und Beenden</string>
-    <string name="delete_appdata_and_exit_warning">Achtung: Dadurch werden alle persönlichen Daten gelöscht. Fortfahren? </string>
-    <string name="dev_options">Developer options</string>
-    <string name="more_information">Mehr Informationen</string>
-    <string name="privacy_policy">Datenschutzrichtlinie</string>
-    <string name="report_bug">Bug oder Verbesserung melden</string>
+    <string name="commonutils_design">Design</string>
+    <string name="commonutils_system_default">Systemeinstellung</string>
+    <string name="commonutils_general">Allgemein</string>
+    <string name="commonutils_language">Sprache</string>
+    <string name="commonutils_change_language">App Sprache ändern</string>
+    <string name="commonutils_change_language_not_supported_by_device">Das Ändern der Sprache wird von diesem Gerät nicht unterstützt.</string>
+    <string name="commonutils_image_save_location">Dateispeicherort für Bilder</string>
+    <string name="commonutils_delete_appdata_and_exit">App-Daten löschen und Beenden</string>
+    <string name="commonutils_delete_appdata_and_exit_warning">Achtung: Dadurch werden alle persönlichen Daten gelöscht. Fortfahren? </string>
+    <string name="commonutils_dev_options">Developer options</string>
+    <string name="commonutils_more_information">Mehr Informationen</string>
+    <string name="commonutils_privacy_policy">Datenschutzrichtlinie</string>
+    <string name="commonutils_report_bug">Bug oder Verbesserung melden</string>
 
-    <string name="history">Verlauf</string>
-    <string name="delete_history">Verlauf löschen</string>
-    <string name="delete_history_message">Verlauf wirklich löschen?</string>
+    <!--Mute/DND-->
+    <string name="commonutils_phone_settings">Telefon-Einstellungen</string>
+    <string name="commonutils_mute_all_audio_streams">Alle Audio-Streams stummschalten</string>
+    <string name="commonutils_dnd">Bitte-Nicht-Stören</string>
+    <string name="commonutils_dnd_summary">Bitte-Nicht-Stören Modus aktivieren/deaktivieren</string>
+    <string name="commonutils_dnd_activated">Bitte-Nicht-Stören Modus wurde aktiviert</string>
+    <string name="commonutils_dnd_deactivated">Bitte-Nicht-Stören Modus wurde deaktiviert</string>
+    <string name="commonutils_mute">Stummschalten</string>
+    <string name="commonutils_failed_to_mute_streams">Hoppla, ich habs nicht geschafft alles Stummzuschalten…</string>
+    <string name="commonutils_need_access">Berechtigung benötigt</string>
+    <string name="commonutils_need_access_dnd">Um den \"Bitte-Nicht-Stören\"-Modus zu aktivieren, benötigt die App die \"Nicht-Stören\"-Berechtigung</string>
+    <string name="commonutils_grant_access">Berechtigung erteilen</string>
 
-    <string name="phone_settings">Telefon-Einstellungen</string>
-    <string name="mute_all_audio_streams">Alle Audio-Streams stummschalten</string>
-    <string name="dnd">Bitte-Nicht-Stören</string>
-    <string name="dnd_description">Bitte-Nicht-Stören Modus aktivieren/deaktivieren</string>
-    <string name="dnd_activated">Bitte-Nicht-Stören Modus wurde aktiviert</string>
-    <string name="dnd_deactivated">Bitte-Nicht-Stören Modus wurde deaktiviert</string>
-    <string name="mute">Stummschalten</string>
-    <string name="failed_to_mute_streams">Hoppla, ich habs nicht geschafft alles Stummzuschalten…</string>
-    <string name="need_access">Berechtigung benötigt</string>
-    <string name="need_access_dnd">Um den \"Bitte-Nicht-Stören\"-Modus zu aktivieren, benötigt die App die \"Nicht-Stören\"-Berechtigung</string>
-    <string name="grant_access">Berechtigung erteilen</string>
+    <!--Error-->
+    <string name="commonutils_no_email_app_installed">Keine E-Mail-App installiert…</string>
+    <string name="commonutils_no_browser_app_installed">Keine Browser-App installiert…</string>
+    <string name="commonutils_error_cant_open_url">Fehler: URL konnte nicht geöffnet werden.</string>
+    <string name="commonutils_error_cant_open_app">Fehler: App konnte nicht geöffnet werden.</string>
+    <string name="commonutils_error_cant_open_app_settings">Fehler: App-Einstellungen konnten nicht geöffnet werden.</string>
+    <string name="commonutils_error_saving_image">Fehler beim Speichern des Bildes</string>
+    <string name="commonutils_error_creating_file">Fehler beim Erstellen der Datei</string>
+    <string name="commonutils_error_share_content_not_supported_on_device">Fehler: Das Teilen von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
+    <string name="commonutils_error_saving_content_is_not_supported_on_device">Fehler: Das Speichern von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
+    <string name="commonutils_error_no_valid_file_selected">Keine gültige Datei ausgewählt</string>
+    <string name="commonutils_error_loading_apps">Fehler beim Laden der Apps</string>
+    <string name="commonutils_error_app_not_found">App nicht gefunden</string>
 
-    <string name="help_email_text">Wow, das ist mit Abstand die beste App, die ich je benutzt habe!</string>
-    <string name="about_email_text">Das ist die beste App, die ich je in meinem Leben gesehen habe!</string>
-    <string name="bug_report_email_text">Ich kann mir keine bessere App als diese vorstellen - sie ist perfekt und braucht keine Verbesserungen. Aber hier ist trotzdem ein Fehlerbericht: </string>
+    <!--General-->
+    <string name="commonutils_yes">Ja</string>
+    <string name="commonutils_no">Nein</string>
+    <string name="commonutils_warning">Warnung</string>
+    <string name="commonutils_info">Info</string>
+    <string name="commonutils_error">Fehler</string>
+    <string name="commonutils_error_unknown">Unbekannter Fehler</string>
+    <string name="commonutils_light">Hell</string>
+    <string name="commonutils_dark">Dunkel</string>
+    <string name="commonutils_experimental">Experimentell</string>
+    <string name="commonutils_new_badge_text">NEU</string>
+    <string name="commonutils_delete">Löschen</string>
+    <string name="commonutils_copied_to_clipboard">In Zwischenablage kopiert</string>
+    <string name="commonutils_no_entry">Kein Eintrag</string>
+    <string name="commonutils_custom">Benutzerdefiniert</string>
+    <string name="commonutils_reset">Zurücksetzen</string>
+    <string name="commonutils_tip">Tipp</string>
+    <string name="commonutils_dont_show_again">Nicht mehr anzeigen</string>
+
+    <string name="commonutils_history">Verlauf</string>
+    <string name="commonutils_delete_history">Verlauf löschen</string>
+    <string name="commonutils_delete_history_message">Verlauf wirklich löschen?</string>
+    <string name="commonutils_image_saved">Bild gespeichert</string>
+    <string name="commonutils_save_as_image">Als Bild speichern</string>
+    <string name="commonutils_background">Hintergrund</string>
+    <string name="commonutils_foreground">Vordergrund</string>
+    <string name="commonutils_masked">Maskiert</string>
+    <string name="commonutils_color">Farbe</string>
+    <string name="commonutils_size">Größe</string>
+
+    <string name="commonutils_search_apps">Apps suchen</string>
+    <string name="commonutils_show_system_apps">System Apps anzeigen</string>
+    <string name="commonutils_hide_system_apps">System Apps ausblenden</string>
+
+    <string name="commonutils_help_email_text">Wow, das ist mit Abstand die beste App, die ich je benutzt habe!</string>
+    <string name="commonutils_about_email_text">Das ist die beste App, die ich je in meinem Leben gesehen habe!</string>
+    <string name="commonutils_bug_report_email_text">Ich kann mir keine bessere App als diese vorstellen - sie ist perfekt und braucht keine Verbesserungen. Aber hier ist trotzdem ein Fehlerbericht: </string>
+
+    <!--Other-->
+    <string name="commonutils_openInStore">Im Store Öffnen</string>
+    <string name="commonutils_openOnPhone">Auf Telefon Öffnen</string>
+
 </resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="@string/commonutils_general">
+
+        <PreferenceScreen
+            android:key="language_pref"
+            android:summary="@string/commonutils_change_language"
+            android:title="@string/commonutils_language"
+            app:isPreferenceVisible="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

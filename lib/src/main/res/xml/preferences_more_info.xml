@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/commonutils_more_information">
+        <PreferenceScreen
+            android:key="tos_pref"
+            android:title="@string/commonutils_tos" />
+
+        <PreferenceScreen
+            android:key="privacy_pref"
+            android:title="@string/commonutils_privacy_policy" />
+
+        <PreferenceScreen
+            android:key="report_bug_pref"
+            android:title="@string/commonutils_report_bug" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

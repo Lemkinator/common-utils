@@ -32,7 +32,7 @@ fun Fragment.shareApp(): Boolean = requireContext().shareApp()
 fun Context.shareApp(): Boolean = safeStartActivity(Intent.createChooser(Intent().apply {
     action = ACTION_SEND
     type = MIME_TYPE_TEXT
-    putExtra(EXTRA_TEXT, getString(R.string.playstore_link) + packageName)
+    putExtra(EXTRA_TEXT, getString(R.string.commonutils_playstore_link) + packageName)
 }, null))
 
 fun Fragment.shareText(text: String, title: String? = null): Boolean = requireContext().shareText(text, title)
@@ -51,7 +51,7 @@ fun Fragment.copyToClipboard(text: String, label: String): Boolean = requireCont
 
 fun Context.copyToClipboard(text: String, label: String): Boolean {
     (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText(label, text))
-    toast(R.string.copied_to_clipboard)
+    toast(R.string.commonutils_copied_to_clipboard)
     return true
 }
 
@@ -60,7 +60,7 @@ fun Context.copyToClipboard(bitmap: Bitmap, label: String, shareFileName: String
     bitmap.compress(PNG, 100, cacheFile.outputStream())
     val clip = ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this))
     (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
-    toast(R.string.copied_to_clipboard)
+    toast(R.string.commonutils_copied_to_clipboard)
     return true
 }
 
@@ -88,7 +88,7 @@ fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = n
     true
 } catch (e: Exception) {
     e.printStackTrace()
-    context.toast(R.string.error_share_content_not_supported_on_device)
+    context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
     false
 }
 
@@ -157,7 +157,7 @@ private inline fun Context.safeStartActivity(intent: Intent): Boolean {
     } catch (e: Exception) {
         e.printStackTrace()
         Log.e(TAG, "Failed to start activity: ${e.message}")
-        toast(R.string.error_share_content_not_supported_on_device)
+        toast(R.string.commonutils_error_share_content_not_supported_on_device)
         return false
     }
 }

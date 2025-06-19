@@ -50,7 +50,7 @@ private fun View.showTipPopup(
     setExpanded(true)
     setBackgroundColorWithAlpha(context.getColor(designR.color.oui_des_background_color))
     setOnDismissListener { rootView.removeView(backgroundView) }
-    setAction(actionText ?: context.getString(R.string.ok)) { rootView.removeView(backgroundView); action() }
+    setAction(actionText ?: context.getString(R.string.commonutils_ok)) { rootView.removeView(backgroundView); action() }
     show()
 }
 

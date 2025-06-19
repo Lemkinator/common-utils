@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="@string/commonutils_design">
+
+        <dev.oneuiproject.oneui.preference.HorizontalRadioPreference
+            android:key="darkMode"
+            app:entries="@array/preferences_darkmode_entries"
+            app:entriesImage="@array/preferences_darkmode_entries_image"
+            app:entryValues="@array/preferences_darkmode_values"
+            app:viewType="image" />
+
+        <SwitchPreferenceCompat
+            android:key="autoDarkMode"
+            android:title="@string/commonutils_system_default" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -26,7 +26,7 @@ fun Fragment.openURL(url: String?, cantOpenURLMessage: String? = null, noBrowser
 fun Context.openURL(url: String?, cantOpenURLMessage: String? = null, noBrowserInstalledMessage: String? = null): Boolean = try {
     if (url.isNullOrBlank()) {
         Log.e(TAG, "link is null or blank")
-        toast(cantOpenURLMessage ?: getString(R.string.error_cant_open_url))
+        toast(cantOpenURLMessage ?: getString(R.string.commonutils_error_cant_open_url))
         false
     } else {
         startActivity(Intent(ACTION_VIEW, url.toUri()))
@@ -34,11 +34,11 @@ fun Context.openURL(url: String?, cantOpenURLMessage: String? = null, noBrowserI
     }
 } catch (e: ActivityNotFoundException) {
     e.printStackTrace()
-    toast(noBrowserInstalledMessage ?: getString(R.string.no_browser_app_installed))
+    toast(noBrowserInstalledMessage ?: getString(R.string.commonutils_no_browser_app_installed))
     false
 } catch (e: Exception) {
     e.printStackTrace()
-    toast(cantOpenURLMessage ?: getString(R.string.error_cant_open_url))
+    toast(cantOpenURLMessage ?: getString(R.string.commonutils_error_cant_open_url))
     false
 }
 
@@ -56,25 +56,25 @@ private fun Context.openAppWithPackageName(packageName: String): Boolean = try {
     } else openAppWithPackageNameOnStore(packageName)
 } catch (e: Exception) {
     e.printStackTrace()
-    toast(getString(R.string.error_cant_open_app))
+    toast(getString(R.string.commonutils_error_cant_open_app))
     false
 }
 
 private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean {
     val intent = Intent(ACTION_VIEW)
-    intent.data = (getString(R.string.playstore_app_link) + packageName).toUri()
+    intent.data = (getString(R.string.commonutils_playstore_app_link) + packageName).toUri()
     try {
         startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
         return true
     } catch (anfe: ActivityNotFoundException) {
         anfe.printStackTrace()
-        intent.data = (getString(R.string.playstore_link) + packageName).toUri()
+        intent.data = (getString(R.string.commonutils_playstore_link) + packageName).toUri()
         try {
             startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
             return true
         } catch (e: Exception) {
             e.printStackTrace()
-            toast(getString(R.string.error_cant_open_app))
+            toast(getString(R.string.commonutils_error_cant_open_app))
             return false
         }
     }
@@ -86,7 +86,7 @@ fun areAppLocalSettingsSupported(): Boolean = SDK_INT >= TIRAMISU
 @RequiresApi(TIRAMISU)
 fun Fragment.openAppLocaleSettings(notSupportedMessage: String? = null): Boolean {
     if (!areAppLocalSettingsSupported()) {
-        toast(notSupportedMessage ?: getString(R.string.change_language_not_supported_by_device))
+        toast(notSupportedMessage ?: getString(R.string.commonutils_change_language_not_supported_by_device))
         return false
     }
     try {
@@ -94,7 +94,7 @@ fun Fragment.openAppLocaleSettings(notSupportedMessage: String? = null): Boolean
         return true
     } catch (e: ActivityNotFoundException) {
         e.printStackTrace()
-        toast(notSupportedMessage ?: getString(R.string.change_language_not_supported_by_device))
+        toast(notSupportedMessage ?: getString(R.string.commonutils_change_language_not_supported_by_device))
         return false
     }
 }
@@ -107,7 +107,7 @@ fun Context.openApplicationSettings(): Boolean = try {
     true
 } catch (e: Exception) {
     e.printStackTrace()
-    toast(R.string.error_cant_open_app_settings)
+    toast(R.string.commonutils_error_cant_open_app_settings)
     false
 }
 

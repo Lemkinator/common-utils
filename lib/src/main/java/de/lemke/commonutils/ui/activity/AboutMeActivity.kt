@@ -140,11 +140,11 @@ class AboutMeActivity : AppCompatActivity() {
         val icon = AppCompatResources.getDrawable(this, R.drawable.me4_round)
         binding.aboutHeaderIcon.setImageDrawable(icon)
         binding.aboutBottomIcon.setImageDrawable(icon)
-        binding.aboutHeaderGithub.semSetToolTipText(getString(R.string.github))
-        binding.aboutHeaderPlayStore.semSetToolTipText(getString(R.string.playstore))
-        binding.aboutHeaderWebsite.semSetToolTipText(getString(R.string.website))
-        binding.aboutHeaderInsta.semSetToolTipText(getString(R.string.instagram))
-        binding.aboutHeaderTiktok.semSetToolTipText(getString(R.string.tiktok))
+        binding.aboutHeaderGithub.semSetToolTipText(getString(R.string.commonutils_github))
+        binding.aboutHeaderPlayStore.semSetToolTipText(getString(R.string.commonutils_playstore))
+        binding.aboutHeaderWebsite.semSetToolTipText(getString(R.string.commonutils_website))
+        binding.aboutHeaderInsta.semSetToolTipText(getString(R.string.commonutils_instagram))
+        binding.aboutHeaderTiktok.semSetToolTipText(getString(R.string.commonutils_tiktok))
     }
 
     private fun setBottomContentEnabled(enabled: Boolean) {
@@ -156,31 +156,33 @@ class AboutMeActivity : AppCompatActivity() {
 
     private fun openPlayStore() {
         AlertDialog.Builder(this)
-            .setTitle(getString(R.string.playstore_ad))
-            .setMessage(getString(R.string.playstore_redirect_message))
-            .setPositiveButton(getString(R.string.yes)) { _, _ ->
-                openURL(getString(R.string.playstore_developer_page_link))
+            .setTitle(getString(R.string.commonutils_playstore_ad))
+            .setMessage(getString(R.string.commonutils_playstore_redirect_message))
+            .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ ->
+                openURL(getString(R.string.commonutils_playstore_developer_page_link))
             }
             .setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
             .show()
     }
 
     private fun setupOnClickListeners() {
-        binding.aboutHeaderGithub.setOnClickListener { openURL(getString(R.string.my_github)) }
+        binding.aboutHeaderGithub.setOnClickListener { openURL(getString(R.string.commonutils_my_github)) }
         binding.aboutHeaderPlayStore.setOnClickListener { openPlayStore() }
-        binding.aboutHeaderWebsite.setOnClickListener { openURL(getString(R.string.my_website)) }
-        binding.aboutHeaderInsta.setOnClickListener { openURL(getString(R.string.my_insta)) }
-        binding.aboutHeaderTiktok.setOnClickListener { openURL(getString(R.string.rick_roll_troll_link)) }
+        binding.aboutHeaderWebsite.setOnClickListener { openURL(getString(R.string.commonutils_my_website)) }
+        binding.aboutHeaderInsta.setOnClickListener { openURL(getString(R.string.commonutils_my_insta)) }
+        binding.aboutHeaderTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
         with(binding.aboutBottomContent) {
             aboutBottomRelativePlayStore.setOnClickListener { openPlayStore() }
-            aboutBottomRelativeWebsite.setOnClickListener { openURL(getString(R.string.my_website)) }
-            aboutBottomRelativeTiktok.setOnClickListener { openURL(getString(R.string.rick_roll_troll_link)) }
+            aboutBottomRelativeWebsite.setOnClickListener { openURL(getString(R.string.commonutils_my_website)) }
+            aboutBottomRelativeTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
             aboutBottomRateApp.setOnClickListener { openApp(packageName, false) }
             aboutBottomShareApp.setOnClickListener {
                 onShareApp(this@AboutMeActivity)
                 shareApp()
             }
-            aboutBottomWriteEmail.setOnClickListener { sendEmailAboutMe(email, appName, noEmailAppInstalledText) }
+            aboutBottomWriteEmail.setOnClickListener {
+                sendEmailAboutMe(getString(R.string.commonutils_email), getString(R.string.commonutils_app_name), noEmailAppInstalledText)
+            }
         }
     }
 
@@ -216,8 +218,6 @@ class AboutMeActivity : AppCompatActivity() {
     }
 
     companion object {
-        var email = "apps@leonard-lemke.com"
-        var appName = "App"
         var onShareApp: (activity: Activity) -> Unit = {}
         var cantOpenURLMessage: String? = null
         var noBrowserInstalledMessage: String? = null
