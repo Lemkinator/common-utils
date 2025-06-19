@@ -5,8 +5,8 @@
         <item>@drawable/display_help_dark_mode</item>
     </array>
     <string-array name="preferences_darkmode_entries">
-        <item>@string/light</item>
-        <item>@string/dark</item>
+        <item>@string/commonutils_light</item>
+        <item>@string/commonutils_dark</item>
     </string-array>
     <string-array name="preferences_darkmode_values">
         <item>0</item>

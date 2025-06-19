@@ -42,7 +42,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:text="@string/leo"
+                    android:text="@string/commonutils_leo"
                     android:textColor="@color/oui_des_appinfolayout_app_label_text_color"
                     android:textSize="30sp"
                     app:fontFamily="@font/samsungsharpsans_bold" />
@@ -52,7 +52,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:gravity="center"
-                    android:text="@string/leo_job"
+                    android:text="@string/commonutils_leo_job"
                     android:textColor="@color/oui_des_appinfolayout_sub_text_color"
                     android:textSize="14sp" />
 
@@ -146,7 +146,7 @@
                     android:layout_height="38dp"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
-                    android:contentDescription="@string/about_me" />
+                    android:contentDescription="@string/commonutils_about_me" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -160,14 +160,14 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/leo"
+                        android:text="@string/commonutils_leo"
                         android:textColor="@color/oui_des_appinfolayout_app_label_text_color"
                         android:textSize="18sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/leo_job"
+                        android:text="@string/commonutils_leo_job"
                         android:textColor="@color/oui_des_appinfolayout_sub_text_color" />
 
                 </LinearLayout>
