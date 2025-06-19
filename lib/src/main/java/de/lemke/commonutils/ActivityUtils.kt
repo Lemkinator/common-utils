@@ -4,40 +4,23 @@ package de.lemke.commonutils
 
 import android.app.Activity
 import android.text.SpannableString
-import de.lemke.commonutils.ui.activity.AboutActivity
-import de.lemke.commonutils.ui.activity.AboutMeActivity
+import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
+import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
+import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
 private const val TAG = "ActivityUtils"
 
-fun setupCommonActivities(
-    appVersion: String,
-    optionalText: String,
-    onShareApp: (activity: Activity) -> Unit = {},
-    cantOpenURLMessage: String? = null,
-    noBrowserInstalledMessage: String? = null,
-    noEmailAppInstalledText: String? = null,
-) = setupCommonActivities(
-    appVersion,
-    SpannableString(optionalText),
-    onShareApp,
-    cantOpenURLMessage,
-    noBrowserInstalledMessage,
-    noEmailAppInstalledText,
-)
+fun setupCommonUtilsSettingsActivity(preferences: List<Int>) {
+    CommonUtilsSettingsActivity.Companion.preferences = preferences
+}
 
-fun setupCommonActivities(
-    appVersion: String,
-    optionalText: SpannableString,
+fun setupAboutMeActivity(
     onShareApp: (activity: Activity) -> Unit = {},
     cantOpenURLMessage: String? = null,
     noBrowserInstalledMessage: String? = null,
     noEmailAppInstalledText: String? = null,
 ) {
-    AboutActivity.Companion.apply {
-        this.appVersion = appVersion
-        this.optionalText = optionalText
-    }
-    AboutMeActivity.Companion.apply {
+    CommonUtilsAboutMeActivity.Companion.apply {
         this.onShareApp = onShareApp
         this.cantOpenURLMessage = cantOpenURLMessage
         this.noBrowserInstalledMessage = noBrowserInstalledMessage
@@ -45,11 +28,16 @@ fun setupCommonActivities(
     }
 }
 
-fun setupAboutActivityWithGetVersion(
-    getAppVersion: suspend () -> String,
-    optionalText: String,
-) {
-    AboutActivity.Companion.apply {
+fun setupAboutActivity(appVersion: String, optionalText: String) = setupAboutActivity(appVersion, SpannableString(optionalText))
+fun setupAboutActivity(appVersion: String, optionalText: SpannableString? = null) {
+    CommonUtilsAboutActivity.Companion.apply {
+        this.appVersion = appVersion
+        this.optionalText = optionalText
+    }
+}
+
+fun setupAboutActivity(getAppVersion: suspend () -> String, optionalText: String) {
+    CommonUtilsAboutActivity.Companion.apply {
         this.getAppVersion = getAppVersion
         this.optionalText = SpannableString(optionalText)
     }

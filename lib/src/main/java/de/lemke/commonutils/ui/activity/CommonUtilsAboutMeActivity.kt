@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.abs
 import dev.oneuiproject.oneui.design.R as designR
 
-class AboutMeActivity : AppCompatActivity() {
+class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutMeBinding
     private val appBarListener: AboutAppBarListener = AboutAppBarListener()
     private val progressInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
@@ -177,7 +177,7 @@ class AboutMeActivity : AppCompatActivity() {
             aboutBottomRelativeTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
             aboutBottomRateApp.setOnClickListener { openApp(packageName, false) }
             aboutBottomShareApp.setOnClickListener {
-                onShareApp(this@AboutMeActivity)
+                onShareApp(this@CommonUtilsAboutMeActivity)
                 shareApp()
             }
             aboutBottomWriteEmail.setOnClickListener {

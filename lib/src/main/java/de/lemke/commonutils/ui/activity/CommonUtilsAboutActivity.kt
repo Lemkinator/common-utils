@@ -39,7 +39,7 @@ import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.UpdateAvailable
 import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
-class AboutActivity : AppCompatActivity() {
+class CommonUtilsAboutActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutBinding
     private lateinit var appUpdateManager: AppUpdateManager
     private lateinit var appUpdateInfo: AppUpdateInfo
@@ -97,7 +97,7 @@ class AboutActivity : AppCompatActivity() {
 
     private fun setOptionalText() {
         binding.appInfoLayout.addOptionalText("").apply {
-            text = optionalText
+            text = optionalText ?: getString(R.string.commonutils_app_description)
             movementMethod = LinkMovementMethod.getInstance()
             highlightColor = TRANSPARENT
             setLinkTextColor(getColor(R.color.primary_color_themed))
@@ -152,9 +152,9 @@ class AboutActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val TAG = "AboutActivity"
+        private const val TAG = "CommonUtilsAboutActivity"
         var appVersion = ""
         var getAppVersion = suspend { "" }
-        var optionalText = SpannableString("")
+        var optionalText: SpannableString? = null
     }
 }
