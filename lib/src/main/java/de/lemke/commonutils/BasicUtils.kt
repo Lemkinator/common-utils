@@ -27,7 +27,7 @@ fun Context.toast(msg: String) = Toast.makeText(this, msg, LENGTH_SHORT).show()
 fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
 fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
 
-fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, delete: String? = null): Boolean {
+fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, delete: String? = null) {
     val dialog = AlertDialog.Builder(requireContext())
         .setTitle(title ?: getString(R.string.commonutils_delete_appdata_and_exit))
         .setMessage(message ?: getString(R.string.commonutils_delete_appdata_and_exit_warning))
@@ -44,7 +44,6 @@ fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null
             }
         }
     }
-    return true
 }
 
 const val COMMONUTILS_KEY_IS_SEARCH_MODE = "commonutils_isSearchMode"
