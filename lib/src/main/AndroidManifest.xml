@@ -15,7 +15,9 @@
             android:theme="@style/AppTheme.OSL" />
         <activity android:name=".ui.activity.CommonUtilsAboutActivity" />
         <activity android:name=".ui.activity.CommonUtilsAboutMeActivity" />
-        <activity android:name=".ui.activity.CommonUtilsSettingsActivity" />
+        <activity
+            android:name=".ui.activity.CommonUtilsSettingsActivity"
+            android:configChanges="orientation|screenLayout|screenSize" />
     </application>
 
 </manifest>

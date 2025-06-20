@@ -24,27 +24,33 @@ import dev.oneuiproject.oneui.widget.RelativeLink
 
 private const val TAG = "PreferenceUtils"
 
-fun onPrefChange(function: (Preference, Any) -> Boolean) = object : Preference.OnPreferenceChangeListener {
-    override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
-        return function(preference, newValue)
+fun Preference.onPrefChange(function: (Preference, Any) -> Boolean) {
+    onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
+        override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
+            return function(preference, newValue)
+        }
     }
 }
 
-fun onPrefChange(function: () -> Unit) = object : Preference.OnPreferenceChangeListener {
-    override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
-        function()
-        return true
-    }
-}
-
-inline fun <reified T> onPrefChange(crossinline function: (T) -> Unit) = object : Preference.OnPreferenceChangeListener {
-    override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
-        if (newValue is T) {
-            function(newValue)
+fun Preference.onPrefChange(function: () -> Unit) {
+    onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
+        override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
+            function()
             return true
         }
-        Log.e("OnPrefChange", "Expected type ${T::class.java.simpleName}, but got ${newValue::class.java.simpleName}")
-        return false
+    }
+}
+
+inline fun <reified T> Preference.onPrefChange(crossinline function: (T) -> Unit) {
+    onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
+        override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
+            if (newValue is T) {
+                function(newValue)
+                return true
+            }
+            Log.e("OnPrefChange", "Expected type ${T::class.java.simpleName}, but got ${newValue::class.java.simpleName}")
+            return false
+        }
     }
 }
 
@@ -120,7 +126,7 @@ private fun PreferenceFragmentCompat.initDarkMode() {
         darkModePref.setDividerEnabled(false)
         darkModePref.setTouchEffectEnabled(false)
         autoDarkModePref.isChecked = commonUtilsSettings.autoDarkMode
-        autoDarkModePref.onPreferenceChangeListener = onPrefChange { newValue: Boolean ->
+        autoDarkModePref.onPrefChange { newValue: Boolean ->
             darkModePref.isEnabled = !newValue
             if (newValue) setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
             else {
@@ -128,7 +134,7 @@ private fun PreferenceFragmentCompat.initDarkMode() {
                 else setDefaultNightMode(MODE_NIGHT_NO)
             }
         }
-        darkModePref.onPreferenceChangeListener = onPrefChange { newValue: String ->
+        darkModePref.onPrefChange { newValue: String ->
             commonUtilsSettings.darkMode = newValue == "1"
             setDefaultNightMode(if (newValue == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
         }

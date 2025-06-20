@@ -4,18 +4,21 @@ package de.lemke.commonutils
 
 import android.app.Activity
 import android.text.SpannableString
+import androidx.preference.PreferenceFragmentCompat
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
 private const val TAG = "ActivityUtils"
 
-fun setupCommonUtilsSettingsActivity(vararg preferences: Int) {
+fun setupCommonUtilsSettingsActivity(vararg preferences: Int, initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}) {
     CommonUtilsSettingsActivity.Companion.preferences = preferences.toList()
+    CommonUtilsSettingsActivity.Companion.initPreferences = initPreferences
 }
 
-fun setupCommonUtilsSettingsActivity(preferences: List<Int>) {
+fun setupCommonUtilsSettingsActivity(preferences: List<Int>, initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}) {
     CommonUtilsSettingsActivity.Companion.preferences = preferences
+    CommonUtilsSettingsActivity.Companion.initPreferences = initPreferences
 }
 
 fun setupCommonUtilsAboutMeActivity(
