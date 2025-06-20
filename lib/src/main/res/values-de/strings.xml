@@ -61,6 +61,8 @@
     <string name="commonutils_grant_access">Berechtigung erteilen</string>
 
     <!--Error-->
+    <string name="commonutils_error">Fehler</string>
+    <string name="commonutils_error_unknown">Unbekannter Fehler</string>
     <string name="commonutils_no_email_app_installed">Keine E-Mail-App installiert…</string>
     <string name="commonutils_no_browser_app_installed">Keine Browser-App installiert…</string>
     <string name="commonutils_error_cant_open_url">Fehler: URL konnte nicht geöffnet werden.</string>
@@ -79,8 +81,6 @@
     <string name="commonutils_no">Nein</string>
     <string name="commonutils_warning">Warnung</string>
     <string name="commonutils_info">Info</string>
-    <string name="commonutils_error">Fehler</string>
-    <string name="commonutils_error_unknown">Unbekannter Fehler</string>
     <string name="commonutils_light">Hell</string>
     <string name="commonutils_dark">Dunkel</string>
     <string name="commonutils_experimental">Experimentell</string>
@@ -102,12 +102,22 @@
     <string name="commonutils_foreground">Vordergrund</string>
     <string name="commonutils_masked">Maskiert</string>
     <string name="commonutils_color">Farbe</string>
+    <string name="commonutils_tint_border">Rahmen einfärben</string>
+    <string name="commonutils_tint_anchor">Anker einfärben</string>
     <string name="commonutils_size">Größe</string>
+    <string name="commonutils_frame">Rahmen</string>
+    <string name="commonutils_icon">Icon</string>
+
+    <string name="commonutils_remove_from_fav">Aus Favoriten löschen</string>
+    <string name="commonutils_add_to_fav">Zu Favoriten hinzufügen</string>
+    <string name="commonutils_show_all">Alle anzeigen</string>
+    <string name="commonutils_only_show_favorites">Nur Favoriten anzeigen</string>
 
     <string name="commonutils_search_apps">Apps suchen</string>
     <string name="commonutils_show_system_apps">System Apps anzeigen</string>
     <string name="commonutils_hide_system_apps">System Apps ausblenden</string>
 
+    <!--Email-->
     <string name="commonutils_help_email_text">Wow, das ist mit Abstand die beste App, die ich je benutzt habe!</string>
     <string name="commonutils_about_email_text">Das ist die beste App, die ich je in meinem Leben gesehen habe!</string>
     <string name="commonutils_bug_report_email_text">Ich kann mir keine bessere App als diese vorstellen - sie ist perfekt und braucht keine Verbesserungen. Aber hier ist trotzdem ein Fehlerbericht: </string>

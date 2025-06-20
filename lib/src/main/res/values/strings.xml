@@ -83,6 +83,8 @@
     <string name="commonutils_grant_access">Grant permission</string>
 
     <!--Error-->
+    <string name="commonutils_error">Error</string>
+    <string name="commonutils_error_unknown">Unknown error</string>
     <string name="commonutils_no_email_app_installed">No e-mail app installed…</string>
     <string name="commonutils_no_browser_app_installed">No browser app installed…</string>
     <string name="commonutils_error_cant_open_url">Error: URL could not be opened.</string>
@@ -102,8 +104,6 @@
     <string name="commonutils_no">No</string>
     <string name="commonutils_warning">Warning</string>
     <string name="commonutils_info">Info</string>
-    <string name="commonutils_error">Error</string>
-    <string name="commonutils_error_unknown">Unknown error</string>
     <string name="commonutils_light">Light</string>
     <string name="commonutils_dark">Dark</string>
     <string name="commonutils_experimental">Experimental</string>
@@ -125,12 +125,22 @@
     <string name="commonutils_foreground">Foreground</string>
     <string name="commonutils_masked">Masked</string>
     <string name="commonutils_color">Color</string>
+    <string name="commonutils_tint_border">Tint border</string>
+    <string name="commonutils_tint_anchor">Tint anchor</string>
     <string name="commonutils_size">Size</string>
+    <string name="commonutils_frame">Frame</string>
+    <string name="commonutils_icon">Icon</string>
+
+    <string name="commonutils_remove_from_fav">Remove from favorites</string>
+    <string name="commonutils_add_to_fav">Add to favorites</string>
+    <string name="commonutils_show_all">Show all</string>
+    <string name="commonutils_only_show_favorites">Only show favorites</string>
 
     <string name="commonutils_search_apps">Search Apps</string>
     <string name="commonutils_show_system_apps">Show system apps</string>
     <string name="commonutils_hide_system_apps">Hide system apps</string>
 
+    <!--Email-->
     <string name="commonutils_help_email_text">By far, this is the greatest app I’ve ever used!</string>
     <string name="commonutils_about_email_text">This is the best app I’ve ever seen in my life!</string>
     <string name="commonutils_bug_report_email_text">I can’t imagine a better app than this — it’s perfect and doesn’t need any improvements. But here’s a bug report anyway: </string>
