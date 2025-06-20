@@ -10,6 +10,10 @@ import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
 private const val TAG = "ActivityUtils"
 
+fun setupCommonUtilsSettingsActivity(vararg preferences: Int) {
+    CommonUtilsSettingsActivity.Companion.preferences = preferences.toList()
+}
+
 fun setupCommonUtilsSettingsActivity(preferences: List<Int>) {
     CommonUtilsSettingsActivity.Companion.preferences = preferences
 }
