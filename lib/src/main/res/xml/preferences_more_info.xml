@@ -3,15 +3,15 @@
 
     <PreferenceCategory android:title="@string/commonutils_more_information">
         <PreferenceScreen
-            android:key="tos_pref"
+            android:key="@string/commonutils_preference_key_tos"
             android:title="@string/commonutils_tos" />
 
         <PreferenceScreen
-            android:key="privacy_pref"
+            android:key="@string/commonutils_preference_key_privacy_policy"
             android:title="@string/commonutils_privacy_policy" />
 
         <PreferenceScreen
-            android:key="report_bug_pref"
+            android:key="@string/commonutils_preference_key_report_bug"
             android:title="@string/commonutils_report_bug" />
 
     </PreferenceCategory>

@@ -24,6 +24,19 @@ import dev.oneuiproject.oneui.widget.RelativeLink
 
 private const val TAG = "PreferenceUtils"
 
+fun Preference.onPrefClick(function: (Preference) -> Unit) {
+    onPreferenceClickListener = OnPreferenceClickListener { preference ->
+        function(preference)
+        true
+    }
+}
+
+fun Preference.onPrefClickWithResult(function: (Preference) -> Boolean) {
+    onPreferenceClickListener = OnPreferenceClickListener { preference ->
+        function(preference)
+    }
+}
+
 fun Preference.onPrefChange(function: (Preference, Any) -> Boolean) {
     onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
         override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
@@ -65,45 +78,42 @@ fun PreferenceFragmentCompat.initCommonUtilsPreferences() {
     initDarkMode()
     initImageSaveLocation()
     initMoreInfo()
-    findPreference<PreferenceCategory>("dev_options")?.apply {
+    findPreference<PreferenceCategory>(getString(R.string.commonutils_preference_key_dev_options))?.apply {
         isVisible = commonUtilsSettings.devModeEnabled
-    } ?: Log.w(TAG, "dev_options preference category is null, skipping initialization")
+    } ?: Log.w(TAG, "dev options preference category is null, skipping initialization")
 
-    findPreference<PreferenceScreen>("delete_app_data_pref")?.apply {
-        setOnPreferenceClickListener { deleteAppDataAndExit() }
-    } ?: Log.w(TAG, "delete_app_data_pref preference is null, skipping initialization")
+    findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_delete_app_data))?.apply {
+        onPrefClick { deleteAppDataAndExit() }
+    } ?: Log.w(TAG, "delete app data preference is null, skipping initialization")
 
-    findPreference<PreferenceScreen>("language_pref")?.apply {
+    findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_language))?.apply {
         if (SDK_INT >= VERSION_CODES.TIRAMISU) {
             isVisible = true
-            onPreferenceClickListener = OnPreferenceClickListener { openAppLocaleSettings() }
+            onPrefClickWithResult { openAppLocaleSettings() }
         }
-    } ?: Log.w(TAG, "language_pref preference is null, skipping initialization")
+    } ?: Log.w(TAG, "language preference is null, skipping initialization")
 }
 
 private fun PreferenceFragmentCompat.initMoreInfo() {
-    findPreference<PreferenceScreen>("privacy_pref")?.apply {
-        onPreferenceClickListener = OnPreferenceClickListener { openURL(getString(R.string.commonutils_privacy_website)) }
-    } ?: Log.w(TAG, "privacy_pref preference is null, skipping initialization")
-    findPreference<PreferenceScreen>("tos_pref")?.apply {
-        onPreferenceClickListener = OnPreferenceClickListener {
+    findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_privacy_policy))?.apply {
+        onPrefClickWithResult { openURL(getString(R.string.commonutils_privacy_website)) }
+    } ?: Log.w(TAG, "privacy preference is null, skipping initialization")
+    findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_tos))?.apply {
+        onPrefClick {
             AlertDialog.Builder(requireContext())
                 .setTitle(getString(R.string.commonutils_tos))
                 .setMessage(getString(R.string.commonutils_tos_content))
                 .setPositiveButton(R.string.commonutils_ok, null)
                 .show()
-            true
         }
-    } ?: Log.w(TAG, "tos_pref preference is null, skipping initialization")
-    findPreference<PreferenceScreen>("report_bug_pref")?.apply {
-        onPreferenceClickListener = OnPreferenceClickListener {
-            sendEmailBugReport(getString(R.string.commonutils_email), getString(R.string.commonutils_app_name))
-        }
-    }
+    } ?: Log.w(TAG, "tos preference is null, skipping initialization")
+    findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_report_bug))?.apply {
+        onPrefClickWithResult { sendEmailBugReport(getString(R.string.commonutils_email), getString(R.string.commonutils_app_name)) }
+    } ?: Log.w(TAG, "report bug preference is null, skipping initialization")
 }
 
 private fun PreferenceFragmentCompat.initImageSaveLocation() {
-    findPreference<DropDownPreference>("imageSaveLocation")?.apply {
+    findPreference<DropDownPreference>(getString(R.string.commonutils_preference_key_image_save_location))?.apply {
         entries = SaveLocation.getLocalizedEntries(this@initImageSaveLocation.requireContext())
         entryValues = SaveLocation.entryValues
         if (SDK_INT <= VERSION_CODES.Q) {
@@ -114,12 +124,9 @@ private fun PreferenceFragmentCompat.initImageSaveLocation() {
 }
 
 private fun PreferenceFragmentCompat.initDarkMode() {
-    val darkModePref = findPreference<HorizontalRadioPreference>("darkMode")
-    val autoDarkModePref = findPreference<SwitchPreferenceCompat>("autoDarkMode")
-    if (autoDarkModePref == null || darkModePref == null) Log.e(
-        TAG,
-        "autoDarkModePref or darkModePref is null, skipping initialization"
-    )
+    val darkModePref = findPreference<HorizontalRadioPreference>(getString(R.string.commonutils_preference_key_dark_mode))
+    val autoDarkModePref = findPreference<SwitchPreferenceCompat>(getString(R.string.commonutils_preference_key_auto_dark_mode))
+    if (autoDarkModePref == null || darkModePref == null) Log.e(TAG, "autoDarkModePref or darkModePref is null, skipping initialization")
     else {
         darkModePref.isEnabled = !commonUtilsSettings.autoDarkMode
         darkModePref.value = if (commonUtilsSettings.darkMode) "1" else "0"

@@ -5,14 +5,14 @@
     <PreferenceCategory android:title="@string/commonutils_design">
 
         <dev.oneuiproject.oneui.preference.HorizontalRadioPreference
-            android:key="darkMode"
+            android:key="@string/commonutils_preference_key_dark_mode"
             app:entries="@array/preferences_darkmode_entries"
             app:entriesImage="@array/preferences_darkmode_entries_image"
             app:entryValues="@array/preferences_darkmode_values"
             app:viewType="image" />
 
         <SwitchPreferenceCompat
-            android:key="autoDarkMode"
+            android:key="@string/commonutils_preference_key_auto_dark_mode"
             android:title="@string/commonutils_system_default" />
 
     </PreferenceCategory>

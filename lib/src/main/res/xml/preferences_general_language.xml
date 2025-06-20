@@ -5,7 +5,7 @@
     <PreferenceCategory android:title="@string/commonutils_general">
 
         <PreferenceScreen
-            android:key="language_pref"
+            android:key="@string/commonutils_preference_key_language"
             android:summary="@string/commonutils_change_language"
             android:title="@string/commonutils_language"
             app:isPreferenceVisible="false" />
