@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--sesl???-->
-    <string name="commonutils_search">Suche</string>
-    <string name="commonutils_settings">Einstellungen</string>
-
     <!--OOBE-->
     <string name="commonutils_tos">Nutzungsbedingungen</string>
     <string name="commonutils_tos_content">Es ist nicht gestattet, diese App entgegen den guten Sitten oder den geltenden Gesetzen zu verwenden. \n\nSie verpflichten sich außerdem, diese App nicht für Zwecke zu verwenden, die nach dem Recht der Vereinigten Staaten verboten sind, insbesondere nicht für die Entwicklung, Konstruktion, Herstellung oder Produktion von Raketen, chemischen oder biologischen Waffen. \nDiese Einschränkung gilt jedoch nicht für den Fall, dass eine weit verbreitete Virusinfektion auftritt (die von den United States Centers for Disease Control oder einer Nachfolgeorganisation bestätigt wurde), die durch Bisse oder Kontakt mit Körperflüssigkeiten übertragen wird und dazu führt, dass menschliche Leichen wiederbelebt werden und versuchen, lebendes menschliches Fleisch, Blut, Gehirn oder Nervengewebe zu verzehren, und die wahrscheinlich zum Untergang der organisierten Zivilisation führen wird. \n\nEine besondere Gegenleistung, die eine finanzielle Entschädigung beinhalten kann, wird einer begrenzten Anzahl von Nutzern angeboten, die diesen Abschnitt der Nutzungsbedingungen lesen und mich unter eine-email-an-diese-adresse-zu-schreiben-wird-sie-10-euro-kosten@leonard-lemke.com kontaktieren. Dieses Angebot kann jederzeit und ohne Vorankündigung zurückgezogen werden. \n\nWeitere Fragen werden unter diese-email-ist-viel-zu-lang-und-hoffentlich-koennen-sie-nicht-kopieren-und-einfuegen@leonard-lemke.com beantwortet.</string>
@@ -33,6 +29,7 @@
     <string name="commonutils_playstore_redirect_message">Laut Google Play handelt es sich hierbei um \"Irreführende Werbung, welche die Benutzeroberfläche einer App-Funktion simuliert oder nachahmt\"… Weil App-Updates andernfalls von Google Play abgelehnt werden, hier ein Hinweis: Dieser Button führt (überaschenderweise?&#129313;) zu meiner Entwicklerseite bei Google Play, fortfahren?</string>
 
     <!--Settings-->
+    <string name="commonutils_settings">Einstellungen</string>
     <string name="commonutils_design">Design</string>
     <string name="commonutils_system_default">Systemeinstellung</string>
     <string name="commonutils_general">Allgemein</string>
@@ -79,6 +76,7 @@
     <!--General-->
     <string name="commonutils_yes">Ja</string>
     <string name="commonutils_no">Nein</string>
+    <string name="commonutils_search">Suche</string>
     <string name="commonutils_warning">Warnung</string>
     <string name="commonutils_info">Info</string>
     <string name="commonutils_light">Hell</string>
@@ -90,12 +88,15 @@
     <string name="commonutils_no_entry">Kein Eintrag</string>
     <string name="commonutils_custom">Benutzerdefiniert</string>
     <string name="commonutils_reset">Zurücksetzen</string>
+    <string name="commonutils_pause">Pause</string>
+    <string name="commonutils_resume">Weiter</string>
     <string name="commonutils_tip">Tipp</string>
     <string name="commonutils_dont_show_again">Nicht mehr anzeigen</string>
 
     <string name="commonutils_history">Verlauf</string>
     <string name="commonutils_delete_history">Verlauf löschen</string>
     <string name="commonutils_delete_history_message">Verlauf wirklich löschen?</string>
+    <string name="commonutils_statistics">Statistik</string>
     <string name="commonutils_image_saved">Bild gespeichert</string>
     <string name="commonutils_save_as_image">Als Bild speichern</string>
     <string name="commonutils_background">Hintergrund</string>
@@ -108,6 +109,7 @@
     <string name="commonutils_frame">Rahmen</string>
     <string name="commonutils_icon">Icon</string>
 
+    <string name="commonutils_favorites">Favoriten</string>
     <string name="commonutils_remove_from_fav">Aus Favoriten löschen</string>
     <string name="commonutils_add_to_fav">Zu Favoriten hinzufügen</string>
     <string name="commonutils_show_all">Alle anzeigen</string>
