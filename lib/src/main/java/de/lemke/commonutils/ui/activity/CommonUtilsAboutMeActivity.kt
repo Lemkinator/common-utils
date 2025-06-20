@@ -152,8 +152,6 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         binding.aboutBottomContent.aboutBottomScrollView.setEnableRecursive(enabled)
     }
 
-    private fun openURL(url: String) = openURL(url, cantOpenURLMessage, noBrowserInstalledMessage)
-
     private fun openPlayStore() {
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.commonutils_playstore_ad))
@@ -181,7 +179,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
                 shareApp()
             }
             aboutBottomWriteEmail.setOnClickListener {
-                sendEmailAboutMe(getString(R.string.commonutils_email), getString(R.string.commonutils_app_name), noEmailAppInstalledText)
+                sendEmailAboutMe(getString(R.string.commonutils_email), getString(R.string.commonutils_app_name))
             }
         }
     }
@@ -219,8 +217,5 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
 
     companion object {
         var onShareApp: (activity: Activity) -> Unit = {}
-        var cantOpenURLMessage: String? = null
-        var noBrowserInstalledMessage: String? = null
-        var noEmailAppInstalledText: String? = null
     }
 }

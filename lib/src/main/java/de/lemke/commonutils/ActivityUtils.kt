@@ -21,22 +21,11 @@ fun setupCommonUtilsSettingsActivity(preferences: List<Int>, initPreferences: su
     CommonUtilsSettingsActivity.Companion.initPreferences = initPreferences
 }
 
-fun setupCommonUtilsAboutMeActivity(
-    onShareApp: (activity: Activity) -> Unit = {},
-    cantOpenURLMessage: String? = null,
-    noBrowserInstalledMessage: String? = null,
-    noEmailAppInstalledText: String? = null,
-) {
+fun setupCommonUtilsAboutMeActivity(onShareApp: (activity: Activity) -> Unit = {}) {
     CommonUtilsAboutMeActivity.Companion.apply {
         this.onShareApp = onShareApp
-        this.cantOpenURLMessage = cantOpenURLMessage
-        this.noBrowserInstalledMessage = noBrowserInstalledMessage
-        this.noEmailAppInstalledText = noEmailAppInstalledText
     }
 }
-
-fun setupCommonUtilsAboutActivity(appVersion: String, optionalText: String) =
-    setupCommonUtilsAboutActivity(appVersion, SpannableString(optionalText))
 
 fun setupCommonUtilsAboutActivity(appVersion: String, optionalText: SpannableString? = null) {
     CommonUtilsAboutActivity.Companion.apply {
@@ -45,9 +34,9 @@ fun setupCommonUtilsAboutActivity(appVersion: String, optionalText: SpannableStr
     }
 }
 
-fun setupCommonUtilsAboutActivity(getAppVersion: suspend () -> String, optionalText: String) {
+fun setupCommonUtilsAboutActivity(getAppVersion: suspend () -> String, optionalText: SpannableString? = null) {
     CommonUtilsAboutActivity.Companion.apply {
         this.getAppVersion = getAppVersion
-        this.optionalText = SpannableString(optionalText)
+        this.optionalText = optionalText
     }
 }
