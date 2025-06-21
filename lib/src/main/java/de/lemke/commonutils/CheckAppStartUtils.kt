@@ -2,25 +2,28 @@
 
 package de.lemke.commonutils
 
+import android.content.Context
 import android.util.Log
-import de.lemke.commonutils.AppStart.FIRST_TIME
-import de.lemke.commonutils.AppStart.FIRST_TIME_VERSION
-import de.lemke.commonutils.AppStart.NORMAL
-import de.lemke.commonutils.AppStart.OLD_VERSION
+import de.lemke.commonutils.AppStartResult.FIRST_TIME
+import de.lemke.commonutils.AppStartResult.FIRST_TIME_VERSION
+import de.lemke.commonutils.AppStartResult.NORMAL
+import de.lemke.commonutils.AppStartResult.VERSION_THRESHOLD_PASSED
+import de.lemke.commonutils.AppStartResult.NEW_TOS
 import de.lemke.commonutils.data.commonUtilsSettings
 
 private const val TAG = "CheckAppStartUtils"
 
-fun checkAppStart(versionCode: Int, versionName: String, oldVersionCode: Int = -1): AppStart {
+fun Context.checkAppStart(versionCode: Int, versionName: String, versionCodeThreshold: Int = -1): AppStart {
     val lastVersionCode = commonUtilsSettings.lastVersionCode
     val lastVersionName = commonUtilsSettings.lastVersionName
     commonUtilsSettings.lastVersionCode = versionCode
     commonUtilsSettings.lastVersionName = versionName
-    Log.d(TAG, "Current version code: $versionCode , last version code: $lastVersionCode")
-    Log.d(TAG, "Current version name: $versionName , last version name: $lastVersionName")
-    return when {
+    val tosVersion = resources.getInteger(R.integer.tosVersion)
+    val acceptedTosVersion = commonUtilsSettings.acceptedTosVersion
+    val result = when {
         lastVersionCode == -1 -> FIRST_TIME
-        lastVersionCode <= oldVersionCode -> OLD_VERSION
+        lastVersionCode <= versionCodeThreshold && versionCode > versionCodeThreshold -> VERSION_THRESHOLD_PASSED
+        acceptedTosVersion < tosVersion -> NEW_TOS
         lastVersionCode < versionCode -> FIRST_TIME_VERSION
         lastVersionCode > versionCode -> {
             Log.w(TAG, "Current version code ($versionCode) is less then the one recognized on last startup ($lastVersionCode). ")
@@ -30,6 +33,28 @@ fun checkAppStart(versionCode: Int, versionName: String, oldVersionCode: Int = -
 
         else -> NORMAL
     }
+    return AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
+        Log.d(TAG, this.toString())
+    }
 }
 
-enum class AppStart { FIRST_TIME, FIRST_TIME_VERSION, NORMAL, OLD_VERSION }
+enum class AppStartResult { FIRST_TIME, VERSION_THRESHOLD_PASSED, NEW_TOS, FIRST_TIME_VERSION, NORMAL }
+
+class AppStart(
+    val result: AppStartResult,
+    val versionCode: Int,
+    val versionName: String,
+    val lastVersionCode: Int,
+    val lastVersionName: String,
+    val tosVersion: Int,
+    val acceptedTosVersion: Int,
+) {
+    val isFirstTime get() = lastVersionCode == -1
+    val isFirstTimeVersion get() = lastVersionCode < versionCode
+    val tosAccepted get() = acceptedTosVersion >= tosVersion
+    val shouldShowOOBE get() = isFirstTime || !tosAccepted
+    fun versionThresholdPassed(threshold: Int) = lastVersionCode <= threshold && versionCode > threshold
+    override fun toString(): String = "AppStart(result=$result, versionCode=$versionCode, versionName='$versionName', " +
+            "lastVersionCode=$lastVersionCode, lastVersionName='$lastVersionName', " +
+            "tosVersion=$tosVersion, acceptedTosVersion=$acceptedTosVersion)"
+}

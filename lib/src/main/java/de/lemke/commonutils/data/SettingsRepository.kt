@@ -18,7 +18,7 @@ class SettingsRepository(preferences: SharedPreferences) {
     var autoDarkMode: Boolean by preferences.delegates.boolean(true)
     var lastVersionCode: Int by preferences.delegates.int(-1)
     var lastVersionName: String by preferences.delegates.string("0.0.0")
-    var tosAccepted: Boolean by preferences.delegates.boolean(false)
+    var acceptedTosVersion: Int by preferences.delegates.int(-1)
     var devModeEnabled: Boolean by preferences.delegates.boolean(false)
     var search: String by preferences.delegates.string("")
     var imageSaveLocation: SaveLocation by preferences.delegates.saveLocation(SaveLocation.default)
