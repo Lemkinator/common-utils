@@ -7,8 +7,6 @@ import android.util.Log
 import de.lemke.commonutils.AppStartResult.FIRST_TIME
 import de.lemke.commonutils.AppStartResult.FIRST_TIME_VERSION
 import de.lemke.commonutils.AppStartResult.NORMAL
-import de.lemke.commonutils.AppStartResult.VERSION_THRESHOLD_PASSED
-import de.lemke.commonutils.AppStartResult.NEW_TOS
 import de.lemke.commonutils.data.commonUtilsSettings
 
 private const val TAG = "CheckAppStartUtils"
@@ -22,8 +20,6 @@ fun Context.checkAppStart(versionCode: Int, versionName: String, versionCodeThre
     val acceptedTosVersion = commonUtilsSettings.acceptedTosVersion
     val result = when {
         lastVersionCode == -1 -> FIRST_TIME
-        lastVersionCode <= versionCodeThreshold && versionCode > versionCodeThreshold -> VERSION_THRESHOLD_PASSED
-        acceptedTosVersion < tosVersion -> NEW_TOS
         lastVersionCode < versionCode -> FIRST_TIME_VERSION
         lastVersionCode > versionCode -> {
             Log.w(TAG, "Current version code ($versionCode) is less then the one recognized on last startup ($lastVersionCode). ")
@@ -38,7 +34,7 @@ fun Context.checkAppStart(versionCode: Int, versionName: String, versionCodeThre
     }
 }
 
-enum class AppStartResult { FIRST_TIME, VERSION_THRESHOLD_PASSED, NEW_TOS, FIRST_TIME_VERSION, NORMAL }
+enum class AppStartResult { FIRST_TIME, FIRST_TIME_VERSION, NORMAL }
 
 class AppStart(
     val result: AppStartResult,
