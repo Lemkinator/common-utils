@@ -7,9 +7,18 @@ import android.text.SpannableString
 import androidx.preference.PreferenceFragmentCompat
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
+import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
 private const val TAG = "ActivityUtils"
+
+fun setupCommonUtilsOOBEActivity(nextActivity: Class<*>) {
+    CommonUtilsOOBEActivity.Companion.nextActivity = nextActivity
+}
+
+fun setupCommonUtilsOOBEActivity(onContinue: (() -> Unit)) {
+    CommonUtilsOOBEActivity.Companion.onContinue = onContinue
+}
 
 fun setupCommonUtilsSettingsActivity(vararg preferences: Int, initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}) {
     CommonUtilsSettingsActivity.Companion.preferences = preferences.toList()

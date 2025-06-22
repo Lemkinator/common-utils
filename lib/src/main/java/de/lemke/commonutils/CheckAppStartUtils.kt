@@ -2,16 +2,25 @@
 
 package de.lemke.commonutils
 
-import android.content.Context
+import android.R.anim.fade_in
+import android.R.anim.fade_out
+import android.content.Intent
+import android.os.Build.VERSION.SDK_INT
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import de.lemke.commonutils.AppStartResult.FIRST_TIME
 import de.lemke.commonutils.AppStartResult.FIRST_TIME_VERSION
 import de.lemke.commonutils.AppStartResult.NORMAL
 import de.lemke.commonutils.data.commonUtilsSettings
+import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 
 private const val TAG = "CheckAppStartUtils"
 
-fun Context.checkAppStart(versionCode: Int, versionName: String, versionCodeThreshold: Int = -1): AppStart {
+fun AppCompatActivity.checkAppStart(
+    versionCode: Int,
+    versionName: String,
+    versionCodeThreshold: Int = -1,
+): AppStart {
     val lastVersionCode = commonUtilsSettings.lastVersionCode
     val lastVersionName = commonUtilsSettings.lastVersionName
     commonUtilsSettings.lastVersionCode = versionCode
@@ -32,6 +41,20 @@ fun Context.checkAppStart(versionCode: Int, versionName: String, versionCodeThre
     return AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
         Log.d(TAG, this.toString())
     }
+}
+
+fun AppCompatActivity.checkAppStartAndHandleOOBE(
+    versionCode: Int,
+    versionName: String,
+    versionCodeThreshold: Int = -1,
+): Boolean {
+    if (checkAppStart(versionCode, versionName, versionCodeThreshold).shouldShowOOBE) {
+        startActivity(Intent(applicationContext, CommonUtilsOOBEActivity::class.java))
+        @Suppress("DEPRECATION") if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
+        finishAfterTransition()
+        return true
+    }
+    return false
 }
 
 enum class AppStartResult { FIRST_TIME, FIRST_TIME_VERSION, NORMAL }

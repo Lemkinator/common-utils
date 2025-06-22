@@ -13,6 +13,7 @@
         <activity
             android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
             android:theme="@style/AppTheme.OSL" />
+        <activity android:name=".ui.activity.CommonUtilsOOBEActivity" />
         <activity android:name=".ui.activity.CommonUtilsAboutActivity" />
         <activity android:name=".ui.activity.CommonUtilsAboutMeActivity" />
         <activity
