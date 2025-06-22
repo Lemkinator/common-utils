@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="DimmingView">
+        <!-- Alpha value for the dimming view. -->
         <attr name="alpha" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="NoEntryView">
+        <!-- No entry text to display. -->
+        <attr name="noEntryText" format="string"/>
     </declare-styleable>
 
 </resources>
