@@ -35,6 +35,7 @@ class NoEntryView @JvmOverloads constructor(
                 }
             }
         }
+        hide()
     }
 
     fun toggle(otherView: View? = null) = updateVisibility(!isVisible, otherView)

@@ -4,7 +4,6 @@
     android:id="@+id/noEntryScrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:visibility="gone"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     <LinearLayout
@@ -30,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            android:text="@string/commonutils_no_entry"
+            android:text="@string/commonutils_no_results_found"
             android:textColor="@color/commonutils_primary_text_icon_color_themed"
             android:textSize="17sp" />
 
