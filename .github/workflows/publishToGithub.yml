@@ -2,8 +2,8 @@ name: Publish Common Utils Package
 
 on:
   push:
-    branches: [main]
-    paths: ['build.gradle.kts']
+    branches: [ main ]
+    paths: [ 'build.gradle.kts' ]
 
 jobs:
   check-and-publish:
@@ -17,12 +17,21 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
+
+      - name: Cache Gradle and wrapper
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Check if version changed
         id: check_version
@@ -40,8 +49,9 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
       - name: Publish to GitHub Packages
         if: steps.check_version.outputs.changed == 'true'
-        run: |
-          chmod +x ./gradlew
-          ./gradlew publishAllPublicationsToGitHubPackagesRepository
+        run: ./gradlew publishAllPublicationsToGitHubPackagesRepository
