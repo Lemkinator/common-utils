@@ -90,7 +90,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
                     startActivity(Intent(this@CommonUtilsOOBEActivity, it))
                     @Suppress("DEPRECATION") if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
                     finishAfterTransition()
-                } ?: onContinue?.invoke()
+                } ?: onContinue?.invoke() ?: finishAfterTransition()
             }
         }
     }
