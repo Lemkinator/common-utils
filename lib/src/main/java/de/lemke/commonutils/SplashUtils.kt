@@ -11,7 +11,7 @@ import android.view.View.SCALE_Y
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.KeepOnScreenCondition
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
@@ -20,8 +20,7 @@ import java.lang.System.currentTimeMillis
 
 private const val TAG = "SplashUtils"
 
-fun AppCompatActivity.installCommonUtilsSplashScreen(root: View, condition: KeepOnScreenCondition) {
-    val splashScreen = installSplashScreen()
+fun AppCompatActivity.configureCommonUtilsSplashScreen(splashScreen: SplashScreen, root: View, condition: KeepOnScreenCondition) {
     splashScreen.setKeepOnScreenCondition(condition)
     splashScreen.setOnExitAnimationListener { splash ->
         val splashAnimator: ObjectAnimator = ObjectAnimator.ofPropertyValuesHolder(
