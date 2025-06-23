@@ -130,7 +130,7 @@ fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
     window.apply {
         if (transparent) {
             clearFlags(FLAG_DIM_BEHIND)
-            setBackgroundDrawableResource(R.color.transparent_window_bg_color)
+            setBackgroundDrawableResource(R.color.commonutils_transparent_window_bg_color)
             if (SDK_INT >= Build.VERSION_CODES.R) setTranslucent(true)
         } else {
             addFlags(FLAG_DIM_BEHIND)

@@ -6,5 +6,5 @@
     <!--color name="commonutils_filled_background_color">#17171a</color>
     <color name="commonutils_filled_background_color_themed">@color/oui_des_background_color</color-->
 
-    <color name="transparent_window_bg_color">#47333333</color>
+    <color name="commonutils_transparent_window_bg_color">#47333333</color>
 </resources>
