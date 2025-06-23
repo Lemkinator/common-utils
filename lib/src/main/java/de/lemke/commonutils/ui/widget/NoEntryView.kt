@@ -24,19 +24,25 @@ class NoEntryView @JvmOverloads constructor(
     defStyleAttr: Int = 0,
     defStyleRes: Int = 0,
 ) : RoundedLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
-    private val noEntryLottie by lazy { findViewById<LottieAnimationView>(R.id.noEntryLottie) }
+    val lottieAnimationView: LottieAnimationView by lazy { findViewById<LottieAnimationView>(R.id.noEntryLottie) }
+    val textView: TextView by lazy { findViewById<TextView>(R.id.noEntryText) }
+
 
     init {
         inflate(context, R.layout.widget_no_entry_view, this)
         if (attrs != null) {
             context.withStyledAttributes(attrs, R.styleable.NoEntryView) {
-                getText(R.styleable.NoEntryView_noEntryText)?.let {
-                    findViewById<TextView>(R.id.noEntryText).text = it
-                }
+                getText(R.styleable.NoEntryView_noEntryText)?.let { textView.text = it }
             }
         }
         hide()
     }
+
+    var text: String
+        get() = textView.text.toString()
+        set(value) {
+            textView.text = value
+        }
 
     fun toggle(otherView: View? = null) = updateVisibility(!isVisible, otherView)
     fun updateVisibilityWith(list: List<*>, otherView: View? = null) = updateVisibility(list.isEmpty(), otherView)
@@ -49,12 +55,12 @@ class NoEntryView @JvmOverloads constructor(
     }
 
     fun show() {
-        noEntryLottie.cancelAnimation()
-        noEntryLottie.progress = 0f
+        lottieAnimationView.cancelAnimation()
+        lottieAnimationView.progress = 0f
         isVisible = true
         val callback = LottieValueCallback<ColorFilter>(SimpleColorFilter(context.getColor(R.color.primary_color_themed)))
-        noEntryLottie.addValueCallback(KeyPath("**"), COLOR_FILTER, callback)
-        noEntryLottie.postDelayed({ noEntryLottie.playAnimation() }, 400)
+        lottieAnimationView.addValueCallback(KeyPath("**"), COLOR_FILTER, callback)
+        lottieAnimationView.postDelayed({ lottieAnimationView.playAnimation() }, 400)
     }
 
     fun hide() {
