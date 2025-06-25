@@ -40,9 +40,9 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
 
     private fun initTipsItems() {
         val tipsData = listOf(
-            Triple(R.string.oobe1_title, R.string.oobe1_summary, R.drawable.oobe1_icon),
-            Triple(R.string.oobe2_title, R.string.oobe2_summary, R.drawable.oobe1_icon),
-            Triple(R.string.oobe3_title, R.string.oobe3_summary, R.drawable.oobe1_icon)
+            Triple(R.string.commonutils_oobe1_title, R.string.commonutils_oobe1_summary, R.drawable.oobe1_icon),
+            Triple(R.string.commonutils_oobe2_title, R.string.commonutils_oobe2_summary, R.drawable.oobe1_icon),
+            Triple(R.string.commonutils_oobe3_title, R.string.commonutils_oobe3_summary, R.drawable.oobe1_icon)
         )
         tipsData.forEach { (titleRes, summaryRes, iconRes) ->
             OnboardingTipsItemView(this).apply {
