@@ -12,11 +12,13 @@ import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
 private const val TAG = "ActivityUtils"
 
-fun setupCommonUtilsOOBEActivity(nextActivity: Class<*>) {
+fun setupCommonUtilsOOBEActivity(setAcceptedTosVersion: Boolean? = null, nextActivity: Class<*>) {
+    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.Companion.setAcceptedTosVersion = it }
     CommonUtilsOOBEActivity.Companion.nextActivity = nextActivity
 }
 
-fun setupCommonUtilsOOBEActivity(onContinue: (() -> Unit)) {
+fun setupCommonUtilsOOBEActivity(setAcceptedTosVersion: Boolean? = null, onContinue: (() -> Unit)) {
+    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.Companion.setAcceptedTosVersion = it }
     CommonUtilsOOBEActivity.Companion.onContinue = onContinue
 }
 

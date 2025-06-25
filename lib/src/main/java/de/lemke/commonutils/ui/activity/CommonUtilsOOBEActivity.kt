@@ -83,7 +83,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
             binding.oobeIntroFooterTosText.isEnabled = false
             binding.oobeIntroFooterButton.isVisible = false
             binding.oobeIntroFooterButtonProgress.isVisible = true
-            commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.tosVersion)
+            if (setAcceptedTosVersion) commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.tosVersion)
             lifecycleScope.launch {
                 delay(500)
                 nextActivity?.let {
@@ -96,6 +96,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     }
 
     companion object {
+        var setAcceptedTosVersion = true
         var nextActivity: Class<*>? = null
         var onContinue: (() -> Unit)? = null
     }
