@@ -82,7 +82,7 @@ fun AppCompatActivity.setCustomBackAnimation(
     setWindowTransparent(true)
     val predictiveBackMargin = resources.getDimension(R.dimen.predictive_back_margin)
     var initialTouchY = -1f
-    var outlineProvider = BackAnimationOutlineProvider()
+    val outlineProvider = BackAnimationOutlineProvider()
     animatedView.clipToOutline = true
     animatedView.outlineProvider = outlineProvider
     val showInAppReview = showInAppReviewIfPossible && canShowInAppReview()

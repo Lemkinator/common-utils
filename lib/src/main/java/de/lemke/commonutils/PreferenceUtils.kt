@@ -38,19 +38,13 @@ fun Preference.onPrefClickWithResult(function: (Preference) -> Boolean) {
 }
 
 fun Preference.onPrefChange(function: (Preference, Any) -> Boolean) {
-    onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
-        override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
-            return function(preference, newValue)
-        }
-    }
+    onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue -> function(preference, newValue) }
 }
 
 fun Preference.onPrefChange(function: () -> Unit) {
-    onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
-        override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
-            function()
-            return true
-        }
+    onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
+        function()
+        true
     }
 }
 

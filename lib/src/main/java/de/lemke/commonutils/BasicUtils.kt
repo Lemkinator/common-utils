@@ -55,7 +55,7 @@ fun Bundle.saveSearchAndActionMode(isSearchMode: Boolean = false) = saveSearchAn
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
-    selectedIds: ScatterSet<Long> = emptyScatterSet<Long>(),
+    selectedIds: ScatterSet<Long> = emptyScatterSet(),
 ) = saveSearchAndActionMode(isSearchMode, isActionMode, selectedIds.asSet().toLongArray())
 
 fun Bundle.saveSearchAndActionMode(

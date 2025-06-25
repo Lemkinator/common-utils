@@ -24,8 +24,8 @@ class NoEntryView @JvmOverloads constructor(
     defStyleAttr: Int = 0,
     defStyleRes: Int = 0,
 ) : RoundedLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
-    val lottieAnimationView: LottieAnimationView by lazy { findViewById<LottieAnimationView>(R.id.noEntryLottie) }
-    val textView: TextView by lazy { findViewById<TextView>(R.id.noEntryText) }
+    val lottieAnimationView: LottieAnimationView by lazy { findViewById(R.id.noEntryLottie) }
+    val textView: TextView by lazy { findViewById(R.id.noEntryText) }
 
 
     init {
