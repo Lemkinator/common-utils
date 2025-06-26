@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
     <string name="commonutils_leo" translatable="false">Leonard Lemke</string>
     <string name="commonutils_leo_job" translatable="false">Softwaredeveloper</string>
     <string name="commonutils_my_website" translatable="false">https://www.leonard-lemke.com</string>
