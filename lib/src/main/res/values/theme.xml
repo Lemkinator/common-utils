@@ -5,6 +5,11 @@
         <item name="colorPrimary">@color/primary_color_themed</item>
     </style>
 
+    <style name="CommonUtils.AppTheme.Fullscreen" parent="CommonUtils.AppTheme">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
     <style name="CommonUtils.AppTheme.Starting" parent="Theme.SplashScreen">
         <item name="postSplashScreenTheme">@style/CommonUtils.AppTheme</item>
         <item name="windowSplashScreenBackground">@color/oui_des_round_and_bgcolor</item>
