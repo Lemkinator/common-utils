@@ -40,9 +40,9 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
 
     private fun initTipsItems() {
         val tipsData = listOf(
-            Triple(R.string.commonutils_oobe1_title, R.string.commonutils_oobe1_summary, R.drawable.oobe1_icon),
-            Triple(R.string.commonutils_oobe2_title, R.string.commonutils_oobe2_summary, R.drawable.oobe2_icon),
-            Triple(R.string.commonutils_oobe3_title, R.string.commonutils_oobe3_summary, R.drawable.oobe3_icon)
+            Triple(R.string.commonutils_oobe1_title, R.string.commonutils_oobe1_summary, R.drawable.commonutils_oobe1_icon),
+            Triple(R.string.commonutils_oobe2_title, R.string.commonutils_oobe2_summary, R.drawable.commonutils_oobe2_icon),
+            Triple(R.string.commonutils_oobe3_title, R.string.commonutils_oobe3_summary, R.drawable.commonutils_oobe3_icon)
         )
         tipsData.forEach { (titleRes, summaryRes, iconRes) ->
             OnboardingTipsItemView(this).apply {
@@ -83,7 +83,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
             binding.oobeIntroFooterTosText.isEnabled = false
             binding.oobeIntroFooterButton.isVisible = false
             binding.oobeIntroFooterButtonProgress.isVisible = true
-            if (setAcceptedTosVersion) commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.tosVersion)
+            if (setAcceptedTosVersion) commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
             lifecycleScope.launch {
                 delay(500)
                 nextActivity?.let {

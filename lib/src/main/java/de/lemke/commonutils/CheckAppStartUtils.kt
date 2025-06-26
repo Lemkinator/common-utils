@@ -25,7 +25,7 @@ fun AppCompatActivity.checkAppStart(
     val lastVersionName = commonUtilsSettings.lastVersionName
     commonUtilsSettings.lastVersionCode = versionCode
     commonUtilsSettings.lastVersionName = versionName
-    val tosVersion = resources.getInteger(R.integer.tosVersion)
+    val tosVersion = resources.getInteger(R.integer.commonutils_tos_version)
     val acceptedTosVersion = commonUtilsSettings.acceptedTosVersion
     val result = when {
         lastVersionCode == -1 -> FIRST_TIME
