@@ -49,12 +49,16 @@ fun AppCompatActivity.checkAppStartAndHandleOOBE(
     versionCodeThreshold: Int = -1,
 ): Boolean {
     if (checkAppStart(versionCode, versionName, versionCodeThreshold).shouldShowOOBE) {
-        startActivity(Intent(applicationContext, CommonUtilsOOBEActivity::class.java))
-        @Suppress("DEPRECATION") if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
-        finishAfterTransition()
+        openOOBEAndFinish()
         return true
     }
     return false
+}
+
+fun AppCompatActivity.openOOBEAndFinish() {
+    startActivity(Intent(applicationContext, CommonUtilsOOBEActivity::class.java))
+    @Suppress("DEPRECATION") if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
+    finishAfterTransition()
 }
 
 enum class AppStartResult { FIRST_TIME, FIRST_TIME_VERSION, NORMAL }
