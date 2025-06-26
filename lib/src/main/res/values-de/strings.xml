@@ -91,6 +91,7 @@
     <string name="commonutils_new_badge_text">NEU</string>
     <string name="commonutils_delete">Löschen</string>
     <string name="commonutils_copied_to_clipboard">In Zwischenablage kopiert</string>
+    <string name="commonutils_no_entry">Kein Eintrag</string>
     <string name="commonutils_no_results_found">Keine Ergebnisse</string>
     <string name="commonutils_custom">Benutzerdefiniert</string>
     <string name="commonutils_reset">Zurücksetzen</string>
