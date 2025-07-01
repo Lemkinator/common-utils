@@ -40,6 +40,7 @@ fun AppCompatActivity.checkAppStart(
     }
     return AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
         Log.d(TAG, this.toString())
+        if (result == FIRST_TIME_VERSION && !tosAccepted) CommonUtilsOOBEActivity.Companion.tosChanged = true
     }
 }
 

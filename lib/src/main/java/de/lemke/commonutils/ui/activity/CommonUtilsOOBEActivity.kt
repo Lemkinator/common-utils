@@ -56,8 +56,8 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
 
     private fun initToSView() {
         val tos = getString(R.string.commonutils_tos)
-        val tosText = getString(R.string.commonutils_oobe_tos_text, tos)
-        val tosIndex = tosText.indexOf(tos)
+        val tosText = getString(if (tosChanged) R.string.commonutils_oobe_new_tos_text else R.string.commonutils_oobe_tos_text, tos)
+        val tosIndex = tosText.lastIndexOf(tos)
         binding.oobeIntroFooterTosText.text = SpannableString(tosText).apply {
             setSpan(
                 object : ClickableSpan() {
@@ -99,5 +99,6 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
         var setAcceptedTosVersion = true
         var nextActivity: Class<*>? = null
         var onContinue: (() -> Unit)? = null
+        var tosChanged = false
     }
 }
