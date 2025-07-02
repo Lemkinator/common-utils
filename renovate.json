@@ -17,10 +17,10 @@
       "automerge": true
     },
     {
-      "matchPackagePrefixes": [
-        "sesl.androidx"
-      ],
-      "automerge": false
+      "automerge": false,
+      "matchPackageNames": [
+        "sesl.androidx{/,}**"
+      ]
     }
   ]
 }
