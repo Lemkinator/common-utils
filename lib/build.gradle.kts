@@ -45,7 +45,7 @@ dependencies {
     implementation("io.github.tribalfs:oneui-design:0.6.6+oneui7")
     implementation("io.github.oneuiproject:icons:1.1.0")
 
-    implementation("androidx.core:core-splashscreen:1.2.0-beta02")
+    implementation("androidx.core:core-splashscreen:1.2.0-rc01")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.1")
     implementation("com.airbnb.android:lottie:6.6.7")
     implementation("com.google.android.gms:play-services-oss-licenses:17.1.0")
