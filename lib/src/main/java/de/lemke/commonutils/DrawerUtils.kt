@@ -6,6 +6,7 @@ import android.widget.ImageButton
 import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
+import dev.oneuiproject.oneui.layout.Badge
 import dev.oneuiproject.oneui.layout.NavDrawerLayout
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import dev.oneuiproject.oneui.R as iconsR
@@ -21,6 +22,7 @@ fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     )
     setNavRailContentMinSideMargin(14)
     closeNavRailOnBack = true
+    context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
 }
 
 private var lastClick = 0L
