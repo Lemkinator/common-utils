@@ -11,55 +11,18 @@ import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.preference.DropDownPreference
-import androidx.preference.Preference
-import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreferenceCompat
 import de.lemke.commonutils.data.commonUtilsSettings
 import dev.oneuiproject.oneui.ktx.addRelativeLinksCard
+import dev.oneuiproject.oneui.ktx.onClick
+import dev.oneuiproject.oneui.ktx.onNewValue
 import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
 import dev.oneuiproject.oneui.widget.RelativeLink
 
 private const val TAG = "PreferenceUtils"
-
-fun Preference.onPrefClick(function: (Preference) -> Unit) {
-    onPreferenceClickListener = OnPreferenceClickListener { preference ->
-        function(preference)
-        true
-    }
-}
-
-fun Preference.onPrefClickWithResult(function: (Preference) -> Boolean) {
-    onPreferenceClickListener = OnPreferenceClickListener { preference ->
-        function(preference)
-    }
-}
-
-fun Preference.onPrefChange(function: (Preference, Any) -> Boolean) {
-    onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue -> function(preference, newValue) }
-}
-
-fun Preference.onPrefChange(function: () -> Unit) {
-    onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
-        function()
-        true
-    }
-}
-
-inline fun <reified T> Preference.onPrefChange(crossinline function: (T) -> Unit) {
-    onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
-        override fun onPreferenceChange(preference: Preference, newValue: Any): Boolean {
-            if (newValue is T) {
-                function(newValue)
-                return true
-            }
-            Log.e("OnPrefChange", "Expected type ${T::class.java.simpleName}, but got ${newValue::class.java.simpleName}")
-            return false
-        }
-    }
-}
 
 fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
     addRelativeLinksCard(
@@ -77,23 +40,23 @@ fun PreferenceFragmentCompat.initCommonUtilsPreferences() {
     } ?: Log.w(TAG, "dev options preference category is null, skipping initialization")
 
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_delete_app_data))?.apply {
-        onPrefClick { deleteAppDataAndExit() }
+        onClick { deleteAppDataAndExit() }
     } ?: Log.w(TAG, "delete app data preference is null, skipping initialization")
 
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_language))?.apply {
         if (SDK_INT >= VERSION_CODES.TIRAMISU) {
             isVisible = true
-            onPrefClickWithResult { openAppLocaleSettings() }
+            onClick { openAppLocaleSettings() }
         }
     } ?: Log.w(TAG, "language preference is null, skipping initialization")
 }
 
 private fun PreferenceFragmentCompat.initMoreInfo() {
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_privacy_policy))?.apply {
-        onPrefClickWithResult { openURL(getString(R.string.commonutils_privacy_website)) }
+        onClick { openURL(getString(R.string.commonutils_privacy_website)) }
     } ?: Log.w(TAG, "privacy preference is null, skipping initialization")
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_tos))?.apply {
-        onPrefClick {
+        onClick {
             AlertDialog.Builder(requireContext())
                 .setTitle(getString(R.string.commonutils_tos))
                 .setMessage(getString(R.string.commonutils_tos_content))
@@ -102,7 +65,7 @@ private fun PreferenceFragmentCompat.initMoreInfo() {
         }
     } ?: Log.w(TAG, "tos preference is null, skipping initialization")
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_report_bug))?.apply {
-        onPrefClickWithResult { sendEmailBugReport(getString(R.string.commonutils_email), getString(R.string.commonutils_app_name)) }
+        onClick { sendEmailBugReport(getString(R.string.commonutils_email), getString(R.string.commonutils_app_name)) }
     } ?: Log.w(TAG, "report bug preference is null, skipping initialization")
 }
 
@@ -127,17 +90,17 @@ private fun PreferenceFragmentCompat.initDarkMode() {
         darkModePref.setDividerEnabled(false)
         darkModePref.setTouchEffectEnabled(false)
         autoDarkModePref.isChecked = commonUtilsSettings.autoDarkMode
-        autoDarkModePref.onPrefChange { newValue: Boolean ->
-            darkModePref.isEnabled = !newValue
-            if (newValue) setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
+        autoDarkModePref.onNewValue {
+            darkModePref.isEnabled = !it
+            if (it) setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
             else {
                 if (commonUtilsSettings.darkMode) setDefaultNightMode(MODE_NIGHT_YES)
                 else setDefaultNightMode(MODE_NIGHT_NO)
             }
         }
-        darkModePref.onPrefChange { newValue: String ->
-            commonUtilsSettings.darkMode = newValue == "1"
-            setDefaultNightMode(if (newValue == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
+        darkModePref.onNewValue {
+            commonUtilsSettings.darkMode = it == "1"
+            setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
         }
     }
 }
