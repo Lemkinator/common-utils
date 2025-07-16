@@ -15,10 +15,10 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import de.lemke.commonutils.databinding.WidgetInfoBottomsheetBinding
+import dev.oneuiproject.oneui.app.SemBottomSheetDialogFragment
 
-class InfoBottomSheet : BottomSheetDialogFragment() {
+class InfoBottomSheet : SemBottomSheetDialogFragment() {
     private lateinit var binding: WidgetInfoBottomsheetBinding
 
     override fun onDismiss(dialog: DialogInterface) {
