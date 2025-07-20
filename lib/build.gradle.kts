@@ -35,18 +35,9 @@ android {
 }
 
 dependencies {
-    //SESL Android Jetpack
-    implementation("sesl.androidx.core:core:1.16.0+1.0.16-sesl7+rev1")
-    implementation("sesl.androidx.core:core-ktx:1.16.0+1.0.0-sesl7+rev0")
-    implementation("sesl.androidx.appcompat:appcompat:1.7.1+1.0.47000-sesl7+rev0")
-    implementation("sesl.androidx.preference:preference:1.2.1+1.0.12-sesl7+rev0")
-    //SESL Material Components + Design Lib + Icons
-    implementation("sesl.com.google.android.material:material:1.12.0+1.0.39-sesl7+rev6")
     implementation("io.github.tribalfs:oneui-design:0.7.6+oneui7")
     implementation("io.github.oneuiproject:icons:1.1.0")
-
     implementation("androidx.core:core-splashscreen:1.2.0-rc01")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
     implementation("com.airbnb.android:lottie:6.6.7")
     implementation("com.google.android.gms:play-services-oss-licenses:17.2.1")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
