@@ -64,7 +64,6 @@
     <string name="commonutils_share">Share</string>
     <string name="commonutils_share_app">Share app</string>
     <string name="commonutils_useful_links">Useful links</string>
-    <string name="commonutils_credits">Credits</string>
     <string name="commonutils_playstore_ad">ADVERTISEMENT!!!&#129313;&#129396;</string>
     <string name="commonutils_playstore_redirect_message">According to Google Play, this is \"Deceptive advertisement that simulates or impersonates the user interface of an app feature\"… Since app updates are otherwise rejected by Google Play, here\'s a hint: This button leads (surprisingly?&#129313;) to my developer page on Google Play, continue?</string>
 
