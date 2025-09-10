@@ -39,7 +39,7 @@ dependencies {
     api("io.github.oneuiproject:icons:1.1.0")
     api("androidx.core:core-splashscreen:1.2.0-rc01")
     api("com.airbnb.android:lottie:6.6.7")
-    api("com.google.android.gms:play-services-oss-licenses:17.2.2")
+    api("com.google.android.gms:play-services-oss-licenses:17.3.0")
     api("com.google.android.play:app-update-ktx:2.1.0")
     api("com.google.android.play:review-ktx:2.0.2")
 }
