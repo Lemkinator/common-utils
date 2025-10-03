@@ -38,7 +38,7 @@ dependencies {
     api("io.github.tribalfs:oneui-design:0.7.10+oneui7")
     api("io.github.oneuiproject:icons:1.1.0")
     api("androidx.core:core-splashscreen:1.2.0-rc01")
-    api("com.airbnb.android:lottie:6.6.9")
+    api("com.airbnb.android:lottie:6.6.10")
     api("com.google.android.gms:play-services-oss-licenses:17.3.0")
     api("com.google.android.play:app-update-ktx:2.1.0")
     api("com.google.android.play:review-ktx:2.0.2")
