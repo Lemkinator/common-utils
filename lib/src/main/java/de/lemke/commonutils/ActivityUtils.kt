@@ -13,38 +13,38 @@ import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 private const val TAG = "ActivityUtils"
 
 fun setupCommonUtilsOOBEActivity(setAcceptedTosVersion: Boolean? = null, nextActivity: Class<*>) {
-    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.Companion.setAcceptedTosVersion = it }
-    CommonUtilsOOBEActivity.Companion.nextActivity = nextActivity
+    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.setAcceptedTosVersion = it }
+    CommonUtilsOOBEActivity.nextActivity = nextActivity
 }
 
 fun setupCommonUtilsOOBEActivity(setAcceptedTosVersion: Boolean? = null, onContinue: (() -> Unit)) {
-    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.Companion.setAcceptedTosVersion = it }
-    CommonUtilsOOBEActivity.Companion.onContinue = onContinue
+    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.setAcceptedTosVersion = it }
+    CommonUtilsOOBEActivity.onContinue = onContinue
 }
 
 fun setupCommonUtilsSettingsActivity(vararg preferences: Int, initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}) {
-    CommonUtilsSettingsActivity.Companion.preferences = preferences.toList()
-    CommonUtilsSettingsActivity.Companion.initPreferences = initPreferences
+    CommonUtilsSettingsActivity.preferences = preferences.toList()
+    CommonUtilsSettingsActivity.initPreferences = initPreferences
 }
 
 fun setupCommonUtilsSettingsActivity(preferences: List<Int>, initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}) {
-    CommonUtilsSettingsActivity.Companion.preferences = preferences
-    CommonUtilsSettingsActivity.Companion.initPreferences = initPreferences
+    CommonUtilsSettingsActivity.preferences = preferences
+    CommonUtilsSettingsActivity.initPreferences = initPreferences
 }
 
 fun setupCommonUtilsAboutMeActivity(onShareApp: (activity: Activity) -> Unit = {}) {
-    CommonUtilsAboutMeActivity.Companion.apply {
+    CommonUtilsAboutMeActivity.apply {
         this.onShareApp = onShareApp
     }
 }
 
 fun setupCommonUtilsAboutActivity(appVersion: String, optionalText: SpannableString? = null) {
-    CommonUtilsAboutActivity.Companion.apply {
+    CommonUtilsAboutActivity.apply {
         this.appVersion = appVersion
         this.optionalText = optionalText
     }
 }
 
 fun setupCommonUtilsAboutActivity(getAppVersion: suspend () -> String) {
-    CommonUtilsAboutActivity.Companion.getAppVersion = getAppVersion
+    CommonUtilsAboutActivity.getAppVersion = getAppVersion
 }

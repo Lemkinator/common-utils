@@ -40,7 +40,7 @@ fun AppCompatActivity.checkAppStart(
     }
     return AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
         Log.d(TAG, this.toString())
-        if (result == FIRST_TIME_VERSION && !tosAccepted) CommonUtilsOOBEActivity.Companion.tosChanged = true
+        if (result == FIRST_TIME_VERSION && !tosAccepted) CommonUtilsOOBEActivity.tosChanged = true
     }
 }
 
@@ -77,7 +77,7 @@ class AppStart(
     val isFirstTimeVersion get() = lastVersionCode < versionCode
     val tosAccepted get() = acceptedTosVersion >= tosVersion
     val shouldShowOOBE get() = isFirstTime || !tosAccepted
-    fun versionThresholdPassed(threshold: Int) = lastVersionCode <= threshold && versionCode > threshold
+    fun versionThresholdPassed(threshold: Int) = threshold in lastVersionCode..<versionCode
     override fun toString(): String = "AppStart(result=$result, versionCode=$versionCode, versionName='$versionName', " +
             "lastVersionCode=$lastVersionCode, lastVersionName='$lastVersionName', " +
             "tosVersion=$tosVersion, acceptedTosVersion=$acceptedTosVersion)"
