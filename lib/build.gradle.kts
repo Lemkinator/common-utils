@@ -35,7 +35,7 @@ android {
 }
 
 dependencies {
-    api("io.github.tribalfs:oneui-design:0.8.13+oneui8")
+    api("io.github.tribalfs:oneui-design:0.8.14+oneui8")
     api("io.github.oneuiproject:icons:1.1.0")
     api("androidx.core:core-splashscreen:1.2.0")
     api("com.airbnb.android:lottie:6.7.1")
