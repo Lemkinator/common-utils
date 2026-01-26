@@ -68,7 +68,6 @@ fun Context.exportBitmap(
             SaveLocation.DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
             SaveLocation.PICTURES -> Environment.DIRECTORY_PICTURES
             SaveLocation.DCIM -> Environment.DIRECTORY_DCIM
-            else -> Environment.DIRECTORY_DOWNLOADS // should never happen
         }
         Files.newOutputStream(File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath())
             .use<OutputStream, Boolean> { bitmap.compress(PNG, 100, it) }
