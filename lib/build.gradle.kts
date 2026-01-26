@@ -1,8 +1,6 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
 
 plugins {
     id("com.android.library")
-    id("kotlin-android")
     id("maven-publish")
     id("signing")
 }
@@ -26,8 +24,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-
-    kotlin { compilerOptions { jvmTarget.set(JVM_21) } }
 
     buildFeatures {
         viewBinding = true
