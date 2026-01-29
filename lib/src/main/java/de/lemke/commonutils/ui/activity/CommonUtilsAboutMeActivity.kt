@@ -179,7 +179,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
                 shareApp()
             }
             aboutBottomWriteEmail.setOnClickListener {
-                sendEmailAboutMe(getString(R.string.commonutils_email), getString(R.string.commonutils_app_name))
+                sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
             }
         }
     }

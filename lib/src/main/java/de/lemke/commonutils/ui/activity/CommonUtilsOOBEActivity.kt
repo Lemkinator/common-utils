@@ -33,6 +33,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
         if (SDK_INT >= 34) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
         binding = ActivityOobeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.setTitle(applicationInfo.loadLabel(packageManager).toString())
         initTipsItems()
         initToSView()
         initFooterButton()
