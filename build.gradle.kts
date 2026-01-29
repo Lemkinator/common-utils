@@ -54,7 +54,7 @@ allprojects {
 
 val groupId = "io.github.lemkinator"
 val artifact = "common-utils"
-val versionName = "0.9.10"
+val versionName = "0.9.11"
 
 subprojects {
     afterEvaluate {
