@@ -1,0 +1,29 @@
+[versions]
+appUpdateKtx = "2.1.0"
+coreSplashscreen = "1.2.0"
+gradle = "9.0.0"
+kotlin = "2.3.0"
+lottie = "6.7.1"
+oneui-design = "0.8.27+oneui8"
+oneui-icons = "1.1.0"
+playServicesOssLicenses = "17.3.0"
+reviewKtx = "2.0.2"
+
+[libraries]
+app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdateKtx" }
+core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
+oneui-design = { module = "io.github.tribalfs:oneui-design", version.ref = "oneui-design" }
+oneui-icons = { module = "io.github.oneuiproject:icons", version.ref = "oneui-icons" }
+play-services-oss-licenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "playServicesOssLicenses" }
+review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "reviewKtx" }
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "gradle" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+maven-publish = { id = "maven-publish"}
+signing = { id = "signing"}
+
+[bundles]
+android-play = ["app-update-ktx", "review-ktx"]
+oneui = ["oneui-design", "oneui-icons"]
