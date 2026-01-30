@@ -39,8 +39,8 @@ jobs:
           # Get the previous commit hash on main
           PREV_COMMIT=$(git rev-parse HEAD^)
           # Extract the line from both versions, Use xargs to trim whitespace
-          OLD_LINE=$(git show $PREV_COMMIT:gradle/libs.versions.toml | grep '^commonUtils =' | xargs)
-          NEW_LINE=$(grep '^commonUtils =' gradle/libs.versions.toml | xargs)
+          OLD_LINE=$(git show $PREV_COMMIT:gradle/libs.versions.toml | grep '^common-utils =' | xargs)
+          NEW_LINE=$(grep '^common-utils =' gradle/libs.versions.toml | xargs)
           echo "Old: $OLD_LINE"
           echo "New: $NEW_LINE"
           if [ "$OLD_LINE" != "$NEW_LINE" ] && [ -n "$NEW_LINE" ]; then

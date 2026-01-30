@@ -1,26 +1,26 @@
 [versions]
 #lib version
 #noinspection UnusedVersionCatalogEntry
-commonUtils = "0.9.11"
+common-utils = "0.9.11"
 
-appUpdateKtx = "2.1.0"
-coreSplashscreen = "1.2.0"
+app-update-ktx = "2.1.0"
+core-splashscreen = "1.2.0"
 gradle = "9.0.0"
 kotlin = "2.3.0"
 lottie = "6.7.1"
 oneui-design = "0.8.27+oneui8"
 oneui-icons = "1.1.0"
-playServicesOssLicenses = "17.3.0"
-reviewKtx = "2.0.2"
+play-services-oss-licenses = "17.3.0"
+review-ktx = "2.0.2"
 
 [libraries]
-app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdateKtx" }
-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "app-update-ktx" }
+core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 oneui-design = { module = "io.github.tribalfs:oneui-design", version.ref = "oneui-design" }
 oneui-icons = { module = "io.github.oneuiproject:icons", version.ref = "oneui-icons" }
-play-services-oss-licenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "playServicesOssLicenses" }
-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "reviewKtx" }
+play-services-oss-licenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "play-services-oss-licenses" }
+review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "review-ktx" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "gradle" }

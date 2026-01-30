@@ -76,7 +76,7 @@ subprojects {
         }
         val artifact = "common-utils"
         group = "io.github.lemkinator"
-        version = libs.versions.commonUtils.get()
+        version = libs.versions.common.utils.get()
         println("Evaluated $group:$artifact:$version")
         project.extensions.configure<PublishingExtension>("publishing") {
             publications {
