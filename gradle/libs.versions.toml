@@ -3,8 +3,6 @@
 #noinspection UnusedVersionCatalogEntry
 common-utils = "0.9.12"
 
-#test
-
 app-update-ktx = "2.1.0"
 core-splashscreen = "1.2.0"
 gradle = "9.0.0"
