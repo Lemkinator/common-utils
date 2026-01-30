@@ -6,10 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
 }
 
-val groupId = "io.github.lemkinator"
-val artifact = "common-utils"
-val versionName = "0.9.11"
-
 /**
  * Converts a camelCase or mixedCase string to ENV_VAR_STYLE (uppercase with underscores).
  * Example: githubAccessToken -> GITHUB_ACCESS_TOKEN
@@ -78,8 +74,9 @@ subprojects {
         if (!project.plugins.hasPlugin(libs.plugins.maven.publish.get().pluginId)) {
             return@afterEvaluate
         }
-        group = groupId
-        version = versionName
+        val artifact = "common-utils"
+        group = "io.github.lemkinator"
+        version = libs.versions.commonUtils.get()
         println("Evaluated $group:$artifact:$version")
         project.extensions.configure<PublishingExtension>("publishing") {
             publications {

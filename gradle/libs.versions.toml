@@ -1,4 +1,8 @@
 [versions]
+#lib version
+#noinspection UnusedVersionCatalogEntry
+commonUtils = "0.9.11"
+
 appUpdateKtx = "2.1.0"
 coreSplashscreen = "1.2.0"
 gradle = "9.0.0"

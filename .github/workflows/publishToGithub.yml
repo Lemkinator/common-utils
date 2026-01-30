@@ -3,7 +3,7 @@ name: Publish Common Utils Package
 on:
   push:
     branches: [ main ]
-    paths: [ 'build.gradle.kts' ]
+    paths: [ 'gradle/libs.versions.toml' ]
 
 jobs:
   check-and-publish:
@@ -38,12 +38,12 @@ jobs:
         run: |
           # Get the previous commit hash on main
           PREV_COMMIT=$(git rev-parse HEAD^)
-          # Extract the line from both versions
-          OLD_LINE=$(git show $PREV_COMMIT:build.gradle.kts | grep 'versionName =')
-          NEW_LINE=$(grep 'versionName =' build.gradle.kts)
+          # Extract the line from both versions, Use xargs to trim whitespace
+          OLD_LINE=$(git show $PREV_COMMIT:gradle/libs.versions.toml | grep '^commonUtils =' | xargs)
+          NEW_LINE=$(grep '^commonUtils =' gradle/libs.versions.toml | xargs)
           echo "Old: $OLD_LINE"
           echo "New: $NEW_LINE"
-          if [ "$OLD_LINE" != "$NEW_LINE" ]; then
+          if [ "$OLD_LINE" != "$NEW_LINE" ] && [ -n "$NEW_LINE" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
