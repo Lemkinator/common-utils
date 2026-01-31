@@ -30,6 +30,7 @@ import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import com.mikepenz.aboutlibraries.util.withContext
 import de.lemke.commonutils.prepareActivityTransformationTo
 import de.lemke.commonutils.setCustomBackAnimation
+import de.lemke.commonutils.setWindowTransparent
 import de.lemke.commonutils.R
 import dev.oneuiproject.oneui.R as iconsR
 import dev.oneuiproject.oneui.design.R as designR
@@ -39,6 +40,7 @@ class CommonUtilsLibsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         prepareActivityTransformationTo()
         super.onCreate(savedInstanceState)
+        setWindowTransparent(true)
         setContent {
             LocalView.current.apply { LaunchedEffect(this) { setCustomBackAnimation(this@apply) } }
             MaterialTheme(
