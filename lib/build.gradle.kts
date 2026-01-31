@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.signing)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -24,7 +25,9 @@ android {
 dependencies {
     api(libs.bundles.oneui)
     api(libs.bundles.android.play)
-    api(libs.play.services.oss.licenses)
+    implementation(libs.aboutlibraries.compose.m3)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.material3)
     api(libs.core.splashscreen)
     api(libs.lottie)
 }

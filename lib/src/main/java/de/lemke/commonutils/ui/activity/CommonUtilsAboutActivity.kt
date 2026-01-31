@@ -1,6 +1,5 @@
 package de.lemke.commonutils.ui.activity
 
-import android.content.Intent
 import android.graphics.Color.TRANSPARENT
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
@@ -14,7 +13,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -30,6 +28,7 @@ import de.lemke.commonutils.databinding.ActivityAboutBinding
 import de.lemke.commonutils.openApp
 import de.lemke.commonutils.prepareActivityTransformationTo
 import de.lemke.commonutils.setCustomBackAnimation
+import de.lemke.commonutils.transformToActivity
 import dev.oneuiproject.oneui.ktx.onMultiClick
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoConnection
@@ -64,7 +63,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         setVersionText()
         setOptionalText()
         binding.aboutButtonOpenInStore.setOnClickListener { openApp(packageName, false) }
-        binding.aboutButtonOpenSourceLicenses.setOnClickListener { startActivity(Intent(this, OssLicensesMenuActivity::class.java)) }
+        binding.aboutButtonOpenSourceLicenses.apply { setOnClickListener { transformToActivity(CommonUtilsLibsActivity::class.java) } }
         activityResultLauncher = registerForActivityResult(StartIntentSenderForResult()) { result ->
             when (result.resultCode) {
                 // For immediate updates, you might not receive RESULT_OK because

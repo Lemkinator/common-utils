@@ -4,6 +4,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
 }
 
 /**
@@ -87,6 +88,7 @@ subprojects {
                     }
                     pom {
                         name = artifact
+                        description = "A collection of common utility functions and classes for my Android projects."
                         url = "https://github.com/Lemkinator/common-utils"
                         developers {
                             developer {

@@ -3,28 +3,33 @@
 #noinspection UnusedVersionCatalogEntry
 common-utils = "0.9.12"
 
+aboutlibraries = "14.0.0-b02"
+activity-compose = "1.12.3"
 app-update-ktx = "2.1.0"
 core-splashscreen = "1.2.0"
 gradle = "9.0.0"
 kotlin = "2.3.0"
 lottie = "6.7.1"
+material3 = "1.4.0"
 oneui-design = "0.8.27+oneui8"
 oneui-icons = "1.1.0"
-play-services-oss-licenses = "17.3.0"
 review-ktx = "2.0.2"
 
 [libraries]
+aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "app-update-ktx" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 oneui-design = { module = "io.github.tribalfs:oneui-design", version.ref = "oneui-design" }
 oneui-icons = { module = "io.github.oneuiproject:icons", version.ref = "oneui-icons" }
-play-services-oss-licenses = { module = "com.google.android.gms:play-services-oss-licenses", version.ref = "play-services-oss-licenses" }
 review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "review-ktx" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "gradle" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 maven-publish = { id = "maven-publish"}
 signing = { id = "signing"}
 

@@ -5,14 +5,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application>
-        <activity
-            android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-            android:label="@string/commonutils_open_source_licenses"
-            android:theme="@style/AppTheme.OSL"
-            tools:replace="android:label" />
-        <activity
-            android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
-            android:theme="@style/AppTheme.OSL" />
+        <activity android:name=".ui.activity.CommonUtilsLibsActivity" />
         <activity android:name=".ui.activity.CommonUtilsOOBEActivity" />
         <activity android:name=".ui.activity.CommonUtilsAboutActivity" />
         <activity android:name=".ui.activity.CommonUtilsAboutMeActivity" />
