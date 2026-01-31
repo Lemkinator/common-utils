@@ -26,7 +26,7 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.databinding.ActivityAboutBinding
 import de.lemke.commonutils.openApp
-import de.lemke.commonutils.prepareActivityTransformationTo
+import de.lemke.commonutils.prepareActivityTransformationBetween
 import de.lemke.commonutils.setCustomBackAnimation
 import de.lemke.commonutils.transformToActivity
 import dev.oneuiproject.oneui.ktx.onMultiClick
@@ -45,7 +45,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
     private lateinit var activityResultLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        prepareActivityTransformationTo()
+        prepareActivityTransformationBetween()
         super.onCreate(savedInstanceState)
         binding = ActivityAboutBinding.inflate(layoutInflater)
         setContentView(binding.root)
