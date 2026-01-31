@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <application>
+    <application android:theme="@style/CommonUtils.AppTheme">
         <activity android:name=".ui.activity.CommonUtilsLibsActivity" />
         <activity android:name=".ui.activity.CommonUtilsOOBEActivity" />
         <activity android:name=".ui.activity.CommonUtilsAboutActivity" />
