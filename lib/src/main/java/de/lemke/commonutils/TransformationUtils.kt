@@ -110,12 +110,28 @@ fun View.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
+    suspendItemRipple()
     this.transitionName = transitionName
     val bundle = ActivityOptions.makeSceneTransitionAnimation(context.activity, this, transitionName).toBundle()
     intent.putExtra(TRANSITION_NAME_KEY, transitionName)
         .putExtra(DURATION_KEY, duration)
         .putExtra(FADE_MODE_KEY, fadeMode)
     context.startActivity(intent, bundle)
+}
+
+/**
+ * Temporary disable item view's background to
+ * workaround bleeding ripple on rounded corners
+ * when calling startActivity with ActivityOptions.makeSceneTransitionAnimation()
+ *
+ * https://github.com/tribalfs/Stargazers/blob/4f75aa6f0a64cb9e8f2bdd47287203f33ea81086/app/src/main/java/com/tribalfs/stargazers/ui/screens/main/stargazerslist/StargazersListFragment.kt#L478
+ *
+ * @receiver View The view to suspend ripple effect.
+ * */
+private fun View.suspendItemRipple() {
+    val bg = background
+    postOnAnimation { background = null }
+    postDelayed({ background = bg }, 1_000)
 }
 
 /**
