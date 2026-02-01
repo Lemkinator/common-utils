@@ -110,12 +110,22 @@ fun View.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
+    suspendStateListAnimator()
     this.transitionName = transitionName
     val bundle = ActivityOptions.makeSceneTransitionAnimation(context.activity, this, transitionName).toBundle()
     intent.putExtra(TRANSITION_NAME_KEY, transitionName)
         .putExtra(DURATION_KEY, duration)
         .putExtra(FADE_MODE_KEY, fadeMode)
     context.startActivity(intent, bundle)
+}
+
+/**
+ * Workaround: Temporary disable item view's StateListAnimator
+ * */
+private fun View.suspendStateListAnimator() {
+    val sla = stateListAnimator
+    stateListAnimator = null
+    postDelayed({ stateListAnimator = sla }, 1_000)
 }
 
 /**
