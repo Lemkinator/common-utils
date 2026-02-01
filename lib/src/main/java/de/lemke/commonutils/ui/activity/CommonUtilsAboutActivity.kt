@@ -63,7 +63,9 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         setVersionText()
         setOptionalText()
         binding.aboutButtonOpenInStore.setOnClickListener { openApp(packageName, false) }
-        binding.aboutButtonOpenSourceLicenses.apply { setOnClickListener { transformToActivity(CommonUtilsLibsActivity::class.java) } }
+        binding.aboutButtonOpenSourceLicenses.apply {
+            setOnClickListener { transformToActivity(CommonUtilsLibsActivity::class.java, transitionName = "CommonUtilsLibsTransition") }
+        }
         activityResultLauncher = registerForActivityResult(StartIntentSenderForResult()) { result ->
             when (result.resultCode) {
                 // For immediate updates, you might not receive RESULT_OK because
