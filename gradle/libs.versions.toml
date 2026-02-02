@@ -30,8 +30,8 @@ review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "rev
 android-library = { id = "com.android.library", version.ref = "gradle" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-maven-publish = { id = "maven-publish"}
-signing = { id = "signing"}
+maven-publish = { id = "maven-publish" }
+signing = { id = "signing" }
 
 [bundles]
 android-play = ["app-update-ktx", "review-ktx"]
