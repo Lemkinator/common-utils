@@ -1,7 +1,7 @@
 [versions]
 #lib version
 #noinspection UnusedVersionCatalogEntry
-common-utils = "0.9.20"
+common-utils = "0.9.21"
 
 aboutlibraries = "14.0.0-b02"
 activity-compose = "1.12.4"
