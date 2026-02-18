@@ -48,8 +48,6 @@ const val COMMONUTILS_KEY_IS_SEARCH_MODE = "commonutils_isSearchMode"
 const val COMMONUTILS_KEY_IS_ACTION_MODE = "commonutils_isActionMode"
 const val COMMONUTILS_KEY_SELECTED_IDS = "commonutils_selectedIds"
 
-fun Bundle.saveSearchAndActionMode(isSearchMode: Boolean = false) = saveSearchAndActionMode(isSearchMode, false, emptySet())
-
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
