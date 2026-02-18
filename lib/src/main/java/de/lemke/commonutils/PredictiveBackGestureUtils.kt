@@ -62,10 +62,11 @@ inline fun Fragment.addOnBackLogic(
 
 val GestureInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
 
-class BackAnimationOutlineProvider() : ViewOutlineProvider() {
+class BackAnimationOutlineProvider : ViewOutlineProvider() {
     var radius = 0f
     var progress: Float = 0f
         set(value) {
+            field = value
             radius = value * 100f
         }
 
