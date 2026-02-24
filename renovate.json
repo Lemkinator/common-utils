@@ -15,12 +15,6 @@
       ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true
-    },
-    {
-      "matchPackageNames": [
-        "sesl.{/,}**"
-      ],
-      "automerge": false
     }
   ]
 }
