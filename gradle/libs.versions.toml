@@ -3,7 +3,7 @@
 #noinspection UnusedVersionCatalogEntry
 common-utils = "0.9.22"
 
-aboutlibraries = "14.0.0"
+aboutlibraries = "14.0.1"
 activity-compose = "1.12.4"
 app-update-ktx = "2.1.0"
 core-splashscreen = "1.2.0"
