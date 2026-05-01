@@ -4,7 +4,7 @@
 common-utils = "0.9.22"
 
 aboutlibraries = "14.1.0"
-activity-compose = "1.12.4"
+activity-compose = "1.13.0"
 app-update-ktx = "2.1.0"
 core-splashscreen = "1.2.0"
 gradle = "9.2.0"
