@@ -11,9 +11,15 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.Lifecycle.State
+import androidx.lifecycle.Lifecycle.State.STARTED
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dev.oneuiproject.oneui.ktx.setOnClickListenerWithProgress
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
@@ -24,6 +30,20 @@ fun Fragment.toast(msg: String) = requireContext().toast(msg)
 fun Context.toast(msg: String) = Toast.makeText(this, msg, LENGTH_SHORT).show()
 fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
 fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
+
+inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
+    minActiveState: State = STARTED,
+    crossinline block: suspend CoroutineScope.() -> Unit,
+) {
+    lifecycleScope.launch { lifecycle.repeatOnLifecycle(minActiveState) { block() } }
+}
+
+inline fun Fragment.launchAndRepeatWithViewLifecycle(
+    minActiveState: State = STARTED,
+    crossinline block: suspend CoroutineScope.() -> Unit,
+) {
+    viewLifecycleOwner.lifecycleScope.launch { viewLifecycleOwner.lifecycle.repeatOnLifecycle(minActiveState) { block() } }
+}
 
 fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, delete: String? = null) {
     val dialog = AlertDialog.Builder(requireContext())
