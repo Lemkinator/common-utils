@@ -12,18 +12,18 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import java.lang.System.currentTimeMillis
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
-private const val tag = "InAppReviewUtils"
+private const val TAG = "InAppReviewUtils"
 
-fun AppCompatActivity.getLastInAppReview() = getSharedPreferences(tag, MODE_PRIVATE).getLong("lastInAppReview", currentTimeMillis())
+fun AppCompatActivity.getLastInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).getLong("lastInAppReview", currentTimeMillis())
 
-fun AppCompatActivity.setInAppReview() = getSharedPreferences(tag, MODE_PRIVATE).edit { putLong("lastInAppReview", currentTimeMillis()) }
+fun AppCompatActivity.setInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).edit { putLong("lastInAppReview", currentTimeMillis()) }
 
 fun AppCompatActivity.canShowInAppReview() = try {
     val daysSinceLastReview = MILLISECONDS.toDays(currentTimeMillis() - getLastInAppReview())
-    Log.d(tag, "Days since last review: $daysSinceLastReview")
+    Log.d(TAG, "Days since last review: $daysSinceLastReview")
     daysSinceLastReview >= 14
 } catch (e: Exception) {
-    e.printStackTrace()
+    Log.e(TAG, "Error checking in-app review eligibility", e)
     false
 }
 
@@ -47,31 +47,31 @@ private fun AppCompatActivity.showInAppReview(
     onError: (Exception) -> Unit = {},
 ) {
     try {
-        if (canShowInAppReview()) {
-            Log.d(tag, "In app review requested less than 14 days ago, skipping")
+        if (!canShowInAppReview()) {
+            Log.d(TAG, "In app review requested less than 14 days ago, skipping")
             onNotAllowed()
             return
         }
-        Log.d(tag, "trying to show in app review")
+        Log.d(TAG, "trying to show in app review")
         setInAppReview()
         val manager = ReviewManagerFactory.create(this)
         val request = manager.requestReviewFlow()
         request.addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                Log.d(tag, "Review task successful")
+                Log.d(TAG, "Review task successful")
                 val reviewInfo = task.result
                 val flow = manager.launchReviewFlow(this, reviewInfo)
                 flow.addOnCompleteListener {
-                    Log.d(tag, "Review flow complete")
+                    Log.d(TAG, "Review flow complete")
                     onCompleted()
                 }
             } else {
-                Log.e(tag, "Review task failed: ${task.exception?.message}")
+                Log.e(TAG, "Review task failed: ${task.exception?.message}")
                 onReviewError(task)
             }
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        Log.e(TAG, "Error showing in-app review", e)
         onError(e)
     }
 }

@@ -31,10 +31,10 @@ class SharedPreferenceDelegates(private val prefs: SharedPreferences) {
         create(default, key, prefs::getLong, prefs.edit()::putLong)
 
     fun string(default: String = "", key: String? = null): ReadWriteProperty<Any, String> =
-        create(default, key, { k, d -> prefs.getString(k, d) as String }, prefs.edit()::putString)
+        create(default, key, { k, d -> prefs.getString(k, d) ?: d }, prefs.edit()::putString)
 
     fun stringSet(default: Set<String> = emptySet(), key: String? = null): ReadWriteProperty<Any, Set<String>> =
-        create(default, key, { k, d -> prefs.getStringSet(k, d) as Set<String> }, prefs.edit()::putStringSet)
+        create(default, key, { k, d -> prefs.getStringSet(k, d) ?: d }, prefs.edit()::putStringSet)
 
     fun darkMode(default: Boolean = false, key: String? = null): ReadWriteProperty<Any, Boolean> =
         create(

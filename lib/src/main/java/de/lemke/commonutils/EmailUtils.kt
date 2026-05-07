@@ -8,6 +8,7 @@ import android.content.Intent.ACTION_SENDTO
 import android.content.Intent.EXTRA_EMAIL
 import android.content.Intent.EXTRA_SUBJECT
 import android.content.Intent.EXTRA_TEXT
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 
@@ -24,7 +25,7 @@ fun Context.sendEmail(emails: Array<String>, subject: String, text: String): Boo
     }
     true
 } catch (e: Exception) {
-    e.printStackTrace()
+    Log.e(TAG, "Failed to send email", e)
     toast(getString(R.string.commonutils_no_email_app_installed))
     false
 }

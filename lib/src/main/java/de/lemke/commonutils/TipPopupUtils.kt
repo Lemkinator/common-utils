@@ -20,10 +20,7 @@ fun View.showTouchBlockingTipPopup(
 ) = showTouchBlockingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
 fun View.showTouchBlockingTipPopup(message: String, actionText: String? = null, action: () -> Unit = {}) {
-    val rootView = context.activity?.window?.decorView?.rootView as ViewGroup
-    val blockingView = TouchBlockingView(context)
-    rootView.addView(blockingView)
-    showTipPopup(rootView, blockingView, message, actionText, action).apply { setOutsideTouchEnabled(false) }
+    showTipPopupWithOverlay(TouchBlockingView(context), message, actionText, action).setOutsideTouchEnabled(false)
 }
 
 fun View.showDimmingTipPopup(
@@ -33,10 +30,13 @@ fun View.showDimmingTipPopup(
 ) = showDimmingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
 fun View.showDimmingTipPopup(message: String, actionText: String? = null, action: () -> Unit = {}) {
+    showTipPopupWithOverlay(DimmingView(context), message, actionText, action)
+}
+
+private fun View.showTipPopupWithOverlay(overlay: View, message: String, actionText: String?, action: () -> Unit): TipPopup {
     val rootView = context.activity?.window?.decorView?.rootView as ViewGroup
-    val dimmingView = DimmingView(context)
-    rootView.addView(dimmingView)
-    showTipPopup(rootView, dimmingView, message, actionText, action)
+    rootView.addView(overlay)
+    return showTipPopup(rootView, overlay, message, actionText, action)
 }
 
 private fun View.showTipPopup(
@@ -53,4 +53,3 @@ private fun View.showTipPopup(
     setAction(actionText ?: context.getString(R.string.commonutils_ok)) { rootView.removeView(backgroundView); action() }
     show()
 }
-
