@@ -4,7 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Android utility library published to GitHub Packages as `io.github.lemkinator:common-utils`. Single `:lib` module. Min SDK 26, Target SDK 36, Kotlin 2.3.21, Java 21.
+Android utility library published to GitHub Packages as `io.github.lemkinator:common-utils`. Single `:lib` module. Min SDK 26, Target SDK
+36, Kotlin 2.3.21, Java 21.
 
 ## Build Commands
 
@@ -31,16 +32,20 @@ Requires `GH_USERNAME` and `GH_ACCESS_TOKEN` in `github.properties`, gradle prop
 
 **Single-module utility library** — no DI framework, no ViewModel layer. Code is organized into:
 
-- **Root utilities** (`lib/src/main/java/de/lemke/commonutils/`): ~19 extension-function files targeting `Context`, `Activity`, `Fragment` (e.g., `SharingUtils.kt`, `URLUtils.kt`, `EmailUtils.kt`).
+- **Root utilities** (`lib/src/main/java/de/lemke/commonutils/`): ~19 extension-function files targeting `Context`, `Activity`, `Fragment` (
+  e.g., `SharingUtils.kt`, `URLUtils.kt`, `EmailUtils.kt`).
 - **Pre-built Activities** (`ui/activity/`): Drop-in About, Settings, OOBE, LibraryInfo, and AboutMe screens.
 - **UI Widgets** (`ui/widget/`, `ui/fragment/`): Reusable components like `InfoBottomSheet`, `NoEntryView`, `DimmingView`.
-- **Data layer** (`data/`): `SettingsRepository.kt` (SharedPreferences-backed app settings) and `DelegatesAdvanced.kt` (type-safe `ReadWriteProperty` delegates for preferences).
+- **Data layer** (`data/`): `SettingsRepository.kt` (SharedPreferences-backed app settings) and `DelegatesAdvanced.kt` (type-safe
+  `ReadWriteProperty` delegates for preferences).
 
-**UI stack**: Samsung OneUI Design system (`io.github.tribalfs:oneui-design`) is the primary UI framework. Jetpack Compose / Material3 is used selectively. View Binding is enabled.
+**UI stack**: Samsung OneUI Design system (`io.github.tribalfs:oneui-design`) is the primary UI framework. Jetpack Compose / Material3 is
+used selectively. View Binding is enabled.
 
 **Key dependencies**: Lottie (animations), AboutLibraries (OSS license screen), Play Core (in-app updates + reviews), Splashscreen.
 
-**Dependency exclusions**: Many AndroidX libraries are excluded in the root `build.gradle.kts` to avoid version conflicts with OneUI Design's bundled dependencies — be careful when adding new dependencies.
+**Dependency exclusions**: Many AndroidX libraries are excluded in the root `build.gradle.kts` to avoid version conflicts with OneUI
+Design's bundled dependencies — be careful when adding new dependencies.
 
 ## Configuration
 
