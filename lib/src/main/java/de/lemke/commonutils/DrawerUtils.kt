@@ -28,9 +28,8 @@ fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
 }
 
-private var lastClick = 0L
-
 fun DrawerNavigationView.onNavigationSingleClick(interval: Long = 600, listener: NavigationView.OnNavigationItemSelectedListener) {
+    var lastClick = 0L
     setNavigationItemSelectedListener { item ->
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastClick < interval) return@setNavigationItemSelectedListener false

@@ -1,17 +1,17 @@
 [versions]
 #lib version
 #noinspection UnusedVersionCatalogEntry
-common-utils = "0.9.19"
+common-utils = "0.9.23"
 
-aboutlibraries = "14.0.0-b02"
-activity-compose = "1.12.3"
+aboutlibraries = "14.2.0"
+activity-compose = "1.12.4"
 app-update-ktx = "2.1.0"
 core-splashscreen = "1.2.0"
-gradle = "9.0.0"
-kotlin = "2.3.0"
+gradle = "9.2.1"
+kotlin = "2.3.21"
 lottie = "6.7.1"
 material3 = "1.4.0"
-oneui-design = "0.8.27+oneui8"
+oneui-design = "0.9.10+oneui8"
 oneui-icons = "1.1.0"
 review-ktx = "2.0.2"
 
@@ -30,8 +30,8 @@ review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "rev
 android-library = { id = "com.android.library", version.ref = "gradle" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-maven-publish = { id = "maven-publish"}
-signing = { id = "signing"}
+maven-publish = { id = "maven-publish" }
+signing = { id = "signing" }
 
 [bundles]
 android-play = ["app-update-ktx", "review-ktx"]

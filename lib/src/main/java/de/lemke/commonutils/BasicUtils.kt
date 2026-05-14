@@ -11,11 +11,14 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-import androidx.collection.ScatterSet
-import androidx.collection.emptyScatterSet
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle.State
+import androidx.lifecycle.Lifecycle.State.STARTED
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dev.oneuiproject.oneui.ktx.setOnClickListenerWithProgress
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
@@ -26,6 +29,20 @@ fun Fragment.toast(msg: String) = requireContext().toast(msg)
 fun Context.toast(msg: String) = Toast.makeText(this, msg, LENGTH_SHORT).show()
 fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
 fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
+
+inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
+    minActiveState: State = STARTED,
+    crossinline block: suspend CoroutineScope.() -> Unit,
+) {
+    lifecycleScope.launch { lifecycle.repeatOnLifecycle(minActiveState) { block() } }
+}
+
+inline fun Fragment.launchAndRepeatWithViewLifecycle(
+    minActiveState: State = STARTED,
+    crossinline block: suspend CoroutineScope.() -> Unit,
+) {
+    viewLifecycleOwner.lifecycleScope.launch { viewLifecycleOwner.lifecycle.repeatOnLifecycle(minActiveState) { block() } }
+}
 
 fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, delete: String? = null) {
     val dialog = AlertDialog.Builder(requireContext())
@@ -50,31 +67,23 @@ const val COMMONUTILS_KEY_IS_SEARCH_MODE = "commonutils_isSearchMode"
 const val COMMONUTILS_KEY_IS_ACTION_MODE = "commonutils_isActionMode"
 const val COMMONUTILS_KEY_SELECTED_IDS = "commonutils_selectedIds"
 
-fun Bundle.saveSearchAndActionMode(isSearchMode: Boolean = false) = saveSearchAndActionMode(isSearchMode, false, longArrayOf())
-
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
-    selectedIds: ScatterSet<Long> = emptyScatterSet(),
-) = saveSearchAndActionMode(isSearchMode, isActionMode, selectedIds.asSet().toLongArray())
-
-fun Bundle.saveSearchAndActionMode(
-    isSearchMode: Boolean = false,
-    isActionMode: Boolean = false,
-    selectedIds: LongArray = longArrayOf(),
+    selectedIds: Set<Long> = emptySet(),
 ) {
     if (isSearchMode) {
         putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true)
     }
     if (isActionMode) {
         putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true)
-        putLongArray(COMMONUTILS_KEY_SELECTED_IDS, selectedIds)
+        putLongArray(COMMONUTILS_KEY_SELECTED_IDS, selectedIds.toLongArray())
     }
 }
 
 inline fun Bundle?.restoreSearchAndActionMode(
     crossinline onSearchMode: () -> Unit = {},
-    crossinline onActionMode: (selectedIds: Array<Long>) -> Unit = {},
+    crossinline onActionMode: (selectedIds: Set<Long>) -> Unit = {},
     crossinline bundleIsNull: () -> Unit = {},
 ) {
     if (this == null) {
@@ -84,7 +93,7 @@ inline fun Bundle?.restoreSearchAndActionMode(
             onSearchMode()
         }
         if (getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE)) {
-            onActionMode(getLongArray(COMMONUTILS_KEY_SELECTED_IDS)?.toTypedArray() ?: emptyArray())
+            onActionMode(getLongArray(COMMONUTILS_KEY_SELECTED_IDS)?.toSet() ?: emptySet())
         }
     }
 }

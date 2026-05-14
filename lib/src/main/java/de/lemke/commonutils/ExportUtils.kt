@@ -1,4 +1,4 @@
-@file:Suppress("NOTHING_TO_INLINE", "unused")
+@file:Suppress("unused")
 
 package de.lemke.commonutils
 
@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
 import java.io.File
@@ -44,9 +45,9 @@ enum class SaveLocation {
 
     fun toLocalizedString(context: Context): String = when (this) {
         CUSTOM -> context.getString(R.string.commonutils_custom)
-        DOWNLOADS -> "Downloads"
-        PICTURES -> "Pictures"
-        DCIM -> "DCIM"
+        DOWNLOADS -> context.getString(R.string.commonutils_downloads)
+        PICTURES -> context.getString(R.string.commonutils_pictures)
+        DCIM -> context.getString(R.string.commonutils_dcim)
     }
 }
 
@@ -74,7 +75,7 @@ fun Context.exportBitmap(
         toast(getString(R.string.commonutils_image_saved) + ": ${saveLocation.toLocalizedString(this)}")
         true
     } catch (e: Exception) {
-        e.printStackTrace()
+        Log.e(TAG, "Error saving bitmap to directory", e)
         toast(R.string.commonutils_error_creating_file)
         false
     }
@@ -86,28 +87,37 @@ fun Context.exportBitmap(
     activityResultLauncher?.launch(intent)
     true
 } catch (e: Exception) {
-    e.printStackTrace()
+    Log.e(TAG, "Error launching document picker", e)
     toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
     false
 }
 
-fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?): Boolean = try {
-    contentResolver.openOutputStream(uri!!)!!.use { outputStream ->
-        if (bitmap?.compress(PNG, 100, outputStream) == true) {
-            toast(R.string.commonutils_image_saved)
-            true
-        } else {
-            toast(R.string.commonutils_error_saving_image)
+fun Context.saveBitmapToUri(uri: Uri?, bitmap: Bitmap?): Boolean {
+    if (uri == null || bitmap == null) {
+        toast(R.string.commonutils_error_creating_file)
+        return false
+    }
+    return try {
+        contentResolver.openOutputStream(uri)?.use { outputStream ->
+            if (bitmap.compress(PNG, 100, outputStream)) {
+                toast(R.string.commonutils_image_saved)
+                true
+            } else {
+                toast(R.string.commonutils_error_saving_image)
+                false
+            }
+        } ?: run {
+            toast(R.string.commonutils_error_creating_file)
             false
         }
+    } catch (e: Exception) {
+        Log.e(TAG, "Error saving bitmap to uri", e)
+        toast(R.string.commonutils_error_creating_file)
+        false
     }
-} catch (e: Exception) {
-    e.printStackTrace()
-    toast(R.string.commonutils_error_creating_file)
-    false
 }
 
-inline fun String.toSafeFileName(extension: String): String =
+fun String.toSafeFileName(extension: String): String =
     "${this}_${SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault()).format(Date())}"
         .replace("https://", "")
         .replace("[^a-zA-Z0-9]+".toRegex(), "_")

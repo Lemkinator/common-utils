@@ -12,6 +12,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.TIRAMISU
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
 import android.provider.Settings.ACTION_APP_LOCALE_SETTINGS
+import android.util.Log
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
@@ -32,7 +33,7 @@ private fun Context.openAppWithPackageName(packageName: String): Boolean = try {
         true
     } else openAppWithPackageNameOnStore(packageName)
 } catch (e: Exception) {
-    e.printStackTrace()
+    Log.e(TAG, "Failed to open app with package name", e)
     toast(getString(R.string.commonutils_error_cant_open_app))
     false
 }
@@ -44,13 +45,13 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean 
         startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
         return true
     } catch (anfe: ActivityNotFoundException) {
-        anfe.printStackTrace()
+        Log.e(TAG, "Failed to open Play Store app link", anfe)
         intent.data = (getString(R.string.commonutils_playstore_link) + packageName).toUri()
         try {
             startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
             return true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Failed to open Play Store link", e)
             toast(getString(R.string.commonutils_error_cant_open_app))
             return false
         }
@@ -70,7 +71,7 @@ fun Fragment.openAppLocaleSettings(): Boolean {
         startActivity(Intent(ACTION_APP_LOCALE_SETTINGS, "package:${requireContext().packageName}".toUri()))
         return true
     } catch (e: ActivityNotFoundException) {
-        e.printStackTrace()
+        Log.e(TAG, "App locale settings not available", e)
         toast(getString(R.string.commonutils_change_language_not_supported_by_device))
         return false
     }
@@ -83,7 +84,7 @@ fun Context.openApplicationSettings(): Boolean = try {
     )
     true
 } catch (e: Exception) {
-    e.printStackTrace()
+    Log.e(TAG, "Failed to open application settings", e)
     toast(R.string.commonutils_error_cant_open_app_settings)
     false
 }

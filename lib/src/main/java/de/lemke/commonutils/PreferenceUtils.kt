@@ -65,7 +65,12 @@ private fun PreferenceFragmentCompat.initMoreInfo() {
         }
     } ?: Log.w(TAG, "tos preference is null, skipping initialization")
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_report_bug))?.apply {
-        onClick { sendEmailBugReport(getString(R.string.commonutils_email), requireContext().applicationInfo.loadLabel(requireContext().packageManager).toString()) }
+        onClick {
+            sendEmailBugReport(
+                getString(R.string.commonutils_email),
+                requireContext().applicationInfo.loadLabel(requireContext().packageManager).toString()
+            )
+        }
     } ?: Log.w(TAG, "report bug preference is null, skipping initialization")
 }
 

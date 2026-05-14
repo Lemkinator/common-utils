@@ -34,11 +34,11 @@ fun Context.openURL(url: String?): Boolean = try {
         true
     }
 } catch (e: ActivityNotFoundException) {
-    e.printStackTrace()
+    Log.e(TAG, "No browser app installed", e)
     toast(getString(R.string.commonutils_no_browser_app_installed))
     false
 } catch (e: Exception) {
-    e.printStackTrace()
+    Log.e(TAG, "Failed to open URL", e)
     toast(getString(R.string.commonutils_error_cant_open_url))
     false
 }

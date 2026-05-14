@@ -1,4 +1,4 @@
-@file:Suppress("NOTHING_TO_INLINE", "unused")
+@file:Suppress("unused")
 
 package de.lemke.commonutils
 
@@ -87,7 +87,7 @@ fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = n
     }
     true
 } catch (e: Exception) {
-    e.printStackTrace()
+    Log.e(TAG, "Error sharing bitmap", e)
     context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
     false
 }
@@ -106,7 +106,7 @@ fun Bitmap.quickShare(context: Context, shareFileName: String): Boolean {
     }
 }
 
-inline fun File.share(context: Context): Boolean = listOf(this).share(context)
+fun File.share(context: Context): Boolean = listOf(this).share(context)
 
 fun List<File>.share(context: Context): Boolean {
     val contentUris = map { f -> f.getFileUri(context) }
@@ -129,7 +129,7 @@ fun List<File>.share(context: Context): Boolean {
     }
 }
 
-private inline fun Context.createBaseIntent() =
+private fun Context.createBaseIntent() =
     Intent().apply {
         addFlags(FLAG_GRANT_READ_URI_PERMISSION)
         action = ACTION_SEND
@@ -138,7 +138,7 @@ private inline fun Context.createBaseIntent() =
         }
     }
 
-private inline fun Intent.start(context: Context): Boolean {
+private fun Intent.start(context: Context): Boolean {
     try {
         context.startActivity(this)
         return true
@@ -150,13 +150,12 @@ private inline fun Intent.start(context: Context): Boolean {
     }
 }
 
-private inline fun Context.safeStartActivity(intent: Intent): Boolean {
+private fun Context.safeStartActivity(intent: Intent): Boolean {
     try {
         startActivity(intent)
         return true
     } catch (e: Exception) {
-        e.printStackTrace()
-        Log.e(TAG, "Failed to start activity: ${e.message}")
+        Log.e(TAG, "Failed to start activity", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
         return false
     }
@@ -173,5 +172,5 @@ fun Context.isSamsungQuickShareAvailable(): Boolean {
     }
 }
 
-inline fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", this)
+fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", this)
 
