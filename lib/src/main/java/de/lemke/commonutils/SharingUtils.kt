@@ -139,7 +139,7 @@ fun Bitmap.share(
             return false
         }
         val uri = cacheFile.getFileUri(context)
-        Intent(ACTION_SEND).apply {
+        Intent(ACTION_SEND).run {
             clipData = ClipData.newRawUri(shareFileName, uri)
             putExtra(EXTRA_STREAM, uri)
             shareText?.let { putExtra(EXTRA_TEXT, it) }
@@ -147,7 +147,6 @@ fun Bitmap.share(
             addFlags(FLAG_GRANT_READ_URI_PERMISSION)
             context.safeStartActivity(Intent.createChooser(this, null))
         }
-        true
     } catch (e: Exception) {
         Log.e(TAG, "Error sharing bitmap", e)
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
