@@ -2,17 +2,6 @@
 <issues format="6" by="lint 9.2.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.2.1)" variant="all" version="9.2.1">
 
     <issue
-        id="WrongConstant"
-        message="Must be one or more of: "
-        errorLine1="                val systemBarsInsets = insets.getInsets(systemBars())"
-        errorLine2="                                                        ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/de/lemke/commonutils/ui/activity/CommonUtilsAboutMeActivity.kt"
-            line="81"
-            column="57"/>
-    </issue>
-
-    <issue
         id="GradleDependency"
         message="A newer version of androidx.activity:activity-compose than 1.12.4 is available: 1.13.0"
         errorLine1="activity-compose = &quot;1.12.4&quot;"

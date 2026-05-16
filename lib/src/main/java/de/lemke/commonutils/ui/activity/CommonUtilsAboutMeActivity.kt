@@ -78,6 +78,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private fun applyInsetIfNeeded() {
         if (SDK_INT >= Build.VERSION_CODES.R && !window.decorView.fitsSystemWindows) {
             binding.root.setOnApplyWindowInsetsListener { _, insets ->
+                @Suppress("WrongConstant")
                 val systemBarsInsets = insets.getInsets(systemBars())
                 binding.root.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom)
                 insets
