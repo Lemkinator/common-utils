@@ -28,6 +28,11 @@ android {
         baseline = file("lint-baseline.xml")
         disable += "IconMissingDensityFolder"
     }
+    testOptions {
+        unitTests {
+            all { it.useJUnitPlatform() }
+        }
+    }
 }
 
 spotless {
@@ -75,4 +80,9 @@ dependencies {
     implementation(libs.androidx.material3)
     api(libs.core.splashscreen)
     api(libs.lottie)
+
+    testImplementation(libs.konsist)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

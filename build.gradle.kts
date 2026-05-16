@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    // dependency-analysis plugin blocked: incompatible with Kotlin 2.3.x (kotlin-metadata-jvm > 2.1.0). Re-enable when plugin supports 2.3.x.
 }
 
 /**
