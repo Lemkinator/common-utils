@@ -90,15 +90,8 @@
     </issue>
 
     <issue
-        id="IconLocation"
-        message="Found bitmap drawable `res/drawable/me4_round.png` in densityless folder">
-        <location
-            file="src/main/res/drawable/me4_round.png"/>
-    </issue>
-
-    <issue
         id="IconMissingDensityFolder"
-        message="Missing density variation folders in `src/main/res`: drawable-hdpi, drawable-mdpi, drawable-xhdpi">
+        message="Missing density variation folders in `src\main\res`: drawable-hdpi, drawable-mdpi, drawable-xhdpi">
         <location
             file="src/main/res"/>
     </issue>
