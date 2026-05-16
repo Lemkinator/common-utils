@@ -26,21 +26,13 @@ class ArchitectureTest {
     fun `ui activities do not depend on widget internals`() {
         scope.files
             .withPackage("de.lemke.commonutils.ui.activity..")
-            .forEach { file ->
-                assert(file.imports.none { it.name.contains(".widget.internal.") }) {
-                    "${file.name} imports widget internals"
-                }
-            }
+            .assertFalse { file -> file.imports.any { it.name.contains(".widget.internal.") } }
     }
 
     @Test
     fun `data layer does not depend on ui`() {
         scope.files
             .withPackage("de.lemke.commonutils.data..")
-            .forEach { file ->
-                assert(file.imports.none { it.name.startsWith("de.lemke.commonutils.ui.") }) {
-                    "${file.name} in data layer imports UI"
-                }
-            }
+            .assertFalse { file -> file.imports.any { it.name.startsWith("de.lemke.commonutils.ui.") } }
     }
 }

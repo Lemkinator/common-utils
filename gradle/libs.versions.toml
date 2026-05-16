@@ -7,11 +7,10 @@ aboutlibraries = "14.2.0"
 activity-compose = "1.12.4"
 app-update-ktx = "2.1.0"
 core-splashscreen = "1.2.0"
-dependency-analysis = "2.7.0"
+dependency-analysis = "3.12.0"
 detekt = "2.0.0-alpha.3"
 gradle = "9.2.1"
-junit-jupiter = "5.12.2"
-junit-platform = "1.12.2"
+junit-jupiter = "6.0.3"
 kotlin = "2.3.21"
 konsist = "0.17.3"
 kover = "0.9.8"
@@ -32,7 +31,7 @@ app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.re
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit-jupiter" }
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
-junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-jupiter" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 oneui-design = { module = "io.github.tribalfs:oneui-design", version.ref = "oneui-design" }
