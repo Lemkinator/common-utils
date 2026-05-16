@@ -5,7 +5,7 @@ common-utils = "0.9.23"
 
 aboutlibraries = "14.2.0"
 activity-compose = "1.12.4"
-app-update-ktx = "2.1.0"
+app-update = "2.1.0"
 core-splashscreen = "1.2.0"
 dependency-analysis = "3.12.0"
 detekt = "2.0.0-alpha.3"
@@ -20,14 +20,14 @@ lottie = "6.7.1"
 material3 = "1.4.0"
 oneui-design = "0.9.11+oneui8"
 oneui-icons = "1.1.0"
-review-ktx = "2.0.2"
+review = "2.0.2"
 spotless = "8.5.1"
 
 [libraries]
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
-app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "app-update-ktx" }
+app-update = { module = "com.google.android.play:app-update", version.ref = "app-update" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit-jupiter" }
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
@@ -36,7 +36,7 @@ konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 oneui-design = { module = "io.github.tribalfs:oneui-design", version.ref = "oneui-design" }
 oneui-icons = { module = "io.github.oneuiproject:icons", version.ref = "oneui-icons" }
-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "review-ktx" }
+review = { module = "com.google.android.play:review", version.ref = "review" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "gradle" }
@@ -49,7 +49,3 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 maven-publish = { id = "maven-publish" }
 signing = { id = "signing" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-
-[bundles]
-android-play = ["app-update-ktx", "review-ktx"]
-oneui = ["oneui-design", "oneui-icons"]

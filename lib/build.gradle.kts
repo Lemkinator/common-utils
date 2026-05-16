@@ -74,8 +74,10 @@ tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
 }
 
 dependencies {
-    api(libs.bundles.oneui)
-    api(libs.bundles.android.play)
+    api(libs.oneui.design)
+    implementation(libs.oneui.icons)
+    implementation(libs.app.update)
+    implementation(libs.review)
     implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
