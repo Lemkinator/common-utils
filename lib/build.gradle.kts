@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.signing)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.detekt)
     alias(libs.plugins.spotless)
 }
@@ -27,6 +28,11 @@ android {
         checkDependencies = false
         baseline = file("lint-baseline.xml")
         disable += "IconMissingDensityFolder"
+    }
+    testOptions {
+        unitTests {
+            all { it.useJUnitPlatform() }
+        }
     }
 }
 
@@ -75,4 +81,9 @@ dependencies {
     implementation(libs.androidx.material3)
     api(libs.core.splashscreen)
     api(libs.lottie)
+
+    testImplementation(libs.konsist)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

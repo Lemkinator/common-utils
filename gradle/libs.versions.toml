@@ -7,9 +7,12 @@ aboutlibraries = "14.2.0"
 activity-compose = "1.12.4"
 app-update-ktx = "2.1.0"
 core-splashscreen = "1.2.0"
+dependency-analysis = "3.12.0"
 detekt = "2.0.0-alpha.3"
 gradle = "9.2.1"
+junit-jupiter = "6.0.3"
 kotlin = "2.3.21"
+konsist = "0.17.3"
 kover = "0.9.8"
 ksp = "2.3.8"
 ktlint = "1.7.1"
@@ -26,6 +29,10 @@ androidx-activity-compose = { group = "androidx.activity", name = "activity-comp
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "app-update-ktx" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
+junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit-jupiter" }
+junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-jupiter" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 oneui-design = { module = "io.github.tribalfs:oneui-design", version.ref = "oneui-design" }
 oneui-icons = { module = "io.github.oneuiproject:icons", version.ref = "oneui-icons" }
@@ -33,6 +40,7 @@ review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "rev
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "gradle" }
+dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependency-analysis" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
