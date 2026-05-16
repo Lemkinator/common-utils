@@ -96,7 +96,11 @@ fun Context.copyToClipboard(
     shareFileName: String,
 ): Boolean {
     val cacheFile = File(cacheDir, shareFileName)
-    bitmap.compress(PNG, COMPRESS_QUALITY_MAX, cacheFile.outputStream())
+    if (!cacheFile.outputStream().use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
+        cacheFile.delete()
+        toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        return false
+    }
     val clip = ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this))
     (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
     toast(R.string.commonutils_copied_to_clipboard)
@@ -129,7 +133,11 @@ fun Bitmap.share(
     @Suppress("TooGenericExceptionCaught")
     try {
         val cacheFile = File(context.cacheDir, shareFileName)
-        compress(PNG, COMPRESS_QUALITY_MAX, cacheFile.outputStream())
+        if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
+            cacheFile.delete()
+            context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+            return false
+        }
         val uri = cacheFile.getFileUri(context)
         Intent(ACTION_SEND).apply {
             clipData = ClipData.newRawUri(shareFileName, uri)
@@ -161,7 +169,11 @@ fun Bitmap.quickShare(
     shareFileName: String,
 ): Boolean {
     val cacheFile = File(context.cacheDir, shareFileName)
-    compress(PNG, COMPRESS_QUALITY_MAX, cacheFile.outputStream())
+    if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
+        cacheFile.delete()
+        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        return false
+    }
     context.createBaseIntent().apply {
         type = MIME_TYPE_PNG
         putExtra(EXTRA_STREAM, cacheFile.getFileUri(context))

@@ -17,6 +17,7 @@
 
 package de.lemke.commonutils
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -24,6 +25,7 @@ import android.content.Intent.ACTION_SENDTO
 import android.content.Intent.EXTRA_EMAIL
 import android.content.Intent.EXTRA_SUBJECT
 import android.content.Intent.EXTRA_TEXT
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -47,6 +49,7 @@ fun Context.sendEmail(
             putExtra(EXTRA_EMAIL, emails)
             putExtra(EXTRA_SUBJECT, subject)
             putExtra(EXTRA_TEXT, text)
+            if (this@sendEmail !is Activity) addFlags(FLAG_ACTIVITY_NEW_TASK)
             startActivity(this)
         }
         true

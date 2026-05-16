@@ -33,7 +33,6 @@ import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
 import java.io.File
-import java.io.OutputStream
 import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -92,23 +91,32 @@ fun Context.exportBitmap(
                     SaveLocation.PICTURES -> Environment.DIRECTORY_PICTURES
                     SaveLocation.DCIM -> Environment.DIRECTORY_DCIM
                 }
-            Files
-                .newOutputStream(File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath())
-                .use<OutputStream, Boolean> { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }
-            toast(getString(R.string.commonutils_image_saved) + ": ${saveLocation.toLocalizedString(this)}")
-            true
+            if (Files
+                    .newOutputStream(
+                        File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath(),
+                    ).use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }
+            ) {
+                toast(getString(R.string.commonutils_image_saved) + ": ${saveLocation.toLocalizedString(this)}")
+                true
+            } else {
+                toast(R.string.commonutils_error_saving_image)
+                false
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error saving bitmap to directory", e)
             toast(R.string.commonutils_error_creating_file)
             false
         }
+    } else if (activityResultLauncher == null) {
+        toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
+        false
     } else {
         try {
             val intent = Intent(ACTION_CREATE_DOCUMENT)
             intent.addCategory(CATEGORY_OPENABLE)
             intent.type = MIME_TYPE_PNG
             intent.putExtra(EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
-            activityResultLauncher?.launch(intent)
+            activityResultLauncher.launch(intent)
             true
         } catch (e: ActivityNotFoundException) {
             Log.e(TAG, "Error launching document picker", e)
