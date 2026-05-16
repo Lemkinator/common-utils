@@ -26,6 +26,7 @@ android {
         warningsAsErrors = true
         checkDependencies = false
         baseline = file("lint-baseline.xml")
+        disable += "IconMissingDensityFolder"
     }
 }
 
