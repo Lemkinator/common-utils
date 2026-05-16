@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.ext.list.withPackage
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 
 class ArchitectureTest {
@@ -26,13 +27,21 @@ class ArchitectureTest {
     fun `ui activities do not depend on widget internals`() {
         scope.files
             .withPackage("de.lemke.commonutils.ui.activity..")
-            .assertFalse { file -> file.imports.any { it.name.contains(".widget.internal.") } }
+            .forEach { file ->
+                assertFalse(file.imports.any { it.name.contains(".widget.internal.") }) {
+                    "${file.name} imports widget internals"
+                }
+            }
     }
 
     @Test
     fun `data layer does not depend on ui`() {
         scope.files
             .withPackage("de.lemke.commonutils.data..")
-            .assertFalse { file -> file.imports.any { it.name.startsWith("de.lemke.commonutils.ui.") } }
+            .forEach { file ->
+                assertFalse(file.imports.any { it.name.startsWith("de.lemke.commonutils.ui.") }) {
+                    "${file.name} in data layer imports UI"
+                }
+            }
     }
 }
