@@ -2,14 +2,14 @@
 <issues format="6" by="lint 9.2.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.2.1)" variant="all" version="9.2.1">
 
     <issue
-        id="GradleDependency"
-        message="A newer version of `compileSdk` than 36 is available: 37"
-        errorLine1="    compileSdk = 36"
-        errorLine2="    ~~~~~~~~~~~~~~~">
+        id="WrongConstant"
+        message="Must be one or more of: "
+        errorLine1="                val systemBarsInsets = insets.getInsets(systemBars())"
+        errorLine2="                                                        ~~~~~~~~~~~~">
         <location
-            file="build.gradle.kts"
-            line="12"
-            column="5"/>
+            file="src/main/java/de/lemke/commonutils/ui/activity/CommonUtilsAboutMeActivity.kt"
+            line="81"
+            column="57"/>
     </issue>
 
     <issue
@@ -21,17 +21,6 @@
             file="../gradle/libs.versions.toml"
             line="7"
             column="20"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.diffplug.spotless than 8.4.0 is available: 8.5.1"
-        errorLine1="spotless = &quot;8.4.0&quot;"
-        errorLine2="           ~~~~~~~">
-        <location
-            file="../gradle/libs.versions.toml"
-            line="21"
-            column="12"/>
     </issue>
 
     <issue

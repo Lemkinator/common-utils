@@ -19,6 +19,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
+import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
@@ -44,8 +45,8 @@ import dev.oneuiproject.oneui.ktx.semSetToolTipText
 import dev.oneuiproject.oneui.ktx.setEnableRecursive
 import dev.oneuiproject.oneui.utils.DeviceLayoutUtil.isPortrait
 import dev.oneuiproject.oneui.widget.AdaptiveCoordinatorLayout.Companion.MARGIN_PROVIDER_ADP_DEFAULT
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.abs
+import kotlinx.coroutines.flow.MutableStateFlow
 import dev.oneuiproject.oneui.design.R as designR
 
 class CommonUtilsAboutMeActivity : AppCompatActivity() {
@@ -73,8 +74,9 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         initOnBackPressed()
     }
 
+    @Suppress("MagicNumber")
     private fun applyInsetIfNeeded() {
-        if (SDK_INT >= 30 && !window.decorView.fitsSystemWindows) {
+        if (SDK_INT >= Build.VERSION_CODES.R && !window.decorView.fitsSystemWindows) {
             binding.root.setOnApplyWindowInsetsListener { _, insets ->
                 val systemBarsInsets = insets.getInsets(systemBars())
                 binding.root.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom)
@@ -107,7 +109,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
                 if (interpolatedProgress > .5 && !isExpanding) {
                     isExpanding = true
                     binding.aboutAppBar.setExpanded(true, true)
-                } else if (interpolatedProgress < .3 && isExpanding) {
+                } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
                     isExpanding = false
                     binding.aboutAppBar.setExpanded(false, true)
                 }
@@ -199,6 +201,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
+    @Suppress("MagicNumber")
     private inner class AboutAppBarListener : OnOffsetChangedListener {
         override fun onOffsetChanged(
             appBarLayout: AppBarLayout,
@@ -234,6 +237,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val BACK_COLLAPSE_THRESHOLD = 0.3f
         var onShareApp: (activity: Activity) -> Unit = {}
     }
 }

@@ -28,6 +28,7 @@ import dev.oneuiproject.oneui.R as iconsR
 import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "DrawerUtils"
+private const val NAV_RAIL_MIN_SIDE_MARGIN_DP = 14
 
 fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
@@ -38,7 +39,7 @@ fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
                 .transformToActivity(CommonUtilsAboutActivity::class.java, transitionName = "CommonUtilsAboutAppTransition")
         },
     )
-    setNavRailContentMinSideMargin(14)
+    setNavRailContentMinSideMargin(NAV_RAIL_MIN_SIDE_MARGIN_DP)
     closeNavRailOnBack = true
     context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
 }

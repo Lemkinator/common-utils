@@ -39,6 +39,7 @@ private const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"
 private const val DEFAULT_TRANSITION_NAME = "commonUtilsActivityTransitionName"
 private const val DURATION_KEY = "commonUtilsDurationKey"
 private const val DEFAULT_DURATION = 400L
+private const val STATE_ANIMATOR_RESTORE_DELAY_MS = 1_000L
 private const val FADE_MODE_KEY = "commonUtilsFadeModeKey"
 private const val DEFAULT_FADE_MODE = FADE_MODE_CROSS
 
@@ -142,7 +143,7 @@ fun View.transformToActivity(
 private fun View.suspendStateListAnimator() {
     val sla = stateListAnimator
     stateListAnimator = null
-    postDelayed({ stateListAnimator = sla }, 1_000)
+    postDelayed({ stateListAnimator = sla }, STATE_ANIMATOR_RESTORE_DELAY_MS)
 }
 
 /**

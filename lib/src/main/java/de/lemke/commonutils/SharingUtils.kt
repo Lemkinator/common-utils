@@ -17,6 +17,7 @@
 
 package de.lemke.commonutils
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -41,6 +42,7 @@ private const val SAMSUNG_QUICK_SHARE_PACKAGE = "com.samsung.android.app.shareli
 private const val MIME_TYPE_TEXT = "text/plain"
 private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
+private const val COMPRESS_QUALITY_MAX = 100
 
 fun Fragment.shareApp(): Boolean = requireContext().shareApp()
 
@@ -94,7 +96,7 @@ fun Context.copyToClipboard(
     shareFileName: String,
 ): Boolean {
     val cacheFile = File(cacheDir, shareFileName)
-    bitmap.compress(PNG, 100, cacheFile.outputStream())
+    bitmap.compress(PNG, COMPRESS_QUALITY_MAX, cacheFile.outputStream())
     val clip = ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this))
     (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
     toast(R.string.commonutils_copied_to_clipboard)
@@ -124,9 +126,10 @@ fun Bitmap.share(
     shareFileName: String,
     shareText: String? = null,
 ): Boolean =
+    @Suppress("TooGenericExceptionCaught")
     try {
         val cacheFile = File(context.cacheDir, shareFileName)
-        compress(PNG, 100, cacheFile.outputStream())
+        compress(PNG, COMPRESS_QUALITY_MAX, cacheFile.outputStream())
         val uri = cacheFile.getFileUri(context)
         Intent(ACTION_SEND).apply {
             clipData = ClipData.newRawUri(shareFileName, uri)
@@ -158,7 +161,7 @@ fun Bitmap.quickShare(
     shareFileName: String,
 ): Boolean {
     val cacheFile = File(context.cacheDir, shareFileName)
-    compress(PNG, 100, cacheFile.outputStream())
+    compress(PNG, COMPRESS_QUALITY_MAX, cacheFile.outputStream())
     context.createBaseIntent().apply {
         type = MIME_TYPE_PNG
         putExtra(EXTRA_STREAM, cacheFile.getFileUri(context))
@@ -202,9 +205,8 @@ private fun Intent.start(context: Context): Boolean {
     try {
         context.startActivity(this)
         return true
-    } catch (e: Exception) {
+    } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to start activity with specific package: ${e.message}")
-        // Fallback to default chooser if specific package fails
         `package` = null
         return context.safeStartActivity(this)
     }
@@ -214,7 +216,7 @@ private fun Context.safeStartActivity(intent: Intent): Boolean {
     try {
         startActivity(intent)
         return true
-    } catch (e: Exception) {
+    } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to start activity", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
         return false

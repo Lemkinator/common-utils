@@ -21,6 +21,7 @@ import android.R.anim.fade_in
 import android.R.anim.fade_out
 import android.content.Intent
 import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import de.lemke.commonutils.AppStartResult.FIRST_TIME
@@ -75,7 +76,7 @@ fun AppCompatActivity.checkAppStartAndHandleOOBE(
 fun AppCompatActivity.openOOBEAndFinish() {
     startActivity(Intent(applicationContext, CommonUtilsOOBEActivity::class.java))
     @Suppress("DEPRECATION")
-    if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
+    if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
     finishAfterTransition()
 }
 

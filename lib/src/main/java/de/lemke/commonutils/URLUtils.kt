@@ -38,6 +38,7 @@ fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
 
 fun Fragment.openURL(url: String?): Boolean = requireContext().openURL(url)
 
+@Suppress("TooGenericExceptionCaught")
 fun Context.openURL(url: String?): Boolean =
     try {
         if (url.isNullOrBlank()) {

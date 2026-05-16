@@ -29,11 +29,13 @@ import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.KeepOnScreenCondition
 import androidx.lifecycle.lifecycleScope
+import java.lang.System.currentTimeMillis
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.lang.System.currentTimeMillis
 
 private const val TAG = "SplashUtils"
+private const val SPLASH_ANIMATION_DURATION_MS = 400L
+private const val SPLASH_SCALE_FACTOR = 1.2f
 
 fun AppCompatActivity.configureCommonUtilsSplashScreen(
     splashScreen: SplashScreen,
@@ -46,21 +48,21 @@ fun AppCompatActivity.configureCommonUtilsSplashScreen(
             ObjectAnimator.ofPropertyValuesHolder(
                 splash.view,
                 PropertyValuesHolder.ofFloat(ALPHA, 0f),
-                PropertyValuesHolder.ofFloat(SCALE_X, 1.2f),
-                PropertyValuesHolder.ofFloat(SCALE_Y, 1.2f),
+                PropertyValuesHolder.ofFloat(SCALE_X, SPLASH_SCALE_FACTOR),
+                PropertyValuesHolder.ofFloat(SCALE_Y, SPLASH_SCALE_FACTOR),
             )
         splashAnimator.interpolator = AccelerateDecelerateInterpolator()
-        splashAnimator.duration = 400L
+        splashAnimator.duration = SPLASH_ANIMATION_DURATION_MS
         splashAnimator.doOnEnd { splash.remove() }
         val contentAnimator: ObjectAnimator =
             ObjectAnimator.ofPropertyValuesHolder(
                 root,
                 PropertyValuesHolder.ofFloat(ALPHA, 0f, 1f),
-                PropertyValuesHolder.ofFloat(SCALE_X, 1.2f, 1f),
-                PropertyValuesHolder.ofFloat(SCALE_Y, 1.2f, 1f),
+                PropertyValuesHolder.ofFloat(SCALE_X, SPLASH_SCALE_FACTOR, 1f),
+                PropertyValuesHolder.ofFloat(SCALE_Y, SPLASH_SCALE_FACTOR, 1f),
             )
         contentAnimator.interpolator = AccelerateDecelerateInterpolator()
-        contentAnimator.duration = 400L
+        contentAnimator.duration = SPLASH_ANIMATION_DURATION_MS
         val remainingDuration =
             splash.iconAnimationDurationMillis - (currentTimeMillis() - splash.iconAnimationStartMillis).coerceAtLeast(0L)
         lifecycleScope.launch {

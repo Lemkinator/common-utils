@@ -17,6 +17,7 @@
 
 package de.lemke.commonutils
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_SENDTO
@@ -49,7 +50,7 @@ fun Context.sendEmail(
             startActivity(this)
         }
         true
-    } catch (e: Exception) {
+    } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to send email", e)
         toast(getString(R.string.commonutils_no_email_app_installed))
         false

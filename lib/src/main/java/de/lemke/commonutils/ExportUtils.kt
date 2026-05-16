@@ -17,6 +17,7 @@
 
 package de.lemke.commonutils
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_CREATE_DOCUMENT
@@ -41,6 +42,7 @@ import java.util.Locale
 private const val TAG = "ExportUtils"
 private const val MIME_TYPE_PNG = "image/png"
 private const val EXTENSION_PNG = ".png"
+private const val COMPRESS_QUALITY_MAX = 100
 
 enum class SaveLocation {
     CUSTOM,
@@ -82,6 +84,7 @@ fun Context.exportBitmap(
     activityResultLauncher: ActivityResultLauncher<Intent>?,
 ): Boolean =
     if (saveLocation != SaveLocation.CUSTOM && SDK_INT > Build.VERSION_CODES.Q) {
+        @Suppress("TooGenericExceptionCaught")
         try {
             val dir: String =
                 when (saveLocation) {
@@ -91,7 +94,7 @@ fun Context.exportBitmap(
                 }
             Files
                 .newOutputStream(File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath())
-                .use<OutputStream, Boolean> { bitmap.compress(PNG, 100, it) }
+                .use<OutputStream, Boolean> { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }
             toast(getString(R.string.commonutils_image_saved) + ": ${saveLocation.toLocalizedString(this)}")
             true
         } catch (e: Exception) {
@@ -107,7 +110,7 @@ fun Context.exportBitmap(
             intent.putExtra(EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
             activityResultLauncher?.launch(intent)
             true
-        } catch (e: Exception) {
+        } catch (e: ActivityNotFoundException) {
             Log.e(TAG, "Error launching document picker", e)
             toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
             false
@@ -122,9 +125,10 @@ fun Context.saveBitmapToUri(
         toast(R.string.commonutils_error_creating_file)
         return false
     }
+    @Suppress("TooGenericExceptionCaught")
     return try {
         contentResolver.openOutputStream(uri)?.use { outputStream ->
-            if (bitmap.compress(PNG, 100, outputStream)) {
+            if (bitmap.compress(PNG, COMPRESS_QUALITY_MAX, outputStream)) {
                 toast(R.string.commonutils_image_saved)
                 true
             } else {

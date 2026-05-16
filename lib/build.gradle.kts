@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "de.lemke.commonutils"
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         minSdk = 26
     }
@@ -53,7 +53,6 @@ spotless {
 detekt {
     toolVersion = libs.versions.detekt.get()
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-    baseline = rootProject.file("config/detekt/baseline.xml")
     buildUponDefaultConfig = true
     parallel = true
     autoCorrect = false

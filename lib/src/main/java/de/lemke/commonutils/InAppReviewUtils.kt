@@ -28,16 +28,18 @@ import java.lang.System.currentTimeMillis
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 private const val TAG = "InAppReviewUtils"
+private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
 
 fun AppCompatActivity.getLastInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).getLong("lastInAppReview", currentTimeMillis())
 
 fun AppCompatActivity.setInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).edit { putLong("lastInAppReview", currentTimeMillis()) }
 
+@Suppress("TooGenericExceptionCaught")
 fun AppCompatActivity.canShowInAppReview() =
     try {
         val daysSinceLastReview = MILLISECONDS.toDays(currentTimeMillis() - getLastInAppReview())
         Log.d(TAG, "Days since last review: $daysSinceLastReview")
-        daysSinceLastReview >= 14
+        daysSinceLastReview >= MIN_DAYS_BETWEEN_REVIEWS
     } catch (e: Exception) {
         Log.e(TAG, "Error checking in-app review eligibility", e)
         false
@@ -56,6 +58,7 @@ private fun AppCompatActivity.showInAppReviewAnd(action: () -> Unit) {
     )
 }
 
+@Suppress("TooGenericExceptionCaught")
 private fun AppCompatActivity.showInAppReview(
     onNotAllowed: () -> Unit = {},
     onCompleted: () -> Unit = {},
@@ -64,7 +67,7 @@ private fun AppCompatActivity.showInAppReview(
 ) {
     try {
         if (!canShowInAppReview()) {
-            Log.d(TAG, "In app review requested less than 14 days ago, skipping")
+            Log.d(TAG, "In app review requested less than $MIN_DAYS_BETWEEN_REVIEWS days ago, skipping")
             onNotAllowed()
             return
         }

@@ -18,7 +18,7 @@ material3 = "1.4.0"
 oneui-design = "0.9.10+oneui8"
 oneui-icons = "1.1.0"
 review-ktx = "2.0.2"
-spotless = "8.4.0"
+spotless = "8.5.1"
 
 [libraries]
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlibraries" }

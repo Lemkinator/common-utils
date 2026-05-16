@@ -59,12 +59,13 @@ private fun Context.openAppWithPackageName(packageName: String): Boolean =
         } else {
             openAppWithPackageNameOnStore(packageName)
         }
-    } catch (e: Exception) {
+    } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to open app with package name", e)
         toast(getString(R.string.commonutils_error_cant_open_app))
         false
     }
 
+@Suppress("ReturnCount")
 private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean {
     val intent = Intent(ACTION_VIEW)
     intent.data = (getString(R.string.commonutils_playstore_app_link) + packageName).toUri()
@@ -77,7 +78,7 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean 
         try {
             startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
             return true
-        } catch (e: Exception) {
+        } catch (e: ActivityNotFoundException) {
             Log.e(TAG, "Failed to open Play Store link", e)
             toast(getString(R.string.commonutils_error_cant_open_app))
             return false
@@ -89,6 +90,7 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean 
 fun areAppLocalSettingsSupported(): Boolean = SDK_INT >= TIRAMISU
 
 @RequiresApi(TIRAMISU)
+@Suppress("ReturnCount")
 fun Fragment.openAppLocaleSettings(): Boolean {
     if (!areAppLocalSettingsSupported()) {
         toast(getString(R.string.commonutils_change_language_not_supported_by_device))
@@ -111,7 +113,7 @@ fun Context.openApplicationSettings(): Boolean =
                 .setFlags(FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK),
         )
         true
-    } catch (e: Exception) {
+    } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to open application settings", e)
         toast(R.string.commonutils_error_cant_open_app_settings)
         false

@@ -159,13 +159,14 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
             }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun startUpdateFlow() {
         try {
             Log.i(TAG, "Starting update flow")
             appUpdateManager.startUpdateFlowForResult(appUpdateInfo, activityResultLauncher, AppUpdateOptions.newBuilder(IMMEDIATE).build())
         } catch (e: Exception) {
             binding.appInfoLayout.updateStatus = NotUpdatable
-            e.printStackTrace()
+            Log.e(TAG, "Update flow failed", e)
         }
     }
 

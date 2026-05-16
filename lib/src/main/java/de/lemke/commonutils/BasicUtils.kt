@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "BasicUtils"
+private const val DELETE_APP_DATA_DELAY_MS = 500L
 
 fun Fragment.toast(msg: String) = requireContext().toast(msg)
 
@@ -85,7 +86,7 @@ fun Fragment.deleteAppDataAndExit(
         setTextColor(requireContext().getColor(designR.color.oui_des_functional_red_color))
         setOnClickListenerWithProgress { button, progressBar ->
             lifecycleScope.launch {
-                delay(500)
+                delay(DELETE_APP_DATA_DELAY_MS)
                 (requireContext().getSystemService(ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
             }
         }
