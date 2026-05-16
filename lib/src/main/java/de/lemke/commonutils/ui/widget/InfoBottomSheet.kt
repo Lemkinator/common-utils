@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils.ui.widget
@@ -23,30 +38,43 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        //onDismissListener?.onDismiss(dialog)
+        // onDismissListener?.onDismiss(dialog)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        WidgetInfoBottomsheetBinding.inflate(inflater, container, false).also { binding = it }.root
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View = WidgetInfoBottomsheetBinding.inflate(inflater, container, false).also { binding = it }.root
 
-    override fun onCreateDialog(savedInstanceState: Bundle?) = (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
-        behavior.skipCollapsed = true
-        setOnShowListener { behavior.state = STATE_EXPANDED }
-    }
+    override fun onCreateDialog(savedInstanceState: Bundle?) =
+        (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
+            behavior.skipCollapsed = true
+            setOnShowListener { behavior.state = STATE_EXPANDED }
+        }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
         arguments?.getInt(KEY_TEXT_GRAVITY)?.also {
             binding.infoTitle.gravity = it
             binding.infoMessage.gravity = it
         }
         arguments?.getString(KEY_TITLE).also {
-            if (it.isNullOrBlank()) binding.infoTitle.isVisible = false
-            else binding.infoTitle.text = it
+            if (it.isNullOrBlank()) {
+                binding.infoTitle.isVisible = false
+            } else {
+                binding.infoTitle.text = it
+            }
         }
         arguments?.getString(KEY_MESSAGE).also {
-            if (it.isNullOrBlank()) binding.infoMessage.isVisible = false
-            else binding.infoMessage.text = it
+            if (it.isNullOrBlank()) {
+                binding.infoMessage.isVisible = false
+            } else {
+                binding.infoMessage.text = it
+            }
         }
     }
 
@@ -57,8 +85,11 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
             textGravity: Int? = null,
         ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
-        fun FragmentActivity.showInfoBottomSheet(title: String, message: String, textGravity: Int? = null) =
-            showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
+        fun FragmentActivity.showInfoBottomSheet(
+            title: String,
+            message: String,
+            textGravity: Int? = null,
+        ) = showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
 
         fun Fragment.showInfoBottomSheet(
             @StringRes titleResId: Int,
@@ -66,18 +97,30 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
             textGravity: Int? = null,
         ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
-        fun Fragment.showInfoBottomSheet(title: String, message: String, textGravity: Int? = null) =
-            showInfoBottomSheet(childFragmentManager, title, message, textGravity)
+        fun Fragment.showInfoBottomSheet(
+            title: String,
+            message: String,
+            textGravity: Int? = null,
+        ) = showInfoBottomSheet(childFragmentManager, title, message, textGravity)
 
-        fun showInfoBottomSheet(fragmentManager: FragmentManager, title: String, message: String, textGravity: Int? = null) =
-            newInstance(title, message, textGravity ?: CENTER).show(fragmentManager, InfoBottomSheet::class.java.simpleName)
+        fun showInfoBottomSheet(
+            fragmentManager: FragmentManager,
+            title: String,
+            message: String,
+            textGravity: Int? = null,
+        ) = newInstance(title, message, textGravity ?: CENTER).show(fragmentManager, InfoBottomSheet::class.java.simpleName)
 
-        private fun newInstance(title: String, message: String, textGravity: Int = CENTER) = InfoBottomSheet().apply {
-            arguments = Bundle().apply {
-                putString(KEY_TITLE, title)
-                putString(KEY_MESSAGE, message)
-                putInt(KEY_TEXT_GRAVITY, textGravity)
-            }
+        private fun newInstance(
+            title: String,
+            message: String,
+            textGravity: Int = CENTER,
+        ) = InfoBottomSheet().apply {
+            arguments =
+                Bundle().apply {
+                    putString(KEY_TITLE, title)
+                    putString(KEY_MESSAGE, message)
+                    putInt(KEY_TEXT_GRAVITY, textGravity)
+                }
         }
 
         const val KEY_TITLE = "key_title"

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils
@@ -27,7 +42,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-private const val tag = "PredictiveBackGestureUtils"
+private const val TAG = "PredictiveBackGestureUtils"
 
 inline fun Fragment.addOnBackLogic(
     backPressLogicEnabled: StateFlow<Boolean>,
@@ -48,11 +63,12 @@ inline fun Fragment.addOnBackLogic(
                 }
         }
     } else {
-        val onBackPressedCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                onBackPressedLogic.invoke()
+        val onBackPressedCallback =
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    onBackPressedLogic.invoke()
+                }
             }
-        }
         requireActivity().onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
         lifecycleScope.launch {
             backPressLogicEnabled.flowWithLifecycle(lifecycle).collectLatest { enable -> onBackPressedCallback.isEnabled = enable }
@@ -70,7 +86,10 @@ class BackAnimationOutlineProvider : ViewOutlineProvider() {
             radius = value * 100f
         }
 
-    override fun getOutline(view: View, outline: Outline) {
+    override fun getOutline(
+        view: View,
+        outline: Outline,
+    ) {
         outline.setRoundRect(0, 0, view.width, view.height, radius)
     }
 }
@@ -87,42 +106,53 @@ fun AppCompatActivity.setCustomBackAnimation(
     animatedView.clipToOutline = true
     animatedView.outlineProvider = outlineProvider
     val showInAppReview = showInAppReviewIfPossible && canShowInAppReview()
-    val callback = object : OnBackPressedCallback(backEnabled?.value != false) {
-        override fun handleOnBackPressed() {
-            if (showInAppReview) showInAppReviewOrFinish()
-            else finishAfterTransition()
+    val callback =
+        object : OnBackPressedCallback(backEnabled?.value != false) {
+            override fun handleOnBackPressed() {
+                if (showInAppReview) {
+                    showInAppReviewOrFinish()
+                } else {
+                    finishAfterTransition()
+                }
+            }
+
+            override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+                if (showInAppReview) return
+                val progress = GestureInterpolator.getInterpolation(backEvent.progress)
+                if (initialTouchY < 0f) initialTouchY = backEvent.touchY
+                val progressY = GestureInterpolator.getInterpolation((backEvent.touchY - initialTouchY) / animatedView.height)
+
+                // See the motion spec about the calculations below.
+                // https://developer.android.com/design/ui/mobile/guides/patterns/predictive-back#motion-specs
+
+                // Shift horizontally.
+                val maxTranslationX = (animatedView.width / 20) - predictiveBackMargin
+                animatedView.translationX = progress * maxTranslationX * if (backEvent.swipeEdge == EDGE_LEFT) 1 else -1
+
+                // Shift vertically.
+                val maxTranslationY = (animatedView.height / 20) - predictiveBackMargin
+                animatedView.translationY = progressY * maxTranslationY
+
+                // Scale down from 100% to 90%.
+                val scale = 1f - (0.1f * progress)
+                animatedView.scaleX = scale
+                animatedView.scaleY = scale
+
+                // apply rounded corners
+                outlineProvider.progress = progress
+                animatedView.invalidateOutline()
+            }
+
+            override fun handleOnBackCancelled() {
+                initialTouchY = -1f
+                animatedView.run {
+                    translationX = 0f
+                    translationY = 0f
+                    scaleX = 1f
+                    scaleY = 1f
+                }
+            }
         }
-
-        override fun handleOnBackProgressed(backEvent: BackEventCompat) {
-            if (showInAppReview) return
-            val progress = GestureInterpolator.getInterpolation(backEvent.progress)
-            if (initialTouchY < 0f) initialTouchY = backEvent.touchY
-            val progressY = GestureInterpolator.getInterpolation((backEvent.touchY - initialTouchY) / animatedView.height)
-
-            // See the motion spec about the calculations below.
-            // https://developer.android.com/design/ui/mobile/guides/patterns/predictive-back#motion-specs
-
-            // Shift horizontally.
-            val maxTranslationX = (animatedView.width / 20) - predictiveBackMargin
-            animatedView.translationX = progress * maxTranslationX * if (backEvent.swipeEdge == EDGE_LEFT) 1 else -1
-
-            // Shift vertically.
-            val maxTranslationY = (animatedView.height / 20) - predictiveBackMargin
-            animatedView.translationY = progressY * maxTranslationY
-
-            // Scale down from 100% to 90%.
-            val scale = 1f - (0.1f * progress)
-            animatedView.scaleX = scale; animatedView.scaleY = scale
-
-            // apply rounded corners
-            outlineProvider.progress = progress
-            animatedView.invalidateOutline()
-        }
-
-        override fun handleOnBackCancelled() {
-            initialTouchY = -1f; animatedView.run { translationX = 0f; translationY = 0f; scaleX = 1f; scaleY = 1f }
-        }
-    }
     onBackPressedDispatcher.addCallback(this, callback)
     backEnabled?.apply { lifecycleScope.launch { flowWithLifecycle(lifecycle).collectLatest { enable -> callback.isEnabled = enable } } }
 }

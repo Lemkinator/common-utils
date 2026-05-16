@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils
@@ -29,15 +44,27 @@ private const val TAG = "SharingUtils"
 
 fun Fragment.shareApp(): Boolean = requireContext().shareApp()
 
-fun Context.shareApp(): Boolean = safeStartActivity(Intent.createChooser(Intent().apply {
-    action = ACTION_SEND
-    type = MIME_TYPE_TEXT
-    putExtra(EXTRA_TEXT, getString(R.string.commonutils_playstore_link) + packageName)
-}, null))
+fun Context.shareApp(): Boolean =
+    safeStartActivity(
+        Intent.createChooser(
+            Intent().apply {
+                action = ACTION_SEND
+                type = MIME_TYPE_TEXT
+                putExtra(EXTRA_TEXT, getString(R.string.commonutils_playstore_link) + packageName)
+            },
+            null,
+        ),
+    )
 
-fun Fragment.shareText(text: String, title: String? = null): Boolean = requireContext().shareText(text, title)
+fun Fragment.shareText(
+    text: String,
+    title: String? = null,
+): Boolean = requireContext().shareText(text, title)
 
-fun Context.shareText(text: String, title: String? = null): Boolean {
+fun Context.shareText(
+    text: String,
+    title: String? = null,
+): Boolean {
     Intent().apply {
         action = ACTION_SEND
         putExtra(EXTRA_TEXT, text)
@@ -47,15 +74,25 @@ fun Context.shareText(text: String, title: String? = null): Boolean {
     }
 }
 
-fun Fragment.copyToClipboard(text: String, label: String): Boolean = requireContext().copyToClipboard(text, label)
+fun Fragment.copyToClipboard(
+    text: String,
+    label: String,
+): Boolean = requireContext().copyToClipboard(text, label)
 
-fun Context.copyToClipboard(text: String, label: String): Boolean {
+fun Context.copyToClipboard(
+    text: String,
+    label: String,
+): Boolean {
     (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText(label, text))
     toast(R.string.commonutils_copied_to_clipboard)
     return true
 }
 
-fun Context.copyToClipboard(bitmap: Bitmap, label: String, shareFileName: String): Boolean {
+fun Context.copyToClipboard(
+    bitmap: Bitmap,
+    label: String,
+    shareFileName: String,
+): Boolean {
     val cacheFile = File(cacheDir, shareFileName)
     bitmap.compress(PNG, 100, cacheFile.outputStream())
     val clip = ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this))
@@ -64,39 +101,62 @@ fun Context.copyToClipboard(bitmap: Bitmap, label: String, shareFileName: String
     return true
 }
 
-fun Bitmap.copyToClipboard(context: Context, label: String, shareFileName: String): Boolean =
-    context.copyToClipboard(this, label, shareFileName)
+fun Bitmap.copyToClipboard(
+    context: Context,
+    label: String,
+    shareFileName: String,
+): Boolean = context.copyToClipboard(this, label, shareFileName)
 
-fun Fragment.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null): Boolean =
-    bitmap.share(requireContext(), shareFileName, shareText)
+fun Fragment.shareBitmap(
+    bitmap: Bitmap,
+    shareFileName: String,
+    shareText: String? = null,
+): Boolean = bitmap.share(requireContext(), shareFileName, shareText)
 
-fun Context.shareBitmap(bitmap: Bitmap, shareFileName: String, shareText: String? = null): Boolean =
-    bitmap.share(this, shareFileName, shareText)
+fun Context.shareBitmap(
+    bitmap: Bitmap,
+    shareFileName: String,
+    shareText: String? = null,
+): Boolean = bitmap.share(this, shareFileName, shareText)
 
-fun Bitmap.share(context: Context, shareFileName: String, shareText: String? = null): Boolean = try {
-    val cacheFile = File(context.cacheDir, shareFileName)
-    compress(PNG, 100, cacheFile.outputStream())
-    val uri = cacheFile.getFileUri(context)
-    Intent(ACTION_SEND).apply {
-        clipData = ClipData.newRawUri(shareFileName, uri)
-        putExtra(EXTRA_STREAM, uri)
-        shareText?.let { putExtra(EXTRA_TEXT, it) }
-        type = MIME_TYPE_PNG
-        addFlags(FLAG_GRANT_READ_URI_PERMISSION)
-        context.safeStartActivity(Intent.createChooser(this, null))
+fun Bitmap.share(
+    context: Context,
+    shareFileName: String,
+    shareText: String? = null,
+): Boolean =
+    try {
+        val cacheFile = File(context.cacheDir, shareFileName)
+        compress(PNG, 100, cacheFile.outputStream())
+        val uri = cacheFile.getFileUri(context)
+        Intent(ACTION_SEND).apply {
+            clipData = ClipData.newRawUri(shareFileName, uri)
+            putExtra(EXTRA_STREAM, uri)
+            shareText?.let { putExtra(EXTRA_TEXT, it) }
+            type = MIME_TYPE_PNG
+            addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+            context.safeStartActivity(Intent.createChooser(this, null))
+        }
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Error sharing bitmap", e)
+        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        false
     }
-    true
-} catch (e: Exception) {
-    Log.e(TAG, "Error sharing bitmap", e)
-    context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-    false
-}
 
-fun Fragment.quickShareBitmap(bitmap: Bitmap, shareFileName: String): Boolean = bitmap.quickShare(requireContext(), shareFileName)
+fun Fragment.quickShareBitmap(
+    bitmap: Bitmap,
+    shareFileName: String,
+): Boolean = bitmap.quickShare(requireContext(), shareFileName)
 
-fun Context.quickShareBitmap(bitmap: Bitmap, shareFileName: String): Boolean = bitmap.quickShare(this, shareFileName)
+fun Context.quickShareBitmap(
+    bitmap: Bitmap,
+    shareFileName: String,
+): Boolean = bitmap.quickShare(this, shareFileName)
 
-fun Bitmap.quickShare(context: Context, shareFileName: String): Boolean {
+fun Bitmap.quickShare(
+    context: Context,
+    shareFileName: String,
+): Boolean {
     val cacheFile = File(context.cacheDir, shareFileName)
     compress(PNG, 100, cacheFile.outputStream())
     context.createBaseIntent().apply {
@@ -161,8 +221,8 @@ private fun Context.safeStartActivity(intent: Intent): Boolean {
     }
 }
 
-fun Context.isSamsungQuickShareAvailable(): Boolean {
-    return try {
+fun Context.isSamsungQuickShareAvailable(): Boolean =
+    try {
         packageManager.getPackageInfo(SAMSUNG_QUICK_SHARE_PACKAGE, 0)
         true
     } catch (_: PackageManager.NameNotFoundException) {
@@ -170,7 +230,5 @@ fun Context.isSamsungQuickShareAvailable(): Boolean {
     }.also {
         Log.i(TAG, "isSamsungQuickShareAvailable: $it")
     }
-}
 
 fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", this)
-

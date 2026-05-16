@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils
@@ -14,24 +29,43 @@ import androidx.fragment.app.Fragment
 
 private const val TAG = "EmailUtils"
 
-fun Context.sendEmail(email: String, subject: String, text: String): Boolean = sendEmail(arrayOf(email), subject, text)
-fun Context.sendEmail(emails: Array<String>, subject: String, text: String): Boolean = try {
-    Intent(ACTION_SENDTO).apply {
-        data = "mailto:".toUri()
-        putExtra(EXTRA_EMAIL, emails)
-        putExtra(EXTRA_SUBJECT, subject)
-        putExtra(EXTRA_TEXT, text)
-        startActivity(this)
+fun Context.sendEmail(
+    email: String,
+    subject: String,
+    text: String,
+): Boolean = sendEmail(arrayOf(email), subject, text)
+
+fun Context.sendEmail(
+    emails: Array<String>,
+    subject: String,
+    text: String,
+): Boolean =
+    try {
+        Intent(ACTION_SENDTO).apply {
+            data = "mailto:".toUri()
+            putExtra(EXTRA_EMAIL, emails)
+            putExtra(EXTRA_SUBJECT, subject)
+            putExtra(EXTRA_TEXT, text)
+            startActivity(this)
+        }
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to send email", e)
+        toast(getString(R.string.commonutils_no_email_app_installed))
+        false
     }
-    true
-} catch (e: Exception) {
-    Log.e(TAG, "Failed to send email", e)
-    toast(getString(R.string.commonutils_no_email_app_installed))
-    false
-}
 
-fun Context.sendEmailHelp(email: String, subject: String) = sendEmail(email, subject, getString(R.string.commonutils_help_email_text))
-fun Context.sendEmailAboutMe(email: String, subject: String) = sendEmail(email, subject, getString(R.string.commonutils_about_email_text))
-fun Fragment.sendEmailBugReport(email: String, subject: String) =
-    requireContext().sendEmail(email, subject, getString(R.string.commonutils_bug_report_email_text))
+fun Context.sendEmailHelp(
+    email: String,
+    subject: String,
+) = sendEmail(email, subject, getString(R.string.commonutils_help_email_text))
 
+fun Context.sendEmailAboutMe(
+    email: String,
+    subject: String,
+) = sendEmail(email, subject, getString(R.string.commonutils_about_email_text))
+
+fun Fragment.sendEmailBugReport(
+    email: String,
+    subject: String,
+) = requireContext().sendEmail(email, subject, getString(R.string.commonutils_bug_report_email_text))

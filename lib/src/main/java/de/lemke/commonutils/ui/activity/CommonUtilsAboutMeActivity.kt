@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.lemke.commonutils.ui.activity
 
 import android.annotation.SuppressLint
@@ -70,7 +85,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         setSupportActionBar(binding.aboutToolbar)
-        //Should be called after setSupportActionBar
+        // Should be called after setSupportActionBar
         binding.aboutToolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
         supportActionBar!!.apply {
             setDisplayHomeAsUpEnabled(true)
@@ -101,7 +116,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
                 binding.aboutAppBar.setExpanded(false)
                 isBackProgressing = false
                 isExpanding = false
-            }
+            },
         )
         updateCallbackState()
     }
@@ -116,7 +131,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private fun refreshAppBar(config: Configuration) {
         if (config.orientation != ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
             binding.aboutAppBar.apply {
-                seslSetCustomHeightProportion(true, 0.5f)//expanded
+                seslSetCustomHeightProportion(true, 0.5f) // expanded
                 addOnOffsetChangedListener(appBarListener)
                 setExpanded(true, false)
             }
@@ -153,13 +168,13 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     private fun openPlayStore() {
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(getString(R.string.commonutils_playstore_ad))
             .setMessage(getString(R.string.commonutils_playstore_redirect_message))
             .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ ->
                 openURL(getString(R.string.commonutils_playstore_developer_page_link))
-            }
-            .setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
+            }.setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
             .show()
     }
 
@@ -185,7 +200,10 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     private inner class AboutAppBarListener : OnOffsetChangedListener {
-        override fun onOffsetChanged(appBarLayout: AppBarLayout, verticalOffset: Int) {
+        override fun onOffsetChanged(
+            appBarLayout: AppBarLayout,
+            verticalOffset: Int,
+        ) {
             // Handle the SwipeUp anim view
             val totalScrollRange = appBarLayout.totalScrollRange
             val abs = abs(verticalOffset)

@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.signing)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.spotless)
 }
 
 android {
@@ -19,6 +21,49 @@ android {
     }
     buildFeatures {
         viewBinding = true
+    }
+    lint {
+        warningsAsErrors = true
+        checkDependencies = false
+        baseline = file("lint-baseline.xml")
+    }
+}
+
+spotless {
+    kotlin {
+        target("src/**/*.kt")
+        targetExclude("**/build/**", "**/generated/**")
+        licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.kt"))
+        ktlint(libs.versions.ktlint.get())
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    kotlinGradle {
+        target("*.gradle.kts")
+        ktlint(libs.versions.ktlint.get())
+    }
+    format("xml") {
+        target("src/**/*.xml")
+        targetExclude("**/build/**")
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+detekt {
+    toolVersion = libs.versions.detekt.get()
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline.xml")
+    buildUponDefaultConfig = true
+    parallel = true
+    autoCorrect = false
+}
+
+tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+    jvmTarget = "21"
+    reports {
+        html.required.set(true)
+        sarif.required.set(true)
     }
 }
 

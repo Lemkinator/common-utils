@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils
@@ -27,7 +42,7 @@ private const val TAG = "PreferenceUtils"
 fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
     addRelativeLinksCard(
         RelativeLink(getString(R.string.commonutils_share_app)) { shareApp() },
-        RelativeLink(getString(R.string.commonutils_rate_app)) { openApp(requireContext().packageName, false) }
+        RelativeLink(getString(R.string.commonutils_rate_app)) { openApp(requireContext().packageName, false) },
     )
 }
 
@@ -57,7 +72,8 @@ private fun PreferenceFragmentCompat.initMoreInfo() {
     } ?: Log.w(TAG, "privacy preference is null, skipping initialization")
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_tos))?.apply {
         onClick {
-            AlertDialog.Builder(requireContext())
+            AlertDialog
+                .Builder(requireContext())
                 .setTitle(getString(R.string.commonutils_tos))
                 .setMessage(getString(R.string.commonutils_tos_content))
                 .setPositiveButton(R.string.commonutils_ok, null)
@@ -68,7 +84,7 @@ private fun PreferenceFragmentCompat.initMoreInfo() {
         onClick {
             sendEmailBugReport(
                 getString(R.string.commonutils_email),
-                requireContext().applicationInfo.loadLabel(requireContext().packageManager).toString()
+                requireContext().applicationInfo.loadLabel(requireContext().packageManager).toString(),
             )
         }
     } ?: Log.w(TAG, "report bug preference is null, skipping initialization")
@@ -88,8 +104,9 @@ private fun PreferenceFragmentCompat.initImageSaveLocation() {
 private fun PreferenceFragmentCompat.initDarkMode() {
     val darkModePref = findPreference<HorizontalRadioPreference>(getString(R.string.commonutils_preference_key_dark_mode))
     val autoDarkModePref = findPreference<SwitchPreferenceCompat>(getString(R.string.commonutils_preference_key_auto_dark_mode))
-    if (autoDarkModePref == null || darkModePref == null) Log.e(TAG, "autoDarkModePref or darkModePref is null, skipping initialization")
-    else {
+    if (autoDarkModePref == null || darkModePref == null) {
+        Log.e(TAG, "autoDarkModePref or darkModePref is null, skipping initialization")
+    } else {
         darkModePref.isEnabled = !commonUtilsSettings.autoDarkMode
         darkModePref.value = if (commonUtilsSettings.darkMode) "1" else "0"
         darkModePref.setDividerEnabled(false)
@@ -97,10 +114,14 @@ private fun PreferenceFragmentCompat.initDarkMode() {
         autoDarkModePref.isChecked = commonUtilsSettings.autoDarkMode
         autoDarkModePref.onNewValue {
             darkModePref.isEnabled = !it
-            if (it) setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
-            else {
-                if (commonUtilsSettings.darkMode) setDefaultNightMode(MODE_NIGHT_YES)
-                else setDefaultNightMode(MODE_NIGHT_NO)
+            if (it) {
+                setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
+            } else {
+                if (commonUtilsSettings.darkMode) {
+                    setDefaultNightMode(MODE_NIGHT_YES)
+                } else {
+                    setDefaultNightMode(MODE_NIGHT_NO)
+                }
             }
         }
         darkModePref.onNewValue {
@@ -109,5 +130,3 @@ private fun PreferenceFragmentCompat.initDarkMode() {
         }
     }
 }
-
-

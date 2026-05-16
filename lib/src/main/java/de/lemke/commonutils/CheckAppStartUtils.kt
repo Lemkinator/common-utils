@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils
@@ -27,17 +42,18 @@ fun AppCompatActivity.checkAppStart(
     commonUtilsSettings.lastVersionName = versionName
     val tosVersion = resources.getInteger(R.integer.commonutils_tos_version)
     val acceptedTosVersion = commonUtilsSettings.acceptedTosVersion
-    val result = when {
-        lastVersionCode == -1 -> FIRST_TIME
-        lastVersionCode < versionCode -> FIRST_TIME_VERSION
-        lastVersionCode > versionCode -> {
-            Log.w(TAG, "Current version code ($versionCode) is less then the one recognized on last startup ($lastVersionCode). ")
-            Log.w(TAG, "Defensively assuming normal app start.")
-            NORMAL
-        }
+    val result =
+        when {
+            lastVersionCode == -1 -> FIRST_TIME
+            lastVersionCode < versionCode -> FIRST_TIME_VERSION
+            lastVersionCode > versionCode -> {
+                Log.w(TAG, "Current version code ($versionCode) is less then the one recognized on last startup ($lastVersionCode). ")
+                Log.w(TAG, "Defensively assuming normal app start.")
+                NORMAL
+            }
 
-        else -> NORMAL
-    }
+            else -> NORMAL
+        }
     return AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
         Log.d(TAG, this.toString())
         if (result == FIRST_TIME_VERSION && !tosAccepted) CommonUtilsOOBEActivity.tosChanged = true
@@ -58,7 +74,8 @@ fun AppCompatActivity.checkAppStartAndHandleOOBE(
 
 fun AppCompatActivity.openOOBEAndFinish() {
     startActivity(Intent(applicationContext, CommonUtilsOOBEActivity::class.java))
-    @Suppress("DEPRECATION") if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
+    @Suppress("DEPRECATION")
+    if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
     finishAfterTransition()
 }
 
@@ -77,8 +94,11 @@ class AppStart(
     val isFirstTimeVersion get() = lastVersionCode < versionCode
     val tosAccepted get() = acceptedTosVersion >= tosVersion
     val shouldShowOOBE get() = isFirstTime || !tosAccepted
+
     fun versionThresholdPassed(threshold: Int) = threshold in lastVersionCode..<versionCode
-    override fun toString(): String = "AppStart(result=$result, versionCode=$versionCode, versionName='$versionName', " +
+
+    override fun toString(): String =
+        "AppStart(result=$result, versionCode=$versionCode, versionName='$versionName', " +
             "lastVersionCode=$lastVersionCode, lastVersionName='$lastVersionName', " +
             "tosVersion=$tosVersion, acceptedTosVersion=$acceptedTosVersion)"
 }

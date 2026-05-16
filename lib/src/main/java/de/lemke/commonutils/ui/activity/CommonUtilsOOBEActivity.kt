@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.lemke.commonutils.ui.activity
 
 import android.R.anim.fade_in
@@ -40,11 +55,12 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     }
 
     private fun initTipsItems() {
-        val tipsData = listOf(
-            Triple(R.string.commonutils_oobe1_title, R.string.commonutils_oobe1_summary, R.drawable.commonutils_oobe1_icon),
-            Triple(R.string.commonutils_oobe2_title, R.string.commonutils_oobe2_summary, R.drawable.commonutils_oobe2_icon),
-            Triple(R.string.commonutils_oobe3_title, R.string.commonutils_oobe3_summary, R.drawable.commonutils_oobe3_icon)
-        )
+        val tipsData =
+            listOf(
+                Triple(R.string.commonutils_oobe1_title, R.string.commonutils_oobe1_summary, R.drawable.commonutils_oobe1_icon),
+                Triple(R.string.commonutils_oobe2_title, R.string.commonutils_oobe2_summary, R.drawable.commonutils_oobe2_icon),
+                Triple(R.string.commonutils_oobe3_title, R.string.commonutils_oobe3_summary, R.drawable.commonutils_oobe3_icon),
+            )
         tipsData.forEach { (titleRes, summaryRes, iconRes) ->
             OnboardingTipsItemView(this).apply {
                 setIcon(iconRes)
@@ -59,21 +75,24 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
         val tos = getString(R.string.commonutils_tos)
         val tosText = getString(if (tosChanged) R.string.commonutils_oobe_new_tos_text else R.string.commonutils_oobe_tos_text, tos)
         val tosIndex = tosText.lastIndexOf(tos)
-        binding.oobeIntroFooterTosText.text = SpannableString(tosText).apply {
-            setSpan(
-                object : ClickableSpan() {
-                    override fun onClick(widget: View) {
-                        AlertDialog.Builder(this@CommonUtilsOOBEActivity)
-                            .setTitle(getString(R.string.commonutils_tos))
-                            .setMessage(getString(R.string.commonutils_tos_content))
-                            .setPositiveButton(R.string.commonutils_ok, null)
-                            .show()
-                    }
-                },
-                tosIndex, tosIndex + tos.length,
-                SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
+        binding.oobeIntroFooterTosText.text =
+            SpannableString(tosText).apply {
+                setSpan(
+                    object : ClickableSpan() {
+                        override fun onClick(widget: View) {
+                            AlertDialog
+                                .Builder(this@CommonUtilsOOBEActivity)
+                                .setTitle(getString(R.string.commonutils_tos))
+                                .setMessage(getString(R.string.commonutils_tos_content))
+                                .setPositiveButton(R.string.commonutils_ok, null)
+                                .show()
+                        }
+                    },
+                    tosIndex,
+                    tosIndex + tos.length,
+                    SPAN_EXCLUSIVE_EXCLUSIVE,
+                )
+            }
         binding.oobeIntroFooterTosText.movementMethod = LinkMovementMethod.getInstance()
         binding.oobeIntroFooterTosText.highlightColor = TRANSPARENT
     }
@@ -89,7 +108,8 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
                 delay(500)
                 nextActivity?.let {
                     startActivity(Intent(this@CommonUtilsOOBEActivity, it))
-                    @Suppress("DEPRECATION") if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
+                    @Suppress("DEPRECATION")
+                    if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
                     finishAfterTransition()
                 } ?: onContinue?.invoke() ?: finishAfterTransition()
             }
