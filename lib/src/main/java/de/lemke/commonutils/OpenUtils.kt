@@ -65,44 +65,41 @@ private fun Context.openAppWithPackageName(packageName: String): Boolean =
         false
     }
 
-@Suppress("ReturnCount")
 private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean {
-    val intent = Intent(ACTION_VIEW)
-    intent.data = (getString(R.string.commonutils_playstore_app_link) + packageName).toUri()
-    try {
-        startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
-        return true
-    } catch (anfe: ActivityNotFoundException) {
-        Log.e(TAG, "Failed to open Play Store app link", anfe)
-        intent.data = (getString(R.string.commonutils_playstore_link) + packageName).toUri()
+    val uris =
+        listOf(
+            (getString(R.string.commonutils_playstore_app_link) + packageName).toUri(),
+            (getString(R.string.commonutils_playstore_link) + packageName).toUri(),
+        )
+    val intent = Intent(ACTION_VIEW).addFlags(FLAG_ACTIVITY_NEW_TASK)
+    for (uri in uris) {
         try {
-            startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
+            startActivity(intent.apply { data = uri })
             return true
         } catch (e: ActivityNotFoundException) {
-            Log.e(TAG, "Failed to open Play Store link", e)
-            toast(getString(R.string.commonutils_error_cant_open_app))
-            return false
+            Log.e(TAG, "Failed to open Play Store: $uri", e)
         }
     }
+    toast(getString(R.string.commonutils_error_cant_open_app))
+    return false
 }
 
 @ChecksSdkIntAtLeast(api = TIRAMISU)
 fun areAppLocalSettingsSupported(): Boolean = SDK_INT >= TIRAMISU
 
 @RequiresApi(TIRAMISU)
-@Suppress("ReturnCount")
 fun Fragment.openAppLocaleSettings(): Boolean {
     if (!areAppLocalSettingsSupported()) {
         toast(getString(R.string.commonutils_change_language_not_supported_by_device))
         return false
     }
-    try {
+    return try {
         startActivity(Intent(ACTION_APP_LOCALE_SETTINGS, "package:${requireContext().packageName}".toUri()))
-        return true
+        true
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "App locale settings not available", e)
         toast(getString(R.string.commonutils_change_language_not_supported_by_device))
-        return false
+        false
     }
 }
 
