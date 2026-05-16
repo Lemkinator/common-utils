@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.lemke.commonutils.ui.activity
 
 import android.graphics.Color.TRANSPARENT
@@ -56,7 +71,9 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
                 if (updateStatus == NoConnection) {
                     binding.appInfoLayout.updateStatus = Loading
                     checkUpdate()
-                } else startUpdateFlow()
+                } else {
+                    startUpdateFlow()
+                }
             }
         }
         appUpdateManager = AppUpdateManagerFactory.create(this)
@@ -66,15 +83,16 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         binding.aboutButtonOpenSourceLicenses.apply {
             setOnClickListener { transformToActivity(CommonUtilsLibsActivity::class.java, transitionName = "CommonUtilsLibsTransition") }
         }
-        activityResultLauncher = registerForActivityResult(StartIntentSenderForResult()) { result ->
-            when (result.resultCode) {
-                // For immediate updates, you might not receive RESULT_OK because
-                // the update should already be finished by the time control is given back to your app.
-                RESULT_OK -> Log.d("InAppUpdate", "Update successful")
-                RESULT_CANCELED -> Log.w("InAppUpdate", "Update canceled")
-                RESULT_IN_APP_UPDATE_FAILED -> Log.e("InAppUpdate", "Update failed")
+        activityResultLauncher =
+            registerForActivityResult(StartIntentSenderForResult()) { result ->
+                when (result.resultCode) {
+                    // For immediate updates, you might not receive RESULT_OK because
+                    // the update should already be finished by the time control is given back to your app.
+                    RESULT_OK -> Log.d("InAppUpdate", "Update successful")
+                    RESULT_CANCELED -> Log.w("InAppUpdate", "Update canceled")
+                    RESULT_IN_APP_UPDATE_FAILED -> Log.e("InAppUpdate", "Update failed")
+                }
             }
-        }
         checkUpdate()
     }
 
@@ -135,20 +153,20 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
                     appUpdateInfo.updateAvailability() == UPDATE_AVAILABLE -> binding.appInfoLayout.updateStatus = UpdateAvailable
                     appUpdateInfo.updateAvailability() == UPDATE_NOT_AVAILABLE -> binding.appInfoLayout.updateStatus = NoUpdate
                 }
-            }
-            .addOnFailureListener { appUpdateInfo: Exception ->
+            }.addOnFailureListener { appUpdateInfo: Exception ->
                 binding.appInfoLayout.updateStatus = NotUpdatable
                 Log.w(TAG, appUpdateInfo.message.toString())
             }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun startUpdateFlow() {
         try {
             Log.i(TAG, "Starting update flow")
             appUpdateManager.startUpdateFlowForResult(appUpdateInfo, activityResultLauncher, AppUpdateOptions.newBuilder(IMMEDIATE).build())
         } catch (e: Exception) {
             binding.appInfoLayout.updateStatus = NotUpdatable
-            e.printStackTrace()
+            Log.e(TAG, "Update flow failed", e)
         }
     }
 

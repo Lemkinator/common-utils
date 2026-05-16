@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2026 Leonard Lemke
+ * Copyright 2024-$YEAR Leonard Lemke
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils.ui.widget
-
-import android.content.Context
-import android.util.AttributeSet
-
-open class TouchBlockingView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-) : DimmingView(context, attrs) {
-    init {
-        isClickable = true
-        isFocusable = true
-    }
-}

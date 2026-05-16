@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils
@@ -19,7 +34,11 @@ fun View.showTouchBlockingTipPopup(
     action: () -> Unit = {},
 ) = showTouchBlockingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
-fun View.showTouchBlockingTipPopup(message: String, actionText: String? = null, action: () -> Unit = {}) {
+fun View.showTouchBlockingTipPopup(
+    message: String,
+    actionText: String? = null,
+    action: () -> Unit = {},
+) {
     showTipPopupWithOverlay(TouchBlockingView(context), message, actionText, action).setOutsideTouchEnabled(false)
 }
 
@@ -29,12 +48,25 @@ fun View.showDimmingTipPopup(
     action: () -> Unit = {},
 ) = showDimmingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
-fun View.showDimmingTipPopup(message: String, actionText: String? = null, action: () -> Unit = {}) {
+fun View.showDimmingTipPopup(
+    message: String,
+    actionText: String? = null,
+    action: () -> Unit = {},
+) {
     showTipPopupWithOverlay(DimmingView(context), message, actionText, action)
 }
 
-private fun View.showTipPopupWithOverlay(overlay: View, message: String, actionText: String?, action: () -> Unit): TipPopup {
-    val rootView = context.activity?.window?.decorView?.rootView as ViewGroup
+private fun View.showTipPopupWithOverlay(
+    overlay: View,
+    message: String,
+    actionText: String?,
+    action: () -> Unit,
+): TipPopup {
+    val rootView =
+        context.activity
+            ?.window
+            ?.decorView
+            ?.rootView as ViewGroup
     rootView.addView(overlay)
     return showTipPopup(rootView, overlay, message, actionText, action)
 }
@@ -50,6 +82,9 @@ private fun View.showTipPopup(
     setExpanded(true)
     setBackgroundColorWithAlpha(context.getColor(designR.color.oui_des_background_color))
     setOnDismissListener { rootView.removeView(backgroundView) }
-    setAction(actionText ?: context.getString(R.string.commonutils_ok)) { rootView.removeView(backgroundView); action() }
+    setAction(actionText ?: context.getString(R.string.commonutils_ok)) {
+        rootView.removeView(backgroundView)
+        action()
+    }
     show()
 }

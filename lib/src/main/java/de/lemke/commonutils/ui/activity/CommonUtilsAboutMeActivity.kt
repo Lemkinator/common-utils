@@ -1,9 +1,25 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.lemke.commonutils.ui.activity
 
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
+import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
@@ -29,8 +45,8 @@ import dev.oneuiproject.oneui.ktx.semSetToolTipText
 import dev.oneuiproject.oneui.ktx.setEnableRecursive
 import dev.oneuiproject.oneui.utils.DeviceLayoutUtil.isPortrait
 import dev.oneuiproject.oneui.widget.AdaptiveCoordinatorLayout.Companion.MARGIN_PROVIDER_ADP_DEFAULT
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.abs
+import kotlinx.coroutines.flow.MutableStateFlow
 import dev.oneuiproject.oneui.design.R as designR
 
 class CommonUtilsAboutMeActivity : AppCompatActivity() {
@@ -58,9 +74,11 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         initOnBackPressed()
     }
 
+    @Suppress("MagicNumber")
     private fun applyInsetIfNeeded() {
-        if (SDK_INT >= 30 && !window.decorView.fitsSystemWindows) {
+        if (SDK_INT >= Build.VERSION_CODES.R && !window.decorView.fitsSystemWindows) {
             binding.root.setOnApplyWindowInsetsListener { _, insets ->
+                @Suppress("WrongConstant")
                 val systemBarsInsets = insets.getInsets(systemBars())
                 binding.root.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom)
                 insets
@@ -70,7 +88,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         setSupportActionBar(binding.aboutToolbar)
-        //Should be called after setSupportActionBar
+        // Should be called after setSupportActionBar
         binding.aboutToolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
         supportActionBar!!.apply {
             setDisplayHomeAsUpEnabled(true)
@@ -92,7 +110,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
                 if (interpolatedProgress > .5 && !isExpanding) {
                     isExpanding = true
                     binding.aboutAppBar.setExpanded(true, true)
-                } else if (interpolatedProgress < .3 && isExpanding) {
+                } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
                     isExpanding = false
                     binding.aboutAppBar.setExpanded(false, true)
                 }
@@ -101,7 +119,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
                 binding.aboutAppBar.setExpanded(false)
                 isBackProgressing = false
                 isExpanding = false
-            }
+            },
         )
         updateCallbackState()
     }
@@ -116,7 +134,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private fun refreshAppBar(config: Configuration) {
         if (config.orientation != ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
             binding.aboutAppBar.apply {
-                seslSetCustomHeightProportion(true, 0.5f)//expanded
+                seslSetCustomHeightProportion(true, 0.5f) // expanded
                 addOnOffsetChangedListener(appBarListener)
                 setExpanded(true, false)
             }
@@ -153,13 +171,13 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     private fun openPlayStore() {
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(getString(R.string.commonutils_playstore_ad))
             .setMessage(getString(R.string.commonutils_playstore_redirect_message))
             .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ ->
                 openURL(getString(R.string.commonutils_playstore_developer_page_link))
-            }
-            .setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
+            }.setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
             .show()
     }
 
@@ -184,8 +202,12 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
+    @Suppress("MagicNumber")
     private inner class AboutAppBarListener : OnOffsetChangedListener {
-        override fun onOffsetChanged(appBarLayout: AppBarLayout, verticalOffset: Int) {
+        override fun onOffsetChanged(
+            appBarLayout: AppBarLayout,
+            verticalOffset: Int,
+        ) {
             // Handle the SwipeUp anim view
             val totalScrollRange = appBarLayout.totalScrollRange
             val abs = abs(verticalOffset)
@@ -216,6 +238,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val BACK_COLLAPSE_THRESHOLD = 0.3f
         var onShareApp: (activity: Activity) -> Unit = {}
     }
 }

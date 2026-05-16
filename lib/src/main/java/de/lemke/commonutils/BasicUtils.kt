@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils
@@ -24,11 +39,19 @@ import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "BasicUtils"
+private const val DELETE_APP_DATA_DELAY_MS = 500L
 
 fun Fragment.toast(msg: String) = requireContext().toast(msg)
+
 fun Context.toast(msg: String) = Toast.makeText(this, msg, LENGTH_SHORT).show()
-fun Fragment.toast(@StringRes stringResId: Int) = requireContext().toast(stringResId)
-fun Context.toast(@StringRes stringResId: Int) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
+
+fun Fragment.toast(
+    @StringRes stringResId: Int,
+) = requireContext().toast(stringResId)
+
+fun Context.toast(
+    @StringRes stringResId: Int,
+) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
 
 inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
     minActiveState: State = STARTED,
@@ -44,19 +67,26 @@ inline fun Fragment.launchAndRepeatWithViewLifecycle(
     viewLifecycleOwner.lifecycleScope.launch { viewLifecycleOwner.lifecycle.repeatOnLifecycle(minActiveState) { block() } }
 }
 
-fun Fragment.deleteAppDataAndExit(title: String? = null, message: String? = null, cancel: String? = null, delete: String? = null) {
-    val dialog = AlertDialog.Builder(requireContext())
-        .setTitle(title ?: getString(R.string.commonutils_delete_appdata_and_exit))
-        .setMessage(message ?: getString(R.string.commonutils_delete_appdata_and_exit_warning))
-        .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
-        .setPositiveButton(delete ?: getString(R.string.commonutils_delete), null)
-        .create()
+fun Fragment.deleteAppDataAndExit(
+    title: String? = null,
+    message: String? = null,
+    cancel: String? = null,
+    delete: String? = null,
+) {
+    val dialog =
+        AlertDialog
+            .Builder(requireContext())
+            .setTitle(title ?: getString(R.string.commonutils_delete_appdata_and_exit))
+            .setMessage(message ?: getString(R.string.commonutils_delete_appdata_and_exit_warning))
+            .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
+            .setPositiveButton(delete ?: getString(R.string.commonutils_delete), null)
+            .create()
     dialog.show()
     dialog.getButton(BUTTON_POSITIVE).apply {
         setTextColor(requireContext().getColor(designR.color.oui_des_functional_red_color))
         setOnClickListenerWithProgress { button, progressBar ->
             lifecycleScope.launch {
-                delay(500)
+                delay(DELETE_APP_DATA_DELAY_MS)
                 (requireContext().getSystemService(ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
             }
         }
@@ -97,4 +127,3 @@ inline fun Bundle?.restoreSearchAndActionMode(
         }
     }
 }
-

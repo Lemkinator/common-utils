@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils
@@ -13,6 +28,7 @@ import dev.oneuiproject.oneui.R as iconsR
 import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "DrawerUtils"
+private const val NAV_RAIL_MIN_SIDE_MARGIN_DP = 14
 
 fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
@@ -21,14 +37,17 @@ fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
         listener = {
             findViewById<ImageButton>(designR.id.oui_des_drawer_header_button)
                 .transformToActivity(CommonUtilsAboutActivity::class.java, transitionName = "CommonUtilsAboutAppTransition")
-        }
+        },
     )
-    setNavRailContentMinSideMargin(14)
+    setNavRailContentMinSideMargin(NAV_RAIL_MIN_SIDE_MARGIN_DP)
     closeNavRailOnBack = true
     context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
 }
 
-fun DrawerNavigationView.onNavigationSingleClick(interval: Long = 600, listener: NavigationView.OnNavigationItemSelectedListener) {
+fun DrawerNavigationView.onNavigationSingleClick(
+    interval: Long = 600,
+    listener: NavigationView.OnNavigationItemSelectedListener,
+) {
     var lastClick = 0L
     setNavigationItemSelectedListener { item ->
         val currentTime = System.currentTimeMillis()

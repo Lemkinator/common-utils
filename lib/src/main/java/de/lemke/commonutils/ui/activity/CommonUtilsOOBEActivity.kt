@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.lemke.commonutils.ui.activity
 
 import android.R.anim.fade_in
@@ -5,6 +20,7 @@ import android.R.anim.fade_out
 import android.content.Intent
 import android.graphics.Color.TRANSPARENT
 import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -30,7 +46,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (SDK_INT >= 34) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
+        if (SDK_INT >= UPSIDE_DOWN_CAKE) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
         binding = ActivityOobeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.root.setTitle(applicationInfo.loadLabel(packageManager).toString())
@@ -40,11 +56,12 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     }
 
     private fun initTipsItems() {
-        val tipsData = listOf(
-            Triple(R.string.commonutils_oobe1_title, R.string.commonutils_oobe1_summary, R.drawable.commonutils_oobe1_icon),
-            Triple(R.string.commonutils_oobe2_title, R.string.commonutils_oobe2_summary, R.drawable.commonutils_oobe2_icon),
-            Triple(R.string.commonutils_oobe3_title, R.string.commonutils_oobe3_summary, R.drawable.commonutils_oobe3_icon)
-        )
+        val tipsData =
+            listOf(
+                Triple(R.string.commonutils_oobe1_title, R.string.commonutils_oobe1_summary, R.drawable.commonutils_oobe1_icon),
+                Triple(R.string.commonutils_oobe2_title, R.string.commonutils_oobe2_summary, R.drawable.commonutils_oobe2_icon),
+                Triple(R.string.commonutils_oobe3_title, R.string.commonutils_oobe3_summary, R.drawable.commonutils_oobe3_icon),
+            )
         tipsData.forEach { (titleRes, summaryRes, iconRes) ->
             OnboardingTipsItemView(this).apply {
                 setIcon(iconRes)
@@ -59,37 +76,43 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
         val tos = getString(R.string.commonutils_tos)
         val tosText = getString(if (tosChanged) R.string.commonutils_oobe_new_tos_text else R.string.commonutils_oobe_tos_text, tos)
         val tosIndex = tosText.lastIndexOf(tos)
-        binding.oobeIntroFooterTosText.text = SpannableString(tosText).apply {
-            setSpan(
-                object : ClickableSpan() {
-                    override fun onClick(widget: View) {
-                        AlertDialog.Builder(this@CommonUtilsOOBEActivity)
-                            .setTitle(getString(R.string.commonutils_tos))
-                            .setMessage(getString(R.string.commonutils_tos_content))
-                            .setPositiveButton(R.string.commonutils_ok, null)
-                            .show()
-                    }
-                },
-                tosIndex, tosIndex + tos.length,
-                SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-        }
+        binding.oobeIntroFooterTosText.text =
+            SpannableString(tosText).apply {
+                setSpan(
+                    object : ClickableSpan() {
+                        override fun onClick(widget: View) {
+                            AlertDialog
+                                .Builder(this@CommonUtilsOOBEActivity)
+                                .setTitle(getString(R.string.commonutils_tos))
+                                .setMessage(getString(R.string.commonutils_tos_content))
+                                .setPositiveButton(R.string.commonutils_ok, null)
+                                .show()
+                        }
+                    },
+                    tosIndex,
+                    tosIndex + tos.length,
+                    SPAN_EXCLUSIVE_EXCLUSIVE,
+                )
+            }
         binding.oobeIntroFooterTosText.movementMethod = LinkMovementMethod.getInstance()
         binding.oobeIntroFooterTosText.highlightColor = TRANSPARENT
     }
 
     private fun initFooterButton() {
-        if (resources.configuration.screenWidthDp < 360) binding.oobeIntroFooterButton.layoutParams.width = MATCH_PARENT
+        if (resources.configuration.screenWidthDp < MIN_FULL_BUTTON_WIDTH_DP) {
+            binding.oobeIntroFooterButton.layoutParams.width = MATCH_PARENT
+        }
         binding.oobeIntroFooterButton.setOnClickListener {
             binding.oobeIntroFooterTosText.isEnabled = false
             binding.oobeIntroFooterButton.isVisible = false
             binding.oobeIntroFooterButtonProgress.isVisible = true
             if (setAcceptedTosVersion) commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
             lifecycleScope.launch {
-                delay(500)
+                delay(PROCEED_DELAY_MS)
                 nextActivity?.let {
                     startActivity(Intent(this@CommonUtilsOOBEActivity, it))
-                    @Suppress("DEPRECATION") if (SDK_INT < 34) overridePendingTransition(fade_in, fade_out)
+                    @Suppress("DEPRECATION")
+                    if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
                     finishAfterTransition()
                 } ?: onContinue?.invoke() ?: finishAfterTransition()
             }
@@ -97,6 +120,8 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val PROCEED_DELAY_MS = 500L
+        private const val MIN_FULL_BUTTON_WIDTH_DP = 360
         var setAcceptedTosVersion = true
         var nextActivity: Class<*>? = null
         var onContinue: (() -> Unit)? = null

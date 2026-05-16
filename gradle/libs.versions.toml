@@ -7,13 +7,18 @@ aboutlibraries = "14.2.0"
 activity-compose = "1.12.4"
 app-update-ktx = "2.1.0"
 core-splashscreen = "1.2.0"
+detekt = "2.0.0-alpha.3"
 gradle = "9.2.1"
 kotlin = "2.3.21"
+kover = "0.9.8"
+ksp = "2.3.8"
+ktlint = "1.7.1"
 lottie = "6.7.1"
 material3 = "1.4.0"
 oneui-design = "0.9.11+oneui8"
 oneui-icons = "1.1.0"
 review-ktx = "2.0.2"
+spotless = "8.5.1"
 
 [libraries]
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
@@ -28,10 +33,14 @@ review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "rev
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "gradle" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 maven-publish = { id = "maven-publish" }
 signing = { id = "signing" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 [bundles]
 android-play = ["app-update-ktx", "review-ktx"]

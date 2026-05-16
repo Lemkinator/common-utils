@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 package de.lemke.commonutils.ui.widget
@@ -17,6 +32,7 @@ import com.airbnb.lottie.value.LottieValueCallback
 import de.lemke.commonutils.R
 import dev.oneuiproject.oneui.widget.RoundedLinearLayout
 
+private const val ANIMATION_START_DELAY_MS = 400L
 
 class NoEntryView @JvmOverloads constructor(
     context: Context,
@@ -26,7 +42,6 @@ class NoEntryView @JvmOverloads constructor(
 ) : RoundedLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
     val lottieAnimationView: LottieAnimationView by lazy { findViewById(R.id.noEntryLottie) }
     val textView: TextView by lazy { findViewById(R.id.noEntryText) }
-
 
     init {
         inflate(context, R.layout.widget_no_entry_view, this)
@@ -45,8 +60,16 @@ class NoEntryView @JvmOverloads constructor(
         }
 
     fun toggle(otherView: View? = null) = updateVisibility(!isVisible, otherView)
-    fun updateVisibilityWith(list: List<*>, otherView: View? = null) = updateVisibility(list.isEmpty(), otherView)
-    fun updateVisibility(visible: Boolean, otherView: View? = null) = if (visible) {
+
+    fun updateVisibilityWith(
+        list: List<*>,
+        otherView: View? = null,
+    ) = updateVisibility(list.isEmpty(), otherView)
+
+    fun updateVisibility(
+        visible: Boolean,
+        otherView: View? = null,
+    ) = if (visible) {
         otherView?.isVisible = false
         show()
     } else {
@@ -60,11 +83,10 @@ class NoEntryView @JvmOverloads constructor(
         isVisible = true
         val callback = LottieValueCallback<ColorFilter>(SimpleColorFilter(context.getColor(R.color.primary_color_themed)))
         lottieAnimationView.addValueCallback(KeyPath("**"), COLOR_FILTER, callback)
-        lottieAnimationView.postDelayed({ lottieAnimationView.playAnimation() }, 400)
+        lottieAnimationView.postDelayed({ lottieAnimationView.playAnimation() }, ANIMATION_START_DELAY_MS)
     }
 
     fun hide() {
         isVisible = false
     }
-
 }
