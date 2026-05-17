@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <issues format="6" by="lint 9.2.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.2.1)" variant="all" version="9.2.1">
-
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.activity:activity-compose than 1.12.4 is available: 1.13.0"
-        errorLine1="activity-compose = &quot;1.12.4&quot;"
-        errorLine2="                   ~~~~~~~~">
-        <location
-            file="../gradle/libs.versions.toml"
-            line="7"
-            column="20"/>
-    </issue>
-
     <issue
         id="VectorPath"
         message="Very long vector path (4007 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector."
