@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "Running pre-commit checks (spotlessCheck detekt)..."
-./gradlew spotlessCheck detekt --daemon
+echo "Running pre-commit checks (staticAnalysis)..."
+./gradlew staticAnalysis --daemon
