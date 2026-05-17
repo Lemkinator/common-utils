@@ -81,8 +81,8 @@ dependencies {
     implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
-    implementation(libs.core.splashscreen)
-    implementation(libs.lottie)
+    api(libs.core.splashscreen)
+    api(libs.lottie)
 
     testImplementation(libs.konsist)
     testImplementation(libs.junit.jupiter.api)
