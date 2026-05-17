@@ -4,6 +4,9 @@
 common-utils = "0.9.23"
 
 aboutlibraries = "14.2.0"
+# activity-compose 1.13.x requires androidx.core.app.PictureInPictureProvider, absent in the androidx.core
+# version bundled by oneui-design. Upgrading is blocked until oneui-design ships a compatible core.
+#noinspection GradleDependency
 activity-compose = "1.12.4"
 app-update = "2.1.0"
 core-splashscreen = "1.2.0"
@@ -13,8 +16,8 @@ gradle = "9.2.1"
 junit-jupiter = "6.0.3"
 kotlin = "2.3.21"
 konsist = "0.17.3"
-kover = "0.9.8"
-ksp = "2.3.8"
+# Used via spotless { kotlin { ktlint(libs.versions.ktlint.get()) } } — version-only ref, no library/plugin alias
+#noinspection UnusedVersionCatalogEntry
 ktlint = "1.7.1"
 lottie = "6.7.1"
 material3 = "1.4.0"
@@ -44,8 +47,6 @@ dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.r
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 maven-publish = { id = "maven-publish" }
 signing = { id = "signing" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
