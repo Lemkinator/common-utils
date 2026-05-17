@@ -18,8 +18,15 @@ Min SDK 26, Target SDK 36, Kotlin 2.3.21, Java 21.
 ./gradlew assembleRelease
 ```
 
-No tests exist in this project yet (tests are being added as part of
-the modernization plan).
+Tests live under `lib/src/test/java/de/lemke/commonutils/`.
+
+## Pre-commit Hook
+
+Enable local static-analysis checks before every commit:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ## Publishing
 
