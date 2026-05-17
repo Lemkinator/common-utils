@@ -47,7 +47,7 @@ class BasicUtilsTest {
         val ids = setOf(1L, 2L, 3L)
         bundle.saveSearchAndActionMode(isActionMode = true, selectedIds = ids)
         verify { bundle.putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true) }
-        verify { bundle.putLongArray(COMMONUTILS_KEY_SELECTED_IDS, ids.toLongArray()) }
+        verify { bundle.putLongArray(COMMONUTILS_KEY_SELECTED_IDS, match { it.contentEquals(ids.toLongArray()) }) }
     }
 
     @Test

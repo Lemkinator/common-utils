@@ -13,27 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package de.lemke.commonutils.di
 
+import de.lemke.commonutils.MainDispatcherExtension
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 
+@ExtendWith(MainDispatcherExtension::class)
 class CoroutineDispatchersModuleTest {
-    @BeforeEach
-    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
-
-    @AfterEach
-    fun tearDown() = Dispatchers.resetMain()
-
     @Test
     fun `provideIo returns Dispatchers IO`() {
         assertSame(Dispatchers.IO, CoroutineDispatchersModule.provideIo())
