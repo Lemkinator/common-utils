@@ -25,7 +25,14 @@ fun String.toEnvVarStyle(): String = replace(Regex("([a-z])([A-Z])"), "$1_$2").u
  *      ghAccessToken=&lt;YOUR_GITHUB_ACCESS_TOKEN&gt;
  */
 fun getProperty(key: String): String =
-    Properties().apply { rootProject.file("github.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) } }.getProperty(key)
+    Properties()
+        .apply {
+            rootProject
+                .file("github.properties")
+                .takeIf { it.exists() }
+                ?.inputStream()
+                ?.use { load(it) }
+        }.getProperty(key)
         ?: rootProject.findProperty(key)?.toString()
         ?: System.getenv(key.toEnvVarStyle())
         ?: throw GradleException("Property $key not found")
@@ -73,12 +80,19 @@ subprojects {
         }
     }
     afterEvaluate {
-        if (!project.plugins.hasPlugin(libs.plugins.maven.publish.get().pluginId)) {
+        if (!project.plugins.hasPlugin(
+                libs.plugins.maven.publish
+                    .get()
+                    .pluginId,
+            )
+        ) {
             return@afterEvaluate
         }
         val artifact = "common-utils"
         group = "io.github.lemkinator"
-        version = libs.versions.common.utils.get()
+        version =
+            libs.versions.common.utils
+                .get()
         println("Evaluated $group:$artifact:$version")
         project.extensions.configure<PublishingExtension>("publishing") {
             publications {
@@ -105,7 +119,7 @@ subprojects {
                             developerConnection = "scm:git:ssh://github.com/Lemkinator/common-utils.git"
                             url = "https://github.com/Lemkinator/common-utils"
                         }
-                        issueManagement{
+                        issueManagement {
                             system = "GitHub Issues"
                             url = "https://github.com/Lemkinator/common-utils/issues"
                         }
