@@ -21,8 +21,6 @@ import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-import com.google.android.gms.tasks.Task
-import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
 import java.lang.System.currentTimeMillis
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -45,52 +43,41 @@ fun AppCompatActivity.canShowInAppReview() =
         false
     }
 
-fun AppCompatActivity.showInAppReviewOrFinish() = showInAppReviewAnd { finishAfterTransition() }
+fun AppCompatActivity.showInAppReviewOrFinish() = showInAppReview(
+    onNotAllowed = { finishAfterTransition() },
+    onCompleted = { finishAfterTransition() },
+)
 
 fun AppCompatActivity.showInAppReviewIfPossible() = showInAppReview()
-
-private fun AppCompatActivity.showInAppReviewAnd(action: () -> Unit) {
-    showInAppReview(
-        onNotAllowed = { action() },
-        onCompleted = { action() },
-        onReviewError = { task -> action() },
-        onError = { e -> action() },
-    )
-}
 
 @Suppress("TooGenericExceptionCaught")
 private fun AppCompatActivity.showInAppReview(
     onNotAllowed: () -> Unit = {},
     onCompleted: () -> Unit = {},
-    onReviewError: (Task<ReviewInfo>) -> Unit = {},
-    onError: (Exception) -> Unit = {},
 ) {
+    if (!canShowInAppReview()) {
+        Log.d(TAG, "In app review requested less than $MIN_DAYS_BETWEEN_REVIEWS days ago, skipping")
+        onNotAllowed()
+        return
+    }
+    Log.d(TAG, "trying to show in app review")
+    setInAppReview()
     try {
-        if (!canShowInAppReview()) {
-            Log.d(TAG, "In app review requested less than $MIN_DAYS_BETWEEN_REVIEWS days ago, skipping")
-            onNotAllowed()
-            return
-        }
-        Log.d(TAG, "trying to show in app review")
-        setInAppReview()
         val manager = ReviewManagerFactory.create(this)
-        val request = manager.requestReviewFlow()
-        request.addOnCompleteListener { task ->
+        manager.requestReviewFlow().addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 Log.d(TAG, "Review task successful")
-                val reviewInfo = task.result
-                val flow = manager.launchReviewFlow(this, reviewInfo)
-                flow.addOnCompleteListener {
+                manager.launchReviewFlow(this, task.result).addOnCompleteListener {
                     Log.d(TAG, "Review flow complete")
                     onCompleted()
                 }
             } else {
                 Log.e(TAG, "Review task failed: ${task.exception?.message}")
-                onReviewError(task)
+                onCompleted()
             }
         }
     } catch (e: Exception) {
         Log.e(TAG, "Error showing in-app review", e)
-        onError(e)
+        onCompleted()
     }
 }
