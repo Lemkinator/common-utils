@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.detekt)
     alias(libs.plugins.spotless)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -92,4 +93,28 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
+    testImplementation(libs.truth)
+    testImplementation(libs.kotlinx.coroutines.test)
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "*.databinding.*",
+                    "*.BuildConfig",
+                    "*Hilt_*",
+                    "*_HiltModules*",
+                    "*_Factory",
+                    "*_MembersInjector",
+                    "dagger.hilt.*",
+                    "hilt_aggregated_deps.*",
+                    "de.lemke.commonutils.di.*",
+                )
+            }
+        }
+    }
 }
