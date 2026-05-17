@@ -43,10 +43,11 @@ fun AppCompatActivity.canShowInAppReview() =
         false
     }
 
-fun AppCompatActivity.showInAppReviewOrFinish() = showInAppReview(
-    onNotAllowed = { finishAfterTransition() },
-    onCompleted = { finishAfterTransition() },
-)
+fun AppCompatActivity.showInAppReviewOrFinish() =
+    showInAppReview(
+        onNotAllowed = { finishAfterTransition() },
+        onCompleted = { finishAfterTransition() },
+    )
 
 fun AppCompatActivity.showInAppReviewIfPossible() = showInAppReview()
 
