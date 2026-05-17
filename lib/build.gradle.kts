@@ -34,7 +34,13 @@ android {
     }
     testOptions {
         unitTests {
+            isIncludeAndroidResources = true
             all { it.useJUnitPlatform() }
+        }
+    }
+    packaging {
+        resources {
+            excludes += setOf("META-INF/AL2.0", "META-INF/LGPL2.1", "META-INF/LICENSE*", "META-INF/NOTICE*")
         }
     }
 }
@@ -92,11 +98,14 @@ dependencies {
     testImplementation(libs.konsist)
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.vintage.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }
 
 kover {
