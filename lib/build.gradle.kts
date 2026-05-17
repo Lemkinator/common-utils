@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.signing)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.detekt)
     alias(libs.plugins.spotless)
@@ -83,6 +85,8 @@ dependencies {
     implementation(libs.androidx.material3)
     api(libs.core.splashscreen)
     api(libs.lottie)
+    api(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     testImplementation(libs.konsist)
     testImplementation(libs.junit.jupiter.api)
