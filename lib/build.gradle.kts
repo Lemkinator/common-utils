@@ -85,7 +85,7 @@ dependencies {
     implementation(libs.androidx.material3)
     api(libs.core.splashscreen)
     api(libs.lottie)
-    api(libs.hilt.android)
+    implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.konsist)
