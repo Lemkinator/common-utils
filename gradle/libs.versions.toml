@@ -4,71 +4,71 @@
 common-utils = "1.0.0"
 
 aboutlibraries = "14.2.0"
-coroutines = "1.11.0"
-kover = "0.9.8"
-kotest = "6.1.11"
-kotest-robolectric = "0.9.0"
-mockk = "1.14.9"
-turbine = "1.2.1"
-hilt = "2.59.2"
-ksp = "2.3.8"
 # activity-compose 1.13.x requires androidx.core.app.PictureInPictureProvider, absent in the androidx.core
 # version bundled by oneui-design. Upgrading is blocked until oneui-design ships a compatible core.
 #noinspection GradleDependency
 activity-compose = "1.12.4"
+androidx-test = "1.7.0"
 app-update = "2.1.0"
+coroutines = "1.11.0"
 core-splashscreen = "1.2.0"
 dependency-analysis = "3.12.0"
 detekt = "2.0.0-alpha.3"
 gradle = "9.2.1"
+hilt = "2.59.2"
 junit-jupiter = "6.0.3"
-kotlin = "2.3.21"
 konsist = "0.17.3"
+kotlin = "2.3.21"
+kotest = "6.1.11"
+kotest-robolectric = "0.9.0"
+kover = "0.9.8"
+ksp = "2.3.8"
 # Used via spotless { kotlin { ktlint(libs.versions.ktlint.get()) } } — version-only ref, no library/plugin alias
 #noinspection UnusedVersionCatalogEntry
 ktlint = "1.7.1"
 lottie = "6.7.1"
 material3 = "1.4.0"
+mockk = "1.14.9"
 oneui-design = "0.9.11+oneui8"
 oneui-icons = "1.1.0"
 review = "2.0.2"
-spotless = "8.5.1"
 robolectric = "4.16.1"
-androidx-test = "1.7.0"
+spotless = "8.5.1"
+turbine = "1.2.1"
 
 [libraries]
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test" }
 app-update = { module = "com.google.android.play:app-update", version.ref = "app-update" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
-junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
-junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-jupiter" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-jupiter" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
-kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-extensions-robolectric = { module = "tech.apter.junit5.jupiter:robolectric-extension", version.ref = "kotest-robolectric" }
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
-robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 oneui-design = { module = "io.github.tribalfs:oneui-design", version.ref = "oneui-design" }
 oneui-icons = { module = "io.github.oneuiproject:icons", version.ref = "oneui-icons" }
 review = { module = "com.google.android.play:review", version.ref = "review" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "gradle" }
-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependency-analysis" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 maven-publish = { id = "maven-publish" }
 signing = { id = "signing" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
