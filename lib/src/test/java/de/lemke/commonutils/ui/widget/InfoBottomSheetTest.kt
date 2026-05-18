@@ -17,13 +17,13 @@ package de.lemke.commonutils.ui.widget
 
 import android.view.Gravity.CENTER
 import android.view.Gravity.START
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
+import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@RunWith(RobolectricTestRunner::class)
+@ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class InfoBottomSheetTest {
     // newInstance is private on the companion object; access via reflection so tests
@@ -47,24 +47,24 @@ class InfoBottomSheetTest {
     @Test
     fun `title is stored in arguments bundle`() {
         val frag = newInstance("Hello", "World")
-        assertThat(frag.arguments!!.getString(InfoBottomSheet.KEY_TITLE)).isEqualTo("Hello")
+        frag.arguments!!.getString(InfoBottomSheet.KEY_TITLE) shouldBe "Hello"
     }
 
     @Test
     fun `message is stored in arguments bundle`() {
         val frag = newInstance("T", "My Message")
-        assertThat(frag.arguments!!.getString(InfoBottomSheet.KEY_MESSAGE)).isEqualTo("My Message")
+        frag.arguments!!.getString(InfoBottomSheet.KEY_MESSAGE) shouldBe "My Message"
     }
 
     @Test
     fun `text gravity defaults to CENTER`() {
         val frag = newInstance("T", "M")
-        assertThat(frag.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY)).isEqualTo(CENTER)
+        frag.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY) shouldBe CENTER
     }
 
     @Test
     fun `explicit text gravity is preserved`() {
         val frag = newInstance("T", "M", START)
-        assertThat(frag.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY)).isEqualTo(START)
+        frag.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY) shouldBe START
     }
 }

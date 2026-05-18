@@ -17,39 +17,52 @@ package de.lemke.commonutils
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
+import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@RunWith(RobolectricTestRunner::class)
+@ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class SaveLocationRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `toLocalizedString returns non-blank for CUSTOM`() {
-        assertThat(SaveLocation.CUSTOM.toLocalizedString(ctx).isNotBlank()).isTrue()
+        SaveLocation.CUSTOM
+            .toLocalizedString(ctx)
+            .isNotBlank()
+            .shouldBeTrue()
     }
 
     @Test
     fun `toLocalizedString returns non-blank for DOWNLOADS`() {
-        assertThat(SaveLocation.DOWNLOADS.toLocalizedString(ctx).isNotBlank()).isTrue()
+        SaveLocation.DOWNLOADS
+            .toLocalizedString(ctx)
+            .isNotBlank()
+            .shouldBeTrue()
     }
 
     @Test
     fun `toLocalizedString returns non-blank for PICTURES`() {
-        assertThat(SaveLocation.PICTURES.toLocalizedString(ctx).isNotBlank()).isTrue()
+        SaveLocation.PICTURES
+            .toLocalizedString(ctx)
+            .isNotBlank()
+            .shouldBeTrue()
     }
 
     @Test
     fun `toLocalizedString returns non-blank for DCIM`() {
-        assertThat(SaveLocation.DCIM.toLocalizedString(ctx).isNotBlank()).isTrue()
+        SaveLocation.DCIM
+            .toLocalizedString(ctx)
+            .isNotBlank()
+            .shouldBeTrue()
     }
 
     @Test
     fun `getLocalizedEntries returns 4 entries`() {
-        assertThat(SaveLocation.getLocalizedEntries(ctx)).hasLength(4)
+        SaveLocation.getLocalizedEntries(ctx).size shouldBe 4
     }
 }

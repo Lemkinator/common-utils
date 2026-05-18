@@ -17,20 +17,27 @@
 
 package de.lemke.commonutils
 
+import io.kotest.core.listeners.AfterTestListener
+import io.kotest.core.listeners.BeforeTestListener
+import io.kotest.core.test.TestCase
+import io.kotest.engine.test.TestResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.extension.AfterEachCallback
-import org.junit.jupiter.api.extension.BeforeEachCallback
-import org.junit.jupiter.api.extension.ExtensionContext
 
-class MainDispatcherExtension(
-    val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(),
-) : BeforeEachCallback, AfterEachCallback {
-    override fun beforeEach(context: ExtensionContext) = Dispatchers.setMain(testDispatcher)
+class MainDispatcherListener : BeforeTestListener, AfterTestListener {
+    private val testDispatcher = UnconfinedTestDispatcher()
 
-    override fun afterEach(context: ExtensionContext) = Dispatchers.resetMain()
+    override suspend fun beforeTest(testCase: TestCase) {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    override suspend fun afterTest(
+        testCase: TestCase,
+        result: TestResult,
+    ) {
+        Dispatchers.resetMain()
+    }
 }

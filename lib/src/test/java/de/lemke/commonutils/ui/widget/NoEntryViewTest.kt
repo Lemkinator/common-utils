@@ -18,20 +18,20 @@ package de.lemke.commonutils.ui.widget
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.test.core.app.ApplicationProvider
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
+import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@RunWith(RobolectricTestRunner::class)
+@ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class NoEntryViewTest {
     private fun view() = NoEntryView(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `initially hidden`() {
-        assertThat(view().isVisible).isFalse()
+        view().isVisible shouldBe false
     }
 
     @Test
@@ -39,28 +39,28 @@ class NoEntryViewTest {
         val v = view()
         v.updateVisibility(true)
         v.hide()
-        assertThat(v.isVisible).isFalse()
+        v.isVisible shouldBe false
     }
 
     @Test
     fun `updateVisibility false keeps view hidden`() {
         val v = view()
         v.updateVisibility(false)
-        assertThat(v.isVisible).isFalse()
+        v.isVisible shouldBe false
     }
 
     @Test
     fun `updateVisibility true shows view`() {
         val v = view()
         v.updateVisibility(true)
-        assertThat(v.isVisible).isTrue()
+        v.isVisible shouldBe true
     }
 
     @Test
     fun `updateVisibilityWith empty list shows view`() {
         val v = view()
         v.updateVisibilityWith(emptyList<String>())
-        assertThat(v.isVisible).isTrue()
+        v.isVisible shouldBe true
     }
 
     @Test
@@ -68,14 +68,14 @@ class NoEntryViewTest {
         val v = view()
         v.updateVisibility(true)
         v.updateVisibilityWith(listOf("item"))
-        assertThat(v.isVisible).isFalse()
+        v.isVisible shouldBe false
     }
 
     @Test
     fun `toggle shows hidden view`() {
-        val v = view() // starts hidden
+        val v = view()
         v.toggle()
-        assertThat(v.isVisible).isTrue()
+        v.isVisible shouldBe true
     }
 
     @Test
@@ -83,14 +83,14 @@ class NoEntryViewTest {
         val v = view()
         v.updateVisibility(true)
         v.toggle()
-        assertThat(v.isVisible).isFalse()
+        v.isVisible shouldBe false
     }
 
     @Test
     fun `text property round-trips`() {
         val v = view()
         v.text = "No results found"
-        assertThat(v.text).isEqualTo("No results found")
+        v.text shouldBe "No results found"
     }
 
     @Test
@@ -98,8 +98,8 @@ class NoEntryViewTest {
         val v = view()
         val other = View(ApplicationProvider.getApplicationContext()).also { it.isVisible = true }
         v.updateVisibility(true, other)
-        assertThat(v.isVisible).isTrue()
-        assertThat(other.isVisible).isFalse()
+        v.isVisible shouldBe true
+        other.isVisible shouldBe false
     }
 
     @Test
@@ -108,7 +108,7 @@ class NoEntryViewTest {
         val other = View(ApplicationProvider.getApplicationContext()).also { it.isVisible = false }
         v.updateVisibility(true)
         v.updateVisibility(false, other)
-        assertThat(v.isVisible).isFalse()
-        assertThat(other.isVisible).isTrue()
+        v.isVisible shouldBe false
+        other.isVisible shouldBe true
     }
 }

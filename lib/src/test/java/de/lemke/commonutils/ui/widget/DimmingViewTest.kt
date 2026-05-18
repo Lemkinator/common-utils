@@ -19,43 +19,41 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.test.core.app.ApplicationProvider
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
+import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@RunWith(RobolectricTestRunner::class)
+@ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class DimmingViewTest {
     @Test
     fun `default constructor sets MATCH_PARENT layout params`() {
         val view = DimmingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.layoutParams.width).isEqualTo(MATCH_PARENT)
-        assertThat(view.layoutParams.height).isEqualTo(MATCH_PARENT)
+        view.layoutParams.width shouldBe MATCH_PARENT
+        view.layoutParams.height shouldBe MATCH_PARENT
     }
 
     @Test
     fun `default constructor is not clickable`() {
-        val view = DimmingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.isClickable).isFalse()
+        DimmingView(ApplicationProvider.getApplicationContext()).isClickable shouldBe false
     }
 
     @Test
     fun `default constructor is not focusable`() {
-        val view = DimmingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.isFocusable).isFalse()
+        DimmingView(ApplicationProvider.getApplicationContext()).isFocusable shouldBe false
     }
 
     @Test
     fun `default constructor sets semi-transparent black background`() {
         val view = DimmingView(ApplicationProvider.getApplicationContext())
-        val bg = view.background as? ColorDrawable
-        assertThat(bg).isNotNull()
+        val bg = (view.background as? ColorDrawable).shouldNotBeNull()
         // Color.argb(0.5f, 0f, 0f, 0f): alpha = round(0.5 * 255 + 0.5) = 128
-        assertThat(Color.alpha(bg!!.color)).isEqualTo(128)
-        assertThat(Color.red(bg.color)).isEqualTo(0)
-        assertThat(Color.green(bg.color)).isEqualTo(0)
-        assertThat(Color.blue(bg.color)).isEqualTo(0)
+        Color.alpha(bg.color) shouldBe 128
+        Color.red(bg.color) shouldBe 0
+        Color.green(bg.color) shouldBe 0
+        Color.blue(bg.color) shouldBe 0
     }
 }

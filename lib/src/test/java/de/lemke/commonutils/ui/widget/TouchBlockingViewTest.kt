@@ -17,37 +17,35 @@ package de.lemke.commonutils.ui.widget
 
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.test.core.app.ApplicationProvider
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
+import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@RunWith(RobolectricTestRunner::class)
+@ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class TouchBlockingViewTest {
     @Test
     fun `clickable by default`() {
-        val view = TouchBlockingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.isClickable).isTrue()
+        TouchBlockingView(ApplicationProvider.getApplicationContext()).isClickable shouldBe true
     }
 
     @Test
     fun `focusable by default`() {
-        val view = TouchBlockingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.isFocusable).isTrue()
+        TouchBlockingView(ApplicationProvider.getApplicationContext()).isFocusable shouldBe true
     }
 
     @Test
     fun `inherits MATCH_PARENT layout params from DimmingView`() {
         val view = TouchBlockingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.layoutParams.width).isEqualTo(MATCH_PARENT)
-        assertThat(view.layoutParams.height).isEqualTo(MATCH_PARENT)
+        view.layoutParams.width shouldBe MATCH_PARENT
+        view.layoutParams.height shouldBe MATCH_PARENT
     }
 
     @Test
     fun `is a DimmingView`() {
-        val view = TouchBlockingView(ApplicationProvider.getApplicationContext())
-        assertThat(view).isInstanceOf(DimmingView::class.java)
+        TouchBlockingView(ApplicationProvider.getApplicationContext()).shouldBeInstanceOf<DimmingView>()
     }
 }

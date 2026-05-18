@@ -15,64 +15,41 @@
  */
 package de.lemke.commonutils
 
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.string.shouldEndWith
+import io.kotest.matchers.string.shouldMatch
+import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldNotStartWith
 
-class ExportUtilsTest {
-    @Test
-    fun `toSafeFileName ends with given extension`() {
+class ExportUtilsTest : ShouldSpec({
+    should("toSafeFileName end with given extension") {
+        "my photo".toSafeFileName(".png") shouldEndWith ".png"
+    }
+    should("toSafeFileName contain only alphanumeric and underscores before extension") {
         val result = "my photo".toSafeFileName(".png")
-        assertTrue(result.endsWith(".png"))
+        result.removeSuffix(".png") shouldMatch "[a-zA-Z0-9_]+"
     }
-
-    @Test
-    fun `toSafeFileName contains only alphanumeric and underscores before extension`() {
-        val result = "my photo".toSafeFileName(".png")
-        val base = result.removeSuffix(".png")
-        assertTrue(base.matches("[a-zA-Z0-9_]+".toRegex())) {
-            "Base '$base' contains disallowed characters"
-        }
+    should("toSafeFileName remove https scheme") {
+        "https://example.com".toSafeFileName(".png") shouldNotContain "https"
     }
-
-    @Test
-    fun `toSafeFileName removes https scheme`() {
-        val result = "https://example.com".toSafeFileName(".png")
-        assertFalse(result.contains("https"))
-    }
-
-    @Test
-    fun `toSafeFileName does not remove http scheme (only https is stripped)`() {
-        // Implementation only strips "https://" — "http://" becomes "http___"
+    should("toSafeFileName not start with http___ after http scheme sanitization") {
         val result = "http://example.com".toSafeFileName(".png")
-        assertFalse(result.startsWith("http___"), "http:// should produce safe chars, not 'http___'")
-        // Base must still be alphanumeric+undersscores only
-        val base = result.removeSuffix(".png")
-        assertTrue(base.matches("[a-zA-Z0-9_]+".toRegex()))
+        result.shouldNotStartWith("http___")
+        result.removeSuffix(".png") shouldMatch "[a-zA-Z0-9_]+"
     }
-
-    @Test
-    fun `toSafeFileName has no leading underscores before extension`() {
-        val result = "  leading spaces".toSafeFileName(".png")
-        assertFalse(result.startsWith("_"))
+    should("toSafeFileName have no leading underscores before extension") {
+        "  leading spaces".toSafeFileName(".png").startsWith("_").shouldBeFalse()
     }
-
-    @Test
-    fun `toSafeFileName has no consecutive underscores`() {
-        val result = "hello   world".toSafeFileName(".png")
-        assertFalse(result.contains("__"))
+    should("toSafeFileName have no consecutive underscores") {
+        "hello   world".toSafeFileName(".png") shouldNotContain "__"
     }
-
-    @Test
-    fun `toSafeFileName replaces special characters with underscores`() {
-        val result = "file@name!test".toSafeFileName(".png")
-        val base = result.removeSuffix(".png")
-        assertTrue(base.matches("[a-zA-Z0-9_]+".toRegex()))
+    should("toSafeFileName replace special characters with underscores") {
+        "file@name!test"
+            .toSafeFileName(".png")
+            .removeSuffix(".png") shouldMatch "[a-zA-Z0-9_]+"
     }
-
-    @Test
-    fun `toSafeFileName appended extension is preserved literally`() {
-        val result = "test".toSafeFileName(".jpg")
-        assertTrue(result.endsWith(".jpg"))
+    should("toSafeFileName preserve appended extension literally") {
+        "test".toSafeFileName(".jpg") shouldEndWith ".jpg"
     }
-}
+})
