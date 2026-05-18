@@ -108,10 +108,13 @@ Document any pin or downgrade with a `# Why pinned:` comment in
 
 ## Hilt (same-module)
 
-Hilt is added as a same-module dep — qualifiers and `CoroutineDispatchersModule`
-ship in the published artifact. Every consuming app already uses Hilt,
-so transitive `api` exposure is intentional. A separate `:lib-di` subproject
-would let consumers opt out but adds a publish target for zero practical gain.
+Hilt is added as a same-module `implementation` dep — qualifiers and
+`CoroutineDispatchersModule` ship compiled into the published AAR.
+Consumers see `@IoDispatcher` / `@DefaultDispatcher` / `@MainDispatcher`
+because those annotation classes live in our AAR, not in Hilt's runtime jar,
+so no transitive exposure is needed. Every consuming app already declares
+Hilt directly. A separate `:lib-di` subproject would let consumers opt out
+but adds a publish target for zero practical gain.
 
 ## Configuration
 
