@@ -101,7 +101,7 @@ class BackAnimationOutlineProvider : ViewOutlineProvider() {
     }
 }
 
-/** Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back. */
+/** Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back, with optional in-app review. */
 fun AppCompatActivity.setCustomBackAnimation(
     animatedView: View,
     backEnabled: StateFlow<Boolean>? = null,

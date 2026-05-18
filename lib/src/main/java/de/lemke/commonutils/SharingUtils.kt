@@ -194,10 +194,10 @@ fun Bitmap.quickShare(
     }
 }
 
-/** Shares this file via the system share sheet. */
+/** Shares this image file via the system share sheet. */
 fun File.share(context: Context): Boolean = listOf(this).share(context)
 
-/** Shares all files in this list via the system share sheet (multi-file if more than one). */
+/** Shares all image files in this list via the system share sheet (multi-file if more than one). */
 fun List<File>.share(context: Context): Boolean {
     val contentUris = map { f -> f.getFileUri(context) }
 

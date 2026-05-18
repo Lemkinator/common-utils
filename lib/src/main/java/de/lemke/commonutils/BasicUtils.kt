@@ -124,7 +124,7 @@ fun Bundle.saveSearchAndActionMode(
     }
 }
 
-/** Restores search and action mode state from this bundle, invoking the appropriate callback. */
+/** Restores search and action mode state from this bundle, invoking the provided callbacks as needed. */
 inline fun Bundle?.restoreSearchAndActionMode(
     crossinline onSearchMode: () -> Unit = {},
     crossinline onActionMode: (selectedIds: Set<Long>) -> Unit = {},

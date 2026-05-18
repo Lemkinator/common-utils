@@ -108,7 +108,7 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
             textGravity: Int? = null,
         ) = showInfoBottomSheet(childFragmentManager, title, message, textGravity)
 
-        /** Shows an [InfoBottomSheet] using the given [fragmentManager], [title], and [message]. */
+        /** Shows an [InfoBottomSheet] using the given [fragmentManager], [title], [message], and optional [textGravity]. */
         fun showInfoBottomSheet(
             fragmentManager: FragmentManager,
             title: String,
