@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils.ui.widget
+package de.lemke.commonutils
 
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -25,29 +25,31 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
-class TouchBlockingViewTest {
+class SaveLocationRobolectricTest {
+    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+
     @Test
-    fun `clickable by default`() {
-        val view = TouchBlockingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.isClickable).isTrue()
+    fun `toLocalizedString returns non-blank for CUSTOM`() {
+        assertThat(SaveLocation.CUSTOM.toLocalizedString(ctx).isNotBlank()).isTrue()
     }
 
     @Test
-    fun `focusable by default`() {
-        val view = TouchBlockingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.isFocusable).isTrue()
+    fun `toLocalizedString returns non-blank for DOWNLOADS`() {
+        assertThat(SaveLocation.DOWNLOADS.toLocalizedString(ctx).isNotBlank()).isTrue()
     }
 
     @Test
-    fun `inherits MATCH_PARENT layout params from DimmingView`() {
-        val view = TouchBlockingView(ApplicationProvider.getApplicationContext())
-        assertThat(view.layoutParams.width).isEqualTo(MATCH_PARENT)
-        assertThat(view.layoutParams.height).isEqualTo(MATCH_PARENT)
+    fun `toLocalizedString returns non-blank for PICTURES`() {
+        assertThat(SaveLocation.PICTURES.toLocalizedString(ctx).isNotBlank()).isTrue()
     }
 
     @Test
-    fun `is a DimmingView`() {
-        val view = TouchBlockingView(ApplicationProvider.getApplicationContext())
-        assertThat(view).isInstanceOf(DimmingView::class.java)
+    fun `toLocalizedString returns non-blank for DCIM`() {
+        assertThat(SaveLocation.DCIM.toLocalizedString(ctx).isNotBlank()).isTrue()
+    }
+
+    @Test
+    fun `getLocalizedEntries returns 4 entries`() {
+        assertThat(SaveLocation.getLocalizedEntries(ctx)).hasLength(4)
     }
 }

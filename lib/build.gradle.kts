@@ -125,5 +125,6 @@ kover {
                 )
             }
         }
+        verify { rule { minBound(12) } }
     }
 }

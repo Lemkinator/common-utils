@@ -24,7 +24,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+@Config(sdk = [36])
 class InfoBottomSheetTest {
     // newInstance is private on the companion object; access via reflection so tests
     // cover argument-packing without needing a themed Activity to show the dialog.
