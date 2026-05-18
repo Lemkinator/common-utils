@@ -90,7 +90,9 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
                     // For immediate updates, you might not receive RESULT_OK because
                     // the update should already be finished by the time control is given back to your app.
                     RESULT_OK -> Log.d("InAppUpdate", "Update successful")
+
                     RESULT_CANCELED -> Log.w("InAppUpdate", "Update canceled")
+
                     RESULT_IN_APP_UPDATE_FAILED -> Log.e("InAppUpdate", "Update failed")
                 }
             }
