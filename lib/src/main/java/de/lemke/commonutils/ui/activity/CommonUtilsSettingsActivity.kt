@@ -28,6 +28,7 @@ import de.lemke.commonutils.prepareActivityTransformationTo
 import de.lemke.commonutils.setCustomBackAnimation
 import kotlinx.coroutines.launch
 
+/** Pre-built settings screen backed by a [PreferenceFragmentCompat] with common-utils defaults. */
 class CommonUtilsSettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsCommonUtilsBinding
 
@@ -40,6 +41,7 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
         if (savedInstanceState == null) supportFragmentManager.beginTransaction().replace(R.id.settingsLayout, SettingsFragment()).commit()
     }
 
+    /** [PreferenceFragmentCompat] that inflates the configured preference XML resources. */
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(
             bundle: Bundle?,
@@ -64,6 +66,7 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
     }
 
     companion object {
+        /** Preference XML resource IDs inflated in order; configure via [setupCommonUtilsSettingsActivity]. */
         var preferences =
             listOf(
                 R.xml.preferences_design,
@@ -71,6 +74,8 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
                 R.xml.preferences_dev_options_delete_app_data,
                 R.xml.preferences_more_info,
             )
+
+        /** Optional suspend block run after preference inflation for app-specific init. */
         var initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}
     }
 }

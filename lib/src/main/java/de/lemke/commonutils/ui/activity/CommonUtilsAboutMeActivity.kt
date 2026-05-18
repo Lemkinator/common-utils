@@ -49,6 +49,7 @@ import kotlin.math.abs
 import kotlinx.coroutines.flow.MutableStateFlow
 import dev.oneuiproject.oneui.design.R as designR
 
+/** Pre-built About Me screen that presents developer info and an optional share-app action. */
 class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutMeBinding
     private val appBarListener: AboutAppBarListener = AboutAppBarListener()
@@ -239,6 +240,8 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
 
     companion object {
         private const val BACK_COLLAPSE_THRESHOLD = 0.3f
+
+        /** Optional callback invoked when the user taps the share button; defaults to a no-op. */
         var onShareApp: (activity: Activity) -> Unit = {}
     }
 }

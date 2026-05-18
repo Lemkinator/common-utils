@@ -31,40 +31,48 @@ import kotlin.reflect.KProperty
  */
 val SharedPreferences.delegates get() = SharedPreferenceDelegates(this)
 
+/** Factory for type-safe [ReadWriteProperty] delegates backed by [SharedPreferences]. */
 @SuppressLint("CommitPrefEdits")
 class SharedPreferenceDelegates(
     private val prefs: SharedPreferences,
 ) {
+    /** Delegate that reads/writes a [Boolean] preference. */
     fun boolean(
         default: Boolean = false,
         key: String? = null,
     ): ReadWriteProperty<Any, Boolean> = create(default, key, prefs::getBoolean, prefs.edit()::putBoolean)
 
+    /** Delegate that reads/writes an [Int] preference. */
     fun int(
         default: Int = 0,
         key: String? = null,
     ): ReadWriteProperty<Any, Int> = create(default, key, prefs::getInt, prefs.edit()::putInt)
 
+    /** Delegate that reads/writes a [Float] preference. */
     fun float(
         default: Float = 0f,
         key: String? = null,
     ): ReadWriteProperty<Any, Float> = create(default, key, prefs::getFloat, prefs.edit()::putFloat)
 
+    /** Delegate that reads/writes a [Long] preference. */
     fun long(
         default: Long = 0L,
         key: String? = null,
     ): ReadWriteProperty<Any, Long> = create(default, key, prefs::getLong, prefs.edit()::putLong)
 
+    /** Delegate that reads/writes a [String] preference. */
     fun string(
         default: String = "",
         key: String? = null,
     ): ReadWriteProperty<Any, String> = create(default, key, { k, d -> prefs.getString(k, d) ?: d }, prefs.edit()::putString)
 
+    /** Delegate that reads/writes a [Set]<[String]> preference. */
     fun stringSet(
         default: Set<String> = emptySet(),
         key: String? = null,
     ): ReadWriteProperty<Any, Set<String>> = create(default, key, { k, d -> prefs.getStringSet(k, d) ?: d }, prefs.edit()::putStringSet)
 
+    /** Delegate that reads/writes a dark mode flag stored as `"1"`/`"0"` for legacy HorizontalRadioPreference compatibility. */
     fun darkMode(
         default: Boolean = false,
         key: String? = null,
@@ -76,6 +84,7 @@ class SharedPreferenceDelegates(
             { k, v -> prefs.edit().putString(k, if (v) "1" else "0") },
         )
 
+    /** Delegate that reads/writes a [SaveLocation] preference, forcing [SaveLocation.CUSTOM] on API ≤29. */
     fun saveLocation(
         default: SaveLocation = SaveLocation.default,
         key: String? = null,

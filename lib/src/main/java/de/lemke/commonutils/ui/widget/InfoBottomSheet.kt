@@ -33,6 +33,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import de.lemke.commonutils.databinding.WidgetInfoBottomsheetBinding
 import dev.oneuiproject.oneui.app.SemBottomSheetDialogFragment
 
+/** Bottom sheet dialog that displays a title and a message, used for informational overlays. */
 class InfoBottomSheet : SemBottomSheetDialogFragment() {
     private lateinit var binding: WidgetInfoBottomsheetBinding
 
@@ -79,30 +80,35 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
     }
 
     companion object {
+        /** Shows an [InfoBottomSheet] with string-resource [titleResId] and [messageResId]. */
         fun FragmentActivity.showInfoBottomSheet(
             @StringRes titleResId: Int,
             @StringRes messageResId: Int,
             textGravity: Int? = null,
         ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
+        /** Shows an [InfoBottomSheet] with the given [title] and [message]. */
         fun FragmentActivity.showInfoBottomSheet(
             title: String,
             message: String,
             textGravity: Int? = null,
         ) = showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
 
+        /** Shows an [InfoBottomSheet] with string-resource [titleResId] and [messageResId]. */
         fun Fragment.showInfoBottomSheet(
             @StringRes titleResId: Int,
             @StringRes messageResId: Int,
             textGravity: Int? = null,
         ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
+        /** Shows an [InfoBottomSheet] with the given [title] and [message]. */
         fun Fragment.showInfoBottomSheet(
             title: String,
             message: String,
             textGravity: Int? = null,
         ) = showInfoBottomSheet(childFragmentManager, title, message, textGravity)
 
+        /** Shows an [InfoBottomSheet] using the given [fragmentManager], [title], [message], and optional [textGravity]. */
         fun showInfoBottomSheet(
             fragmentManager: FragmentManager,
             title: String,
@@ -123,8 +129,13 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
                 }
         }
 
+        /** Bundle argument key for the sheet title. */
         const val KEY_TITLE = "key_title"
+
+        /** Bundle argument key for the sheet message. */
         const val KEY_MESSAGE = "key_message"
+
+        /** Bundle argument key for the text gravity applied to title and message. */
         const val KEY_TEXT_GRAVITY = "key_text_gravity"
     }
 }

@@ -35,11 +35,13 @@ import androidx.fragment.app.Fragment
 
 private const val TAG = "OpenUtils"
 
+/** Opens the app with [packageName], trying the local install first if [tryLocalFirst] is `true`, otherwise opens the Play Store. */
 fun Fragment.openApp(
     packageName: String,
     tryLocalFirst: Boolean,
 ): Boolean = requireContext().openApp(packageName, tryLocalFirst)
 
+/** Opens the app with [packageName], trying the local install first if [tryLocalFirst] is `true`, otherwise opens the Play Store. */
 fun Context.openApp(
     packageName: String,
     tryLocalFirst: Boolean,
@@ -84,9 +86,11 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean 
     return false
 }
 
+/** Returns `true` if per-app language settings are supported (Android 13+). */
 @ChecksSdkIntAtLeast(api = TIRAMISU)
 fun areAppLocalSettingsSupported(): Boolean = SDK_INT >= TIRAMISU
 
+/** Opens the system per-app language settings screen for this app. */
 @RequiresApi(TIRAMISU)
 fun Fragment.openAppLocaleSettings(): Boolean {
     if (!areAppLocalSettingsSupported()) {
@@ -103,6 +107,7 @@ fun Fragment.openAppLocaleSettings(): Boolean {
     }
 }
 
+/** Opens the system application settings screen for this app. */
 fun Context.openApplicationSettings(): Boolean =
     try {
         startActivity(

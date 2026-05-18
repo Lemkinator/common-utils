@@ -43,6 +43,7 @@ private const val MIME_TYPE_PNG = "image/png"
 private const val EXTENSION_PNG = ".png"
 private const val COMPRESS_QUALITY_MAX = 100
 
+/** Target directory for exported images. */
 enum class SaveLocation {
     CUSTOM,
     DOWNLOADS,
@@ -60,6 +61,7 @@ enum class SaveLocation {
         fun getLocalizedEntries(context: Context) = entries.map { it.toLocalizedString(context) }.toTypedArray()
     }
 
+    /** Returns a user-facing label for this save location. */
     fun toLocalizedString(context: Context): String =
         when (this) {
             CUSTOM -> context.getString(R.string.commonutils_custom)
@@ -69,6 +71,7 @@ enum class SaveLocation {
         }
 }
 
+/** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */
 fun Fragment.exportBitmap(
     saveLocation: SaveLocation,
     bitmap: Bitmap,
@@ -76,6 +79,7 @@ fun Fragment.exportBitmap(
     activityResultLauncher: ActivityResultLauncher<Intent>?,
 ): Boolean = requireContext().exportBitmap(saveLocation, bitmap, filename, activityResultLauncher)
 
+/** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */
 fun Context.exportBitmap(
     saveLocation: SaveLocation,
     bitmap: Bitmap,
@@ -125,6 +129,7 @@ fun Context.exportBitmap(
         }
     }
 
+/** Compresses [bitmap] as PNG and writes it to [uri], showing a toast on success or failure. */
 fun Context.saveBitmapToUri(
     uri: Uri?,
     bitmap: Bitmap?,
@@ -154,6 +159,7 @@ fun Context.saveBitmapToUri(
     }
 }
 
+/** Converts this string to a filesystem-safe filename, appending a timestamp and [extension]. */
 fun String.toSafeFileName(extension: String): String =
     "${this}_${SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault()).format(Date())}"
         .replace("https://", "")

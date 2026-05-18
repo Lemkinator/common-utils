@@ -37,6 +37,7 @@ private const val TAG = "SplashUtils"
 private const val SPLASH_ANIMATION_DURATION_MS = 400L
 private const val SPLASH_SCALE_FACTOR = 1.2f
 
+/** Configures the splash screen to stay visible while [condition] holds, then animates it out while fading in [root]. */
 fun AppCompatActivity.configureCommonUtilsSplashScreen(
     splashScreen: SplashScreen,
     root: View,

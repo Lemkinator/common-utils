@@ -32,6 +32,7 @@ import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 
 private const val TAG = "CheckAppStartUtils"
 
+/** Checks whether this is the first run, a version upgrade, or a normal start; persists version info for next launch. */
 fun AppCompatActivity.checkAppStart(
     versionCode: Int,
     versionName: String,
@@ -61,6 +62,11 @@ fun AppCompatActivity.checkAppStart(
     }
 }
 
+/**
+ * Checks the app start result and opens the OOBE activity if required.
+ *
+ * @return `true` if OOBE was opened and the current activity finished.
+ */
 fun AppCompatActivity.checkAppStartAndHandleOOBE(
     versionCode: Int,
     versionName: String,
@@ -73,6 +79,7 @@ fun AppCompatActivity.checkAppStartAndHandleOOBE(
     return false
 }
 
+/** Starts [CommonUtilsOOBEActivity] and finishes this activity with a fade transition. */
 fun AppCompatActivity.openOOBEAndFinish() {
     startActivity(Intent(applicationContext, CommonUtilsOOBEActivity::class.java))
     @Suppress("DEPRECATION")
@@ -80,8 +87,10 @@ fun AppCompatActivity.openOOBEAndFinish() {
     finishAfterTransition()
 }
 
+/** Result category of an app launch relative to the previously recorded version. */
 enum class AppStartResult { FIRST_TIME, FIRST_TIME_VERSION, NORMAL }
 
+/** Snapshot of version and TOS state captured at app launch. */
 class AppStart(
     val result: AppStartResult,
     val versionCode: Int,
@@ -91,11 +100,19 @@ class AppStart(
     val tosVersion: Int,
     val acceptedTosVersion: Int,
 ) {
+    /** `true` if no previous install was recorded. */
     val isFirstTime get() = lastVersionCode == -1
+
+    /** `true` if the app was upgraded since the last launch. */
     val isFirstTimeVersion get() = lastVersionCode < versionCode
+
+    /** `true` if the user has accepted the current TOS version. */
     val tosAccepted get() = acceptedTosVersion >= tosVersion
+
+    /** `true` if OOBE should be shown (first install or TOS not accepted). */
     val shouldShowOOBE get() = isFirstTime || !tosAccepted
 
+    /** `true` if [threshold] falls within the range of version codes updated across on this launch. */
     fun versionThresholdPassed(threshold: Int) = threshold in lastVersionCode..<versionCode
 
     override fun toString(): String =

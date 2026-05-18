@@ -41,6 +41,7 @@ import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/** Pre-built onboarding (OOBE) screen that presents feature tips and a TOS acceptance flow. */
 class CommonUtilsOOBEActivity : AppCompatActivity() {
     private lateinit var binding: ActivityOobeBinding
 
@@ -122,9 +123,17 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     companion object {
         private const val PROCEED_DELAY_MS = 500L
         private const val MIN_FULL_BUTTON_WIDTH_DP = 360
+
+        /** Whether to persist TOS acceptance when the user proceeds; set via [setupCommonUtilsOOBEActivity]. */
         var setAcceptedTosVersion = true
+
+        /** Activity to launch after the user completes OOBE; mutually exclusive with [onContinue]. */
         var nextActivity: Class<*>? = null
+
+        /** Callback invoked when the user completes OOBE; mutually exclusive with [nextActivity]. */
         var onContinue: (() -> Unit)? = null
+
+        /** `true` if TOS content changed since the user last accepted; shown as a "new TOS" notice. */
         var tosChanged = false
     }
 }

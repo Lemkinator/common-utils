@@ -28,10 +28,13 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 private const val TAG = "InAppReviewUtils"
 private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
 
+/** Returns the timestamp of the last in-app review request in milliseconds, defaulting to now if unset. */
 fun AppCompatActivity.getLastInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).getLong("lastInAppReview", currentTimeMillis())
 
+/** Persists the current time as the last in-app review timestamp. */
 fun AppCompatActivity.setInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).edit { putLong("lastInAppReview", currentTimeMillis()) }
 
+/** Returns `true` if at least 14 days have passed since the last in-app review was shown. */
 @Suppress("TooGenericExceptionCaught")
 fun AppCompatActivity.canShowInAppReview() =
     try {
@@ -43,12 +46,14 @@ fun AppCompatActivity.canShowInAppReview() =
         false
     }
 
+/** Attempts to show the in-app review flow; finishes the activity whether the review is shown or skipped. */
 fun AppCompatActivity.showInAppReviewOrFinish() =
     showInAppReview(
         onNotAllowed = { finishAfterTransition() },
         onCompleted = { finishAfterTransition() },
     )
 
+/** Requests the in-app review flow if the cooldown period has elapsed; silently skips otherwise. */
 fun AppCompatActivity.showInAppReviewIfPossible() = showInAppReview()
 
 @Suppress("TooGenericExceptionCaught")

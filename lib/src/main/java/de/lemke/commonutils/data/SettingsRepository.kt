@@ -26,8 +26,10 @@ import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.preference.PreferenceManager
 import de.lemke.commonutils.SaveLocation
 
+/** Global singleton for accessing common-utils app settings; must be initialized via [initCommonUtilsSettingsAndSetDarkMode]. */
 lateinit var commonUtilsSettings: SettingsRepository
 
+/** SharedPreferences-backed repository for common-utils app settings. */
 class SettingsRepository(
     preferences: SharedPreferences,
 ) {
@@ -41,6 +43,7 @@ class SettingsRepository(
     var imageSaveLocation: SaveLocation by preferences.delegates.saveLocation(SaveLocation.default)
 }
 
+/** Initializes [commonUtilsSettings] from the default shared preferences and applies the saved dark mode setting. */
 fun Context.initCommonUtilsSettingsAndSetDarkMode() {
     commonUtilsSettings = SettingsRepository(PreferenceManager.getDefaultSharedPreferences(this))
     when {

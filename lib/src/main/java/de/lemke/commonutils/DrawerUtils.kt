@@ -30,6 +30,7 @@ import dev.oneuiproject.oneui.design.R as designR
 private const val TAG = "DrawerUtils"
 private const val NAV_RAIL_MIN_SIDE_MARGIN_DP = 14
 
+/** Sets up the drawer header button with an info icon navigating to [CommonUtilsAboutActivity] and configures the nav rail. */
 fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
         icon = AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)!!,
@@ -44,6 +45,7 @@ fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
 }
 
+/** Wraps [listener] to ignore repeated clicks within [interval] milliseconds, preventing double-navigation. */
 fun DrawerNavigationView.onNavigationSingleClick(
     interval: Long = 600,
     listener: NavigationView.OnNavigationItemSelectedListener,

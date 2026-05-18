@@ -23,29 +23,36 @@ import javax.inject.Qualifier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
+/** Hilt qualifier for [kotlinx.coroutines.Dispatchers.IO]. */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class IoDispatcher
 
+/** Hilt qualifier for [kotlinx.coroutines.Dispatchers.Default]. */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class DefaultDispatcher
 
+/** Hilt qualifier for [kotlinx.coroutines.Dispatchers.Main]. */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class MainDispatcher
 
+/** Hilt module that provides coroutine dispatcher bindings for [IoDispatcher], [DefaultDispatcher], and [MainDispatcher]. */
 @Module
 @InstallIn(SingletonComponent::class)
 object CoroutineDispatchersModule {
+    /** Provides [kotlinx.coroutines.Dispatchers.IO] for I/O-bound work. */
     @Provides
     @IoDispatcher
     fun provideIo(): CoroutineDispatcher = Dispatchers.IO
 
+    /** Provides [kotlinx.coroutines.Dispatchers.Default] for CPU-bound work. */
     @Provides
     @DefaultDispatcher
     fun provideDefault(): CoroutineDispatcher = Dispatchers.Default
 
+    /** Provides [kotlinx.coroutines.Dispatchers.Main] for UI-thread work. */
     @Provides
     @MainDispatcher
     fun provideMain(): CoroutineDispatcher = Dispatchers.Main
