@@ -5,12 +5,17 @@ on:
     branches: [ main ]
     paths: [ 'gradle/libs.versions.toml' ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   check-and-publish:
     env:
       GH_USERNAME: ${{ secrets.GH_USERNAME }}
       GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -20,18 +25,11 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '21'
 
-      - name: Cache Gradle and wrapper
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Check if version changed
         id: check_version
@@ -49,9 +47,6 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Make Gradle executable
-        run: chmod +x ./gradlew
-
       - name: Publish to GitHub Packages
         if: steps.check_version.outputs.changed == 'true'
-        run: ./gradlew publishAllPublicationsToGitHubPackagesRepository
+        run: chmod +x ./gradlew && ./gradlew publishAllPublicationsToGitHubPackagesRepository
