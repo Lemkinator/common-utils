@@ -42,8 +42,18 @@ class ExportUtilsTest {
     }
 
     @Test
+    fun `toSafeFileName does not remove http scheme (only https is stripped)`() {
+        // Implementation only strips "https://" — "http://" becomes "http___"
+        val result = "http://example.com".toSafeFileName(".png")
+        assertFalse(result.startsWith("http___"), "http:// should produce safe chars, not 'http___'")
+        // Base must still be alphanumeric+undersscores only
+        val base = result.removeSuffix(".png")
+        assertTrue(base.matches("[a-zA-Z0-9_]+".toRegex()))
+    }
+
+    @Test
     fun `toSafeFileName has no leading underscores before extension`() {
-        val result = "my photo".toSafeFileName(".png")
+        val result = "  leading spaces".toSafeFileName(".png")
         assertFalse(result.startsWith("_"))
     }
 

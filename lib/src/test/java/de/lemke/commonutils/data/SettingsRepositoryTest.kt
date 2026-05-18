@@ -16,6 +16,7 @@
 package de.lemke.commonutils.data
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import de.lemke.commonutils.SaveLocation
@@ -28,15 +29,18 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SettingsRepositoryTest {
+    private lateinit var prefs: SharedPreferences
     private lateinit var repo: SettingsRepository
 
     @Before
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
-        val prefs = ctx.getSharedPreferences("settings_test", Context.MODE_PRIVATE)
+        prefs = ctx.getSharedPreferences("settings_test", Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
         repo = SettingsRepository(prefs)
     }
+
+    private fun reload() = SettingsRepository(prefs)
 
     @Test
     fun `darkMode defaults to false`() {
@@ -74,55 +78,55 @@ class SettingsRepositoryTest {
     }
 
     @Test
-    fun `lastVersionCode round-trips written value`() {
-        repo.lastVersionCode = 42
-        assertThat(repo.lastVersionCode).isEqualTo(42)
-    }
-
-    @Test
-    fun `darkMode round-trips written value`() {
-        repo.darkMode = true
-        assertThat(repo.darkMode).isTrue()
-    }
-
-    @Test
-    fun `search round-trips written value`() {
-        repo.search = "hello"
-        assertThat(repo.search).isEqualTo("hello")
-    }
-
-    @Test
     fun `imageSaveLocation defaults to SaveLocation default`() {
         assertThat(repo.imageSaveLocation).isEqualTo(SaveLocation.default)
     }
 
     @Test
+    fun `lastVersionCode round-trips written value`() {
+        repo.lastVersionCode = 42
+        assertThat(reload().lastVersionCode).isEqualTo(42)
+    }
+
+    @Test
+    fun `darkMode round-trips written value`() {
+        repo.darkMode = true
+        assertThat(reload().darkMode).isTrue()
+    }
+
+    @Test
+    fun `search round-trips written value`() {
+        repo.search = "hello"
+        assertThat(reload().search).isEqualTo("hello")
+    }
+
+    @Test
     fun `imageSaveLocation round-trips DOWNLOADS`() {
         repo.imageSaveLocation = SaveLocation.DOWNLOADS
-        assertThat(repo.imageSaveLocation).isEqualTo(SaveLocation.DOWNLOADS)
+        assertThat(reload().imageSaveLocation).isEqualTo(SaveLocation.DOWNLOADS)
     }
 
     @Test
     fun `autoDarkMode round-trips false`() {
         repo.autoDarkMode = false
-        assertThat(repo.autoDarkMode).isFalse()
+        assertThat(reload().autoDarkMode).isFalse()
     }
 
     @Test
     fun `devModeEnabled round-trips true`() {
         repo.devModeEnabled = true
-        assertThat(repo.devModeEnabled).isTrue()
+        assertThat(reload().devModeEnabled).isTrue()
     }
 
     @Test
     fun `acceptedTosVersion round-trips written value`() {
         repo.acceptedTosVersion = 3
-        assertThat(repo.acceptedTosVersion).isEqualTo(3)
+        assertThat(reload().acceptedTosVersion).isEqualTo(3)
     }
 
     @Test
     fun `lastVersionName round-trips written value`() {
         repo.lastVersionName = "2.5.0"
-        assertThat(repo.lastVersionName).isEqualTo("2.5.0")
+        assertThat(reload().lastVersionName).isEqualTo("2.5.0")
     }
 }

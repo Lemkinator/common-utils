@@ -21,13 +21,18 @@ import org.junit.jupiter.api.Test
 
 class CheckAppStartTest {
     private fun appStart(
-        result: AppStartResult = AppStartResult.NORMAL,
         versionCode: Int = 10,
         versionName: String = "1.0",
         lastVersionCode: Int = 9,
         lastVersionName: String = "0.9",
         tosVersion: Int = 1,
         acceptedTosVersion: Int = 1,
+        result: AppStartResult =
+            when {
+                lastVersionCode == -1 -> AppStartResult.FIRST_TIME
+                lastVersionCode < versionCode -> AppStartResult.FIRST_TIME_VERSION
+                else -> AppStartResult.NORMAL
+            },
     ) = AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion)
 
     // region isFirstTime

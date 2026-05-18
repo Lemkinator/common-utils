@@ -66,8 +66,8 @@ class URLUtilsTest {
     }
 
     @Test
-    fun `withoutHttps removes only one prefix`() {
-        // https:// is removed, leaving http://example.com (http prefix also removed)
+    fun `withoutHttps strips https then http from doubly-prefixed input`() {
+        // removePrefix("https://") → "http://example.com", then removePrefix("http://") → "example.com"
         assertEquals("example.com", "https://http://example.com".withoutHttps())
     }
 

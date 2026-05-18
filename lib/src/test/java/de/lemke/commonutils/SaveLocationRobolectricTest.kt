@@ -30,22 +30,22 @@ class SaveLocationRobolectricTest {
 
     @Test
     fun `toLocalizedString returns non-blank for CUSTOM`() {
-        assertThat(SaveLocation.CUSTOM.toLocalizedString(ctx)).isNotEmpty()
+        assertThat(SaveLocation.CUSTOM.toLocalizedString(ctx).isNotBlank()).isTrue()
     }
 
     @Test
     fun `toLocalizedString returns non-blank for DOWNLOADS`() {
-        assertThat(SaveLocation.DOWNLOADS.toLocalizedString(ctx)).isNotEmpty()
+        assertThat(SaveLocation.DOWNLOADS.toLocalizedString(ctx).isNotBlank()).isTrue()
     }
 
     @Test
     fun `toLocalizedString returns non-blank for PICTURES`() {
-        assertThat(SaveLocation.PICTURES.toLocalizedString(ctx)).isNotEmpty()
+        assertThat(SaveLocation.PICTURES.toLocalizedString(ctx).isNotBlank()).isTrue()
     }
 
     @Test
     fun `toLocalizedString returns non-blank for DCIM`() {
-        assertThat(SaveLocation.DCIM.toLocalizedString(ctx)).isNotEmpty()
+        assertThat(SaveLocation.DCIM.toLocalizedString(ctx).isNotBlank()).isTrue()
     }
 
     @Test
