@@ -15,65 +15,43 @@
  */
 package de.lemke.commonutils
 
-import org.junit.jupiter.api.Assertions.assertArrayEquals
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 
-class SaveLocationTest {
-    // region fromStringOrDefault
-
-    @Test
-    fun `fromStringOrDefault returns CUSTOM for CUSTOM string`() {
-        assertEquals(SaveLocation.CUSTOM, SaveLocation.fromStringOrDefault("CUSTOM"))
+class SaveLocationTest : ShouldSpec({
+    context("fromStringOrDefault") {
+        should("return CUSTOM for CUSTOM string") {
+            SaveLocation.fromStringOrDefault("CUSTOM") shouldBe SaveLocation.CUSTOM
+        }
+        should("return DOWNLOADS for DOWNLOADS string") {
+            SaveLocation.fromStringOrDefault("DOWNLOADS") shouldBe SaveLocation.DOWNLOADS
+        }
+        should("return PICTURES for PICTURES string") {
+            SaveLocation.fromStringOrDefault("PICTURES") shouldBe SaveLocation.PICTURES
+        }
+        should("return DCIM for DCIM string") {
+            SaveLocation.fromStringOrDefault("DCIM") shouldBe SaveLocation.DCIM
+        }
+        should("return default for null") {
+            SaveLocation.fromStringOrDefault(null) shouldBe SaveLocation.default
+        }
+        should("return default for unknown string") {
+            SaveLocation.fromStringOrDefault("UNKNOWN") shouldBe SaveLocation.default
+        }
+        should("be case-sensitive") {
+            SaveLocation.fromStringOrDefault("custom") shouldBe SaveLocation.default
+        }
     }
-
-    @Test
-    fun `fromStringOrDefault returns DOWNLOADS for DOWNLOADS string`() {
-        assertEquals(SaveLocation.DOWNLOADS, SaveLocation.fromStringOrDefault("DOWNLOADS"))
+    context("entryValues") {
+        should("contain all enum names in order") {
+            SaveLocation.entryValues.toList() shouldContainExactly
+                listOf("CUSTOM", "DOWNLOADS", "PICTURES", "DCIM")
+        }
     }
-
-    @Test
-    fun `fromStringOrDefault returns PICTURES for PICTURES string`() {
-        assertEquals(SaveLocation.PICTURES, SaveLocation.fromStringOrDefault("PICTURES"))
+    context("default") {
+        should("be CUSTOM") {
+            SaveLocation.default shouldBe SaveLocation.CUSTOM
+        }
     }
-
-    @Test
-    fun `fromStringOrDefault returns DCIM for DCIM string`() {
-        assertEquals(SaveLocation.DCIM, SaveLocation.fromStringOrDefault("DCIM"))
-    }
-
-    @Test
-    fun `fromStringOrDefault returns default for null`() {
-        assertEquals(SaveLocation.default, SaveLocation.fromStringOrDefault(null))
-    }
-
-    @Test
-    fun `fromStringOrDefault returns default for unknown string`() {
-        assertEquals(SaveLocation.default, SaveLocation.fromStringOrDefault("UNKNOWN"))
-    }
-
-    @Test
-    fun `fromStringOrDefault is case-sensitive`() {
-        assertEquals(SaveLocation.default, SaveLocation.fromStringOrDefault("custom"))
-    }
-
-    // endregion
-
-    // region entryValues
-
-    @Test
-    fun `entryValues contains all enum names`() {
-        assertArrayEquals(arrayOf("CUSTOM", "DOWNLOADS", "PICTURES", "DCIM"), SaveLocation.entryValues)
-    }
-
-    // endregion
-
-    // region default
-
-    @Test
-    fun `default is CUSTOM`() {
-        assertEquals(SaveLocation.CUSTOM, SaveLocation.default)
-    }
-
-    // endregion
-}
+})

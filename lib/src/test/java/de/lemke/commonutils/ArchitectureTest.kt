@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 Leonard Lemke
+ * Copyright 2024-2026 Leonard Lemke
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,31 +17,26 @@ package de.lemke.commonutils
 
 import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.ext.list.withPackage
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.booleans.shouldBeFalse
 
-class ArchitectureTest {
-    private val scope = Konsist.scopeFromProduction()
+class ArchitectureTest : ShouldSpec() {
+    private val codeScope = Konsist.scopeFromProduction()
 
-    @Test
-    fun `ui activities do not depend on widget internals`() {
-        scope.files
-            .withPackage("de.lemke.commonutils.ui.activity..")
-            .forEach { file ->
-                assertFalse(file.imports.any { it.name.contains(".widget.internal.") }) {
-                    "${file.name} imports widget internals"
+    init {
+        should("ui activities not depend on widget internals") {
+            codeScope.files
+                .withPackage("de.lemke.commonutils.ui.activity..")
+                .forEach { file ->
+                    file.imports.any { it.name.contains(".widget.internal.") }.shouldBeFalse()
                 }
-            }
-    }
-
-    @Test
-    fun `data layer does not depend on ui`() {
-        scope.files
-            .withPackage("de.lemke.commonutils.data..")
-            .forEach { file ->
-                assertFalse(file.imports.any { it.name.startsWith("de.lemke.commonutils.ui.") }) {
-                    "${file.name} in data layer imports UI"
+        }
+        should("data layer not depend on ui") {
+            codeScope.files
+                .withPackage("de.lemke.commonutils.data..")
+                .forEach { file ->
+                    file.imports.any { it.name.startsWith("de.lemke.commonutils.ui.") }.shouldBeFalse()
                 }
-            }
+        }
     }
 }

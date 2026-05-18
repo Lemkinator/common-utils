@@ -6,8 +6,9 @@ common-utils = "0.9.23"
 aboutlibraries = "14.2.0"
 coroutines = "1.11.0"
 kover = "0.9.8"
+kotest = "6.1.11"
+kotest-robolectric = "0.9.0"
 mockk = "1.14.9"
-truth = "1.4.5"
 turbine = "1.2.1"
 hilt = "2.59.2"
 ksp = "2.3.8"
@@ -47,12 +48,13 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-extensions-robolectric = { module = "tech.apter.junit5.jupiter:robolectric-extension", version.ref = "kotest-robolectric" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-truth = { module = "com.google.truth:truth", version.ref = "truth" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-junit-vintage-engine = { group = "org.junit.vintage", name = "junit-vintage-engine", version.ref = "junit-jupiter" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 oneui-design = { module = "io.github.tribalfs:oneui-design", version.ref = "oneui-design" }

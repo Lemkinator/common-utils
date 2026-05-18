@@ -15,26 +15,21 @@
  */
 package de.lemke.commonutils.di
 
-import de.lemke.commonutils.MainDispatcherExtension
+import de.lemke.commonutils.MainDispatcherListener
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlinx.coroutines.Dispatchers
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 
-@ExtendWith(MainDispatcherExtension::class)
-class CoroutineDispatchersModuleTest {
-    @Test
-    fun `provideIo returns Dispatchers IO`() {
-        assertSame(Dispatchers.IO, CoroutineDispatchersModule.provideIo())
-    }
+class CoroutineDispatchersModuleTest : ShouldSpec({
+    extensions(MainDispatcherListener())
 
-    @Test
-    fun `provideDefault returns Dispatchers Default`() {
-        assertSame(Dispatchers.Default, CoroutineDispatchersModule.provideDefault())
+    should("provideIo return Dispatchers.IO") {
+        CoroutineDispatchersModule.provideIo() shouldBeSameInstanceAs Dispatchers.IO
     }
-
-    @Test
-    fun `provideMain returns Dispatchers Main`() {
-        assertSame(Dispatchers.Main, CoroutineDispatchersModule.provideMain())
+    should("provideDefault return Dispatchers.Default") {
+        CoroutineDispatchersModule.provideDefault() shouldBeSameInstanceAs Dispatchers.Default
     }
-}
+    should("provideMain return Dispatchers.Main") {
+        CoroutineDispatchersModule.provideMain() shouldBeSameInstanceAs Dispatchers.Main
+    }
+})

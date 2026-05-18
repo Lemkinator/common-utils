@@ -35,7 +35,10 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
-            all { it.useJUnitPlatform() }
+            all {
+                it.useJUnitPlatform()
+                it.jvmArgs("-Djunit.platform.launcher.interceptors.enabled=true")
+            }
         }
     }
     packaging {
@@ -96,13 +99,13 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.konsist)
-    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.extensions.robolectric)
     testRuntimeOnly(libs.junit.jupiter.engine)
-    testRuntimeOnly(libs.junit.vintage.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
-    testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)

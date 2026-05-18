@@ -15,11 +15,12 @@
  */
 package de.lemke.commonutils
 
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.string.shouldContain
 
-class CheckAppStartTest {
+class CheckAppStartTest : ShouldSpec() {
     private fun appStart(
         versionCode: Int = 10,
         versionName: String = "1.0",
@@ -35,120 +36,72 @@ class CheckAppStartTest {
             },
     ) = AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion)
 
-    // region isFirstTime
-
-    @Test
-    fun `isFirstTime is true when lastVersionCode is -1`() {
-        assertTrue(appStart(lastVersionCode = -1).isFirstTime)
+    init {
+        context("isFirstTime") {
+            should("be true when lastVersionCode is -1") {
+                appStart(lastVersionCode = -1).isFirstTime.shouldBeTrue()
+            }
+            should("be false when lastVersionCode is not -1") {
+                appStart(lastVersionCode = 5).isFirstTime.shouldBeFalse()
+            }
+        }
+        context("isFirstTimeVersion") {
+            should("be true when lastVersionCode less than versionCode") {
+                appStart(versionCode = 10, lastVersionCode = 9).isFirstTimeVersion.shouldBeTrue()
+            }
+            should("be false when codes are equal") {
+                appStart(versionCode = 10, lastVersionCode = 10).isFirstTimeVersion.shouldBeFalse()
+            }
+            should("be false when lastVersionCode greater") {
+                appStart(versionCode = 9, lastVersionCode = 10).isFirstTimeVersion.shouldBeFalse()
+            }
+        }
+        context("tosAccepted") {
+            should("be true when acceptedTosVersion equals tosVersion") {
+                appStart(tosVersion = 2, acceptedTosVersion = 2).tosAccepted.shouldBeTrue()
+            }
+            should("be true when acceptedTosVersion exceeds tosVersion") {
+                appStart(tosVersion = 1, acceptedTosVersion = 3).tosAccepted.shouldBeTrue()
+            }
+            should("be false when acceptedTosVersion below tosVersion") {
+                appStart(tosVersion = 2, acceptedTosVersion = 1).tosAccepted.shouldBeFalse()
+            }
+        }
+        context("shouldShowOOBE") {
+            should("be true on first install") {
+                appStart(lastVersionCode = -1, tosVersion = 1, acceptedTosVersion = 1).shouldShowOOBE.shouldBeTrue()
+            }
+            should("be true when TOS not accepted") {
+                appStart(lastVersionCode = 5, tosVersion = 2, acceptedTosVersion = 1).shouldShowOOBE.shouldBeTrue()
+            }
+            should("be false when returning user with accepted TOS") {
+                appStart(lastVersionCode = 5, tosVersion = 1, acceptedTosVersion = 1).shouldShowOOBE.shouldBeFalse()
+            }
+        }
+        context("versionThresholdPassed") {
+            should("be true when threshold within upgrade range") {
+                appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(7).shouldBeTrue()
+            }
+            should("be false when threshold below range") {
+                appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(4).shouldBeFalse()
+            }
+            should("be true when threshold equals lastVersionCode (inclusive start)") {
+                appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(5).shouldBeTrue()
+            }
+            should("be false when threshold equals versionCode (exclusive end)") {
+                appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(10).shouldBeFalse()
+            }
+            should("be false when threshold above range") {
+                appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(11).shouldBeFalse()
+            }
+        }
+        context("toString") {
+            should("include versionCode") {
+                appStart(versionCode = 42).toString() shouldContain "42"
+            }
+            should("include versionName") {
+                appStart(versionName = "2.3.4").toString() shouldContain "2.3.4"
+            }
+        }
     }
-
-    @Test
-    fun `isFirstTime is false when lastVersionCode is not -1`() {
-        assertFalse(appStart(lastVersionCode = 5).isFirstTime)
-    }
-
-    // endregion
-
-    // region isFirstTimeVersion
-
-    @Test
-    fun `isFirstTimeVersion is true when lastVersionCode less than versionCode`() {
-        assertTrue(appStart(versionCode = 10, lastVersionCode = 9).isFirstTimeVersion)
-    }
-
-    @Test
-    fun `isFirstTimeVersion is false when codes are equal`() {
-        assertFalse(appStart(versionCode = 10, lastVersionCode = 10).isFirstTimeVersion)
-    }
-
-    @Test
-    fun `isFirstTimeVersion is false when lastVersionCode greater`() {
-        assertFalse(appStart(versionCode = 9, lastVersionCode = 10).isFirstTimeVersion)
-    }
-
-    // endregion
-
-    // region tosAccepted
-
-    @Test
-    fun `tosAccepted is true when acceptedTosVersion equals tosVersion`() {
-        assertTrue(appStart(tosVersion = 2, acceptedTosVersion = 2).tosAccepted)
-    }
-
-    @Test
-    fun `tosAccepted is true when acceptedTosVersion exceeds tosVersion`() {
-        assertTrue(appStart(tosVersion = 1, acceptedTosVersion = 3).tosAccepted)
-    }
-
-    @Test
-    fun `tosAccepted is false when acceptedTosVersion below tosVersion`() {
-        assertFalse(appStart(tosVersion = 2, acceptedTosVersion = 1).tosAccepted)
-    }
-
-    // endregion
-
-    // region shouldShowOOBE
-
-    @Test
-    fun `shouldShowOOBE is true on first install`() {
-        assertTrue(appStart(lastVersionCode = -1, tosVersion = 1, acceptedTosVersion = 1).shouldShowOOBE)
-    }
-
-    @Test
-    fun `shouldShowOOBE is true when TOS not accepted`() {
-        assertTrue(appStart(lastVersionCode = 5, tosVersion = 2, acceptedTosVersion = 1).shouldShowOOBE)
-    }
-
-    @Test
-    fun `shouldShowOOBE is false when returning user with accepted TOS`() {
-        assertFalse(appStart(lastVersionCode = 5, tosVersion = 1, acceptedTosVersion = 1).shouldShowOOBE)
-    }
-
-    // endregion
-
-    // region versionThresholdPassed
-
-    @Test
-    fun `versionThresholdPassed is true when threshold within upgrade range`() {
-        // lastVersionCode=5, versionCode=10 → range 5..<10
-        assertTrue(appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(7))
-    }
-
-    @Test
-    fun `versionThresholdPassed is false when threshold below range`() {
-        assertFalse(appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(4))
-    }
-
-    @Test
-    fun `versionThresholdPassed is true when threshold equals lastVersionCode (inclusive start)`() {
-        assertTrue(appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(5))
-    }
-
-    @Test
-    fun `versionThresholdPassed is false when threshold equals versionCode (exclusive end)`() {
-        assertFalse(appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(10))
-    }
-
-    @Test
-    fun `versionThresholdPassed is false when threshold above range`() {
-        assertFalse(appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(11))
-    }
-
-    // endregion
-
-    // region toString
-
-    @Test
-    fun `toString includes versionCode`() {
-        val s = appStart(versionCode = 42).toString()
-        assertTrue(s.contains("42"))
-    }
-
-    @Test
-    fun `toString includes versionName`() {
-        val s = appStart(versionName = "2.3.4").toString()
-        assertTrue(s.contains("2.3.4"))
-    }
-
-    // endregion
 }

@@ -15,99 +15,61 @@
  */
 package de.lemke.commonutils
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
 
-class URLUtilsTest {
-    // region withHttps
-
-    @Test
-    fun `withHttps prepends https to bare domain`() {
-        assertEquals("https://example.com", "example.com".withHttps())
+class URLUtilsTest : ShouldSpec({
+    context("withHttps") {
+        should("prepend https to bare domain") {
+            "example.com".withHttps() shouldBe "https://example.com"
+        }
+        should("leave https URL unchanged") {
+            "https://example.com".withHttps() shouldBe "https://example.com"
+        }
+        should("leave http URL unchanged") {
+            "http://example.com".withHttps() shouldBe "http://example.com"
+        }
+        should("prepend https to path without scheme") {
+            "example.com/path".withHttps() shouldBe "https://example.com/path"
+        }
     }
-
-    @Test
-    fun `withHttps leaves https URL unchanged`() {
-        assertEquals("https://example.com", "https://example.com".withHttps())
+    context("withoutHttps") {
+        should("remove https scheme") {
+            "https://example.com".withoutHttps() shouldBe "example.com"
+        }
+        should("remove http scheme") {
+            "http://example.com".withoutHttps() shouldBe "example.com"
+        }
+        should("remove trailing slash") {
+            "https://example.com/".withoutHttps() shouldBe "example.com"
+        }
+        should("leave plain domain unchanged") {
+            "example.com".withoutHttps() shouldBe "example.com"
+        }
+        should("strip https then http from doubly-prefixed input") {
+            "https://http://example.com".withoutHttps() shouldBe "example.com"
+        }
     }
-
-    @Test
-    fun `withHttps leaves http URL unchanged`() {
-        assertEquals("http://example.com", "http://example.com".withHttps())
+    context("urlEncodeAmpersand") {
+        should("replace single ampersand") {
+            "a&b".urlEncodeAmpersand() shouldBe "a%26b"
+        }
+        should("replace multiple ampersands") {
+            "a&b&c".urlEncodeAmpersand() shouldBe "a%26b%26c"
+        }
+        should("leave string without ampersand unchanged") {
+            "hello".urlEncodeAmpersand() shouldBe "hello"
+        }
     }
-
-    @Test
-    fun `withHttps prepends https to path without scheme`() {
-        assertEquals("https://example.com/path", "example.com/path".withHttps())
+    context("urlEncode") {
+        should("encode space as plus") {
+            "hello world".urlEncode() shouldBe "hello+world"
+        }
+        should("encode special characters") {
+            "a&b".urlEncode() shouldBe "a%26b"
+        }
+        should("leave alphanumeric unchanged") {
+            "abc123".urlEncode() shouldBe "abc123"
+        }
     }
-
-    // endregion
-
-    // region withoutHttps
-
-    @Test
-    fun `withoutHttps removes https scheme`() {
-        assertEquals("example.com", "https://example.com".withoutHttps())
-    }
-
-    @Test
-    fun `withoutHttps removes http scheme`() {
-        assertEquals("example.com", "http://example.com".withoutHttps())
-    }
-
-    @Test
-    fun `withoutHttps removes trailing slash`() {
-        assertEquals("example.com", "https://example.com/".withoutHttps())
-    }
-
-    @Test
-    fun `withoutHttps leaves plain domain unchanged`() {
-        assertEquals("example.com", "example.com".withoutHttps())
-    }
-
-    @Test
-    fun `withoutHttps strips https then http from doubly-prefixed input`() {
-        // removePrefix("https://") → "http://example.com", then removePrefix("http://") → "example.com"
-        assertEquals("example.com", "https://http://example.com".withoutHttps())
-    }
-
-    // endregion
-
-    // region urlEncodeAmpersand
-
-    @Test
-    fun `urlEncodeAmpersand replaces single ampersand`() {
-        assertEquals("a%26b", "a&b".urlEncodeAmpersand())
-    }
-
-    @Test
-    fun `urlEncodeAmpersand replaces multiple ampersands`() {
-        assertEquals("a%26b%26c", "a&b&c".urlEncodeAmpersand())
-    }
-
-    @Test
-    fun `urlEncodeAmpersand leaves string without ampersand unchanged`() {
-        assertEquals("hello", "hello".urlEncodeAmpersand())
-    }
-
-    // endregion
-
-    // region urlEncode
-
-    @Test
-    fun `urlEncode encodes space as plus`() {
-        assertEquals("hello+world", "hello world".urlEncode())
-    }
-
-    @Test
-    fun `urlEncode encodes special characters`() {
-        assertEquals("a%26b", "a&b".urlEncode())
-    }
-
-    @Test
-    fun `urlEncode leaves alphanumeric unchanged`() {
-        assertEquals("abc123", "abc123".urlEncode())
-    }
-
-    // endregion
-}
+})

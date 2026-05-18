@@ -16,35 +16,37 @@
 package de.lemke.commonutils.data
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import com.google.common.truth.Truth.assertThat
 import de.lemke.commonutils.SaveLocation
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
+import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@RunWith(RobolectricTestRunner::class)
+@ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class DelegatesAdvancedTest {
-    private lateinit var prefs: android.content.SharedPreferences
+    private lateinit var prefs: SharedPreferences
 
-    @Before
+    @BeforeEach
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         prefs = ctx.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
     }
 
-    // region boolean
-
     @Test
     fun `boolean returns default when key absent`() {
         class Holder {
             var flag: Boolean by prefs.delegates.boolean(default = true)
         }
-        assertThat(Holder().flag).isTrue()
+        Holder().flag.shouldBeTrue()
     }
 
     @Test
@@ -54,19 +56,15 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.flag = true
-        assertThat(Holder().flag).isTrue()
+        Holder().flag.shouldBeTrue()
     }
-
-    // endregion
-
-    // region int
 
     @Test
     fun `int returns default when key absent`() {
         class Holder {
             var n: Int by prefs.delegates.int(default = 42)
         }
-        assertThat(Holder().n).isEqualTo(42)
+        Holder().n shouldBe 42
     }
 
     @Test
@@ -76,19 +74,15 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.n = 99
-        assertThat(Holder().n).isEqualTo(99)
+        Holder().n shouldBe 99
     }
-
-    // endregion
-
-    // region float
 
     @Test
     fun `float returns default when key absent`() {
         class Holder {
             var f: Float by prefs.delegates.float(default = 3.14f)
         }
-        assertThat(Holder().f).isEqualTo(3.14f)
+        Holder().f shouldBe 3.14f
     }
 
     @Test
@@ -98,19 +92,15 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.f = 2.71f
-        assertThat(Holder().f).isEqualTo(2.71f)
+        Holder().f shouldBe 2.71f
     }
-
-    // endregion
-
-    // region long
 
     @Test
     fun `long returns default when key absent`() {
         class Holder {
             var l: Long by prefs.delegates.long(default = 100L)
         }
-        assertThat(Holder().l).isEqualTo(100L)
+        Holder().l shouldBe 100L
     }
 
     @Test
@@ -120,19 +110,15 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.l = Long.MAX_VALUE
-        assertThat(Holder().l).isEqualTo(Long.MAX_VALUE)
+        Holder().l shouldBe Long.MAX_VALUE
     }
-
-    // endregion
-
-    // region string
 
     @Test
     fun `string returns default when key absent`() {
         class Holder {
             var s: String by prefs.delegates.string(default = "hello")
         }
-        assertThat(Holder().s).isEqualTo("hello")
+        Holder().s shouldBe "hello"
     }
 
     @Test
@@ -142,19 +128,15 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.s = "world"
-        assertThat(Holder().s).isEqualTo("world")
+        Holder().s shouldBe "world"
     }
-
-    // endregion
-
-    // region stringSet
 
     @Test
     fun `stringSet returns default when key absent`() {
         class Holder {
             var ss: Set<String> by prefs.delegates.stringSet(default = setOf("a", "b"))
         }
-        assertThat(Holder().ss).containsExactly("a", "b")
+        Holder().ss shouldContainExactlyInAnyOrder setOf("a", "b")
     }
 
     @Test
@@ -164,19 +146,15 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.ss = setOf("x", "y", "z")
-        assertThat(Holder().ss).containsExactly("x", "y", "z")
+        Holder().ss shouldContainExactlyInAnyOrder setOf("x", "y", "z")
     }
-
-    // endregion
-
-    // region darkMode
 
     @Test
     fun `darkMode returns default false when key absent`() {
         class Holder {
             var dm: Boolean by prefs.delegates.darkMode(default = false)
         }
-        assertThat(Holder().dm).isFalse()
+        Holder().dm.shouldBeFalse()
     }
 
     @Test
@@ -186,9 +164,8 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.dm = true
-        assertThat(Holder().dm).isTrue()
-        // Verify stored as "1"
-        assertThat(prefs.getString("dm", null)).isEqualTo("1")
+        Holder().dm.shouldBeTrue()
+        prefs.getString("dm", null) shouldBe "1"
     }
 
     @Test
@@ -198,20 +175,16 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.dm = false
-        assertThat(Holder().dm).isFalse()
-        assertThat(prefs.getString("dm", null)).isEqualTo("0")
+        Holder().dm.shouldBeFalse()
+        prefs.getString("dm", null) shouldBe "0"
     }
-
-    // endregion
-
-    // region saveLocation
 
     @Test
     fun `saveLocation returns default when key absent`() {
         class Holder {
             var loc: SaveLocation by prefs.delegates.saveLocation(default = SaveLocation.PICTURES)
         }
-        assertThat(Holder().loc).isEqualTo(SaveLocation.PICTURES)
+        Holder().loc shouldBe SaveLocation.PICTURES
     }
 
     @Test
@@ -221,7 +194,7 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.loc = SaveLocation.DOWNLOADS
-        assertThat(Holder().loc).isEqualTo(SaveLocation.DOWNLOADS)
+        Holder().loc shouldBe SaveLocation.DOWNLOADS
     }
 
     @Test
@@ -231,12 +204,8 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.loc = SaveLocation.DCIM
-        assertThat(prefs.getString("loc", null)).isEqualTo("DCIM")
+        prefs.getString("loc", null) shouldBe "DCIM"
     }
-
-    // endregion
-
-    // region custom key
 
     @Test
     fun `boolean with explicit key uses that key in prefs`() {
@@ -245,8 +214,6 @@ class DelegatesAdvancedTest {
         }
         val h = Holder()
         h.flag = true
-        assertThat(prefs.getBoolean("my_custom_key", false)).isTrue()
+        prefs.getBoolean("my_custom_key", false) shouldBe true
     }
-
-    // endregion
 }

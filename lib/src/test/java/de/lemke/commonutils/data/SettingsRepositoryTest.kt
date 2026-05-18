@@ -18,21 +18,26 @@ package de.lemke.commonutils.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import com.google.common.truth.Truth.assertThat
 import de.lemke.commonutils.SaveLocation
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldBeEmpty
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
+import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@RunWith(RobolectricTestRunner::class)
+@ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class SettingsRepositoryTest {
     private lateinit var prefs: SharedPreferences
     private lateinit var repo: SettingsRepository
 
-    @Before
+    private fun reload() = SettingsRepository(prefs)
+
+    @BeforeEach
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         prefs = ctx.getSharedPreferences("settings_test", Context.MODE_PRIVATE)
@@ -40,93 +45,91 @@ class SettingsRepositoryTest {
         repo = SettingsRepository(prefs)
     }
 
-    private fun reload() = SettingsRepository(prefs)
-
     @Test
     fun `darkMode defaults to false`() {
-        assertThat(repo.darkMode).isFalse()
+        repo.darkMode.shouldBeFalse()
     }
 
     @Test
     fun `autoDarkMode defaults to true`() {
-        assertThat(repo.autoDarkMode).isTrue()
+        repo.autoDarkMode.shouldBeTrue()
     }
 
     @Test
     fun `lastVersionCode defaults to -1`() {
-        assertThat(repo.lastVersionCode).isEqualTo(-1)
+        repo.lastVersionCode shouldBe -1
     }
 
     @Test
     fun `lastVersionName defaults to 0_0_0`() {
-        assertThat(repo.lastVersionName).isEqualTo("0.0.0")
+        repo.lastVersionName shouldBe "0.0.0"
     }
 
     @Test
     fun `acceptedTosVersion defaults to -1`() {
-        assertThat(repo.acceptedTosVersion).isEqualTo(-1)
+        repo.acceptedTosVersion shouldBe -1
     }
 
     @Test
     fun `devModeEnabled defaults to false`() {
-        assertThat(repo.devModeEnabled).isFalse()
+        repo.devModeEnabled.shouldBeFalse()
     }
 
     @Test
     fun `search defaults to empty string`() {
-        assertThat(repo.search).isEmpty()
+        repo.search.shouldBeEmpty()
     }
 
     @Test
     fun `imageSaveLocation defaults to SaveLocation default`() {
-        assertThat(repo.imageSaveLocation).isEqualTo(SaveLocation.default)
+        repo.imageSaveLocation shouldBe SaveLocation.default
     }
 
     @Test
     fun `lastVersionCode round-trips written value`() {
         repo.lastVersionCode = 42
-        assertThat(reload().lastVersionCode).isEqualTo(42)
+        reload().lastVersionCode shouldBe 42
     }
 
     @Test
     fun `darkMode round-trips written value`() {
         repo.darkMode = true
-        assertThat(reload().darkMode).isTrue()
+        reload().darkMode.shouldBeTrue()
     }
 
     @Test
     fun `search round-trips written value`() {
         repo.search = "hello"
-        assertThat(reload().search).isEqualTo("hello")
+        reload().search shouldBe "hello"
     }
 
     @Test
     fun `imageSaveLocation round-trips DOWNLOADS`() {
         repo.imageSaveLocation = SaveLocation.DOWNLOADS
-        assertThat(reload().imageSaveLocation).isEqualTo(SaveLocation.DOWNLOADS)
+        reload().imageSaveLocation shouldBe SaveLocation.DOWNLOADS
     }
 
     @Test
     fun `autoDarkMode round-trips false`() {
         repo.autoDarkMode = false
-        assertThat(reload().autoDarkMode).isFalse()
+        reload().autoDarkMode.shouldBeFalse()
     }
 
     @Test
     fun `devModeEnabled round-trips true`() {
         repo.devModeEnabled = true
-        assertThat(reload().devModeEnabled).isTrue()
+        reload().devModeEnabled.shouldBeTrue()
     }
 
     @Test
     fun `acceptedTosVersion round-trips written value`() {
         repo.acceptedTosVersion = 3
-        assertThat(reload().acceptedTosVersion).isEqualTo(3)
+        reload().acceptedTosVersion shouldBe 3
     }
 
     @Test
     fun `lastVersionName round-trips written value`() {
         repo.lastVersionName = "2.5.0"
-        assertThat(reload().lastVersionName).isEqualTo("2.5.0")
+        reload().lastVersionName shouldBe "2.5.0"
     }
 }
