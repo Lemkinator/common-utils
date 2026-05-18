@@ -82,6 +82,40 @@ bundled dependencies — be careful when adding new dependencies.
 Hilt can inject them directly; the module installs into
 `SingletonComponent`.
 
+## Version Policy
+
+**Default: use the latest stable version of every dependency.**
+Renovate keeps minor/patch updates current; bump majors manually
+with release-note review.
+
+Document any pin or downgrade with a `# Why pinned:` comment in
+`libs.versions.toml`. Known exception classes:
+
+1. **Kotlin + KSP lockstep** — KSP minor must match Kotlin minor
+   (e.g. Kotlin `2.3.21` requires KSP `2.3.x`). Renovate's `kotlin`
+   group enforces this.
+2. **Static-analysis on fresh Kotlin majors** — Detekt typically
+   lags new Kotlin releases by 1–3 months. Stay on the latest
+   pre-release/alpha that supports your Kotlin version until a stable
+   one lands. The `static-analysis` Renovate group bumps them together.
+3. **Plugin AGP compatibility windows** — check plugin docs before
+   bumping AGP.
+4. **`oneui-design`** — versioned against OneUI major releases
+   (e.g. `0.9.10+oneui8`); review manually per bump.
+5. **Hilt version** — must match consumer apps to avoid
+   duplicate-class errors. Renovate's `hilt` group bumps both repos
+   together.
+
+## Hilt (same-module)
+
+Hilt is added as a same-module `implementation` dep — qualifiers and
+`CoroutineDispatchersModule` ship compiled into the published AAR.
+Consumers see `@IoDispatcher` / `@DefaultDispatcher` / `@MainDispatcher`
+because those annotation classes live in our AAR, not in Hilt's runtime jar,
+so no transitive exposure is needed. Every consuming app already declares
+Hilt directly. A separate `:lib-di` subproject would let consumers opt out
+but adds a publish target for zero practical gain.
+
 ## Configuration
 
 - Version catalog: `gradle/libs.versions.toml`
