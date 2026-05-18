@@ -24,7 +24,7 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Run static analysis
         run: chmod +x ./gradlew && ./gradlew spotlessCheck detekt lintDebug --stacktrace
         env:
@@ -43,7 +43,7 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Run unit tests
         run: chmod +x ./gradlew && ./gradlew testDebugUnitTest koverHtmlReport --stacktrace
         env:
@@ -63,7 +63,7 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Assemble release
         run: chmod +x ./gradlew && ./gradlew assembleRelease --stacktrace
         env:
