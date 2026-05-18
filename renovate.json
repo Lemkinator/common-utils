@@ -8,13 +8,76 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "digest"
-      ],
+      "matchUpdateTypes": ["patch", "digest"],
       "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "branch",
+      "platformAutomerge": true
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "matchCurrentVersion": "!/^0/",
+      "matchPackageNames": [
+        "com.google.truth:truth",
+        "io.mockk:**",
+        "app.cash.turbine:**",
+        "com.google.dagger:**",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-test"
+      ],
       "automerge": true
+    },
+    {
+      "groupName": "kotlin",
+      "matchPackageNames": [
+        "org.jetbrains.kotlin:**",
+        "org.jetbrains.kotlin.android",
+        "com.google.devtools.ksp**"
+      ]
+    },
+    {
+      "groupName": "hilt",
+      "matchPackageNames": [
+        "com.google.dagger:**",
+        "com.google.dagger.hilt.android"
+      ]
+    },
+    {
+      "groupName": "androidx-test",
+      "matchPackageNames": [
+        "androidx.test:**",
+        "androidx.test.ext:**",
+        "androidx.test.espresso:**"
+      ]
+    },
+    {
+      "groupName": "junit5",
+      "matchPackageNames": [
+        "org.junit:junit-bom",
+        "org.junit.jupiter:**",
+        "de.mannodermaus.android-junit"
+      ]
+    },
+    {
+      "groupName": "robolectric",
+      "matchPackageNames": [
+        "org.robolectric:**"
+      ]
+    },
+    {
+      "groupName": "static-analysis",
+      "matchPackageNames": [
+        "dev.detekt:**",
+        "io.gitlab.arturbosch.detekt**",
+        "com.diffplug.spotless"
+      ]
+    },
+    {
+      "groupName": "oneui-design",
+      "matchPackageNames": [
+        "io.github.tribalfs:oneui-design",
+        "io.github.tribalfs:oneui-icons"
+      ],
+      "automerge": false
     }
   ]
 }
