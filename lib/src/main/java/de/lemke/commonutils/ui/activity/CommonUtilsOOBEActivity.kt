@@ -123,6 +123,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     companion object {
         private const val PROCEED_DELAY_MS = 500L
         private const val MIN_FULL_BUTTON_WIDTH_DP = 360
+
         /** Whether to persist TOS acceptance when the user proceeds; set via [setupCommonUtilsOOBEActivity]. */
         var setAcceptedTosVersion = true
 

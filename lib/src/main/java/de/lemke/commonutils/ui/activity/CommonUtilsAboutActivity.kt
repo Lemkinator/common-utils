@@ -173,6 +173,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "CommonUtilsAboutActivity"
+
         /** Static version string displayed in the about screen; takes precedence if non-empty. */
         var appVersion = ""
 

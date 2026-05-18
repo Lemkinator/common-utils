@@ -240,6 +240,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
 
     companion object {
         private const val BACK_COLLAPSE_THRESHOLD = 0.3f
+
         /** Optional callback invoked when the user taps the share button; defaults to a no-op. */
         var onShareApp: (activity: Activity) -> Unit = {}
     }
