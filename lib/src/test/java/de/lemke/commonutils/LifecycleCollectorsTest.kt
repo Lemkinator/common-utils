@@ -17,7 +17,6 @@ package de.lemke.commonutils
 
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,24 +41,21 @@ class LifecycleCollectorsTest {
                 .get()
         val idle = { Shadows.shadowOf(Looper.getMainLooper()).idle() }
 
-        // collectState: initial value
         val stateFlow = MutableStateFlow(42)
         val stateCollected = mutableListOf<Int>()
         activity.collectState(stateFlow) { stateCollected.add(it) }
         idle()
-        stateCollected.first() shouldBe 42
+        stateCollected shouldBe listOf(42)
 
-        // collectState: subsequent emission
         stateFlow.value = 99
         idle()
-        stateCollected shouldContain 99
+        stateCollected shouldBe listOf(42, 99)
 
-        // collectEvents: buffered channel item
         val channel = Channel<String>(Channel.BUFFERED)
         val eventCollected = mutableListOf<String>()
         channel.trySend("hello")
         activity.collectEvents(channel) { eventCollected.add(it) }
         idle()
-        eventCollected.first() shouldBe "hello"
+        eventCollected shouldBe listOf("hello")
     }
 }

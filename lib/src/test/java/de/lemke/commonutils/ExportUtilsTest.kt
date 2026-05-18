@@ -17,8 +17,8 @@ package de.lemke.commonutils
 
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldEndWith
+import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldNotStartWith
 
@@ -28,7 +28,7 @@ class ExportUtilsTest : ShouldSpec({
     }
     should("toSafeFileName contain only alphanumeric and underscores before extension") {
         val result = "my photo".toSafeFileName(".png")
-        result.removeSuffix(".png").matches("[a-zA-Z0-9_]+".toRegex()).shouldBeTrue()
+        result.removeSuffix(".png") shouldMatch "[a-zA-Z0-9_]+"
     }
     should("toSafeFileName remove https scheme") {
         "https://example.com".toSafeFileName(".png") shouldNotContain "https"
@@ -36,7 +36,7 @@ class ExportUtilsTest : ShouldSpec({
     should("toSafeFileName not start with http___ after http scheme sanitization") {
         val result = "http://example.com".toSafeFileName(".png")
         result.shouldNotStartWith("http___")
-        result.removeSuffix(".png").matches("[a-zA-Z0-9_]+".toRegex()).shouldBeTrue()
+        result.removeSuffix(".png") shouldMatch "[a-zA-Z0-9_]+"
     }
     should("toSafeFileName have no leading underscores before extension") {
         "  leading spaces".toSafeFileName(".png").startsWith("_").shouldBeFalse()
@@ -47,9 +47,7 @@ class ExportUtilsTest : ShouldSpec({
     should("toSafeFileName replace special characters with underscores") {
         "file@name!test"
             .toSafeFileName(".png")
-            .removeSuffix(".png")
-            .matches("[a-zA-Z0-9_]+".toRegex())
-            .shouldBeTrue()
+            .removeSuffix(".png") shouldMatch "[a-zA-Z0-9_]+"
     }
     should("toSafeFileName preserve appended extension literally") {
         "test".toSafeFileName(".jpg") shouldEndWith ".jpg"

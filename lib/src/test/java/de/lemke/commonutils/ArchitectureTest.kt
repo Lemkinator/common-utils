@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.ext.list.withPackage
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 
@@ -28,14 +29,18 @@ class ArchitectureTest : ShouldSpec() {
             codeScope.files
                 .withPackage("de.lemke.commonutils.ui.activity..")
                 .forEach { file ->
-                    file.imports.any { it.name.contains(".widget.internal.") }.shouldBeFalse()
+                    withClue("${file.path} imports widget internals") {
+                        file.imports.any { it.name.contains(".widget.internal.") }.shouldBeFalse()
+                    }
                 }
         }
         should("data layer not depend on ui") {
             codeScope.files
                 .withPackage("de.lemke.commonutils.data..")
                 .forEach { file ->
-                    file.imports.any { it.name.startsWith("de.lemke.commonutils.ui.") }.shouldBeFalse()
+                    withClue("${file.path} imports ui layer") {
+                        file.imports.any { it.name.startsWith("de.lemke.commonutils.ui.") }.shouldBeFalse()
+                    }
                 }
         }
     }
