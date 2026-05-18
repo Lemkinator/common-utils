@@ -16,9 +16,15 @@ Min SDK 26, Target SDK 36, Kotlin 2.3.21, Java 21.
 ./gradlew clean          # Clean build outputs
 ./gradlew tasks          # List all tasks
 ./gradlew assembleRelease
+./gradlew test           # Run unit tests
+./gradlew koverVerify    # Check coverage floor (≥12%)
 ```
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/`.
+
+**Test stack**: Kotest 6 (`ShouldSpec` style) + Robolectric via
+`kotest-extensions-robolectric` for Android tests. Konsist for architecture
+rules. Kover enforces ≥12% line coverage.
 
 ## Pre-commit Hook
 
