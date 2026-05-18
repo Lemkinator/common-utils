@@ -24,6 +24,7 @@ import androidx.lifecycle.Lifecycle.State.STARTED
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.StateFlow
 
+/** Collects [flow] emissions and delivers each value to [onEach] while the activity is at least [minActiveState]. */
 inline fun <T> AppCompatActivity.collectState(
     flow: StateFlow<T>,
     minActiveState: State = STARTED,
@@ -32,6 +33,7 @@ inline fun <T> AppCompatActivity.collectState(
     flow.collect { onEach(it) }
 }
 
+/** Collects [flow] emissions and delivers each value to [onEach] while the fragment view is at least [minActiveState]. */
 inline fun <T> Fragment.collectState(
     flow: StateFlow<T>,
     minActiveState: State = STARTED,
@@ -40,6 +42,7 @@ inline fun <T> Fragment.collectState(
     flow.collect { onEach(it) }
 }
 
+/** Consumes events from [channel] and delivers each to [onEach] while the activity is at least [minActiveState]. */
 inline fun <T> AppCompatActivity.collectEvents(
     channel: ReceiveChannel<T>,
     minActiveState: State = STARTED,
@@ -48,6 +51,7 @@ inline fun <T> AppCompatActivity.collectEvents(
     for (event in channel) onEach(event)
 }
 
+/** Consumes events from [channel] and delivers each to [onEach] while the fragment view is at least [minActiveState]. */
 inline fun <T> Fragment.collectEvents(
     channel: ReceiveChannel<T>,
     minActiveState: State = STARTED,

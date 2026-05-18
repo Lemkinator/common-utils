@@ -24,6 +24,7 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.core.content.withStyledAttributes
 import de.lemke.commonutils.R
 
+/** Full-screen semi-transparent overlay used as a background for tip popups. */
 open class DimmingView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

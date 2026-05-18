@@ -50,6 +50,7 @@ import de.lemke.commonutils.setWindowTransparent
 import dev.oneuiproject.oneui.R as iconsR
 import dev.oneuiproject.oneui.design.R as designR
 
+/** Pre-built open-source licenses screen powered by AboutLibraries. */
 class CommonUtilsLibsActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {

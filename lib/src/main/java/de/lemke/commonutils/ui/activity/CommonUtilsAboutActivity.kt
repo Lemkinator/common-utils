@@ -53,6 +53,7 @@ import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.UpdateAvailable
 import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
+/** Pre-built About screen that shows the app version, optional text, and an in-app update check. */
 class CommonUtilsAboutActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutBinding
     private lateinit var appUpdateManager: AppUpdateManager
@@ -172,8 +173,13 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "CommonUtilsAboutActivity"
+        /** Static version string displayed in the about screen; takes precedence if non-empty. */
         var appVersion = ""
+
+        /** Suspend function used to resolve the version string at display time; used when [appVersion] is empty. */
         var getAppVersion = suspend { "" }
+
+        /** Optional extra text shown below the version; rendered as a [SpannableString] for clickable spans. */
         var optionalText: SpannableString? = null
     }
 }

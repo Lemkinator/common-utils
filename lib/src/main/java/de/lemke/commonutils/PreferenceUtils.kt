@@ -39,6 +39,7 @@ import dev.oneuiproject.oneui.widget.RelativeLink
 
 private const val TAG = "PreferenceUtils"
 
+/** Adds a relative-links card with "Share app" and "Rate app" actions to the preference screen. */
 fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
     addRelativeLinksCard(
         RelativeLink(getString(R.string.commonutils_share_app)) { shareApp() },
@@ -46,6 +47,7 @@ fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
     )
 }
 
+/** Initializes the standard common-utils preferences (dark mode, save location, language, dev options, more info). */
 fun PreferenceFragmentCompat.initCommonUtilsPreferences() {
     initDarkMode()
     initImageSaveLocation()

@@ -32,12 +32,14 @@ import androidx.fragment.app.Fragment
 
 private const val TAG = "EmailUtils"
 
+/** Opens a mail client to send an email to [email] with the given [subject] and [text]. */
 fun Context.sendEmail(
     email: String,
     subject: String,
     text: String,
 ): Boolean = sendEmail(arrayOf(email), subject, text)
 
+/** Opens a mail client to send an email to [emails] with the given [subject] and [text]. */
 fun Context.sendEmail(
     emails: Array<String>,
     subject: String,
@@ -59,16 +61,19 @@ fun Context.sendEmail(
         false
     }
 
+/** Sends a help request email with a pre-filled body. */
 fun Context.sendEmailHelp(
     email: String,
     subject: String,
 ) = sendEmail(email, subject, getString(R.string.commonutils_help_email_text))
 
+/** Sends an "about me" contact email with a pre-filled body. */
 fun Context.sendEmailAboutMe(
     email: String,
     subject: String,
 ) = sendEmail(email, subject, getString(R.string.commonutils_about_email_text))
 
+/** Sends a bug report email with a pre-filled body. */
 fun Fragment.sendEmailBugReport(
     email: String,
     subject: String,

@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 private const val TAG = "SearchUtils"
 
+/** Returns a [ToolbarLayout.SearchModeListener] that updates [search] on query changes and persists the last query. */
 fun AppCompatActivity.getCommonUtilsSearchListener(
     search: MutableStateFlow<String?>,
     @StringRes queryHint: Int? = null,

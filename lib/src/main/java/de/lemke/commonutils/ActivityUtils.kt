@@ -27,6 +27,7 @@ import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
 private const val TAG = "ActivityUtils"
 
+/** Configures the OOBE activity to launch [nextActivity] on completion. */
 fun setupCommonUtilsOOBEActivity(
     setAcceptedTosVersion: Boolean? = null,
     nextActivity: Class<*>,
@@ -35,6 +36,7 @@ fun setupCommonUtilsOOBEActivity(
     CommonUtilsOOBEActivity.nextActivity = nextActivity
 }
 
+/** Configures the OOBE activity to invoke [onContinue] when the user proceeds. */
 fun setupCommonUtilsOOBEActivity(
     setAcceptedTosVersion: Boolean? = null,
     onContinue: (() -> Unit),
@@ -43,6 +45,7 @@ fun setupCommonUtilsOOBEActivity(
     CommonUtilsOOBEActivity.onContinue = onContinue
 }
 
+/** Configures the settings activity with the given preference XML resources and optional init block. */
 fun setupCommonUtilsSettingsActivity(
     vararg preferences: Int,
     initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {},
@@ -51,6 +54,7 @@ fun setupCommonUtilsSettingsActivity(
     CommonUtilsSettingsActivity.initPreferences = initPreferences
 }
 
+/** Configures the settings activity with the given preference XML resource list and optional init block. */
 fun setupCommonUtilsSettingsActivity(
     preferences: List<Int>,
     initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {},
@@ -59,12 +63,14 @@ fun setupCommonUtilsSettingsActivity(
     CommonUtilsSettingsActivity.initPreferences = initPreferences
 }
 
+/** Configures the About Me activity with an optional share-app callback. */
 fun setupCommonUtilsAboutMeActivity(onShareApp: (activity: Activity) -> Unit = {}) {
     CommonUtilsAboutMeActivity.apply {
         this.onShareApp = onShareApp
     }
 }
 
+/** Configures the About activity with a static version string and optional extra text. */
 fun setupCommonUtilsAboutActivity(
     appVersion: String,
     optionalText: SpannableString? = null,
@@ -75,6 +81,7 @@ fun setupCommonUtilsAboutActivity(
     }
 }
 
+/** Configures the About activity with a suspend function that resolves the version string at display time. */
 fun setupCommonUtilsAboutActivity(getAppVersion: suspend () -> String) {
     CommonUtilsAboutActivity.getAppVersion = getAppVersion
 }

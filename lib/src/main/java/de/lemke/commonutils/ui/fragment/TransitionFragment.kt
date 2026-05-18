@@ -23,6 +23,7 @@ import com.google.android.material.transition.MaterialElevationScale
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.android.material.transition.MaterialSharedAxis.Axis
 
+/** Base [Fragment] that wires up shared-element transitions on `onCreate`. */
 abstract class TransitionFragment(
     @LayoutRes layoutResId: Int,
     private val customEnterTransition: Transition = MaterialElevationScale(true),
@@ -43,6 +44,7 @@ abstract class TransitionFragment(
     }
 }
 
+/** [TransitionFragment] variant that uses [MaterialSharedAxis] transitions along the given [axis]. */
 abstract class TransitionFragmentSharedAxis(
     @LayoutRes layoutResId: Int,
     @Axis axis: Int,

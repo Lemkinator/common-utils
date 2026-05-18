@@ -44,8 +44,10 @@ private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
 private const val COMPRESS_QUALITY_MAX = 100
 
+/** Shares the app's Play Store link via the system share sheet. */
 fun Fragment.shareApp(): Boolean = requireContext().shareApp()
 
+/** Shares the app's Play Store link via the system share sheet. */
 fun Context.shareApp(): Boolean =
     safeStartActivity(
         Intent.createChooser(
@@ -58,11 +60,13 @@ fun Context.shareApp(): Boolean =
         ),
     )
 
+/** Shares [text] via the system share sheet with an optional chooser [title]. */
 fun Fragment.shareText(
     text: String,
     title: String? = null,
 ): Boolean = requireContext().shareText(text, title)
 
+/** Shares [text] via the system share sheet with an optional chooser [title]. */
 fun Context.shareText(
     text: String,
     title: String? = null,
@@ -76,11 +80,13 @@ fun Context.shareText(
     }
 }
 
+/** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
 fun Fragment.copyToClipboard(
     text: String,
     label: String,
 ): Boolean = requireContext().copyToClipboard(text, label)
 
+/** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
 fun Context.copyToClipboard(
     text: String,
     label: String,
@@ -90,6 +96,7 @@ fun Context.copyToClipboard(
     return true
 }
 
+/** Copies [bitmap] to the clipboard via a cached file URI under [label]. */
 fun Context.copyToClipboard(
     bitmap: Bitmap,
     label: String,
@@ -107,24 +114,28 @@ fun Context.copyToClipboard(
     return true
 }
 
+/** Copies this bitmap to the clipboard via a cached file URI under [label]. */
 fun Bitmap.copyToClipboard(
     context: Context,
     label: String,
     shareFileName: String,
 ): Boolean = context.copyToClipboard(this, label, shareFileName)
 
+/** Shares [bitmap] via the system share sheet, optionally including [shareText]. */
 fun Fragment.shareBitmap(
     bitmap: Bitmap,
     shareFileName: String,
     shareText: String? = null,
 ): Boolean = bitmap.share(requireContext(), shareFileName, shareText)
 
+/** Shares [bitmap] via the system share sheet, optionally including [shareText]. */
 fun Context.shareBitmap(
     bitmap: Bitmap,
     shareFileName: String,
     shareText: String? = null,
 ): Boolean = bitmap.share(this, shareFileName, shareText)
 
+/** Writes this bitmap to a cache file and shares it via the system share sheet, optionally including [shareText]. */
 fun Bitmap.share(
     context: Context,
     shareFileName: String,
@@ -153,16 +164,19 @@ fun Bitmap.share(
         false
     }
 
+/** Shares [bitmap] directly via Samsung Quick Share if available, falling back to the system share sheet. */
 fun Fragment.quickShareBitmap(
     bitmap: Bitmap,
     shareFileName: String,
 ): Boolean = bitmap.quickShare(requireContext(), shareFileName)
 
+/** Shares [bitmap] directly via Samsung Quick Share if available, falling back to the system share sheet. */
 fun Context.quickShareBitmap(
     bitmap: Bitmap,
     shareFileName: String,
 ): Boolean = bitmap.quickShare(this, shareFileName)
 
+/** Shares this bitmap directly via Samsung Quick Share if available, falling back to the system share sheet. */
 fun Bitmap.quickShare(
     context: Context,
     shareFileName: String,
@@ -180,8 +194,10 @@ fun Bitmap.quickShare(
     }
 }
 
+/** Shares this file via the system share sheet. */
 fun File.share(context: Context): Boolean = listOf(this).share(context)
 
+/** Shares all files in this list via the system share sheet (multi-file if more than one). */
 fun List<File>.share(context: Context): Boolean {
     val contentUris = map { f -> f.getFileUri(context) }
 
@@ -234,6 +250,7 @@ private fun Context.safeStartActivity(intent: Intent): Boolean {
     }
 }
 
+/** Returns `true` if the Samsung Quick Share app is installed on this device. */
 fun Context.isSamsungQuickShareAvailable(): Boolean =
     try {
         packageManager.getPackageInfo(SAMSUNG_QUICK_SHARE_PACKAGE, 0)
@@ -244,4 +261,5 @@ fun Context.isSamsungQuickShareAvailable(): Boolean =
         Log.i(TAG, "isSamsungQuickShareAvailable: $it")
     }
 
+/** Returns a content URI for this file via the app's FileProvider, usable in share intents. */
 fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", this)

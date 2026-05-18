@@ -41,18 +41,23 @@ import dev.oneuiproject.oneui.design.R as designR
 private const val TAG = "BasicUtils"
 private const val DELETE_APP_DATA_DELAY_MS = 500L
 
+/** Shows a short toast with the given message. */
 fun Fragment.toast(msg: String) = requireContext().toast(msg)
 
+/** Shows a short toast with the given message. */
 fun Context.toast(msg: String) = Toast.makeText(this, msg, LENGTH_SHORT).show()
 
+/** Shows a short toast with the given string resource. */
 fun Fragment.toast(
     @StringRes stringResId: Int,
 ) = requireContext().toast(stringResId)
 
+/** Shows a short toast with the given string resource. */
 fun Context.toast(
     @StringRes stringResId: Int,
 ) = Toast.makeText(this, stringResId, LENGTH_SHORT).show()
 
+/** Launches [block] in the lifecycle scope, repeating it whenever the lifecycle reaches [minActiveState]. */
 inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
     minActiveState: State = STARTED,
     crossinline block: suspend CoroutineScope.() -> Unit,
@@ -60,6 +65,7 @@ inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
     lifecycleScope.launch { lifecycle.repeatOnLifecycle(minActiveState) { block() } }
 }
 
+/** Launches [block] in the view lifecycle scope, repeating it whenever the view lifecycle reaches [minActiveState]. */
 inline fun Fragment.launchAndRepeatWithViewLifecycle(
     minActiveState: State = STARTED,
     crossinline block: suspend CoroutineScope.() -> Unit,
@@ -67,6 +73,7 @@ inline fun Fragment.launchAndRepeatWithViewLifecycle(
     viewLifecycleOwner.lifecycleScope.launch { viewLifecycleOwner.lifecycle.repeatOnLifecycle(minActiveState) { block() } }
 }
 
+/** Shows a confirmation dialog and clears all application user data on confirmation. */
 fun Fragment.deleteAppDataAndExit(
     title: String? = null,
     message: String? = null,
@@ -93,10 +100,16 @@ fun Fragment.deleteAppDataAndExit(
     }
 }
 
+/** Bundle key for persisting search mode state. */
 const val COMMONUTILS_KEY_IS_SEARCH_MODE = "commonutils_isSearchMode"
+
+/** Bundle key for persisting action mode state. */
 const val COMMONUTILS_KEY_IS_ACTION_MODE = "commonutils_isActionMode"
+
+/** Bundle key for persisting the set of selected item IDs during action mode. */
 const val COMMONUTILS_KEY_SELECTED_IDS = "commonutils_selectedIds"
 
+/** Saves search and action mode state into this bundle for later restoration via [restoreSearchAndActionMode]. */
 fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
@@ -111,6 +124,7 @@ fun Bundle.saveSearchAndActionMode(
     }
 }
 
+/** Restores search and action mode state from this bundle, invoking the appropriate callback. */
 inline fun Bundle?.restoreSearchAndActionMode(
     crossinline onSearchMode: () -> Unit = {},
     crossinline onActionMode: (selectedIds: Set<Long>) -> Unit = {},

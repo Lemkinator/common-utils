@@ -28,12 +28,14 @@ import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "TipPopupUtils"
 
+/** Shows a tip popup anchored to this view with a full-screen touch-blocking overlay. */
 fun View.showTouchBlockingTipPopup(
     @StringRes messageResId: Int,
     @StringRes actionTextResId: Int? = null,
     action: () -> Unit = {},
 ) = showTouchBlockingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
+/** Shows a tip popup anchored to this view with a full-screen touch-blocking overlay. */
 fun View.showTouchBlockingTipPopup(
     message: String,
     actionText: String? = null,
@@ -42,12 +44,14 @@ fun View.showTouchBlockingTipPopup(
     showTipPopupWithOverlay(TouchBlockingView(context), message, actionText, action).setOutsideTouchEnabled(false)
 }
 
+/** Shows a tip popup anchored to this view with a semi-transparent dimming overlay. */
 fun View.showDimmingTipPopup(
     @StringRes messageResId: Int,
     @StringRes actionTextResId: Int? = null,
     action: () -> Unit = {},
 ) = showDimmingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
+/** Shows a tip popup anchored to this view with a semi-transparent dimming overlay. */
 fun View.showDimmingTipPopup(
     message: String,
     actionText: String? = null,

@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "PredictiveBackGestureUtils"
 
+/** Registers [onBackPressedLogic] as the back handler, enabled whenever [backPressLogicEnabled] emits `true`. */
 inline fun Fragment.addOnBackLogic(
     backPressLogicEnabled: StateFlow<Boolean>,
     crossinline onBackPressedLogic: () -> Unit = {},
@@ -76,16 +77,22 @@ inline fun Fragment.addOnBackLogic(
     }
 }
 
+/** Path interpolator matching the predictive-back motion spec deceleration curve. */
 val GestureInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
 
+/** [ViewOutlineProvider] that applies rounded corners scaled with back-gesture progress. */
 class BackAnimationOutlineProvider : ViewOutlineProvider() {
+    /** Current corner radius in pixels, driven by [progress]. */
     var radius = 0f
+
+    /** Gesture progress in [0, 1]; setting it updates [radius] proportionally. */
     var progress: Float = 0f
         set(value) {
             field = value
             radius = value * 100f
         }
 
+    /** Applies a rounded-rectangle outline scaled to the current [radius]. */
     override fun getOutline(
         view: View,
         outline: Outline,
@@ -94,6 +101,7 @@ class BackAnimationOutlineProvider : ViewOutlineProvider() {
     }
 }
 
+/** Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back. */
 fun AppCompatActivity.setCustomBackAnimation(
     animatedView: View,
     backEnabled: StateFlow<Boolean>? = null,
@@ -157,6 +165,7 @@ fun AppCompatActivity.setCustomBackAnimation(
     backEnabled?.apply { lifecycleScope.launch { flowWithLifecycle(lifecycle).collectLatest { enable -> callback.isEnabled = enable } } }
 }
 
+/** Makes the activity window transparent or restores its default background, required for the predictive-back animation. */
 fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
     window.apply {
         if (transparent) {
@@ -171,6 +180,7 @@ fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
     }
 }
 
+/** The theme-appropriate default window background color for this activity. */
 val AppCompatActivity.defaultWindowBackground: Int
     @SuppressLint("RestrictedApi", "PrivateResource")
     get() = if (isLightTheme(this)) sesl_round_and_bgcolor_light else sesl_round_and_bgcolor_dark
