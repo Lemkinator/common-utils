@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Pre-built About Me screen that presents developer info and an optional share-app action. */
+@Deprecated("Use CommonUtilsAboutMeFragment with Jetpack Navigation.")
 class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutMeBinding
     private val appBarListener: AboutAppBarListener = AboutAppBarListener()

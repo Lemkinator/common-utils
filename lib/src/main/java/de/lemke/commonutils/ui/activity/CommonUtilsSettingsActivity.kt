@@ -29,6 +29,7 @@ import de.lemke.commonutils.setCustomBackAnimation
 import kotlinx.coroutines.launch
 
 /** Pre-built settings screen backed by a [PreferenceFragmentCompat] with common-utils defaults. */
+@Deprecated("Use CommonUtilsSettingsFragment with Jetpack Navigation.")
 class CommonUtilsSettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsCommonUtilsBinding
 

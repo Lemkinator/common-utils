@@ -54,6 +54,7 @@ import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Pre-built About screen that shows the app version, optional text, and an in-app update check. */
+@Deprecated("Use CommonUtilsAboutFragment with Jetpack Navigation.")
 class CommonUtilsAboutActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutBinding
     private lateinit var appUpdateManager: AppUpdateManager

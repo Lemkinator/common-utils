@@ -42,6 +42,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Pre-built onboarding (OOBE) screen that presents feature tips and a TOS acceptance flow. */
+@Deprecated("Use CommonUtilsOOBEFragment with Jetpack Navigation.")
 class CommonUtilsOOBEActivity : AppCompatActivity() {
     private lateinit var binding: ActivityOobeBinding
 
