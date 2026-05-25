@@ -3,7 +3,7 @@
 #noinspection UnusedVersionCatalogEntry
 common-utils = "1.0.0"
 
-aboutlibraries = "14.2.0"
+aboutlibraries = "14.2.1"
 # activity-compose 1.13.x requires androidx.core.app.PictureInPictureProvider, absent in the androidx.core
 # version bundled by oneui-design. Upgrading is blocked until oneui-design ships a compatible core.
 #noinspection GradleDependency
