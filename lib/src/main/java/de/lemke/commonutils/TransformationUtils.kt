@@ -45,7 +45,7 @@ private const val DEFAULT_FADE_MODE = FADE_MODE_CROSS
 
 /**
  * Extension function to get a configured MaterialContainerTransform for the Activity.
- * @receiver Activity The activity where the transition will be applied.
+ * @receiver The activity where the transition will be applied.
  * @return MaterialContainerTransform The configured container transform.
  */
 fun Activity.getTransitionContainerTransform() =
@@ -59,7 +59,7 @@ fun Activity.getTransitionContainerTransform() =
 /**
  * Prepares the activity for a shared element transition from this activity.
  * This should be called in the source activity before onCreate.
- * @receiver Activity The activity to prepare.
+ * @receiver The activity to prepare.
  */
 fun Activity.prepareActivityTransformationFrom() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
@@ -70,7 +70,7 @@ fun Activity.prepareActivityTransformationFrom() {
 /**
  * Prepares the activity for a shared element transition to this activity.
  * This should be called in the destination activity before onCreate.
- * @receiver Activity The activity to prepare.
+ * @receiver The activity to prepare.
  */
 fun Activity.prepareActivityTransformationTo() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
@@ -89,7 +89,7 @@ fun Activity.prepareActivityTransformationTo() {
 /**
  * Prepares the activity for a shared element transition both from and to this activity.
  * This should be called before onCreate.
- * @receiver Activity The activity to prepare.
+ * @receiver The activity to prepare.
  */
 fun Activity.prepareActivityTransformationBetween() {
     prepareActivityTransformationFrom()
