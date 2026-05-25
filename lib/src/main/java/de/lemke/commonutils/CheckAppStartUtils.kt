@@ -77,6 +77,10 @@ fun AppCompatActivity.checkAppStart(
  *
  * @return `true` if OOBE was opened and the current activity finished.
  */
+@Deprecated(
+    "Use checkAppStart() and set the NavGraph start destination to commonutils_oobe_dest when shouldShowOOBE is true.",
+    ReplaceWith("checkAppStart(versionCode, versionName).shouldShowOOBE"),
+)
 fun AppCompatActivity.checkAppStartAndHandleOOBE(
     versionCode: Int,
     versionName: String,
@@ -90,6 +94,10 @@ fun AppCompatActivity.checkAppStartAndHandleOOBE(
 }
 
 /** Starts [CommonUtilsOOBEActivity] and finishes this activity with a fade transition. */
+@Deprecated(
+    "Use checkAppStart() and set the NavGraph start destination to commonutils_oobe_dest when shouldShowOOBE is true.",
+    ReplaceWith("checkAppStart(versionCode, versionName).shouldShowOOBE"),
+)
 fun AppCompatActivity.openOOBEAndFinish() {
     startActivity(Intent(applicationContext, CommonUtilsOOBEActivity::class.java))
     @Suppress("DEPRECATION")
@@ -110,7 +118,7 @@ class AppStart(
     val tosVersion: Int,
     val acceptedTosVersion: Int,
 ) {
-    /** `true` if no previous install was recorded. */
+    /** `true` if no previous installation was recorded. */
     val isFirstTime get() = lastVersionCode == -1
 
     /** `true` if the app was upgraded since the last launch. */
