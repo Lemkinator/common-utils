@@ -17,6 +17,7 @@
     <string name="commonutils_contact_me">Kontaktier mich (E-Mail)</string>
 
     <!--About-->
+    <string name="commonutils_about_app">Über die App</string>
     <string name="commonutils_open_in_playstore">In Play Store öffnen</string>
     <string name="commonutils_open_source_licenses">Open-Source-Lizenzen</string>
 

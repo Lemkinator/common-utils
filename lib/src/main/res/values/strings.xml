@@ -51,6 +51,7 @@
     <string name="commonutils_contact_me">Contact me (e-mail)</string>
 
     <!--About-->
+    <string name="commonutils_about_app">About app</string>
     <string name="commonutils_open_in_playstore">Open in Play Store</string>
     <string name="commonutils_open_source_licenses">Open source licenses</string>
 
@@ -129,9 +130,9 @@
     <string name="commonutils_no_entry">No entry</string>
     <string name="commonutils_no_results_found">No results found</string>
     <string name="commonutils_custom">Custom</string>
-    <string name="commonutils_downloads">Downloads</string>
-    <string name="commonutils_pictures">Pictures</string>
-    <string name="commonutils_dcim">DCIM</string>
+    <string name="commonutils_downloads" translatable="false">Downloads</string>
+    <string name="commonutils_pictures" translatable="false">Pictures</string>
+    <string name="commonutils_dcim" translatable="false">DCIM</string>
     <string name="commonutils_reset">Reset</string>
     <string name="commonutils_pause">Pause</string>
     <string name="commonutils_resume">Resume</string>
