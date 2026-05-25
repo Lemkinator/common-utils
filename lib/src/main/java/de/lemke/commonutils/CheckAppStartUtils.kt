@@ -46,19 +46,29 @@ fun AppCompatActivity.checkAppStart(
     val acceptedTosVersion = commonUtilsSettings.acceptedTosVersion
     val result =
         when {
-            lastVersionCode == -1 -> FIRST_TIME
-            lastVersionCode < versionCode -> FIRST_TIME_VERSION
+            lastVersionCode == -1 -> {
+                FIRST_TIME
+            }
+
+            lastVersionCode < versionCode -> {
+                FIRST_TIME_VERSION
+            }
+
             lastVersionCode > versionCode -> {
                 Log.w(TAG, "Current version code ($versionCode) is less then the one recognized on last startup ($lastVersionCode). ")
                 Log.w(TAG, "Defensively assuming normal app start.")
                 NORMAL
             }
 
-            else -> NORMAL
+            else -> {
+                NORMAL
+            }
         }
     return AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
         Log.d(TAG, this.toString())
-        if (result == FIRST_TIME_VERSION && !tosAccepted) CommonUtilsOOBEActivity.tosChanged = true
+        if (result == FIRST_TIME_VERSION && !tosAccepted) {
+            CommonUtilsOOBEActivity.tosChanged = true
+        }
     }
 }
 
