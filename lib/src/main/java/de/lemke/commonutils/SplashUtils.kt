@@ -41,9 +41,9 @@ private const val SPLASH_SCALE_FACTOR = 1.2f
 fun AppCompatActivity.configureCommonUtilsSplashScreen(
     splashScreen: SplashScreen,
     root: View,
-    condition: KeepOnScreenCondition,
+    condition: KeepOnScreenCondition? = null,
 ) {
-    splashScreen.setKeepOnScreenCondition(condition)
+    condition?.let { splashScreen.setKeepOnScreenCondition(it) }
     splashScreen.setOnExitAnimationListener { splash ->
         val splashAnimator: ObjectAnimator =
             ObjectAnimator.ofPropertyValuesHolder(
