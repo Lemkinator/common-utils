@@ -19,39 +19,41 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 
-class SaveLocationTest : ShouldSpec({
-    context("fromStringOrDefault") {
-        should("return CUSTOM for CUSTOM string") {
-            SaveLocation.fromStringOrDefault("CUSTOM") shouldBe SaveLocation.CUSTOM
+class SaveLocationTest : ShouldSpec(
+    {
+        context("fromStringOrDefault") {
+            should("return CUSTOM for CUSTOM string") {
+                SaveLocation.fromStringOrDefault("CUSTOM") shouldBe SaveLocation.CUSTOM
+            }
+            should("return DOWNLOADS for DOWNLOADS string") {
+                SaveLocation.fromStringOrDefault("DOWNLOADS") shouldBe SaveLocation.DOWNLOADS
+            }
+            should("return PICTURES for PICTURES string") {
+                SaveLocation.fromStringOrDefault("PICTURES") shouldBe SaveLocation.PICTURES
+            }
+            should("return DCIM for DCIM string") {
+                SaveLocation.fromStringOrDefault("DCIM") shouldBe SaveLocation.DCIM
+            }
+            should("return default for null") {
+                SaveLocation.fromStringOrDefault(null) shouldBe SaveLocation.default
+            }
+            should("return default for unknown string") {
+                SaveLocation.fromStringOrDefault("UNKNOWN") shouldBe SaveLocation.default
+            }
+            should("be case-sensitive") {
+                SaveLocation.fromStringOrDefault("custom") shouldBe SaveLocation.default
+            }
         }
-        should("return DOWNLOADS for DOWNLOADS string") {
-            SaveLocation.fromStringOrDefault("DOWNLOADS") shouldBe SaveLocation.DOWNLOADS
+        context("entryValues") {
+            should("contain all enum names in order") {
+                SaveLocation.entryValues.toList() shouldContainExactly
+                    listOf("CUSTOM", "DOWNLOADS", "PICTURES", "DCIM")
+            }
         }
-        should("return PICTURES for PICTURES string") {
-            SaveLocation.fromStringOrDefault("PICTURES") shouldBe SaveLocation.PICTURES
+        context("default") {
+            should("be CUSTOM") {
+                SaveLocation.default shouldBe SaveLocation.CUSTOM
+            }
         }
-        should("return DCIM for DCIM string") {
-            SaveLocation.fromStringOrDefault("DCIM") shouldBe SaveLocation.DCIM
-        }
-        should("return default for null") {
-            SaveLocation.fromStringOrDefault(null) shouldBe SaveLocation.default
-        }
-        should("return default for unknown string") {
-            SaveLocation.fromStringOrDefault("UNKNOWN") shouldBe SaveLocation.default
-        }
-        should("be case-sensitive") {
-            SaveLocation.fromStringOrDefault("custom") shouldBe SaveLocation.default
-        }
-    }
-    context("entryValues") {
-        should("contain all enum names in order") {
-            SaveLocation.entryValues.toList() shouldContainExactly
-                listOf("CUSTOM", "DOWNLOADS", "PICTURES", "DCIM")
-        }
-    }
-    context("default") {
-        should("be CUSTOM") {
-            SaveLocation.default shouldBe SaveLocation.CUSTOM
-        }
-    }
-})
+    },
+)

@@ -20,16 +20,18 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlinx.coroutines.Dispatchers
 
-class CoroutineDispatchersModuleTest : ShouldSpec({
-    extensions(MainDispatcherListener())
+class CoroutineDispatchersModuleTest : ShouldSpec(
+    {
+        extensions(MainDispatcherListener())
 
-    should("provideIo return Dispatchers.IO") {
-        CoroutineDispatchersModule.provideIo() shouldBeSameInstanceAs Dispatchers.IO
-    }
-    should("provideDefault return Dispatchers.Default") {
-        CoroutineDispatchersModule.provideDefault() shouldBeSameInstanceAs Dispatchers.Default
-    }
-    should("provideMain return Dispatchers.Main") {
-        CoroutineDispatchersModule.provideMain() shouldBeSameInstanceAs Dispatchers.Main
-    }
-})
+        should("provideIo return Dispatchers.IO") {
+            CoroutineDispatchersModule.provideIo() shouldBeSameInstanceAs Dispatchers.IO
+        }
+        should("provideDefault return Dispatchers.Default") {
+            CoroutineDispatchersModule.provideDefault() shouldBeSameInstanceAs Dispatchers.Default
+        }
+        should("provideMain return Dispatchers.Main") {
+            CoroutineDispatchersModule.provideMain() shouldBeSameInstanceAs Dispatchers.Main
+        }
+    },
+)

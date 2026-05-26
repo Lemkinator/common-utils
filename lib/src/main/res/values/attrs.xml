@@ -7,7 +7,7 @@
 
     <declare-styleable name="NoEntryView">
         <!-- No entry text to display. -->
-        <attr name="noEntryText" format="string"/>
+        <attr name="noEntryText" format="string" />
     </declare-styleable>
 
 </resources>

@@ -24,78 +24,80 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 
-class BasicUtilsTest : ShouldSpec({
-    context("saveSearchAndActionMode") {
-        should("store search mode flag when true") {
-            val bundle = mockk<Bundle>(relaxed = true)
-            bundle.saveSearchAndActionMode(isSearchMode = true)
-            verify { bundle.putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true) }
+class BasicUtilsTest : ShouldSpec(
+    {
+        context("saveSearchAndActionMode") {
+            should("store search mode flag when true") {
+                val bundle = mockk<Bundle>(relaxed = true)
+                bundle.saveSearchAndActionMode(isSearchMode = true)
+                verify { bundle.putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true) }
+            }
+            should("omit search mode flag when false") {
+                val bundle = mockk<Bundle>(relaxed = true)
+                bundle.saveSearchAndActionMode(isSearchMode = false)
+                verify(exactly = 0) { bundle.putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, any()) }
+            }
+            should("store action mode flag and IDs when true") {
+                val bundle = mockk<Bundle>(relaxed = true)
+                val ids = setOf(1L, 2L, 3L)
+                bundle.saveSearchAndActionMode(isActionMode = true, selectedIds = ids)
+                verify { bundle.putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true) }
+                verify { bundle.putLongArray(COMMONUTILS_KEY_SELECTED_IDS, match { it.contentEquals(ids.toLongArray()) }) }
+            }
+            should("omit action mode data when false") {
+                val bundle = mockk<Bundle>(relaxed = true)
+                bundle.saveSearchAndActionMode(isActionMode = false)
+                verify(exactly = 0) { bundle.putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, any()) }
+                verify(exactly = 0) { bundle.putLongArray(any(), any()) }
+            }
+            should("store both modes simultaneously") {
+                val bundle = mockk<Bundle>(relaxed = true)
+                bundle.saveSearchAndActionMode(isSearchMode = true, isActionMode = true, selectedIds = setOf(42L))
+                verify { bundle.putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true) }
+                verify { bundle.putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true) }
+            }
         }
-        should("omit search mode flag when false") {
-            val bundle = mockk<Bundle>(relaxed = true)
-            bundle.saveSearchAndActionMode(isSearchMode = false)
-            verify(exactly = 0) { bundle.putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, any()) }
+        context("restoreSearchAndActionMode") {
+            should("call onSearchMode when flag set") {
+                val bundle = mockk<Bundle>()
+                every { bundle.getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE) } returns true
+                every { bundle.getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE) } returns false
+                var called = false
+                bundle.restoreSearchAndActionMode(onSearchMode = { called = true })
+                called.shouldBeTrue()
+            }
+            should("skip onSearchMode when flag not set") {
+                val bundle = mockk<Bundle>()
+                every { bundle.getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE) } returns false
+                every { bundle.getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE) } returns false
+                var called = false
+                bundle.restoreSearchAndActionMode(onSearchMode = { called = true })
+                called.shouldBeFalse()
+            }
+            should("call onActionMode with IDs") {
+                val bundle = mockk<Bundle>()
+                every { bundle.getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE) } returns false
+                every { bundle.getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE) } returns true
+                every { bundle.getLongArray(COMMONUTILS_KEY_SELECTED_IDS) } returns longArrayOf(10L, 20L)
+                var receivedIds: Set<Long>? = null
+                bundle.restoreSearchAndActionMode(onActionMode = { receivedIds = it })
+                receivedIds shouldBe setOf(10L, 20L)
+            }
+            should("pass empty set when getLongArray returns null") {
+                val bundle = mockk<Bundle>()
+                every { bundle.getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE) } returns false
+                every { bundle.getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE) } returns true
+                every { bundle.getLongArray(COMMONUTILS_KEY_SELECTED_IDS) } returns null
+                var receivedIds: Set<Long>? = null
+                bundle.restoreSearchAndActionMode(onActionMode = { receivedIds = it })
+                receivedIds shouldBe emptySet()
+            }
+            should("call bundleIsNull when receiver is null") {
+                val bundle: Bundle? = null
+                var called = false
+                bundle.restoreSearchAndActionMode(bundleIsNull = { called = true })
+                called.shouldBeTrue()
+            }
         }
-        should("store action mode flag and IDs when true") {
-            val bundle = mockk<Bundle>(relaxed = true)
-            val ids = setOf(1L, 2L, 3L)
-            bundle.saveSearchAndActionMode(isActionMode = true, selectedIds = ids)
-            verify { bundle.putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true) }
-            verify { bundle.putLongArray(COMMONUTILS_KEY_SELECTED_IDS, match { it.contentEquals(ids.toLongArray()) }) }
-        }
-        should("omit action mode data when false") {
-            val bundle = mockk<Bundle>(relaxed = true)
-            bundle.saveSearchAndActionMode(isActionMode = false)
-            verify(exactly = 0) { bundle.putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, any()) }
-            verify(exactly = 0) { bundle.putLongArray(any(), any()) }
-        }
-        should("store both modes simultaneously") {
-            val bundle = mockk<Bundle>(relaxed = true)
-            bundle.saveSearchAndActionMode(isSearchMode = true, isActionMode = true, selectedIds = setOf(42L))
-            verify { bundle.putBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE, true) }
-            verify { bundle.putBoolean(COMMONUTILS_KEY_IS_ACTION_MODE, true) }
-        }
-    }
-    context("restoreSearchAndActionMode") {
-        should("call onSearchMode when flag set") {
-            val bundle = mockk<Bundle>()
-            every { bundle.getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE) } returns true
-            every { bundle.getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE) } returns false
-            var called = false
-            bundle.restoreSearchAndActionMode(onSearchMode = { called = true })
-            called.shouldBeTrue()
-        }
-        should("skip onSearchMode when flag not set") {
-            val bundle = mockk<Bundle>()
-            every { bundle.getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE) } returns false
-            every { bundle.getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE) } returns false
-            var called = false
-            bundle.restoreSearchAndActionMode(onSearchMode = { called = true })
-            called.shouldBeFalse()
-        }
-        should("call onActionMode with IDs") {
-            val bundle = mockk<Bundle>()
-            every { bundle.getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE) } returns false
-            every { bundle.getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE) } returns true
-            every { bundle.getLongArray(COMMONUTILS_KEY_SELECTED_IDS) } returns longArrayOf(10L, 20L)
-            var receivedIds: Set<Long>? = null
-            bundle.restoreSearchAndActionMode(onActionMode = { receivedIds = it })
-            receivedIds shouldBe setOf(10L, 20L)
-        }
-        should("pass empty set when getLongArray returns null") {
-            val bundle = mockk<Bundle>()
-            every { bundle.getBoolean(COMMONUTILS_KEY_IS_SEARCH_MODE) } returns false
-            every { bundle.getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE) } returns true
-            every { bundle.getLongArray(COMMONUTILS_KEY_SELECTED_IDS) } returns null
-            var receivedIds: Set<Long>? = null
-            bundle.restoreSearchAndActionMode(onActionMode = { receivedIds = it })
-            receivedIds shouldBe emptySet()
-        }
-        should("call bundleIsNull when receiver is null") {
-            val bundle: Bundle? = null
-            var called = false
-            bundle.restoreSearchAndActionMode(bundleIsNull = { called = true })
-            called.shouldBeTrue()
-        }
-    }
-})
+    },
+)

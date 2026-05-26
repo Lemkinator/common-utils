@@ -24,43 +24,45 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 
-class CoroutineContractsTest : ShouldSpec({
-    context("StateFlow") {
-        should("emit initial value on subscription") {
-            runTest {
-                MutableStateFlow(42).test {
-                    awaitItem() shouldBe 42
-                    cancel()
+class CoroutineContractsTest : ShouldSpec(
+    {
+        context("StateFlow") {
+            should("emit initial value on subscription") {
+                runTest {
+                    MutableStateFlow(42).test {
+                        awaitItem() shouldBe 42
+                        cancel()
+                    }
+                }
+            }
+            should("emit subsequent updates") {
+                runTest {
+                    val flow = MutableStateFlow(0)
+                    flow.test {
+                        awaitItem() // consume initial
+                        flow.value = 7
+                        awaitItem() shouldBe 7
+                        cancel()
+                    }
                 }
             }
         }
-        should("emit subsequent updates") {
-            runTest {
-                val flow = MutableStateFlow(0)
-                flow.test {
-                    awaitItem() // consume initial
-                    flow.value = 7
-                    awaitItem() shouldBe 7
-                    cancel()
+        context("Channel") {
+            should("deliver buffered items via receiveAsFlow") {
+                runTest {
+                    val channel = Channel<String>(Channel.BUFFERED)
+                    launch {
+                        channel.send("a")
+                        channel.send("b")
+                        channel.close()
+                    }
+                    channel.receiveAsFlow().test {
+                        awaitItem() shouldBe "a"
+                        awaitItem() shouldBe "b"
+                        awaitComplete()
+                    }
                 }
             }
         }
-    }
-    context("Channel") {
-        should("deliver buffered items via receiveAsFlow") {
-            runTest {
-                val channel = Channel<String>(Channel.BUFFERED)
-                launch {
-                    channel.send("a")
-                    channel.send("b")
-                    channel.close()
-                }
-                channel.receiveAsFlow().test {
-                    awaitItem() shouldBe "a"
-                    awaitItem() shouldBe "b"
-                    awaitComplete()
-                }
-            }
-        }
-    }
-})
+    },
+)

@@ -18,58 +18,60 @@ package de.lemke.commonutils
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 
-class URLUtilsTest : ShouldSpec({
-    context("withHttps") {
-        should("prepend https to bare domain") {
-            "example.com".withHttps() shouldBe "https://example.com"
+class URLUtilsTest : ShouldSpec(
+    {
+        context("withHttps") {
+            should("prepend https to bare domain") {
+                "example.com".withHttps() shouldBe "https://example.com"
+            }
+            should("leave https URL unchanged") {
+                "https://example.com".withHttps() shouldBe "https://example.com"
+            }
+            should("leave http URL unchanged") {
+                "http://example.com".withHttps() shouldBe "http://example.com"
+            }
+            should("prepend https to path without scheme") {
+                "example.com/path".withHttps() shouldBe "https://example.com/path"
+            }
         }
-        should("leave https URL unchanged") {
-            "https://example.com".withHttps() shouldBe "https://example.com"
+        context("withoutHttps") {
+            should("remove https scheme") {
+                "https://example.com".withoutHttps() shouldBe "example.com"
+            }
+            should("remove http scheme") {
+                "http://example.com".withoutHttps() shouldBe "example.com"
+            }
+            should("remove trailing slash") {
+                "https://example.com/".withoutHttps() shouldBe "example.com"
+            }
+            should("leave plain domain unchanged") {
+                "example.com".withoutHttps() shouldBe "example.com"
+            }
+            should("strip https then http from doubly-prefixed input") {
+                "https://http://example.com".withoutHttps() shouldBe "example.com"
+            }
         }
-        should("leave http URL unchanged") {
-            "http://example.com".withHttps() shouldBe "http://example.com"
+        context("urlEncodeAmpersand") {
+            should("replace single ampersand") {
+                "a&b".urlEncodeAmpersand() shouldBe "a%26b"
+            }
+            should("replace multiple ampersands") {
+                "a&b&c".urlEncodeAmpersand() shouldBe "a%26b%26c"
+            }
+            should("leave string without ampersand unchanged") {
+                "hello".urlEncodeAmpersand() shouldBe "hello"
+            }
         }
-        should("prepend https to path without scheme") {
-            "example.com/path".withHttps() shouldBe "https://example.com/path"
+        context("urlEncode") {
+            should("encode space as plus") {
+                "hello world".urlEncode() shouldBe "hello+world"
+            }
+            should("encode special characters") {
+                "a&b".urlEncode() shouldBe "a%26b"
+            }
+            should("leave alphanumeric unchanged") {
+                "abc123".urlEncode() shouldBe "abc123"
+            }
         }
-    }
-    context("withoutHttps") {
-        should("remove https scheme") {
-            "https://example.com".withoutHttps() shouldBe "example.com"
-        }
-        should("remove http scheme") {
-            "http://example.com".withoutHttps() shouldBe "example.com"
-        }
-        should("remove trailing slash") {
-            "https://example.com/".withoutHttps() shouldBe "example.com"
-        }
-        should("leave plain domain unchanged") {
-            "example.com".withoutHttps() shouldBe "example.com"
-        }
-        should("strip https then http from doubly-prefixed input") {
-            "https://http://example.com".withoutHttps() shouldBe "example.com"
-        }
-    }
-    context("urlEncodeAmpersand") {
-        should("replace single ampersand") {
-            "a&b".urlEncodeAmpersand() shouldBe "a%26b"
-        }
-        should("replace multiple ampersands") {
-            "a&b&c".urlEncodeAmpersand() shouldBe "a%26b%26c"
-        }
-        should("leave string without ampersand unchanged") {
-            "hello".urlEncodeAmpersand() shouldBe "hello"
-        }
-    }
-    context("urlEncode") {
-        should("encode space as plus") {
-            "hello world".urlEncode() shouldBe "hello+world"
-        }
-        should("encode special characters") {
-            "a&b".urlEncode() shouldBe "a%26b"
-        }
-        should("leave alphanumeric unchanged") {
-            "abc123".urlEncode() shouldBe "abc123"
-        }
-    }
-})
+    },
+)

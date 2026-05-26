@@ -8,7 +8,7 @@
         <location
             file="src/main/res/drawable/about_page_insta.xml"
             line="15"
-            column="31"/>
+            column="31" />
     </issue>
 
     <issue
@@ -19,7 +19,7 @@
         <location
             file="src/main/res/drawable/ic_branding.xml"
             line="44"
-            column="35"/>
+            column="35" />
     </issue>
 
     <issue
@@ -30,7 +30,7 @@
         <location
             file="src/main/res/drawable/ic_branding.xml"
             line="54"
-            column="35"/>
+            column="35" />
     </issue>
 
     <issue
@@ -41,7 +41,7 @@
         <location
             file="src/main/res/layout/activity_about.xml"
             line="6"
-            column="5"/>
+            column="5" />
     </issue>
 
     <issue
@@ -52,7 +52,7 @@
         <location
             file="src/main/res/layout/activity_about_me.xml"
             line="7"
-            column="5"/>
+            column="5" />
     </issue>
 
     <issue
@@ -63,7 +63,7 @@
         <location
             file="src/main/res/layout/activity_settings_common_utils.xml"
             line="6"
-            column="5"/>
+            column="5" />
     </issue>
 
 </issues>
