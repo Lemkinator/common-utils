@@ -92,6 +92,8 @@ dependencies {
     implementation(libs.review)
     implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.ui.tooling.preview)
+    debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
     api(libs.androidx.navigation.fragment.ktx)
     api(libs.core.splashscreen)
@@ -126,6 +128,7 @@ kover {
                     "dagger.hilt.*",
                     "hilt_aggregated_deps.*",
                     "de.lemke.commonutils.di.*",
+                    "de.lemke.commonutils.ui.*",
                 )
             }
         }
