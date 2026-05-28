@@ -20,74 +20,28 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.text.SpannableString
 import androidx.preference.PreferenceFragmentCompat
-import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
-import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
-import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
-import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
+import de.lemke.commonutils.ui.fragment.CommonUtilsAboutFragment
+import de.lemke.commonutils.ui.fragment.CommonUtilsAboutMeFragment
+import de.lemke.commonutils.ui.fragment.CommonUtilsOOBEFragment
+import de.lemke.commonutils.ui.fragment.CommonUtilsSettingsFragment
 
-private const val TAG = "ActivityUtils"
-
-/** Configures the OOBE activity to launch [nextActivity] on completion. */
-fun setupCommonUtilsOOBEActivity(
-    setAcceptedTosVersion: Boolean? = null,
-    nextActivity: Class<*>,
-) {
-    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.setAcceptedTosVersion = it }
-    CommonUtilsOOBEActivity.nextActivity = nextActivity
-}
-
-/** Configures the OOBE activity to invoke [onContinue] when the user proceeds. */
-fun setupCommonUtilsOOBEActivity(
-    setAcceptedTosVersion: Boolean? = null,
-    onContinue: (() -> Unit),
-) {
-    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.setAcceptedTosVersion = it }
-    CommonUtilsOOBEActivity.onContinue = onContinue
-}
-
-/** Configures the settings activity with the given preference XML resources and optional init block. */
-fun setupCommonUtilsSettingsActivity(
-    vararg preferences: Int,
+/** Configures the OOBE fragment navigation action and optional fragment-level settings. */
+fun setupCommonUtilsNavGraph(
+    oobeCompleteNavAction: Int = 0,
+    oobeTosVersion: Boolean = true,
+    preferences: List<Int> = CommonUtilsSettingsFragment.preferences,
     initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {},
-) {
-    CommonUtilsSettingsActivity.preferences = preferences.toList()
-    CommonUtilsSettingsActivity.initPreferences = initPreferences
-}
-
-/** Configures the settings activity with the given preference XML resource list and optional init block. */
-fun setupCommonUtilsSettingsActivity(
-    preferences: List<Int>,
-    initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {},
-) {
-    CommonUtilsSettingsActivity.preferences = preferences
-    CommonUtilsSettingsActivity.initPreferences = initPreferences
-}
-
-/** Configures the About Me activity with an optional share-app callback. */
-fun setupCommonUtilsAboutMeActivity(onShareApp: (activity: Activity) -> Unit = {}) {
-    CommonUtilsAboutMeActivity.apply {
-        this.onShareApp = onShareApp
-    }
-}
-
-/** Configures the About activity with a static version string and optional extra text. */
-fun setupCommonUtilsAboutActivity(
-    appVersion: String,
+    appVersion: String = "",
+    getAppVersion: suspend () -> String = { "" },
     optionalText: SpannableString? = null,
+    onShareApp: (activity: Activity) -> Unit = {},
 ) {
-    CommonUtilsAboutActivity.apply {
-        this.appVersion = appVersion
-        this.optionalText = optionalText
-    }
-}
-
-/** Configures the About activity with a suspend function that resolves the version string at display time and optional extra text. */
-fun setupCommonUtilsAboutActivity(
-    getAppVersion: suspend () -> String,
-    optionalText: SpannableString? = null,
-) {
-    CommonUtilsAboutActivity.apply {
-        this.getAppVersion = getAppVersion
-        this.optionalText = optionalText
-    }
+    CommonUtilsOOBEFragment.onCompleteNavAction = oobeCompleteNavAction
+    CommonUtilsOOBEFragment.setAcceptedTosVersion = oobeTosVersion
+    CommonUtilsSettingsFragment.preferences = preferences
+    CommonUtilsSettingsFragment.initPreferences = initPreferences
+    CommonUtilsAboutFragment.appVersion = appVersion
+    CommonUtilsAboutFragment.getAppVersion = getAppVersion
+    CommonUtilsAboutFragment.optionalText = optionalText
+    CommonUtilsAboutMeFragment.onShareApp = onShareApp
 }
