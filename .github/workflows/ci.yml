@@ -53,7 +53,7 @@ jobs:
   assemble:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [static-analysis, unit-tests]
+    needs: [ static-analysis, unit-tests ]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
