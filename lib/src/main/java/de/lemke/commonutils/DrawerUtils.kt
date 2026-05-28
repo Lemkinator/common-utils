@@ -17,28 +17,59 @@
 
 package de.lemke.commonutils
 
-import android.widget.ImageButton
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.fragment.app.Fragment
 import com.google.android.material.navigation.NavigationView
-import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.Badge
 import dev.oneuiproject.oneui.layout.NavDrawerLayout
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import dev.oneuiproject.oneui.R as iconsR
-import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "DrawerUtils"
 private const val NAV_RAIL_MIN_SIDE_MARGIN_DP = 14
 
-/** Sets up the drawer header button with an info icon navigating to [CommonUtilsAboutActivity] and configures the nav rail. */
-fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
+/** Implemented by the host activity to expose the [NavDrawerLayout] to all hosted fragments. */
+interface DrawerHost {
+    val drawerLayout: NavDrawerLayout
+}
+
+/** Returns the [NavDrawerLayout] from the host activity. Requires the activity to implement [DrawerHost]. */
+val Fragment.drawerLayout: NavDrawerLayout get() = (requireActivity() as DrawerHost).drawerLayout
+
+/**
+ * Clears [CoordinatorLayout]'s `mLastNestedScrollingChild` on the [DrawerHost]'s
+ * [NavDrawerLayout] coordinator.
+ *
+ * **Why this exists:** Samsung's `AdaptiveCoordinatorLayout` stores a strong reference to the
+ * last nested-scrolling child and never clears it when the child is removed from the window.
+ * This prevents detached fragment view hierarchies from being GC'd after navigation.
+ *
+ * Call from [Fragment.onDestroyView] in any fragment with a scrollable view hosted inside a
+ * [DrawerHost] activity.
+ *
+ * TODO Remove once sesl-androidx `CoordinatorLayout` uses `WeakReference<View>` for
+ *  `mLastNestedScrollingChild` (fix tracked in sesl-androidx fix/memory-leaks).
+ */
+fun Fragment.clearLastNestedScrollingChild() {
+    try {
+        val coordinator = (requireActivity() as? DrawerHost)?.drawerLayout?.appBarLayout?.parent as? CoordinatorLayout
+        val field = CoordinatorLayout::class.java.getDeclaredField("mLastNestedScrollingChild")
+        field.isAccessible = true
+        field.set(coordinator, null)
+    } catch (_: Exception) {
+    }
+}
+
+/** Sets up the drawer header button with a custom click handler and configures the nav rail. */
+fun NavDrawerLayout.setupHeaderAndNavRail(
+    aboutApp: String,
+    onHeaderClick: () -> Unit,
+) {
     setupHeaderButton(
         icon = AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)!!,
         tooltipText = aboutApp,
-        listener = {
-            findViewById<ImageButton>(designR.id.oui_des_drawer_header_button)
-                .transformToActivity(CommonUtilsAboutActivity::class.java, transitionName = "CommonUtilsAboutAppTransition")
-        },
+        listener = { onHeaderClick() },
     )
     setNavRailContentMinSideMargin(NAV_RAIL_MIN_SIDE_MARGIN_DP)
     closeNavRailOnBack = true
