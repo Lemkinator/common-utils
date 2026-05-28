@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <issues format="6" by="lint 9.2.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.2.1)" variant="all" version="9.2.1">
+
     <issue
         id="VectorPath"
         message="Very long vector path (4007 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector."
@@ -36,21 +37,10 @@
     <issue
         id="Overdraw"
         message="Possible overdraw: Root element paints background `?roundedCornerColor` with a theme that also paints a background (inferred theme is `@android:style/Theme.Holo`)"
-        errorLine1="    android:background=&quot;?roundedCornerColor&quot;>"
+        errorLine1="    android:background=&quot;?roundedCornerColor&quot;"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/activity_about.xml"
-            line="6"
-            column="5" />
-    </issue>
-
-    <issue
-        id="Overdraw"
-        message="Possible overdraw: Root element paints background `?roundedCornerColor` with a theme that also paints a background (inferred theme is `@android:style/Theme.Holo`)"
-        errorLine1="    android:background=&quot;?roundedCornerColor&quot;>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_about_me.xml"
+            file="src/main/res/layout/fragment_about.xml"
             line="7"
             column="5" />
     </issue>
@@ -58,11 +48,11 @@
     <issue
         id="Overdraw"
         message="Possible overdraw: Root element paints background `?roundedCornerColor` with a theme that also paints a background (inferred theme is `@android:style/Theme.Holo`)"
-        errorLine1="    android:background=&quot;?roundedCornerColor&quot;"
+        errorLine1="    android:background=&quot;?roundedCornerColor&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/activity_settings_common_utils.xml"
-            line="6"
+            file="src/main/res/layout/fragment_about_me.xml"
+            line="7"
             column="5" />
     </issue>
 
