@@ -34,7 +34,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import de.lemke.commonutils.R
-import de.lemke.commonutils.advanceFirstRun
+import de.lemke.commonutils.advanceOnboarding
 import de.lemke.commonutils.databinding.ActivityOobeBinding
 import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
 import kotlinx.coroutines.delay
@@ -108,7 +108,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
             binding.oobeIntroFooterButtonProgress.isVisible = true
             lifecycleScope.launch {
                 delay(PROCEED_DELAY_MS)
-                advanceFirstRun()
+                advanceOnboarding()
             }
         }
     }

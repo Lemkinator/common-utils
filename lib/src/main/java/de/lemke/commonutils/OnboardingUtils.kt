@@ -27,46 +27,46 @@ import androidx.appcompat.app.AppCompatActivity
 import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 
-/** Intent extra marking an activity launched as a step of the first-run chain. */
-const val EXTRA_FIRST_RUN = "commonUtilsFirstRunStep"
+/** Intent extra marking an activity launched as a step of the onboarding chain. */
+const val EXTRA_ONBOARDING_STEP = "commonUtilsOnboardingStep"
 
-/** Intent extra (honored only when the host opts in) that bypasses the first-run chain, for benchmarks. */
-const val EXTRA_SKIP_FIRST_RUN = "commonUtilsSkipFirstRun"
+/** Intent extra (honored only when the host opts in) that bypasses the onboarding chain, for benchmarks. */
+const val EXTRA_SKIP_ONBOARDING = "commonUtilsSkipOnboarding"
 
 /** Intent extra carrying the class name of the main activity to launch when the chain completes. */
-const val EXTRA_FIRST_RUN_MAIN_ACTIVITY = "commonUtilsFirstRunMainActivity"
+const val EXTRA_ONBOARDING_MAIN_ACTIVITY = "commonUtilsOnboardingMainActivity"
 
 /** Intent extra carrying the ordered list of step activity class names (excluding OOBE). */
-const val EXTRA_FIRST_RUN_STEPS = "commonUtilsFirstRunSteps"
+const val EXTRA_ONBOARDING_STEPS = "commonUtilsOnboardingSteps"
 
-/** Holds the ordered first-run chain configuration. OOBE is always the implicit first step. */
-object FirstRunFlow {
+/** Holds the ordered onboarding chain configuration. OOBE is always the implicit first step. */
+object Onboarding {
     /** App-specific steps that run after OOBE, in order. */
     var steps: List<Class<out Activity>> = emptyList()
 }
 
 /**
- * Declares the app-specific first-run steps that run after OOBE. Apps with OOBE only may skip this.
+ * Declares the app-specific onboarding steps that run after OOBE. Apps with OOBE only may skip this.
  *
  * Call in your `Application.onCreate()` to ensure steps are restored if the process is killed
- * and recreated during the first-run flow.
+ * and recreated during the onboarding flow.
  */
-fun setupFirstRunFlow(steps: List<Class<out Activity>> = emptyList()) {
+fun setupOnboarding(steps: List<Class<out Activity>> = emptyList()) {
     require(CommonUtilsOOBEActivity::class.java !in steps) {
         "CommonUtilsOOBEActivity is the implicit first step and must not be included in steps"
     }
     require(steps.distinct().size == steps.size) {
-        "First-run steps must be unique; found duplicates: ${steps.groupBy { it }.filter { it.value.size > 1 }.keys}"
+        "Onboarding steps must be unique; found duplicates: ${steps.groupBy { it }.filter { it.value.size > 1 }.keys}"
     }
-    FirstRunFlow.steps = steps
+    Onboarding.steps = steps
 }
 
 /** The full ordered chain: OOBE first, then the configured steps. */
-private fun firstRunChain(): List<Class<out Activity>> = listOf(CommonUtilsOOBEActivity::class.java) + FirstRunFlow.steps
+private fun onboardingChain(): List<Class<out Activity>> = listOf(CommonUtilsOOBEActivity::class.java) + Onboarding.steps
 
 /** Returns the step after [current] in the chain, or `null` if [current] is the last step. */
-internal fun nextFirstRunStep(current: Class<*>): Class<out Activity>? {
-    val chain = firstRunChain()
+internal fun nextOnboardingStep(current: Class<*>): Class<out Activity>? {
+    val chain = onboardingChain()
     val index = chain.indexOfFirst { it == current }
     if (index == -1) return null
     return chain.getOrNull(index + 1)
@@ -80,23 +80,23 @@ internal fun nextFirstRunStep(current: Class<*>): Class<out Activity>? {
  *   activity; the value is available for `isFirstTimeVersion` etc. checks without calling
  *   `checkAppStart` again).
  *
- * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_FIRST_RUN], the chain is
+ * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_ONBOARDING], the chain is
  * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g. a BuildConfig flag).
  */
 @Suppress("ReturnCount")
-fun AppCompatActivity.handleFirstRun(
+fun AppCompatActivity.onboardIfNeeded(
     versionCode: Int,
     versionName: String,
     allowSkip: Boolean = false,
 ): AppStart? {
     val appStart = checkAppStart(versionCode, versionName)
-    if (allowSkip && intent.getBooleanExtra(EXTRA_SKIP_FIRST_RUN, false)) return appStart
+    if (allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false)) return appStart
     if (!appStart.shouldShowOOBE) return appStart
     startActivity(
         Intent(this, CommonUtilsOOBEActivity::class.java).apply {
-            putExtra(EXTRA_FIRST_RUN, true)
-            putExtra(EXTRA_FIRST_RUN_MAIN_ACTIVITY, this@handleFirstRun::class.java.name)
-            putStringArrayListExtra(EXTRA_FIRST_RUN_STEPS, ArrayList(FirstRunFlow.steps.map { it.name }))
+            putExtra(EXTRA_ONBOARDING_STEP, true)
+            putExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY, this@onboardIfNeeded::class.java.name)
+            putStringArrayListExtra(EXTRA_ONBOARDING_STEPS, ArrayList(Onboarding.steps.map { it.name }))
         },
     )
     @Suppress("DEPRECATION")
@@ -106,18 +106,18 @@ fun AppCompatActivity.handleFirstRun(
 }
 
 /**
- * Advances the first-run chain from the current step: finishes this activity and starts the next
- * step (as task root, tagged [EXTRA_FIRST_RUN]); or, past the last step, commits the completion
- * flag and starts the main activity.
+ * Advances the onboarding chain from the current step: finishes this activity and starts the next
+ * step (as task root, tagged [EXTRA_ONBOARDING_STEP]); or, past the last step, commits the
+ * completion flag and starts the main activity.
  *
  * Call from a step activity when the user finishes that step.
  */
-fun Activity.advanceFirstRun() {
+fun Activity.advanceOnboarding() {
     val mainActivityName =
-        checkNotNull(intent.getStringExtra(EXTRA_FIRST_RUN_MAIN_ACTIVITY)) {
-            "advanceFirstRun: EXTRA_FIRST_RUN_MAIN_ACTIVITY missing — was this activity started by handleFirstRun?"
+        checkNotNull(intent.getStringExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY)) {
+            "advanceOnboarding: EXTRA_ONBOARDING_MAIN_ACTIVITY missing — was this activity started by onboardIfNeeded?"
         }
-    val stepsNames = intent.getStringArrayListExtra(EXTRA_FIRST_RUN_STEPS) ?: arrayListOf()
+    val stepsNames = intent.getStringArrayListExtra(EXTRA_ONBOARDING_STEPS) ?: arrayListOf()
     val chain = listOf(CommonUtilsOOBEActivity::class.java.name) + stepsNames
     val index = chain.indexOf(this::class.java.name)
     val nextName = if (index != -1) chain.getOrNull(index + 1) else null
@@ -126,9 +126,9 @@ fun Activity.advanceFirstRun() {
         val nextClass = Class.forName(nextName) as Class<out Activity>
         startActivity(
             Intent(this, nextClass).apply {
-                putExtra(EXTRA_FIRST_RUN, true)
-                putExtra(EXTRA_FIRST_RUN_MAIN_ACTIVITY, mainActivityName)
-                putStringArrayListExtra(EXTRA_FIRST_RUN_STEPS, ArrayList(stepsNames))
+                putExtra(EXTRA_ONBOARDING_STEP, true)
+                putExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY, mainActivityName)
+                putStringArrayListExtra(EXTRA_ONBOARDING_STEPS, ArrayList(stepsNames))
             },
         )
     } else {
@@ -142,5 +142,5 @@ fun Activity.advanceFirstRun() {
     finishAfterTransition()
 }
 
-/** `true` if this activity was launched as a step of the first-run chain (vs. standalone). */
-fun Activity.isFirstRunStep(): Boolean = intent.getBooleanExtra(EXTRA_FIRST_RUN, false)
+/** `true` if this activity was launched as a step of the onboarding chain (vs. standalone). */
+fun Activity.isOnboardingStep(): Boolean = intent.getBooleanExtra(EXTRA_ONBOARDING_STEP, false)
