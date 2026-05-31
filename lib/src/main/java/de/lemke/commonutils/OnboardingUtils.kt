@@ -157,8 +157,8 @@ internal fun nextOnboardingStep(current: Class<*>): Class<out Activity>? {
  *
  * @return `null` if a first run was detected and OOBE was launched (the caller must `return`
  *   immediately so no UI is built). The [AppStart] for a normal start (proceed to build the
- *   activity; the value is available for `isFirstTimeVersion` etc. checks without calling
- *   `checkAppStart` again).
+ *   activity; the value is available for `isFirstTimeVersion` etc. checks without a second
+ *   call to `onboardIfNeeded`.
  *
  * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_ONBOARDING], the chain is
  * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g., a BuildConfig flag).
