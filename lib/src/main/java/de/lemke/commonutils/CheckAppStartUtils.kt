@@ -17,11 +17,6 @@
 
 package de.lemke.commonutils
 
-import android.R.anim.fade_in
-import android.R.anim.fade_out
-import android.content.Intent
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import de.lemke.commonutils.AppStartResult.FIRST_TIME
@@ -70,39 +65,6 @@ fun AppCompatActivity.checkAppStart(
             CommonUtilsOOBEActivity.tosChanged = true
         }
     }
-}
-
-/**
- * Checks the app start result and opens the OOBE activity if required.
- *
- * @return `true` if OOBE was opened and the current activity finished.
- */
-@Deprecated(
-    "Use checkAppStart() and set the NavGraph start destination to commonutils_oobe_dest when shouldShowOOBE is true.",
-    ReplaceWith("checkAppStart(versionCode, versionName).shouldShowOOBE"),
-)
-fun AppCompatActivity.checkAppStartAndHandleOOBE(
-    versionCode: Int,
-    versionName: String,
-    versionCodeThreshold: Int = -1,
-): Boolean {
-    if (checkAppStart(versionCode, versionName, versionCodeThreshold).shouldShowOOBE) {
-        openOOBEAndFinish()
-        return true
-    }
-    return false
-}
-
-/** Starts [CommonUtilsOOBEActivity] and finishes this activity with a fade transition. */
-@Deprecated(
-    "Use checkAppStart() and set the NavGraph start destination to commonutils_oobe_dest when shouldShowOOBE is true.",
-    ReplaceWith("checkAppStart(versionCode, versionName).shouldShowOOBE"),
-)
-fun AppCompatActivity.openOOBEAndFinish() {
-    startActivity(Intent(applicationContext, CommonUtilsOOBEActivity::class.java))
-    @Suppress("DEPRECATION")
-    if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
-    finishAfterTransition()
 }
 
 /** Result category of an app launch relative to the previously recorded version. */

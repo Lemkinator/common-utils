@@ -17,7 +17,6 @@ package de.lemke.commonutils.ui.activity
 
 import android.R.anim.fade_in
 import android.R.anim.fade_out
-import android.content.Intent
 import android.graphics.Color.TRANSPARENT
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
@@ -35,7 +34,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import de.lemke.commonutils.R
-import de.lemke.commonutils.data.commonUtilsSettings
+import de.lemke.commonutils.advanceFirstRun
 import de.lemke.commonutils.databinding.ActivityOobeBinding
 import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
 import kotlinx.coroutines.delay
@@ -107,15 +106,9 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
             binding.oobeIntroFooterTosText.isEnabled = false
             binding.oobeIntroFooterButton.isVisible = false
             binding.oobeIntroFooterButtonProgress.isVisible = true
-            if (setAcceptedTosVersion) commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
             lifecycleScope.launch {
                 delay(PROCEED_DELAY_MS)
-                nextActivity?.let {
-                    startActivity(Intent(this@CommonUtilsOOBEActivity, it))
-                    @Suppress("DEPRECATION")
-                    if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
-                    finishAfterTransition()
-                } ?: onContinue?.invoke() ?: finishAfterTransition()
+                advanceFirstRun()
             }
         }
     }
@@ -123,15 +116,6 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     companion object {
         private const val PROCEED_DELAY_MS = 500L
         private const val MIN_FULL_BUTTON_WIDTH_DP = 360
-
-        /** Whether to persist TOS acceptance when the user proceeds; set via [setupCommonUtilsOOBEActivity]. */
-        var setAcceptedTosVersion = true
-
-        /** Activity to launch after the user completes OOBE; mutually exclusive with [onContinue]. */
-        var nextActivity: Class<*>? = null
-
-        /** Callback invoked when the user completes OOBE; mutually exclusive with [nextActivity]. */
-        var onContinue: (() -> Unit)? = null
 
         /** `true` if TOS content changed since the user last accepted; shown as a "new TOS" notice. */
         var tosChanged = false
