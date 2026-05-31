@@ -20,7 +20,7 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 
-class CheckAppStartTest : ShouldSpec() {
+class AppStartTest : ShouldSpec() {
     private fun appStart(
         versionCode: Int = 10,
         versionName: String = "1.0",
