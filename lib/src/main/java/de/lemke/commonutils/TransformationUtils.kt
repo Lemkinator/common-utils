@@ -208,9 +208,10 @@ fun Activity.overrideFadeOpenTransition() {
 fun Activity.finishWithFade() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
         overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, fade_in, fade_out)
+        finishAfterTransition()
     } else {
+        finishAfterTransition()
         @Suppress("DEPRECATION")
         overridePendingTransition(fade_in, fade_out)
     }
-    finishAfterTransition()
 }

@@ -43,7 +43,7 @@ class AppStart(
     val isFirstTime get() = lastVersionCode == -1
 
     /** `true` if the app was upgraded since the last launch. */
-    val isFirstTimeVersion get() = lastVersionCode < versionCode
+    val isFirstTimeVersion get() = lastVersionCode in 0..<versionCode
 
     /** `true` if the user has accepted the current TOS version. */
     val tosAccepted get() = acceptedTosVersion >= tosVersion
@@ -52,7 +52,7 @@ class AppStart(
     val shouldShowOOBE get() = isFirstTime || !tosAccepted
 
     /** `true` if [threshold] falls within the range of version codes updated across on this launch. */
-    fun versionThresholdPassed(threshold: Int) = threshold in lastVersionCode..<versionCode
+    fun versionThresholdPassed(threshold: Int) = lastVersionCode >= 0 && threshold in lastVersionCode..<versionCode
 
     override fun toString(): String =
         "AppStart(result=$result, versionCode=$versionCode, versionName='$versionName', " +
@@ -119,6 +119,7 @@ const val EXTRA_ONBOARDING_STEPS = "commonUtilsOnboardingSteps"
 object Onboarding {
     /** App-specific steps that run after OOBE, in order. */
     var steps: List<Class<out Activity>> = emptyList()
+        internal set
 }
 
 /**
@@ -200,7 +201,12 @@ fun Activity.advanceOnboarding() {
     val stepsNames = intent.getStringArrayListExtra(EXTRA_ONBOARDING_STEPS) ?: arrayListOf()
     val chain = listOf(CommonUtilsOOBEActivity::class.java.name) + stepsNames
     val index = chain.indexOf(this::class.java.name)
-    val nextName = if (index != -1) chain.getOrNull(index + 1) else null
+    if (index == -1) {
+        Log.w(TAG, "advanceOnboarding: ${this::class.java.simpleName} not found in chain — finishing without completing")
+        finishWithFade()
+        return
+    }
+    val nextName = chain.getOrNull(index + 1)
     if (nextName != null) {
         startActivity(
             Intent().setClassName(this, nextName).apply {

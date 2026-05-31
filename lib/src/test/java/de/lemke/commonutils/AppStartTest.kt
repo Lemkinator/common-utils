@@ -49,6 +49,9 @@ class AppStartTest : ShouldSpec() {
             should("be true when lastVersionCode less than versionCode") {
                 appStart(versionCode = 10, lastVersionCode = 9).isFirstTimeVersion.shouldBeTrue()
             }
+            should("be false on first install (lastVersionCode == -1)") {
+                appStart(lastVersionCode = -1).isFirstTimeVersion.shouldBeFalse()
+            }
             should("be false when codes are equal") {
                 appStart(versionCode = 10, lastVersionCode = 10).isFirstTimeVersion.shouldBeFalse()
             }
@@ -79,6 +82,9 @@ class AppStartTest : ShouldSpec() {
             }
         }
         context("versionThresholdPassed") {
+            should("be false on first install (lastVersionCode == -1)") {
+                appStart(versionCode = 10, lastVersionCode = -1).versionThresholdPassed(5).shouldBeFalse()
+            }
             should("be true when threshold within upgrade range") {
                 appStart(versionCode = 10, lastVersionCode = 5).versionThresholdPassed(7).shouldBeTrue()
             }
