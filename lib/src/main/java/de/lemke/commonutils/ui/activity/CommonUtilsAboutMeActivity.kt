@@ -13,72 +13,129 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils.ui.fragment
+package de.lemke.commonutils.ui.activity
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.animation.PathInterpolatorCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
-import com.google.android.material.transition.MaterialSharedAxis
 import de.lemke.commonutils.R
-import de.lemke.commonutils.autoCleared
-import de.lemke.commonutils.clearLastNestedScrollingChild
-import de.lemke.commonutils.databinding.FragmentAboutMeBinding
+import de.lemke.commonutils.databinding.ActivityAboutMeBinding
 import de.lemke.commonutils.openApp
 import de.lemke.commonutils.openURL
+import de.lemke.commonutils.prepareActivityTransformationTo
 import de.lemke.commonutils.sendEmailAboutMe
+import de.lemke.commonutils.setCustomBackAnimation
 import de.lemke.commonutils.shareApp
+import dev.oneuiproject.oneui.ktx.invokeOnBack
 import dev.oneuiproject.oneui.ktx.isInMultiWindowModeCompat
 import dev.oneuiproject.oneui.ktx.semSetToolTipText
 import dev.oneuiproject.oneui.ktx.setEnableRecursive
+import dev.oneuiproject.oneui.utils.DeviceLayoutUtil.isPortrait
 import dev.oneuiproject.oneui.widget.AdaptiveCoordinatorLayout.Companion.MARGIN_PROVIDER_ADP_DEFAULT
 import kotlin.math.abs
+import kotlinx.coroutines.flow.MutableStateFlow
 import dev.oneuiproject.oneui.design.R as designR
 
-/** Pre-built About Me fragment that presents developer info and an optional share-app action. */
-class CommonUtilsAboutMeFragment : TransitionFragmentSharedAxis(R.layout.fragment_about_me, MaterialSharedAxis.Y) {
-    private val binding by autoCleared { FragmentAboutMeBinding.bind(requireView()) }
-    private val appBarListener = AboutAppBarListener()
+/** Pre-built About Me screen that presents developer info and an optional share-app action. */
+class CommonUtilsAboutMeActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityAboutMeBinding
+    private val appBarListener: AboutAppBarListener = AboutAppBarListener()
     private val progressInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
+    private val callbackIsActive = MutableStateFlow(false)
+    private val crossActivityCallbackIsActive = MutableStateFlow(true)
+    private var isBackProgressing = false
     private var isExpanding = false
 
-    override fun onDestroyView() {
-        // TODO Remove once sesl-androidx CoordinatorLayout uses WeakReference<View> for
-        //  mLastNestedScrollingChild (fix tracked in sesl-androidx fix/memory-leaks).
-        clearLastNestedScrollingChild()
-        super.onDestroyView()
-    }
-
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?,
-    ) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        prepareActivityTransformationTo()
+        super.onCreate(savedInstanceState)
+        binding = ActivityAboutMeBinding.inflate(layoutInflater)
         binding.root.configureAdaptiveMargin(MARGIN_PROVIDER_ADP_DEFAULT, binding.aboutBottomContainer)
-        binding.aboutToolbar.visibility = View.GONE
+        setContentView(binding.root)
+        setCustomBackAnimation(binding.root, crossActivityCallbackIsActive)
+        applyInsetIfNeeded()
+        setupToolbar()
+
         initContent()
         refreshAppBar(resources.configuration)
         setupOnClickListeners()
+        initOnBackPressed()
+    }
+
+    @Suppress("MagicNumber")
+    private fun applyInsetIfNeeded() {
+        if (SDK_INT >= Build.VERSION_CODES.R && !window.decorView.fitsSystemWindows) {
+            binding.root.setOnApplyWindowInsetsListener { _, insets ->
+                @Suppress("WrongConstant")
+                val systemBarsInsets = insets.getInsets(systemBars())
+                binding.root.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom)
+                insets
+            }
+        }
+    }
+
+    private fun setupToolbar() {
+        setSupportActionBar(binding.aboutToolbar)
+        // Should be called after setSupportActionBar
+        binding.aboutToolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        supportActionBar!!.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowTitleEnabled(false)
+        }
+    }
+
+    private fun initOnBackPressed() {
+        invokeOnBack(
+            triggerStateFlow = callbackIsActive,
+            onBackPressed = {
+                binding.aboutAppBar.setExpanded(true)
+                isBackProgressing = false
+                isExpanding = false
+            },
+            onBackStarted = { isBackProgressing = true },
+            onBackProgressed = {
+                val interpolatedProgress = progressInterpolator.getInterpolation(it.progress)
+                if (interpolatedProgress > .5 && !isExpanding) {
+                    isExpanding = true
+                    binding.aboutAppBar.setExpanded(true, true)
+                } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
+                    isExpanding = false
+                    binding.aboutAppBar.setExpanded(false, true)
+                }
+            },
+            onBackCancelled = {
+                binding.aboutAppBar.setExpanded(false)
+                isBackProgressing = false
+                isExpanding = false
+            },
+        )
+        updateCallbackState()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         refreshAppBar(newConfig)
+        updateCallbackState()
     }
 
     @SuppressLint("RestrictedApi")
     private fun refreshAppBar(config: Configuration) {
-        if (config.orientation != ORIENTATION_LANDSCAPE && !requireActivity().isInMultiWindowModeCompat) {
+        if (config.orientation != ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
             binding.aboutAppBar.apply {
-                seslSetCustomHeightProportion(true, 0.5f)
+                seslSetCustomHeightProportion(true, 0.5f) // expanded
                 addOnOffsetChangedListener(appBarListener)
                 setExpanded(true, false)
             }
@@ -99,7 +156,7 @@ class CommonUtilsAboutMeFragment : TransitionFragmentSharedAxis(R.layout.fragmen
     }
 
     private fun initContent() {
-        val icon = AppCompatResources.getDrawable(requireContext(), R.drawable.me4_round)
+        val icon = AppCompatResources.getDrawable(this, R.drawable.me4_round)
         binding.aboutHeaderIcon.setImageDrawable(icon)
         binding.aboutBottomIcon.setImageDrawable(icon)
         binding.aboutHeaderGithub.semSetToolTipText(getString(R.string.commonutils_github))
@@ -116,7 +173,7 @@ class CommonUtilsAboutMeFragment : TransitionFragmentSharedAxis(R.layout.fragmen
 
     private fun openPlayStore() {
         AlertDialog
-            .Builder(requireContext())
+            .Builder(this)
             .setTitle(getString(R.string.commonutils_playstore_ad))
             .setMessage(getString(R.string.commonutils_playstore_redirect_message))
             .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ ->
@@ -135,16 +192,13 @@ class CommonUtilsAboutMeFragment : TransitionFragmentSharedAxis(R.layout.fragmen
             aboutBottomRelativePlayStore.setOnClickListener { openPlayStore() }
             aboutBottomRelativeWebsite.setOnClickListener { openURL(getString(R.string.commonutils_my_website)) }
             aboutBottomRelativeTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
-            aboutBottomRateApp.setOnClickListener { openApp(requireContext().packageName, false) }
+            aboutBottomRateApp.setOnClickListener { openApp(packageName, false) }
             aboutBottomShareApp.setOnClickListener {
-                onShareApp(requireActivity())
+                onShareApp(this@CommonUtilsAboutMeActivity)
                 shareApp()
             }
             aboutBottomWriteEmail.setOnClickListener {
-                requireContext().sendEmailAboutMe(
-                    getString(R.string.commonutils_email),
-                    requireContext().applicationInfo.loadLabel(requireContext().packageManager).toString(),
-                )
+                sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
             }
         }
     }
@@ -155,6 +209,7 @@ class CommonUtilsAboutMeFragment : TransitionFragmentSharedAxis(R.layout.fragmen
             appBarLayout: AppBarLayout,
             verticalOffset: Int,
         ) {
+            // Handle the SwipeUp anim view
             val totalScrollRange = appBarLayout.totalScrollRange
             val abs = abs(verticalOffset)
             if (abs >= totalScrollRange / 2) {
@@ -167,19 +222,26 @@ class CommonUtilsAboutMeFragment : TransitionFragmentSharedAxis(R.layout.fragmen
                 val offsetAlpha = appBarLayout.y / totalScrollRange
                 binding.aboutSwipeUpContainer.alpha = (1 - offsetAlpha * -3).coerceIn(0f, 1f)
             }
+            // Handle the bottom part of the UI
             val alphaRange = binding.aboutCTL.height * 0.143f
             val layoutPosition = abs(appBarLayout.top).toFloat()
             val bottomAlpha = (150.0f / alphaRange * (layoutPosition - binding.aboutCTL.height * 0.35f)).coerceIn(0f, 255f)
             binding.aboutBottomContainer.alpha = bottomAlpha / 255
-            val isCollapsed = appBarLayout.getTotalScrollRange() + verticalOffset == 0
-            if (!isCollapsed && isExpanding) {
-                isExpanding = false
-            }
+            updateCallbackState(appBarLayout.getTotalScrollRange() + verticalOffset == 0)
         }
     }
 
+    private fun updateCallbackState(enable: Boolean? = null) {
+        if (isBackProgressing) return
+        callbackIsActive.value =
+            enable ?: (binding.aboutAppBar.seslIsCollapsed() && isPortrait(resources.configuration) && !isInMultiWindowModeCompat)
+        crossActivityCallbackIsActive.value = !callbackIsActive.value
+    }
+
     companion object {
-        /** Optional callback invoked when the user taps the share button. */
-        var onShareApp: (activity: android.app.Activity) -> Unit = {}
+        private const val BACK_COLLAPSE_THRESHOLD = 0.3f
+
+        /** Optional callback invoked when the user taps the share button; defaults to a no-op. */
+        var onShareApp: (activity: Activity) -> Unit = {}
     }
 }

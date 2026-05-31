@@ -21,7 +21,6 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Intent
 import android.graphics.Color.TRANSPARENT
-import android.os.Bundle
 import android.transition.TransitionManager
 import android.util.Log
 import android.view.View
@@ -29,15 +28,11 @@ import android.view.ViewGroup
 import android.view.Window
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
-import androidx.navigation.findNavController
-import androidx.navigation.fragment.FragmentNavigatorExtras
 import com.google.android.material.transition.platform.MaterialArcMotion
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_CROSS
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import dev.oneuiproject.oneui.ktx.activity
-import com.google.android.material.transition.MaterialContainerTransform as FragmentMaterialContainerTransform
 
 private const val TAG = "TransformationUtils"
 private const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"
@@ -145,7 +140,7 @@ fun View.transformToActivity(
 /**
  * Workaround: Temporary disable item view's StateListAnimator
  * */
-fun View.suspendStateListAnimator() {
+private fun View.suspendStateListAnimator() {
     val sla = stateListAnimator
     stateListAnimator = null
     postDelayed({ stateListAnimator = sla }, STATE_ANIMATOR_RESTORE_DELAY_MS)
@@ -194,49 +189,3 @@ fun View.transformTo(
         }
     }
 }
-
-// ── Fragment / Navigation-component equivalents ──────────────────────────────
-
-/**
- * Sets up [MaterialContainerTransform] on [destination] (the receiving fragment).
- * Call from the destination fragment's `onCreate`.
- */
-fun Fragment.prepareFragmentTransformationTo(duration: Long = DEFAULT_DURATION) {
-    val transform =
-        FragmentMaterialContainerTransform().apply {
-            this.duration = duration
-            fadeMode = FragmentMaterialContainerTransform.FADE_MODE_CROSS
-        }
-    sharedElementEnterTransition = transform
-    sharedElementReturnTransition = transform
-}
-
-/**
- * Navigates to [destinationId] with a [MaterialContainerTransform] shared-element transition
- * originating from this view.
- *
- * The destination fragment must call [prepareFragmentTransformationTo] in its `onCreate`.
- */
-fun View.transformToFragment(
-    destinationId: Int,
-    args: Bundle? = null,
-    transitionName: String = DEFAULT_TRANSITION_NAME,
-    duration: Long = DEFAULT_DURATION,
-) {
-    suspendStateListAnimator()
-    ViewCompat.setTransitionName(this, transitionName)
-    val extras = FragmentNavigatorExtras(this to transitionName)
-    findNavController().navigate(destinationId, args, null, extras)
-}
-
-/**
- * Navigates to [destinationId] with a [MaterialContainerTransform] shared-element transition.
- * Convenience overload that accepts a pre-built [args] bundle and a named [transitionName].
- */
-fun Fragment.navigateWithTransform(
-    destinationId: Int,
-    sourceView: View,
-    args: Bundle? = null,
-    transitionName: String = DEFAULT_TRANSITION_NAME,
-    duration: Long = DEFAULT_DURATION,
-) = sourceView.transformToFragment(destinationId, args, transitionName, duration)

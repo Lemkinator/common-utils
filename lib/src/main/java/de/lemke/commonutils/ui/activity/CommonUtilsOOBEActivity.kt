@@ -13,9 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils.ui.fragment
+package de.lemke.commonutils.ui.activity
 
+import android.R.anim.fade_in
+import android.R.anim.fade_out
+import android.content.Intent
 import android.graphics.Color.TRANSPARENT
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -26,36 +31,26 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout.LayoutParams
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavOptions
-import androidx.navigation.fragment.findNavController
-import com.google.android.material.transition.MaterialSharedAxis
 import de.lemke.commonutils.R
-import de.lemke.commonutils.autoCleared
-import de.lemke.commonutils.clearLastNestedScrollingChild
 import de.lemke.commonutils.data.commonUtilsSettings
-import de.lemke.commonutils.databinding.FragmentOobeBinding
+import de.lemke.commonutils.databinding.ActivityOobeBinding
 import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** Pre-built onboarding (OOBE) fragment that presents feature tips and a TOS acceptance flow. */
-class CommonUtilsOOBEFragment : TransitionFragmentSharedAxis(R.layout.fragment_oobe, MaterialSharedAxis.Y) {
-    private val binding by autoCleared { FragmentOobeBinding.bind(requireView()) }
+/** Pre-built onboarding (OOBE) screen that presents feature tips and a TOS acceptance flow. */
+class CommonUtilsOOBEActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityOobeBinding
 
-    override fun onDestroyView() {
-        // TODO Remove once sesl-androidx CoordinatorLayout uses WeakReference<View> for
-        //  mLastNestedScrollingChild (fix tracked in sesl-androidx fix/memory-leaks).
-        clearLastNestedScrollingChild()
-        super.onDestroyView()
-    }
-
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?,
-    ) {
-        super.onViewCreated(view, savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (SDK_INT >= UPSIDE_DOWN_CAKE) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
+        binding = ActivityOobeBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.root.setTitle(applicationInfo.loadLabel(packageManager).toString())
         initTipsItems()
         initToSView()
         initFooterButton()
@@ -69,7 +64,7 @@ class CommonUtilsOOBEFragment : TransitionFragmentSharedAxis(R.layout.fragment_o
                 Triple(R.string.commonutils_oobe3_title, R.string.commonutils_oobe3_summary, R.drawable.commonutils_oobe3_icon),
             )
         tipsData.forEach { (titleRes, summaryRes, iconRes) ->
-            OnboardingTipsItemView(requireContext()).apply {
+            OnboardingTipsItemView(this).apply {
                 setIcon(iconRes)
                 title = getString(titleRes)
                 summary = getString(summaryRes)
@@ -80,11 +75,7 @@ class CommonUtilsOOBEFragment : TransitionFragmentSharedAxis(R.layout.fragment_o
 
     private fun initToSView() {
         val tos = getString(R.string.commonutils_tos)
-        val tosText =
-            getString(
-                if (tosChanged) R.string.commonutils_oobe_new_tos_text else R.string.commonutils_oobe_tos_text,
-                tos,
-            )
+        val tosText = getString(if (tosChanged) R.string.commonutils_oobe_new_tos_text else R.string.commonutils_oobe_tos_text, tos)
         val tosIndex = tosText.lastIndexOf(tos)
         binding.oobeIntroFooterTosText.text =
             SpannableString(tosText).apply {
@@ -92,7 +83,7 @@ class CommonUtilsOOBEFragment : TransitionFragmentSharedAxis(R.layout.fragment_o
                     object : ClickableSpan() {
                         override fun onClick(widget: View) {
                             AlertDialog
-                                .Builder(requireContext())
+                                .Builder(this@CommonUtilsOOBEActivity)
                                 .setTitle(getString(R.string.commonutils_tos))
                                 .setMessage(getString(R.string.commonutils_tos_content))
                                 .setPositiveButton(R.string.commonutils_ok, null)
@@ -109,7 +100,6 @@ class CommonUtilsOOBEFragment : TransitionFragmentSharedAxis(R.layout.fragment_o
     }
 
     private fun initFooterButton() {
-        val resources = requireContext().resources
         if (resources.configuration.screenWidthDp < MIN_FULL_BUTTON_WIDTH_DP) {
             binding.oobeIntroFooterButton.layoutParams.width = MATCH_PARENT
         }
@@ -117,24 +107,15 @@ class CommonUtilsOOBEFragment : TransitionFragmentSharedAxis(R.layout.fragment_o
             binding.oobeIntroFooterTosText.isEnabled = false
             binding.oobeIntroFooterButton.isVisible = false
             binding.oobeIntroFooterButtonProgress.isVisible = true
-            if (setAcceptedTosVersion) {
-                commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-            }
-            viewLifecycleOwner.lifecycleScope.launch {
+            if (setAcceptedTosVersion) commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
+            lifecycleScope.launch {
                 delay(PROCEED_DELAY_MS)
-                onCompleteNavAction
-                    .takeIf { it != 0 }
-                    ?.let {
-                        findNavController().navigate(
-                            it,
-                            null,
-                            NavOptions
-                                .Builder()
-                                .setPopUpTo(R.id.commonutils_oobe_dest, inclusive = true)
-                                .build(),
-                        )
-                    }
-                    ?: onContinue?.invoke()
+                nextActivity?.let {
+                    startActivity(Intent(this@CommonUtilsOOBEActivity, it))
+                    @Suppress("DEPRECATION")
+                    if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
+                    finishAfterTransition()
+                } ?: onContinue?.invoke() ?: finishAfterTransition()
             }
         }
     }
@@ -143,13 +124,13 @@ class CommonUtilsOOBEFragment : TransitionFragmentSharedAxis(R.layout.fragment_o
         private const val PROCEED_DELAY_MS = 500L
         private const val MIN_FULL_BUTTON_WIDTH_DP = 360
 
-        /** Whether to persist TOS acceptance when the user proceeds. */
+        /** Whether to persist TOS acceptance when the user proceeds; set via [setupCommonUtilsOOBEActivity]. */
         var setAcceptedTosVersion = true
 
-        /** Navigation action ID to navigate to after OOBE completion; mutually exclusive with [onContinue]. */
-        var onCompleteNavAction: Int = 0
+        /** Activity to launch after the user completes OOBE; mutually exclusive with [onContinue]. */
+        var nextActivity: Class<*>? = null
 
-        /** Callback invoked on OOBE completion when no [onCompleteNavAction] is set. */
+        /** Callback invoked when the user completes OOBE; mutually exclusive with [nextActivity]. */
         var onContinue: (() -> Unit)? = null
 
         /** `true` if TOS content changed since the user last accepted; shown as a "new TOS" notice. */

@@ -178,7 +178,7 @@
 
         <include
             android:id="@+id/aboutBottomContent"
-            layout="@layout/fragment_about_me_content" />
+            layout="@layout/activity_about_me_content" />
 
     </LinearLayout>
 
