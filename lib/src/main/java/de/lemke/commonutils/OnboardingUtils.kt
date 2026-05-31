@@ -17,12 +17,8 @@
 
 package de.lemke.commonutils
 
-import android.R.anim.fade_in
-import android.R.anim.fade_out
 import android.app.Activity
 import android.content.Intent
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import de.lemke.commonutils.data.commonUtilsSettings
@@ -144,7 +140,7 @@ fun setupOnboarding(steps: List<Class<out Activity>> = emptyList()) {
 /** The full ordered chain: OOBE first, then the configured steps. */
 private fun onboardingChain(): List<Class<out Activity>> = listOf(CommonUtilsOOBEActivity::class.java) + Onboarding.steps
 
-/** Returns the step after [current] in the chain, or `null` if [current] is the last step. */
+/** Returns the step after [current] in the chain, or `null` if [current] is the last step. Internal for unit testing. */
 internal fun nextOnboardingStep(current: Class<*>): Class<out Activity>? {
     val chain = onboardingChain()
     val index = chain.indexOfFirst { it == current }
@@ -178,9 +174,7 @@ fun AppCompatActivity.onboardIfNeeded(
                 putStringArrayListExtra(EXTRA_ONBOARDING_STEPS, ArrayList(Onboarding.steps.map { it.name }))
             },
         )
-        @Suppress("DEPRECATION")
-        if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
-        finishAfterTransition()
+        finishWithFade()
         null
     } else {
         appStart
@@ -196,9 +190,7 @@ fun AppCompatActivity.onboardIfNeeded(
  */
 fun Activity.advanceOnboarding() {
     if (!isOnboardingStep()) {
-        @Suppress("DEPRECATION")
-        if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
-        finishAfterTransition()
+        finishWithFade()
         return
     }
     val mainActivityName =
@@ -221,9 +213,7 @@ fun Activity.advanceOnboarding() {
         commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
         startActivity(Intent().setClassName(this, mainActivityName))
     }
-    @Suppress("DEPRECATION")
-    if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
-    finishAfterTransition()
+    finishWithFade()
 }
 
 /** `true` if this activity was launched as a step of the onboarding chain (vs. standalone). */

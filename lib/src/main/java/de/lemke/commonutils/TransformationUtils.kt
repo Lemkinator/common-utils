@@ -17,10 +17,14 @@
 
 package de.lemke.commonutils
 
+import android.R.anim.fade_in
+import android.R.anim.fade_out
 import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Intent
 import android.graphics.Color.TRANSPARENT
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 import android.transition.TransitionManager
 import android.util.Log
 import android.view.View
@@ -188,4 +192,15 @@ fun View.transformTo(
             TransitionManager.beginDelayedTransition(container, getContainerTransform(targetView, duration, fadeMode))
         }
     }
+}
+
+/** Applies a fade-out close transition and finishes the activity (predictive-back aware). */
+fun Activity.finishWithFade() {
+    if (SDK_INT >= UPSIDE_DOWN_CAKE) {
+        overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, fade_in, fade_out)
+    } else {
+        @Suppress("DEPRECATION")
+        overridePendingTransition(fade_in, fade_out)
+    }
+    finishAfterTransition()
 }
