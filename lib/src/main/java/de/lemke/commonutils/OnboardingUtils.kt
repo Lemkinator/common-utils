@@ -115,6 +115,12 @@ fun AppCompatActivity.onboardIfNeeded(
  * Call from a step activity when the user finishes that step.
  */
 fun Activity.advanceOnboarding() {
+    if (!isOnboardingStep()) {
+        @Suppress("DEPRECATION")
+        if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
+        finishAfterTransition()
+        return
+    }
     val mainActivityName =
         checkNotNull(intent.getStringExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY)) {
             "advanceOnboarding: EXTRA_ONBOARDING_MAIN_ACTIVITY missing — was this activity started by onboardIfNeeded?"
@@ -124,20 +130,16 @@ fun Activity.advanceOnboarding() {
     val index = chain.indexOf(this::class.java.name)
     val nextName = if (index != -1) chain.getOrNull(index + 1) else null
     if (nextName != null) {
-        @Suppress("UNCHECKED_CAST")
-        val nextClass = Class.forName(nextName) as Class<out Activity>
         startActivity(
-            Intent(this, nextClass).apply {
+            Intent().setClassName(this, nextName).apply {
                 putExtra(EXTRA_ONBOARDING_STEP, true)
                 putExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY, mainActivityName)
                 putStringArrayListExtra(EXTRA_ONBOARDING_STEPS, ArrayList(stepsNames))
             },
         )
     } else {
-        @Suppress("UNCHECKED_CAST")
-        val mainClass = Class.forName(mainActivityName) as Class<out Activity>
         commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-        startActivity(Intent(this, mainClass))
+        startActivity(Intent().setClassName(this, mainActivityName))
     }
     @Suppress("DEPRECATION")
     if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
