@@ -33,17 +33,31 @@ const val EXTRA_FIRST_RUN = "commonUtilsFirstRunStep"
 /** Intent extra (honored only when the host opts in) that bypasses the first-run chain, for benchmarks. */
 const val EXTRA_SKIP_FIRST_RUN = "commonUtilsSkipFirstRun"
 
+/** Intent extra carrying the class name of the main activity to launch when the chain completes. */
+const val EXTRA_FIRST_RUN_MAIN_ACTIVITY = "commonUtilsFirstRunMainActivity"
+
+/** Intent extra carrying the ordered list of step activity class names (excluding OOBE). */
+const val EXTRA_FIRST_RUN_STEPS = "commonUtilsFirstRunSteps"
+
 /** Holds the ordered first-run chain configuration. OOBE is always the implicit first step. */
 object FirstRunFlow {
     /** App-specific steps that run after OOBE, in order. */
     var steps: List<Class<out Activity>> = emptyList()
-
-    /** The activity to land on once the chain completes (set by [handleFirstRun]). */
-    var mainActivity: Class<out Activity>? = null
 }
 
-/** Declares the app-specific first-run steps that run after OOBE. Apps with OOBE only may skip this. */
+/**
+ * Declares the app-specific first-run steps that run after OOBE. Apps with OOBE only may skip this.
+ *
+ * Call in your `Application.onCreate()` to ensure steps are restored if the process is killed
+ * and recreated during the first-run flow.
+ */
 fun setupFirstRunFlow(steps: List<Class<out Activity>> = emptyList()) {
+    require(CommonUtilsOOBEActivity::class.java !in steps) {
+        "CommonUtilsOOBEActivity is the implicit first step and must not be included in steps"
+    }
+    require(steps.distinct().size == steps.size) {
+        "First-run steps must be unique; found duplicates: ${steps.groupBy { it }.filter { it.value.size > 1 }.keys}"
+    }
     FirstRunFlow.steps = steps
 }
 
@@ -61,8 +75,10 @@ internal fun nextFirstRunStep(current: Class<*>): Class<out Activity>? {
 /**
  * Call as the FIRST thing in the launcher activity's `onCreate`, before inflating any UI.
  *
- * @return `true` if a first run was detected and OOBE was launched (the caller must `return`
- *   immediately so no UI is built). `false` for a normal start (proceed to build the activity).
+ * @return `null` if a first run was detected and OOBE was launched (the caller must `return`
+ *   immediately so no UI is built). The [AppStart] for a normal start (proceed to build the
+ *   activity; the value is available for `isFirstTimeVersion` etc. checks without calling
+ *   `checkAppStart` again).
  *
  * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_FIRST_RUN], the chain is
  * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g. a BuildConfig flag).
@@ -72,15 +88,21 @@ fun AppCompatActivity.handleFirstRun(
     versionCode: Int,
     versionName: String,
     allowSkip: Boolean = false,
-): Boolean {
-    if (allowSkip && intent.getBooleanExtra(EXTRA_SKIP_FIRST_RUN, false)) return false
-    if (!checkAppStart(versionCode, versionName).shouldShowOOBE) return false
-    FirstRunFlow.mainActivity = this::class.java
-    startActivity(Intent(this, CommonUtilsOOBEActivity::class.java).putExtra(EXTRA_FIRST_RUN, true))
+): AppStart? {
+    val appStart = checkAppStart(versionCode, versionName)
+    if (allowSkip && intent.getBooleanExtra(EXTRA_SKIP_FIRST_RUN, false)) return appStart
+    if (!appStart.shouldShowOOBE) return appStart
+    startActivity(
+        Intent(this, CommonUtilsOOBEActivity::class.java).apply {
+            putExtra(EXTRA_FIRST_RUN, true)
+            putExtra(EXTRA_FIRST_RUN_MAIN_ACTIVITY, this@handleFirstRun::class.java.name)
+            putStringArrayListExtra(EXTRA_FIRST_RUN_STEPS, ArrayList(FirstRunFlow.steps.map { it.name }))
+        },
+    )
     @Suppress("DEPRECATION")
     if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
     finishAfterTransition()
-    return true
+    return null
 }
 
 /**
@@ -91,16 +113,29 @@ fun AppCompatActivity.handleFirstRun(
  * Call from a step activity when the user finishes that step.
  */
 fun Activity.advanceFirstRun() {
-    val next = nextFirstRunStep(this::class.java)
-    if (next != null) {
-        startActivity(Intent(this, next).putExtra(EXTRA_FIRST_RUN, true))
+    val mainActivityName =
+        checkNotNull(intent.getStringExtra(EXTRA_FIRST_RUN_MAIN_ACTIVITY)) {
+            "advanceFirstRun: EXTRA_FIRST_RUN_MAIN_ACTIVITY missing — was this activity started by handleFirstRun?"
+        }
+    val stepsNames = intent.getStringArrayListExtra(EXTRA_FIRST_RUN_STEPS) ?: arrayListOf()
+    val chain = listOf(CommonUtilsOOBEActivity::class.java.name) + stepsNames
+    val index = chain.indexOf(this::class.java.name)
+    val nextName = if (index != -1) chain.getOrNull(index + 1) else null
+    if (nextName != null) {
+        @Suppress("UNCHECKED_CAST")
+        val nextClass = Class.forName(nextName) as Class<out Activity>
+        startActivity(
+            Intent(this, nextClass).apply {
+                putExtra(EXTRA_FIRST_RUN, true)
+                putExtra(EXTRA_FIRST_RUN_MAIN_ACTIVITY, mainActivityName)
+                putStringArrayListExtra(EXTRA_FIRST_RUN_STEPS, ArrayList(stepsNames))
+            },
+        )
     } else {
-        val main =
-            checkNotNull(FirstRunFlow.mainActivity) {
-                "advanceFirstRun: mainActivity not set — call handleFirstRun() from the launcher activity before the chain starts"
-            }
+        @Suppress("UNCHECKED_CAST")
+        val mainClass = Class.forName(mainActivityName) as Class<out Activity>
         commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-        startActivity(Intent(this, main))
+        startActivity(Intent(this, mainClass))
     }
     @Suppress("DEPRECATION")
     if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
