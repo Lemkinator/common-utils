@@ -54,6 +54,7 @@ private fun firstRunChain(): List<Class<out Activity>> = listOf(CommonUtilsOOBEA
 internal fun nextFirstRunStep(current: Class<*>): Class<out Activity>? {
     val chain = firstRunChain()
     val index = chain.indexOfFirst { it == current }
+    if (index == -1) return null
     return chain.getOrNull(index + 1)
 }
 
@@ -94,7 +95,10 @@ fun Activity.advanceFirstRun() {
         startActivity(Intent(this, next).putExtra(EXTRA_FIRST_RUN, true))
     } else {
         commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-        FirstRunFlow.mainActivity?.let { startActivity(Intent(this, it)) }
+        checkNotNull(FirstRunFlow.mainActivity) {
+            "advanceFirstRun: no mainActivity configured — call handleFirstRun() from the launcher activity's onCreate before the first-run chain starts"
+        }
+        startActivity(Intent(this, FirstRunFlow.mainActivity!!))
     }
     @Suppress("DEPRECATION")
     if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
