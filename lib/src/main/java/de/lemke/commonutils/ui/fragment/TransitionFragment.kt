@@ -45,8 +45,9 @@ abstract class TransitionFragment(
 }
 
 /** [TransitionFragment] variant that uses [MaterialSharedAxis] transitions along the given [axis]. */
+@Suppress("IncorrectFormatting")
 abstract class TransitionFragmentSharedAxis(
-    @LayoutRes layoutResId: Int,
+    @LayoutRes layoutResId: Int = 0,
     @Axis axis: Int,
 ) : TransitionFragment(
         layoutResId = layoutResId,
