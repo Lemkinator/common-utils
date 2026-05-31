@@ -30,7 +30,6 @@ private const val TAG = "CheckAppStartUtils"
 fun AppCompatActivity.checkAppStart(
     versionCode: Int,
     versionName: String,
-    versionCodeThreshold: Int = -1,
 ): AppStart {
     val lastVersionCode = commonUtilsSettings.lastVersionCode
     val lastVersionName = commonUtilsSettings.lastVersionName
