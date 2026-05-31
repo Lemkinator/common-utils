@@ -129,3 +129,26 @@ but adds a publish target for zero practical gain.
 - Maven artifact: `io.github.lemkinator:common-utils` at version defined
   in `libs.versions.toml`
 - Package namespace: `de.lemke.commonutils`
+
+## First-Run Flow
+
+OneUI is activity-oriented; this lib is **multi-activity** (no single-activity /
+Navigation Component). Shared screens (OOBE, About, AboutMe, Settings, Libs) are
+activities. Fragments only for genuine sibling/tab content inside one screen.
+
+First run = an ordered **chain of task-root activities**, OOBE first, advanced by
+finish-then-start-next (`FirstRunFlowUtils.kt`):
+
+- `setupFirstRunFlow(steps)` — app steps after OOBE (omit for OOBE-only apps).
+- `handleFirstRun(versionCode, versionName, allowSkip)` — call FIRST in the launcher
+  activity's `onCreate`, before inflating UI; returns `true` (caller must `return`)
+  when it launched OOBE. `allowSkip` (gated by the app) honors `EXTRA_SKIP_FIRST_RUN`
+  for benchmarks.
+- `advanceFirstRun()` — a step calls this when done; starts the next step or, past the
+  last, commits `acceptedTosVersion` and starts the main activity.
+- `isFirstRunStep()` — for dual-context steps (also reachable standalone).
+
+Why: each step is task root ⇒ predictive back = app exit, no main behind. Redirect
+before building main ⇒ no leak on first start. Commit only past the last step ⇒
+atomic (kill mid-chain replays from OOBE). Full chain on any first-run trigger
+(install or TOS bump) for one uniform, reliable commit point.
