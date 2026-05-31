@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Leonard Lemke
+ * Copyright 2024-2026 Leonard Lemke
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import android.app.Activity
 import de.lemke.commonutils.ui.activity.CommonUtilsLibsActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 import io.kotest.core.spec.style.ShouldSpec
@@ -42,5 +43,10 @@ class FirstRunFlowTest : ShouldSpec({
             FirstRunFlow.steps = listOf(CommonUtilsLibsActivity::class.java)
             nextFirstRunStep(CommonUtilsLibsActivity::class.java) shouldBe null
         }
+    }
+
+    should("unregistered activity returns null") {
+        FirstRunFlow.steps = emptyList()
+        nextFirstRunStep(Activity::class.java) shouldBe null
     }
 })
