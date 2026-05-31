@@ -94,11 +94,11 @@ fun Activity.advanceFirstRun() {
     if (next != null) {
         startActivity(Intent(this, next).putExtra(EXTRA_FIRST_RUN, true))
     } else {
-        commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-        checkNotNull(FirstRunFlow.mainActivity) {
+        val main = checkNotNull(FirstRunFlow.mainActivity) {
             "advanceFirstRun: no mainActivity configured — call handleFirstRun() from the launcher activity's onCreate before the first-run chain starts"
         }
-        startActivity(Intent(this, FirstRunFlow.mainActivity!!))
+        commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
+        startActivity(Intent(this, main))
     }
     @Suppress("DEPRECATION")
     if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
