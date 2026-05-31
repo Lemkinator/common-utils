@@ -81,28 +81,30 @@ internal fun nextOnboardingStep(current: Class<*>): Class<out Activity>? {
  *   `checkAppStart` again).
  *
  * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_ONBOARDING], the chain is
- * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g. a BuildConfig flag).
+ * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g., a BuildConfig flag).
  */
-@Suppress("ReturnCount")
 fun AppCompatActivity.onboardIfNeeded(
     versionCode: Int,
     versionName: String,
     allowSkip: Boolean = false,
 ): AppStart? {
     val appStart = checkAppStart(versionCode, versionName)
-    if (allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false)) return appStart
-    if (!appStart.shouldShowOOBE) return appStart
-    startActivity(
-        Intent(this, CommonUtilsOOBEActivity::class.java).apply {
-            putExtra(EXTRA_ONBOARDING_STEP, true)
-            putExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY, this@onboardIfNeeded::class.java.name)
-            putStringArrayListExtra(EXTRA_ONBOARDING_STEPS, ArrayList(Onboarding.steps.map { it.name }))
-        },
-    )
-    @Suppress("DEPRECATION")
-    if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
-    finishAfterTransition()
-    return null
+    val shouldOnboard = appStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))
+    return if (shouldOnboard) {
+        startActivity(
+            Intent(this, CommonUtilsOOBEActivity::class.java).apply {
+                putExtra(EXTRA_ONBOARDING_STEP, true)
+                putExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY, this@onboardIfNeeded::class.java.name)
+                putStringArrayListExtra(EXTRA_ONBOARDING_STEPS, ArrayList(Onboarding.steps.map { it.name }))
+            },
+        )
+        @Suppress("DEPRECATION")
+        if (SDK_INT < UPSIDE_DOWN_CAKE) overridePendingTransition(fade_in, fade_out)
+        finishAfterTransition()
+        null
+    } else {
+        appStart
+    }
 }
 
 /**
