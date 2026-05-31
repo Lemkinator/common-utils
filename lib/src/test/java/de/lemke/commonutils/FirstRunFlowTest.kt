@@ -21,32 +21,34 @@ import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 
-class FirstRunFlowTest : ShouldSpec({
-    afterEach { FirstRunFlow.steps = emptyList() }
+class FirstRunFlowTest : ShouldSpec(
+    {
+        afterEach { FirstRunFlow.steps = emptyList() }
 
-    context("OOBE is the last step when no app steps are configured") {
-        should("return null for the next step") {
+        context("OOBE is the last step when no app steps are configured") {
+            should("return null for the next step") {
+                FirstRunFlow.steps = emptyList()
+                nextFirstRunStep(CommonUtilsOOBEActivity::class.java) shouldBe null
+            }
+        }
+
+        context("OOBE advances to the first configured app step") {
+            should("return the first app step") {
+                FirstRunFlow.steps = listOf(CommonUtilsLibsActivity::class.java)
+                nextFirstRunStep(CommonUtilsOOBEActivity::class.java) shouldBe CommonUtilsLibsActivity::class.java
+            }
+        }
+
+        context("the last configured app step has no next") {
+            should("return null") {
+                FirstRunFlow.steps = listOf(CommonUtilsLibsActivity::class.java)
+                nextFirstRunStep(CommonUtilsLibsActivity::class.java) shouldBe null
+            }
+        }
+
+        should("unregistered activity returns null") {
             FirstRunFlow.steps = emptyList()
-            nextFirstRunStep(CommonUtilsOOBEActivity::class.java) shouldBe null
+            nextFirstRunStep(Activity::class.java) shouldBe null
         }
-    }
-
-    context("OOBE advances to the first configured app step") {
-        should("return the first app step") {
-            FirstRunFlow.steps = listOf(CommonUtilsLibsActivity::class.java)
-            nextFirstRunStep(CommonUtilsOOBEActivity::class.java) shouldBe CommonUtilsLibsActivity::class.java
-        }
-    }
-
-    context("the last configured app step has no next") {
-        should("return null") {
-            FirstRunFlow.steps = listOf(CommonUtilsLibsActivity::class.java)
-            nextFirstRunStep(CommonUtilsLibsActivity::class.java) shouldBe null
-        }
-    }
-
-    should("unregistered activity returns null") {
-        FirstRunFlow.steps = emptyList()
-        nextFirstRunStep(Activity::class.java) shouldBe null
-    }
-})
+    },
+)
