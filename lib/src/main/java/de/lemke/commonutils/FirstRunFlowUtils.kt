@@ -67,6 +67,7 @@ internal fun nextFirstRunStep(current: Class<*>): Class<out Activity>? {
  * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_FIRST_RUN], the chain is
  * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g. a BuildConfig flag).
  */
+@Suppress("ReturnCount")
 fun AppCompatActivity.handleFirstRun(
     versionCode: Int,
     versionName: String,
@@ -94,9 +95,10 @@ fun Activity.advanceFirstRun() {
     if (next != null) {
         startActivity(Intent(this, next).putExtra(EXTRA_FIRST_RUN, true))
     } else {
-        val main = checkNotNull(FirstRunFlow.mainActivity) {
-            "advanceFirstRun: no mainActivity configured — call handleFirstRun() from the launcher activity's onCreate before the first-run chain starts"
-        }
+        val main =
+            checkNotNull(FirstRunFlow.mainActivity) {
+                "advanceFirstRun: mainActivity not set — call handleFirstRun() from the launcher activity before the chain starts"
+            }
         commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
         startActivity(Intent(this, main))
     }
