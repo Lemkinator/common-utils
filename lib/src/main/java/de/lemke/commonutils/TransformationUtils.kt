@@ -194,6 +194,16 @@ fun View.transformTo(
     }
 }
 
+/** Applies a fade-in open transition for this activity. Call in `onCreate` before `super`. */
+fun Activity.overrideFadeOpenTransition() {
+    if (SDK_INT >= UPSIDE_DOWN_CAKE) {
+        overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
+    } else {
+        @Suppress("DEPRECATION")
+        overridePendingTransition(fade_in, fade_out)
+    }
+}
+
 /** Applies a fade-out close transition and finishes the activity (predictive-back aware). */
 fun Activity.finishWithFade() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
