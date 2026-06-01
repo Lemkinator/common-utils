@@ -254,7 +254,13 @@ fun Activity.advanceOnboarding() {
             if (pendingVersionCode == -1) {
                 Log.w(TAG, "advanceOnboarding: EXTRA_ONBOARDING_VERSION_CODE missing — completing with NORMAL fallback")
                 commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-                startActivity(Intent().setClassName(this, mainActivityName))
+                startActivity(
+                    Intent().setClassName(this, mainActivityName).apply {
+                        putExtra(EXTRA_ONBOARDING_APP_START_RESULT, AppStartResult.NORMAL.name)
+                        putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1))
+                        putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty())
+                    },
+                )
             } else {
                 commonUtilsSettings.lastVersionCode = pendingVersionCode
                 commonUtilsSettings.lastVersionName = intent.getStringExtra(EXTRA_ONBOARDING_VERSION_NAME).orEmpty()
