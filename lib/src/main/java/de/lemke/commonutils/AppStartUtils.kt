@@ -77,7 +77,7 @@ internal fun AppCompatActivity.checkAppStart(
             }
 
             lastVersionCode > versionCode -> {
-                Log.w(TAG, "Current version code ($versionCode) is less then the one recognized on last startup ($lastVersionCode). ")
+                Log.w(TAG, "Current version code ($versionCode) is less than the one recognized on last startup ($lastVersionCode). ")
                 Log.w(TAG, "Defensively assuming normal app start.")
                 AppStartResult.NORMAL
             }
