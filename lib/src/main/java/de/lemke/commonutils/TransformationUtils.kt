@@ -64,7 +64,7 @@ fun Activity.getTransitionContainerTransform() =
 
 /**
  * Prepares the activity for a shared element transition from this activity.
- * This should be called in the source activity before onCreate.
+ * Call in `onCreate`, after `super.onCreate`.
  * @receiver The activity to prepare.
  */
 fun Activity.prepareActivityTransformationFrom() {
@@ -75,7 +75,7 @@ fun Activity.prepareActivityTransformationFrom() {
 
 /**
  * Prepares the activity for a shared element transition to this activity.
- * This should be called in the destination activity before onCreate.
+ * Call in `onCreate`, after `super.onCreate`.
  * @receiver The activity to prepare.
  */
 fun Activity.prepareActivityTransformationTo() {
@@ -94,7 +94,7 @@ fun Activity.prepareActivityTransformationTo() {
 
 /**
  * Prepares the activity for a shared element transition both from and to this activity.
- * This should be called before onCreate.
+ * Call in `onCreate`, after `super.onCreate`.
  * @receiver The activity to prepare.
  */
 fun Activity.prepareActivityTransformationBetween() {
@@ -196,7 +196,7 @@ fun View.transformTo(
     }
 }
 
-/** Applies a fade-in open transition for this activity. Call in `onCreate` before `super`. */
+/** Applies a fade-in open transition for this activity. Call in `onCreate`, after `super.onCreate`. */
 fun Activity.overrideFadeOpenTransition() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
         overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
