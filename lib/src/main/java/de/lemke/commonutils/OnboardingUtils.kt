@@ -221,7 +221,11 @@ private fun Activity.completeOnboarding(mainActivityName: String) {
     val pendingVersionCode = intent.getIntExtra(EXTRA_ONBOARDING_VERSION_CODE, -1)
     if (pendingVersionCode == -1) {
         Log.w(TAG, "advanceOnboarding: EXTRA_ONBOARDING_VERSION_CODE missing — completing with NORMAL fallback")
-        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val packageInfo = runCatching { packageManager.getPackageInfo(packageName, 0) }.getOrNull()
+        if (packageInfo == null) {
+            Log.e(TAG, "completeOnboarding: getPackageInfo failed — cannot complete, finishing without commit")
+            return
+        }
         val currentVersionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toInt()
         val currentVersionName = packageInfo.versionName.orEmpty()
         commonUtilsSettings.lastVersionCode = currentVersionCode
