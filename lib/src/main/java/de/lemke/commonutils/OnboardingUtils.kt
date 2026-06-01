@@ -107,14 +107,15 @@ fun AppCompatActivity.onboardIfNeeded(
         if (ctx != null) {
             // Post-onboarding: main activity re-launched after chain completed — reconstruct original AppStart.
             intent.removeExtra(EXTRA_ONBOARDING_CONTEXT)
+            val tosVersion = resources.getInteger(R.integer.commonutils_tos_version)
             AppStart(
                 ctx.appStartResult,
                 versionCode,
                 versionName,
                 ctx.lastVersionCode,
                 ctx.lastVersionName,
-                resources.getInteger(R.integer.commonutils_tos_version),
-                commonUtilsSettings.acceptedTosVersion,
+                tosVersion,
+                tosVersion,
             ).also { Log.d(TAG, "onboardIfNeeded (post-onboarding): $it") }
         } else {
             val freshAppStart = checkAppStart(versionCode, versionName)
