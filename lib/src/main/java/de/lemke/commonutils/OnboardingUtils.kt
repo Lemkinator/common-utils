@@ -171,19 +171,22 @@ fun AppCompatActivity.onboardIfNeeded(
     // Post-onboarding: main activity re-launched after chain completed — reconstruct original AppStart.
     val appStartResultName = intent.getStringExtra(EXTRA_ONBOARDING_APP_START_RESULT)
     if (!appStartResultName.isNullOrEmpty()) {
-        val result = AppStartResult.valueOf(appStartResultName)
-        val lastVersionCode = intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1)
-        val lastVersionName = intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty()
-        val tosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-        return AppStart(
-            result,
-            versionCode,
-            versionName,
-            lastVersionCode,
-            lastVersionName,
-            tosVersion,
-            commonUtilsSettings.acceptedTosVersion,
-        )
+        val result = AppStartResult.entries.find { it.name == appStartResultName }
+        if (result != null) {
+            val lastVersionCode = intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1)
+            val lastVersionName = intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty()
+            val tosVersion = resources.getInteger(R.integer.commonutils_tos_version)
+            return AppStart(
+                result,
+                versionCode,
+                versionName,
+                lastVersionCode,
+                lastVersionName,
+                tosVersion,
+                commonUtilsSettings.acceptedTosVersion,
+            )
+        }
+        Log.w(TAG, "onboardIfNeeded: unrecognized AppStartResult '$appStartResultName' — falling through to checkAppStart")
     }
     val appStart = checkAppStart(versionCode, versionName)
     val shouldOnboard = appStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))
