@@ -187,6 +187,7 @@ fun AppCompatActivity.onboardIfNeeded(
             )
         }
         Log.w(TAG, "onboardIfNeeded: unrecognized AppStartResult '$appStartResultName' — falling through to checkAppStart")
+        intent.removeExtra(EXTRA_ONBOARDING_APP_START_RESULT)
     }
     val appStart = checkAppStart(versionCode, versionName)
     val shouldOnboard = appStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))
