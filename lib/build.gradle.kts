@@ -130,6 +130,8 @@ kover {
                 )
             }
         }
-        verify { rule { minBound(12) } }
+        variant("debug") {
+            verify { rule { minBound(13) } }
+        }
     }
 }

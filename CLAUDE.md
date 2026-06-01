@@ -17,7 +17,7 @@ Min SDK 26, Target SDK 36, Kotlin 2.3.21, Java 21.
 ./gradlew tasks          # List all tasks
 ./gradlew assembleRelease
 ./gradlew test           # Run unit tests
-./gradlew koverVerify    # Check coverage floor (≥12%)
+./gradlew koverVerifyDebug    # Check coverage floor (≥13%, debug variant only)
 ```
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/`.
