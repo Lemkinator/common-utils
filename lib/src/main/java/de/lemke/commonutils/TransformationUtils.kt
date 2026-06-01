@@ -32,6 +32,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import androidx.annotation.IdRes
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import com.google.android.material.transition.platform.MaterialArcMotion
@@ -144,6 +145,49 @@ fun View.transformToActivity(
 }
 
 /**
+ * Starts an activity with a shared element transition from the view identified by [viewId].
+ * Falls back to a plain startActivity if the view is not found (e.g., recycled drawer item).
+ * @receiver The activity that owns the view hierarchy.
+ * @param viewId The ID of the view to transition from.
+ * @param cls The class of the activity to start.
+ * @param transitionName The name of the shared element transition.
+ * @param duration The duration of the transition in milliseconds.
+ * @param fadeMode The fade mode for the transition.
+ */
+fun Activity.transformToActivity(
+    @IdRes viewId: Int,
+    cls: Class<*>,
+    transitionName: String = DEFAULT_TRANSITION_NAME,
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE,
+) = transformToActivity(viewId, Intent(this, cls), transitionName, duration, fadeMode)
+
+/**
+ * Starts an activity with a shared element transition from the view identified by [viewId].
+ * Falls back to a plain startActivity if the view is not found (e.g., recycled drawer item).
+ * @receiver The activity that owns the view hierarchy.
+ * @param viewId The ID of the view to transition from.
+ * @param intent The intent to start the new activity.
+ * @param transitionName The name of the shared element transition.
+ * @param duration The duration of the transition in milliseconds.
+ * @param fadeMode The fade mode for the transition.
+ */
+fun Activity.transformToActivity(
+    @IdRes viewId: Int,
+    intent: Intent,
+    transitionName: String = DEFAULT_TRANSITION_NAME,
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE,
+) {
+    val view = findViewById<View>(viewId)
+    if (view != null) {
+        view.transformToActivity(intent, transitionName, duration, fadeMode)
+    } else {
+        startActivity(intent)
+    }
+}
+
+/**
  * Workaround: Temporary disable item view's StateListAnimator
  * */
 private fun View.suspendStateListAnimator() {
@@ -201,9 +245,9 @@ fun View.transformTo(
  *
  * **Call in two places for full API coverage:**
  * - **Destination** `onCreate` (after `super.onCreate`) — required for API 34+;
- *   [overridePendingTransition] is a no-op there on pre-34.
+ *   overridePendingTransition is a no-op there on pre-34.
  * - **Source** immediately after a bare `startActivity` (no finish) — required for pre-34.
- *   On API 34+, [overrideActivityTransition] works from both sides; if both source and destination
+ *   On API 34+, overrideActivityTransition works from both sides; if both source and destination
  *   call this, they agree on the same animations and the redundancy is harmless.
  *
  * When the source calls `startActivity` and then [finishWithFade], the source-side call here is
