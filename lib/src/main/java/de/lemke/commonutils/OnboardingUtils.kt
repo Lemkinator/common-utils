@@ -104,6 +104,7 @@ fun AppCompatActivity.onboardIfNeeded(
 ): AppStart? {
     // Post-onboarding: main activity re-launched after chain completed — commit and return original AppStart.
     intent.onboardingContext?.let { ctx ->
+        intent.removeExtra(EXTRA_ONBOARDING_CONTEXT)
         commitAppStart(versionCode, versionName)
         return AppStart(
             ctx.appStartResult,
