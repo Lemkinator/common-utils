@@ -204,7 +204,7 @@ fun View.transformTo(
  *   [overridePendingTransition] is a no-op there on pre-34.
  * - **Source** immediately after a bare `startActivity` (no finish) — required for pre-34.
  *   On API 34+, [overrideActivityTransition] works from both sides; if both source and destination
- *   call this they agree on the same animations and the redundancy is harmless.
+ *   call this, they agree on the same animations and the redundancy is harmless.
  *
  * When the source calls `startActivity` and then [finishWithFade], the source-side call here is
  * unnecessary — [finishWithFade] already applies the entering fade to the new activity on pre-34.
