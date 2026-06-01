@@ -21,6 +21,7 @@ import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.pm.PackageInfoCompat
 import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 
@@ -215,6 +216,38 @@ fun AppCompatActivity.onboardIfNeeded(
     }
 }
 
+/** Completes onboarding, handling missing version code by reading from PackageManager. */
+private fun Activity.completeOnboarding(mainActivityName: String) {
+    val pendingVersionCode = intent.getIntExtra(EXTRA_ONBOARDING_VERSION_CODE, -1)
+    if (pendingVersionCode == -1) {
+        Log.w(TAG, "advanceOnboarding: EXTRA_ONBOARDING_VERSION_CODE missing — completing with NORMAL fallback")
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        val currentVersionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toInt()
+        val currentVersionName = packageInfo.versionName.orEmpty()
+        commonUtilsSettings.lastVersionCode = currentVersionCode
+        commonUtilsSettings.lastVersionName = currentVersionName
+        commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
+        startActivity(
+            Intent().setClassName(this, mainActivityName).apply {
+                putExtra(EXTRA_ONBOARDING_APP_START_RESULT, AppStartResult.NORMAL.name)
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1))
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty())
+            },
+        )
+    } else {
+        commonUtilsSettings.lastVersionCode = pendingVersionCode
+        commonUtilsSettings.lastVersionName = intent.getStringExtra(EXTRA_ONBOARDING_VERSION_NAME).orEmpty()
+        commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
+        startActivity(
+            Intent().setClassName(this, mainActivityName).apply {
+                putExtra(EXTRA_ONBOARDING_APP_START_RESULT, intent.getStringExtra(EXTRA_ONBOARDING_APP_START_RESULT).orEmpty())
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1))
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty())
+            },
+        )
+    }
+}
+
 /**
  * Advances the onboarding chain from the current step: finishes this activity and starts the next
  * step (as task root, tagged [EXTRA_ONBOARDING_STEP]); or, past the last step, commits the
@@ -250,29 +283,7 @@ fun Activity.advanceOnboarding() {
                 },
             )
         } else {
-            val pendingVersionCode = intent.getIntExtra(EXTRA_ONBOARDING_VERSION_CODE, -1)
-            if (pendingVersionCode == -1) {
-                Log.w(TAG, "advanceOnboarding: EXTRA_ONBOARDING_VERSION_CODE missing — completing with NORMAL fallback")
-                commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-                startActivity(
-                    Intent().setClassName(this, mainActivityName).apply {
-                        putExtra(EXTRA_ONBOARDING_APP_START_RESULT, AppStartResult.NORMAL.name)
-                        putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1))
-                        putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty())
-                    },
-                )
-            } else {
-                commonUtilsSettings.lastVersionCode = pendingVersionCode
-                commonUtilsSettings.lastVersionName = intent.getStringExtra(EXTRA_ONBOARDING_VERSION_NAME).orEmpty()
-                commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-                startActivity(
-                    Intent().setClassName(this, mainActivityName).apply {
-                        putExtra(EXTRA_ONBOARDING_APP_START_RESULT, intent.getStringExtra(EXTRA_ONBOARDING_APP_START_RESULT).orEmpty())
-                        putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1))
-                        putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty())
-                    },
-                )
-            }
+            completeOnboarding(mainActivityName)
         }
     } else {
         Log.w(TAG, "advanceOnboarding: ${this::class.java.simpleName} not found in chain — finishing without completing")
