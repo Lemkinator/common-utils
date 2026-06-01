@@ -200,9 +200,6 @@ fun View.transformTo(
 fun Activity.overrideFadeOpenTransition() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
         overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
-    } else {
-        @Suppress("DEPRECATION")
-        overridePendingTransition(fade_in, fade_out)
     }
 }
 
