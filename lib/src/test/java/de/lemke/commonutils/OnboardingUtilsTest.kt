@@ -15,40 +15,67 @@
  */
 package de.lemke.commonutils
 
-import android.app.Activity
 import de.lemke.commonutils.ui.activity.CommonUtilsLibsActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
 class OnboardingUtilsTest : ShouldSpec(
     {
-        afterEach { Onboarding.steps = emptyList() }
+        // --- setupOnboarding validation ---
 
-        context("OOBE is the last step when no app steps are configured") {
-            should("return null for the next step") {
-                Onboarding.steps = emptyList()
-                nextOnboardingStep(CommonUtilsOOBEActivity::class.java) shouldBe null
+        context("setupOnboarding rejects OOBE in steps") {
+            should("throw when CommonUtilsOOBEActivity is included") {
+                shouldThrow<IllegalArgumentException> {
+                    setupOnboarding(listOf(CommonUtilsOOBEActivity::class.java))
+                }
             }
         }
 
-        context("OOBE advances to the first configured app step") {
-            should("return the first app step") {
-                Onboarding.steps = listOf(CommonUtilsLibsActivity::class.java)
-                nextOnboardingStep(CommonUtilsOOBEActivity::class.java) shouldBe CommonUtilsLibsActivity::class.java
+        context("setupOnboarding rejects duplicate steps") {
+            should("throw when a step appears more than once") {
+                shouldThrow<IllegalArgumentException> {
+                    setupOnboarding(listOf(CommonUtilsLibsActivity::class.java, CommonUtilsLibsActivity::class.java))
+                }
             }
         }
 
-        context("the last configured app step has no next") {
+        // --- nextInChain (the chain-walk logic used by advanceOnboarding) ---
+
+        val oobeClass = CommonUtilsOOBEActivity::class.java.name
+        val stepA = "com.example.StepA"
+        val stepB = "com.example.StepB"
+
+        context("OOBE is the only step") {
+            should("return null — no next after OOBE") {
+                nextInChain(listOf(oobeClass), oobeClass).shouldBeNull()
+            }
+        }
+
+        context("OOBE advances to the first configured step") {
+            should("return stepA") {
+                nextInChain(listOf(oobeClass, stepA), oobeClass) shouldBe stepA
+            }
+        }
+
+        context("intermediate step advances to the next") {
+            should("return stepB after stepA") {
+                nextInChain(listOf(oobeClass, stepA, stepB), stepA) shouldBe stepB
+            }
+        }
+
+        context("last step has no next") {
+            should("return null for stepB") {
+                nextInChain(listOf(oobeClass, stepA, stepB), stepB).shouldBeNull()
+            }
+        }
+
+        context("activity not in chain") {
             should("return null") {
-                Onboarding.steps = listOf(CommonUtilsLibsActivity::class.java)
-                nextOnboardingStep(CommonUtilsLibsActivity::class.java) shouldBe null
+                nextInChain(listOf(oobeClass, stepA), stepB).shouldBeNull()
             }
-        }
-
-        should("unregistered activity returns null") {
-            Onboarding.steps = emptyList()
-            nextOnboardingStep(Activity::class.java) shouldBe null
         }
     },
 )

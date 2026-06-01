@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.spotless)
     alias(libs.plugins.kover)
+    id("kotlin-parcelize")
 }
 
 android {
