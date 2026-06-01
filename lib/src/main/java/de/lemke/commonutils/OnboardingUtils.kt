@@ -93,9 +93,6 @@ private fun AppCompatActivity.checkAppStart(
         }
     return AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
         Log.d(TAG, this.toString())
-        if (result == AppStartResult.FIRST_TIME_VERSION && !tosAccepted) {
-            CommonUtilsOOBEActivity.tosChanged = true
-        }
     }
 }
 
@@ -118,6 +115,7 @@ private const val EXTRA_ONBOARDING_VERSION_NAME = "commonUtilsOnboardingVersionN
 private const val EXTRA_ONBOARDING_APP_START_RESULT = "commonUtilsOnboardingAppStartResult"
 private const val EXTRA_ONBOARDING_LAST_VERSION_CODE = "commonUtilsOnboardingLastVersionCode"
 private const val EXTRA_ONBOARDING_LAST_VERSION_NAME = "commonUtilsOnboardingLastVersionName"
+internal const val EXTRA_ONBOARDING_TOS_CHANGED = "commonUtilsOnboardingTosChanged"
 
 /** Holds the ordered onboarding chain configuration. OOBE is always the implicit first step. */
 object Onboarding {
@@ -202,6 +200,10 @@ fun AppCompatActivity.onboardIfNeeded(
                 putExtra(EXTRA_ONBOARDING_APP_START_RESULT, appStart.result.name)
                 putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, appStart.lastVersionCode)
                 putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, appStart.lastVersionName)
+                putExtra(
+                    EXTRA_ONBOARDING_TOS_CHANGED,
+                    appStart.result == AppStartResult.FIRST_TIME_VERSION && !appStart.tosAccepted,
+                )
             },
         )
         finishWithFade()

@@ -29,6 +29,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import de.lemke.commonutils.EXTRA_ONBOARDING_TOS_CHANGED
 import de.lemke.commonutils.R
 import de.lemke.commonutils.advanceOnboarding
 import de.lemke.commonutils.databinding.ActivityOobeBinding
@@ -70,6 +71,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     }
 
     private fun initToSView() {
+        val tosChanged = intent.getBooleanExtra(EXTRA_ONBOARDING_TOS_CHANGED, false)
         val tos = getString(R.string.commonutils_tos)
         val tosText = getString(if (tosChanged) R.string.commonutils_oobe_new_tos_text else R.string.commonutils_oobe_tos_text, tos)
         val tosIndex = tosText.lastIndexOf(tos)
@@ -113,8 +115,5 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     companion object {
         private const val PROCEED_DELAY_MS = 500L
         private const val MIN_FULL_BUTTON_WIDTH_DP = 360
-
-        /** `true` if TOS content changed since the user last accepted; shown as a "new TOS" notice. */
-        var tosChanged = false
     }
 }
