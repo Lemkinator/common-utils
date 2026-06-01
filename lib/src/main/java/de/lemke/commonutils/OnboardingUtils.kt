@@ -134,7 +134,6 @@ fun AppCompatActivity.onboardIfNeeded(
                 ),
             ),
         )
-        overrideFadeOpenTransition()
         finishWithFade()
         null
     } else {
@@ -186,7 +185,6 @@ fun Activity.advanceOnboarding() {
 /** Starts the main activity with the carrier so `onboardIfNeeded` can commit and reconstruct `AppStart`. */
 private fun Activity.completeOnboarding(ctx: OnboardingContext) {
     startActivity(Intent().setClassName(this, ctx.mainActivityName).putOnboardingContext(ctx))
-    overrideFadeOpenTransition()
 }
 
 /** `true` if this activity was launched as a step of the onboarding chain (vs. standalone). */

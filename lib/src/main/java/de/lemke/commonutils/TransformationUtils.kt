@@ -199,14 +199,15 @@ fun View.transformTo(
 /**
  * Applies a fade-in open transition for this activity.
  *
- * **Usage:** call in two places for full API coverage:
- * - In the **destination** activity's `onCreate` (after `super.onCreate`) — handles API 34+.
- * - In the **source** activity immediately after `startActivity` — handles pre-API 34.
+ * **Call in two places for full API coverage:**
+ * - **Destination** `onCreate` (after `super.onCreate`) — required for API 34+;
+ *   [overridePendingTransition] is a no-op there on pre-34.
+ * - **Source** immediately after a bare `startActivity` (no finish) — required for pre-34.
+ *   On API 34+, [overrideActivityTransition] works from both sides; if both source and destination
+ *   call this they agree on the same animations and the redundancy is harmless.
  *
- * On API 34+, [overrideActivityTransition] works from both sides: if both source and destination
- * call this, they agree on the same animations and the redundancy is harmless.
- * On pre-API 34, [overridePendingTransition] is a no-op in the destination's `onCreate`, so
- * the source-side call is the only one that takes effect.
+ * When the source calls `startActivity` and then [finishWithFade], the source-side call here is
+ * unnecessary — [finishWithFade] already applies the entering fade to the new activity on pre-34.
  */
 fun Activity.overrideFadeOpenTransition() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
