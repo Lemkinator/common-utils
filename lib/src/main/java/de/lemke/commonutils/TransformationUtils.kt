@@ -20,6 +20,8 @@ package de.lemke.commonutils
 import android.R.anim.fade_in
 import android.R.anim.fade_out
 import android.app.Activity
+import android.app.Activity.OVERRIDE_TRANSITION_CLOSE
+import android.app.Activity.OVERRIDE_TRANSITION_OPEN
 import android.app.ActivityOptions
 import android.content.Intent
 import android.graphics.Color.TRANSPARENT
@@ -197,7 +199,7 @@ fun View.transformTo(
 /** Applies a fade-in open transition for this activity. Call in `onCreate` before `super`. */
 fun Activity.overrideFadeOpenTransition() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
-        overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
+        overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
     } else {
         @Suppress("DEPRECATION")
         overridePendingTransition(fade_in, fade_out)
@@ -207,7 +209,7 @@ fun Activity.overrideFadeOpenTransition() {
 /** Applies a fade-out close transition and finishes the activity (predictive-back aware). */
 fun Activity.finishWithFade() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
-        overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, fade_in, fade_out)
+        overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, fade_in, fade_out)
         finishAfterTransition()
     } else {
         finishAfterTransition()

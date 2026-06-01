@@ -62,15 +62,13 @@ class AppStart(
 
 private const val TAG = "AppStart"
 
-/** Checks whether this is the first run, a version upgrade, or a normal start; persists version info for next launch. */
+/** Checks whether this is the first run, a version upgrade, or a normal start. Version info is committed by the caller. */
 private fun AppCompatActivity.checkAppStart(
     versionCode: Int,
     versionName: String,
 ): AppStart {
     val lastVersionCode = commonUtilsSettings.lastVersionCode
     val lastVersionName = commonUtilsSettings.lastVersionName
-    commonUtilsSettings.lastVersionCode = versionCode
-    commonUtilsSettings.lastVersionName = versionName
     val tosVersion = resources.getInteger(R.integer.commonutils_tos_version)
     val acceptedTosVersion = commonUtilsSettings.acceptedTosVersion
     val result =
@@ -115,6 +113,12 @@ const val EXTRA_ONBOARDING_MAIN_ACTIVITY = "commonUtilsOnboardingMainActivity"
 /** Intent extra carrying the ordered list of step activity class names (excluding OOBE). */
 const val EXTRA_ONBOARDING_STEPS = "commonUtilsOnboardingSteps"
 
+private const val EXTRA_ONBOARDING_VERSION_CODE = "commonUtilsOnboardingVersionCode"
+private const val EXTRA_ONBOARDING_VERSION_NAME = "commonUtilsOnboardingVersionName"
+private const val EXTRA_ONBOARDING_APP_START_RESULT = "commonUtilsOnboardingAppStartResult"
+private const val EXTRA_ONBOARDING_LAST_VERSION_CODE = "commonUtilsOnboardingLastVersionCode"
+private const val EXTRA_ONBOARDING_LAST_VERSION_NAME = "commonUtilsOnboardingLastVersionName"
+
 /** Holds the ordered onboarding chain configuration. OOBE is always the implicit first step. */
 object Onboarding {
     /** App-specific steps that run after OOBE, in order. */
@@ -152,10 +156,9 @@ internal fun nextOnboardingStep(current: Class<*>): Class<out Activity>? {
 /**
  * Call as the FIRST thing in the launcher activity's `onCreate`, before inflating any UI.
  *
- * @return `null` if a first run was detected and OOBE was launched (the caller must `return`
- *   immediately so no UI is built). The [AppStart] for a normal start (proceed to build the
- *   activity; the value is available for `isFirstTimeVersion` etc. checks without a second
- *   call to `onboardIfNeeded`.
+ * @return `null` if onboarding was launched (caller must `return` immediately). Otherwise the
+ *   [AppStart] snapshot — valid for `isFirstTime`, `isFirstTimeVersion`, etc. even when called
+ *   after the onboarding chain completes (the chain passes the original state back via Intent extras).
  *
  * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_ONBOARDING], the chain is
  * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g., a BuildConfig flag).
@@ -165,6 +168,23 @@ fun AppCompatActivity.onboardIfNeeded(
     versionName: String,
     allowSkip: Boolean = false,
 ): AppStart? {
+    // Post-onboarding: main activity re-launched after chain completed — reconstruct original AppStart.
+    val appStartResultName = intent.getStringExtra(EXTRA_ONBOARDING_APP_START_RESULT)
+    if (!appStartResultName.isNullOrEmpty()) {
+        val result = AppStartResult.valueOf(appStartResultName)
+        val lastVersionCode = intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1)
+        val lastVersionName = intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty()
+        val tosVersion = resources.getInteger(R.integer.commonutils_tos_version)
+        return AppStart(
+            result,
+            versionCode,
+            versionName,
+            lastVersionCode,
+            lastVersionName,
+            tosVersion,
+            commonUtilsSettings.acceptedTosVersion,
+        )
+    }
     val appStart = checkAppStart(versionCode, versionName)
     val shouldOnboard = appStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))
     return if (shouldOnboard) {
@@ -173,11 +193,18 @@ fun AppCompatActivity.onboardIfNeeded(
                 putExtra(EXTRA_ONBOARDING_STEP, true)
                 putExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY, this@onboardIfNeeded::class.java.name)
                 putStringArrayListExtra(EXTRA_ONBOARDING_STEPS, ArrayList(Onboarding.steps.map { it.name }))
+                putExtra(EXTRA_ONBOARDING_VERSION_CODE, versionCode)
+                putExtra(EXTRA_ONBOARDING_VERSION_NAME, versionName)
+                putExtra(EXTRA_ONBOARDING_APP_START_RESULT, appStart.result.name)
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, appStart.lastVersionCode)
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, appStart.lastVersionName)
             },
         )
         finishWithFade()
         null
     } else {
+        commonUtilsSettings.lastVersionCode = versionCode
+        commonUtilsSettings.lastVersionName = versionName
         appStart
     }
 }
@@ -213,11 +240,27 @@ fun Activity.advanceOnboarding() {
                 putExtra(EXTRA_ONBOARDING_STEP, true)
                 putExtra(EXTRA_ONBOARDING_MAIN_ACTIVITY, mainActivityName)
                 putStringArrayListExtra(EXTRA_ONBOARDING_STEPS, ArrayList(stepsNames))
+                putExtra(EXTRA_ONBOARDING_VERSION_CODE, intent.getIntExtra(EXTRA_ONBOARDING_VERSION_CODE, -1))
+                putExtra(EXTRA_ONBOARDING_VERSION_NAME, intent.getStringExtra(EXTRA_ONBOARDING_VERSION_NAME).orEmpty())
+                putExtra(EXTRA_ONBOARDING_APP_START_RESULT, intent.getStringExtra(EXTRA_ONBOARDING_APP_START_RESULT).orEmpty())
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1))
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty())
             },
         )
     } else {
+        val pendingVersionCode = intent.getIntExtra(EXTRA_ONBOARDING_VERSION_CODE, -1)
+        if (pendingVersionCode != -1) {
+            commonUtilsSettings.lastVersionCode = pendingVersionCode
+            commonUtilsSettings.lastVersionName = intent.getStringExtra(EXTRA_ONBOARDING_VERSION_NAME).orEmpty()
+        }
         commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
-        startActivity(Intent().setClassName(this, mainActivityName))
+        startActivity(
+            Intent().setClassName(this, mainActivityName).apply {
+                putExtra(EXTRA_ONBOARDING_APP_START_RESULT, intent.getStringExtra(EXTRA_ONBOARDING_APP_START_RESULT).orEmpty())
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, intent.getIntExtra(EXTRA_ONBOARDING_LAST_VERSION_CODE, -1))
+                putExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME, intent.getStringExtra(EXTRA_ONBOARDING_LAST_VERSION_NAME).orEmpty())
+            },
+        )
     }
     finishWithFade()
 }
