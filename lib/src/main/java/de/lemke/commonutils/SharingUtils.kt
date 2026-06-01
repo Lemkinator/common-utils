@@ -87,6 +87,7 @@ fun Fragment.copyToClipboard(
 ): Boolean = requireContext().copyToClipboard(text, label)
 
 /** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
+@Suppress("SameReturnValue")
 fun Context.copyToClipboard(
     text: String,
     label: String,

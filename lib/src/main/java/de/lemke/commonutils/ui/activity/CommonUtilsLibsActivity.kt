@@ -51,7 +51,6 @@ import dev.oneuiproject.oneui.R as iconsR
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Pre-built open-source licenses screen powered by AboutLibraries. */
-@Deprecated("Use CommonUtilsLibsFragment with Jetpack Navigation.")
 class CommonUtilsLibsActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {

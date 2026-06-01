@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <issues format="6" by="lint 9.2.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.2.1)" variant="all" version="9.2.1">
+
     <issue
         id="VectorPath"
         message="Very long vector path (4007 characters), which is bad for performance. Considering reducing precision, removing minor details or rasterizing vector."

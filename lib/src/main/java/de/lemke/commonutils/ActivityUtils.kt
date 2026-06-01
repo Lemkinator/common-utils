@@ -22,28 +22,9 @@ import android.text.SpannableString
 import androidx.preference.PreferenceFragmentCompat
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
-import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
 private const val TAG = "ActivityUtils"
-
-/** Configures the OOBE activity to launch [nextActivity] on completion. */
-fun setupCommonUtilsOOBEActivity(
-    setAcceptedTosVersion: Boolean? = null,
-    nextActivity: Class<*>,
-) {
-    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.setAcceptedTosVersion = it }
-    CommonUtilsOOBEActivity.nextActivity = nextActivity
-}
-
-/** Configures the OOBE activity to invoke [onContinue] when the user proceeds. */
-fun setupCommonUtilsOOBEActivity(
-    setAcceptedTosVersion: Boolean? = null,
-    onContinue: (() -> Unit),
-) {
-    setAcceptedTosVersion?.let { CommonUtilsOOBEActivity.setAcceptedTosVersion = it }
-    CommonUtilsOOBEActivity.onContinue = onContinue
-}
 
 /** Configures the settings activity with the given preference XML resources and optional init block. */
 fun setupCommonUtilsSettingsActivity(
