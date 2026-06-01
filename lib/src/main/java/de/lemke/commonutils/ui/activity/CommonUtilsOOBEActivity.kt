@@ -15,11 +15,7 @@
  */
 package de.lemke.commonutils.ui.activity
 
-import android.R.anim.fade_in
-import android.R.anim.fade_out
 import android.graphics.Color.TRANSPARENT
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -36,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import de.lemke.commonutils.R
 import de.lemke.commonutils.advanceOnboarding
 import de.lemke.commonutils.databinding.ActivityOobeBinding
+import de.lemke.commonutils.overrideFadeOpenTransition
 import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -46,7 +43,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (SDK_INT >= UPSIDE_DOWN_CAKE) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
+        overrideFadeOpenTransition()
         binding = ActivityOobeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.root.setTitle(applicationInfo.loadLabel(packageManager).toString())
