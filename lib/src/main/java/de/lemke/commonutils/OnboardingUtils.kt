@@ -102,44 +102,45 @@ fun AppCompatActivity.onboardIfNeeded(
     versionName: String,
     allowSkip: Boolean = false,
 ): AppStart? {
-    // Post-onboarding: main activity re-launched after chain completed — commit and return original AppStart.
-    intent.onboardingContext?.let { ctx ->
-        intent.removeExtra(EXTRA_ONBOARDING_CONTEXT)
-        commitAppStart(versionCode, versionName)
-        return AppStart(
-            ctx.appStartResult,
-            versionCode,
-            versionName,
-            ctx.lastVersionCode,
-            ctx.lastVersionName,
-            resources.getInteger(R.integer.commonutils_tos_version),
-            commonUtilsSettings.acceptedTosVersion,
-        ).also { Log.d(TAG, "onboardIfNeeded (post-onboarding): $it") }
-    }
-
-    val appStart = checkAppStart(versionCode, versionName)
-    val shouldOnboard = appStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))
-    return if (shouldOnboard) {
-        startActivity(
-            Intent(this, CommonUtilsOOBEActivity::class.java).putOnboardingContext(
-                OnboardingContext(
-                    mainActivityName = this::class.java.name,
-                    steps = Onboarding.steps.map { it.name },
-                    versionCode = versionCode,
-                    versionName = versionName,
-                    appStartResult = appStart.result,
-                    lastVersionCode = appStart.lastVersionCode,
-                    lastVersionName = appStart.lastVersionName,
-                    tosChanged = appStart.result == AppStartResult.FIRST_TIME_VERSION && !appStart.tosAccepted,
-                ),
-            ),
-        )
-        finishWithFade()
-        null
-    } else {
-        commitAppStart(versionCode, versionName)
-        appStart
-    }
+    val ctx = intent.onboardingContext
+    val appStart =
+        if (ctx != null) {
+            // Post-onboarding: main activity re-launched after chain completed — reconstruct original AppStart.
+            intent.removeExtra(EXTRA_ONBOARDING_CONTEXT)
+            AppStart(
+                ctx.appStartResult,
+                versionCode,
+                versionName,
+                ctx.lastVersionCode,
+                ctx.lastVersionName,
+                resources.getInteger(R.integer.commonutils_tos_version),
+                commonUtilsSettings.acceptedTosVersion,
+            ).also { Log.d(TAG, "onboardIfNeeded (post-onboarding): $it") }
+        } else {
+            val freshAppStart = checkAppStart(versionCode, versionName)
+            if (freshAppStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))) {
+                startActivity(
+                    Intent(this, CommonUtilsOOBEActivity::class.java).putOnboardingContext(
+                        OnboardingContext(
+                            mainActivityName = this::class.java.name,
+                            steps = Onboarding.steps.map { it.name },
+                            versionCode = versionCode,
+                            versionName = versionName,
+                            appStartResult = freshAppStart.result,
+                            lastVersionCode = freshAppStart.lastVersionCode,
+                            lastVersionName = freshAppStart.lastVersionName,
+                            tosChanged = freshAppStart.result == AppStartResult.FIRST_TIME_VERSION && !freshAppStart.tosAccepted,
+                        ),
+                    ),
+                )
+                finishWithFade()
+                return null
+            }
+            freshAppStart
+        }
+    commitAppStart(versionCode, versionName)
+    overrideFadeOpenTransition()
+    return appStart
 }
 
 /**
