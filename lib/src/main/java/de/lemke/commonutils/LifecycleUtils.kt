@@ -21,8 +21,28 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle.State
 import androidx.lifecycle.Lifecycle.State.STARTED
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
+/** Launches [block] in the lifecycle scope, repeating it whenever the lifecycle reaches [minActiveState]. */
+inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
+    minActiveState: State = STARTED,
+    crossinline block: suspend CoroutineScope.() -> Unit,
+) {
+    lifecycleScope.launch { lifecycle.repeatOnLifecycle(minActiveState) { block() } }
+}
+
+/** Launches [block] in the view lifecycle scope, repeating it whenever the view lifecycle reaches [minActiveState]. */
+inline fun Fragment.launchAndRepeatWithViewLifecycle(
+    minActiveState: State = STARTED,
+    crossinline block: suspend CoroutineScope.() -> Unit,
+) {
+    viewLifecycleOwner.lifecycleScope.launch { viewLifecycleOwner.lifecycle.repeatOnLifecycle(minActiveState) { block() } }
+}
 
 /** Collects [flow] emissions and delivers each value to [onEach] while the activity is at least [minActiveState]. */
 inline fun <T> AppCompatActivity.collectState(

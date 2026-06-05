@@ -35,6 +35,8 @@ import android.view.Window
 import androidx.annotation.IdRes
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.transition.platform.MaterialArcMotion
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_CROSS
@@ -72,6 +74,21 @@ fun Activity.prepareActivityTransformationFrom() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
     setExitSharedElementCallback(MaterialContainerTransformSharedElementCallback())
     window.sharedElementsUseOverlay = false
+    val lifecycle = (this as? LifecycleOwner)?.lifecycle ?: run {
+        Log.w(TAG, "Activity is not a LifecycleOwner; exit transition cleanup skipped.")
+        return
+    }
+    lifecycle.addObserver(
+        object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                if (isFinishing) {
+                    setExitSharedElementCallback(null)
+                    window.sharedElementExitTransition = null
+                    window.exitTransition = null
+                }
+            }
+        },
+    )
 }
 
 /**
@@ -81,16 +98,29 @@ fun Activity.prepareActivityTransformationFrom() {
  */
 fun Activity.prepareActivityTransformationTo() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
-    intent.getStringExtra(TRANSITION_NAME_KEY).let {
-        if (it != null) {
-            ViewCompat.setTransitionName(findViewById(android.R.id.content), it)
-            setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
-            window.sharedElementEnterTransition = getTransitionContainerTransform()
-            window.sharedElementReturnTransition = getTransitionContainerTransform()
-        } else {
-            Log.w(TAG, "No transition name found. Skipping transformation.")
-        }
+    val transitionName = intent.getStringExtra(TRANSITION_NAME_KEY) ?: run {
+        Log.w(TAG, "No transition name found. Skipping transformation.")
+        return
     }
+    ViewCompat.setTransitionName(findViewById(android.R.id.content), transitionName)
+    setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
+    window.sharedElementEnterTransition = getTransitionContainerTransform()
+    window.sharedElementReturnTransition = getTransitionContainerTransform()
+    val lifecycle = (this as? LifecycleOwner)?.lifecycle ?: run {
+        Log.w(TAG, "Activity is not a LifecycleOwner; enter transition cleanup skipped.")
+        return
+    }
+    lifecycle.addObserver(
+        object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                if (isFinishing) {
+                    setEnterSharedElementCallback(null)
+                    window.sharedElementEnterTransition = null
+                    window.sharedElementReturnTransition = null
+                }
+            }
+        },
+    )
 }
 
 /**
