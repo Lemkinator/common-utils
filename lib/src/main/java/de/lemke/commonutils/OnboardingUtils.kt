@@ -75,7 +75,7 @@ internal val Intent.onboardingContext: OnboardingContext?
     get() = IntentCompat.getParcelableExtra(this, EXTRA_ONBOARDING_CONTEXT, OnboardingContext::class.java)
 
 /**
- * Persists version and TOS acceptance. The sole write point for all three settings fields —
+ * Persists version and TOS acceptance. The sole writing point for all three settings fields —
  * called in `onboardIfNeeded` whenever the app proceeds to main (post-onboarding or no-onboarding).
  */
 private fun AppCompatActivity.commitAppStart(
@@ -90,7 +90,7 @@ private fun AppCompatActivity.commitAppStart(
 /**
  * Call as the FIRST thing in the launcher activity's `onCreate`, after `super.onCreate`.
  *
- * @return `null` if onboarding was launched (caller must `return` immediately). Otherwise the
+ * @return `null` if onboarding was launched (caller must `return` immediately). Otherwise, the
  *   [AppStart] snapshot — valid for `isFirstTime`, `isFirstTimeVersion`, etc. even when called
  *   after the onboarding chain completes (the chain passes the original state back via the carrier).
  *
