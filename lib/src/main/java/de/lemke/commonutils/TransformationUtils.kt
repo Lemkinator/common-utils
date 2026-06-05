@@ -74,10 +74,11 @@ fun Activity.prepareActivityTransformationFrom() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
     setExitSharedElementCallback(MaterialContainerTransformSharedElementCallback())
     window.sharedElementsUseOverlay = false
-    val lifecycle = (this as? LifecycleOwner)?.lifecycle ?: run {
-        Log.w(TAG, "Activity is not a LifecycleOwner; exit transition cleanup skipped.")
-        return
-    }
+    val lifecycle =
+        (this as? LifecycleOwner)?.lifecycle ?: run {
+            Log.w(TAG, "Activity is not a LifecycleOwner; exit transition cleanup skipped.")
+            return
+        }
     lifecycle.addObserver(
         object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
@@ -98,18 +99,20 @@ fun Activity.prepareActivityTransformationFrom() {
  */
 fun Activity.prepareActivityTransformationTo() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
-    val transitionName = intent.getStringExtra(TRANSITION_NAME_KEY) ?: run {
-        Log.w(TAG, "No transition name found. Skipping transformation.")
-        return
-    }
+    val transitionName =
+        intent.getStringExtra(TRANSITION_NAME_KEY) ?: run {
+            Log.w(TAG, "No transition name found. Skipping transformation.")
+            return
+        }
     ViewCompat.setTransitionName(findViewById(android.R.id.content), transitionName)
     setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
     window.sharedElementEnterTransition = getTransitionContainerTransform()
     window.sharedElementReturnTransition = getTransitionContainerTransform()
-    val lifecycle = (this as? LifecycleOwner)?.lifecycle ?: run {
-        Log.w(TAG, "Activity is not a LifecycleOwner; enter transition cleanup skipped.")
-        return
-    }
+    val lifecycle =
+        (this as? LifecycleOwner)?.lifecycle ?: run {
+            Log.w(TAG, "Activity is not a LifecycleOwner; enter transition cleanup skipped.")
+            return
+        }
     lifecycle.addObserver(
         object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
