@@ -35,6 +35,7 @@ import de.lemke.commonutils.databinding.ActivityOobeBinding
 import de.lemke.commonutils.onboardingContext
 import de.lemke.commonutils.overrideFadeOpenTransition
 import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -106,7 +107,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
             binding.oobeIntroFooterButton.isVisible = false
             binding.oobeIntroFooterButtonProgress.isVisible = true
             lifecycleScope.launch {
-                delay(PROCEED_DELAY_MS)
+                delay(PROCEED_DELAY_MS.milliseconds)
                 advanceOnboarding()
             }
         }

@@ -30,6 +30,7 @@ import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.KeepOnScreenCondition
 import androidx.lifecycle.lifecycleScope
 import java.lang.System.currentTimeMillis
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -67,7 +68,7 @@ fun AppCompatActivity.configureCommonUtilsSplashScreen(
         val remainingDuration =
             splash.iconAnimationDurationMillis - (currentTimeMillis() - splash.iconAnimationStartMillis).coerceAtLeast(0L)
         lifecycleScope.launch {
-            delay(remainingDuration)
+            delay(remainingDuration.milliseconds)
             splashAnimator.start()
             contentAnimator.start()
         }
