@@ -15,10 +15,10 @@
  */
 package de.lemke.commonutils.data
 
-import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
+import androidx.core.content.edit
 import de.lemke.commonutils.SaveLocation
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -30,7 +30,6 @@ import kotlin.reflect.KProperty
 val SharedPreferences.delegates get() = SharedPreferenceDelegates(this)
 
 /** Factory for type-safe [ReadWriteProperty] delegates backed by [SharedPreferences]. */
-@SuppressLint("CommitPrefEdits")
 class SharedPreferenceDelegates(
     private val prefs: SharedPreferences,
 ) {
@@ -38,37 +37,39 @@ class SharedPreferenceDelegates(
     fun boolean(
         default: Boolean = false,
         key: String? = null,
-    ): ReadWriteProperty<Any, Boolean> = create(default, key, prefs::getBoolean, prefs.edit()::putBoolean)
+    ): ReadWriteProperty<Any, Boolean> = create(default, key, prefs::getBoolean) { k, v -> prefs.edit { putBoolean(k, v) } }
 
     /** Delegate that reads/writes an [Int] preference. */
     fun int(
         default: Int = 0,
         key: String? = null,
-    ): ReadWriteProperty<Any, Int> = create(default, key, prefs::getInt, prefs.edit()::putInt)
+    ): ReadWriteProperty<Any, Int> = create(default, key, prefs::getInt) { k, v -> prefs.edit { putInt(k, v) } }
 
     /** Delegate that reads/writes a [Float] preference. */
     fun float(
         default: Float = 0f,
         key: String? = null,
-    ): ReadWriteProperty<Any, Float> = create(default, key, prefs::getFloat, prefs.edit()::putFloat)
+    ): ReadWriteProperty<Any, Float> = create(default, key, prefs::getFloat) { k, v -> prefs.edit { putFloat(k, v) } }
 
     /** Delegate that reads/writes a [Long] preference. */
     fun long(
         default: Long = 0L,
         key: String? = null,
-    ): ReadWriteProperty<Any, Long> = create(default, key, prefs::getLong, prefs.edit()::putLong)
+    ): ReadWriteProperty<Any, Long> = create(default, key, prefs::getLong) { k, v -> prefs.edit { putLong(k, v) } }
 
     /** Delegate that reads/writes a [String] preference. */
     fun string(
         default: String = "",
         key: String? = null,
-    ): ReadWriteProperty<Any, String> = create(default, key, { k, d -> prefs.getString(k, d) ?: d }, prefs.edit()::putString)
+    ): ReadWriteProperty<Any, String> =
+        create(default, key, { k, d -> prefs.getString(k, d) ?: d }, { k, v -> prefs.edit { putString(k, v) } })
 
     /** Delegate that reads/writes a [Set]<[String]> preference. */
     fun stringSet(
         default: Set<String> = emptySet(),
         key: String? = null,
-    ): ReadWriteProperty<Any, Set<String>> = create(default, key, { k, d -> prefs.getStringSet(k, d) ?: d }, prefs.edit()::putStringSet)
+    ): ReadWriteProperty<Any, Set<String>> =
+        create(default, key, { k, d -> prefs.getStringSet(k, d) ?: d }, { k, v -> prefs.edit { putStringSet(k, v) } })
 
     /** Delegate that reads/writes a dark mode flag stored as `"1"`/`"0"` for legacy HorizontalRadioPreference compatibility. */
     fun darkMode(
@@ -79,7 +80,7 @@ class SharedPreferenceDelegates(
             default,
             key,
             { k, d -> prefs.getString(k, if (d) "1" else "0") == "1" },
-            { k, v -> prefs.edit().putString(k, if (v) "1" else "0") },
+            { k, v -> prefs.edit { putString(k, if (v) "1" else "0") } },
         )
 
     /** Delegate that reads/writes a [SaveLocation] preference, forcing [SaveLocation.CUSTOM] on API ≤29. */
@@ -97,14 +98,14 @@ class SharedPreferenceDelegates(
                     SaveLocation.fromStringOrDefault(prefs.getString(k, d.name))
                 }
             },
-            { k, v -> prefs.edit().putString(k, if (SDK_INT <= VERSION_CODES.Q) SaveLocation.CUSTOM.name else v.name) },
+            { k, v -> prefs.edit { putString(k, if (SDK_INT <= VERSION_CODES.Q) SaveLocation.CUSTOM.name else v.name) } },
         )
 
     private fun <T> create(
         default: T,
         key: String? = null,
         getter: (key: String, default: T) -> T,
-        setter: (key: String, value: T) -> SharedPreferences.Editor,
+        setter: (key: String, value: T) -> Unit,
     ) = object : ReadWriteProperty<Any, T> {
         private fun key(property: KProperty<*>) = key ?: property.name
 
@@ -117,6 +118,6 @@ class SharedPreferenceDelegates(
             thisRef: Any,
             property: KProperty<*>,
             value: T,
-        ) = setter(key(property), value).apply()
+        ) = setter(key(property), value)
     }
 }
