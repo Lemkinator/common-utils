@@ -24,7 +24,7 @@ import androidx.lifecycle.Lifecycle.State.STARTED
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -62,20 +62,20 @@ inline fun <T> Fragment.collectState(
     flow.collect { onEach(it) }
 }
 
-/** Consumes events from [channel] and delivers each to [onEach] while the activity is at least [minActiveState]. */
+/** Collects [flow] events and delivers each to [onEach] while the activity is at least [minActiveState]. */
 inline fun <T> AppCompatActivity.collectEvents(
-    channel: ReceiveChannel<T>,
+    flow: Flow<T>,
     minActiveState: State = STARTED,
     crossinline onEach: (T) -> Unit,
 ) = launchAndRepeatWithLifecycle(minActiveState) {
-    for (event in channel) onEach(event)
+    flow.collect { onEach(it) }
 }
 
-/** Consumes events from [channel] and delivers each to [onEach] while the fragment view is at least [minActiveState]. */
+/** Collects [flow] events and delivers each to [onEach] while the fragment view is at least [minActiveState]. */
 inline fun <T> Fragment.collectEvents(
-    channel: ReceiveChannel<T>,
+    flow: Flow<T>,
     minActiveState: State = STARTED,
     crossinline onEach: (T) -> Unit,
 ) = launchAndRepeatWithViewLifecycle(minActiveState) {
-    for (event in channel) onEach(event)
+    flow.collect { onEach(it) }
 }

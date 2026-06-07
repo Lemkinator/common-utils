@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.Robolectric
@@ -54,7 +55,7 @@ class LifecycleCollectorsTest {
         val channel = Channel<String>(Channel.BUFFERED)
         val eventCollected = mutableListOf<String>()
         channel.trySend("hello")
-        activity.collectEvents(channel) { eventCollected.add(it) }
+        activity.collectEvents(channel.receiveAsFlow()) { eventCollected.add(it) }
         idle()
         eventCollected shouldBe listOf("hello")
     }
