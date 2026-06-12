@@ -41,8 +41,6 @@ import com.google.android.material.transition.platform.MaterialArcMotion
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_CROSS
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
-import dev.oneuiproject.oneui.ktx.activity
-
 private const val TAG = "TransformationUtils"
 private const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"
 private const val DEFAULT_TRANSITION_NAME = "commonUtilsActivityTransitionName"
@@ -167,9 +165,13 @@ fun View.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
+    val activity = context as? Activity ?: run {
+        context.startActivity(intent)
+        return
+    }
     suspendStateListAnimator()
     this.transitionName = transitionName
-    val bundle = ActivityOptions.makeSceneTransitionAnimation(context.activity, this, transitionName).toBundle()
+    val bundle = ActivityOptions.makeSceneTransitionAnimation(activity, this, transitionName).toBundle()
     intent
         .putExtra(TRANSITION_NAME_KEY, transitionName)
         .putExtra(DURATION_KEY, duration)
