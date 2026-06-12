@@ -41,14 +41,21 @@ import com.google.android.material.transition.platform.MaterialArcMotion
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_CROSS
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
+
 private const val TAG = "TransformationUtils"
 private const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"
-private const val DEFAULT_TRANSITION_NAME = "commonUtilsActivityTransitionName"
+
+@PublishedApi
+internal const val DEFAULT_TRANSITION_NAME = "commonUtilsActivityTransitionName"
 private const val DURATION_KEY = "commonUtilsDurationKey"
-private const val DEFAULT_DURATION = 400L
+
+@PublishedApi
+internal const val DEFAULT_DURATION = 400L
 private const val STATE_ANIMATOR_RESTORE_DELAY_MS = 1_000L
 private const val FADE_MODE_KEY = "commonUtilsFadeModeKey"
-private const val DEFAULT_FADE_MODE = FADE_MODE_CROSS
+
+@PublishedApi
+internal const val DEFAULT_FADE_MODE = FADE_MODE_CROSS
 
 /**
  * Extension function to get a configured MaterialContainerTransform for the Activity.
@@ -178,10 +185,11 @@ fun View.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
-    val activity = context as? Activity ?: run {
-        context.startActivity(intent)
-        return
-    }
+    val activity =
+        context as? Activity ?: run {
+            context.startActivity(intent)
+            return
+        }
     suspendStateListAnimator()
     this.transitionName = transitionName
     val bundle = ActivityOptions.makeSceneTransitionAnimation(activity, this, transitionName).toBundle()
@@ -268,8 +276,11 @@ fun Activity.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
-    if (view != null) view.transformToActivity(intent, transitionName, duration, fadeMode)
-    else startActivity(intent)
+    if (view != null) {
+        view.transformToActivity(intent, transitionName, duration, fadeMode)
+    } else {
+        startActivity(intent)
+    }
 }
 
 /**
