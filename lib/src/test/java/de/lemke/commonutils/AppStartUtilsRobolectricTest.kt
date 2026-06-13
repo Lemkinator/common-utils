@@ -36,8 +36,10 @@ class AppStartUtilsRobolectricTest {
     @BeforeEach
     fun setUp() {
         activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
-        val prefs = ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("appstart_test", Context.MODE_PRIVATE)
+        val prefs =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getSharedPreferences("appstart_test", Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
         commonUtilsSettings = SettingsRepository(prefs)
     }

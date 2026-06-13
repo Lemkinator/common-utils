@@ -27,7 +27,6 @@ import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class DrawerUtilsRobolectricTest {
-
     @Test
     fun `saveSearchAndActionMode sets search mode key`() {
         val bundle = Bundle()

@@ -29,7 +29,6 @@ import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class ActivityUtilsRobolectricTest {
-
     @Test
     fun `setupCommonUtilsSettingsActivity vararg sets preferences list`() {
         setupCommonUtilsSettingsActivity(1, 2, 3)
