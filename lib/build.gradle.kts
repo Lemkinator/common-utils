@@ -128,13 +128,18 @@ kover {
                     "dagger.hilt.*",
                     "hilt_aggregated_deps.*",
                     "*.di.*",
+                    // Play Core — requires live device + Play Store, untestable in CI
+                    "*AppUpdateManagerUtilsKt",
+                    "*InAppReviewUtilsKt",
+                    // Splash screen — zero-logic platform lifecycle hook
+                    "*SplashUtilsKt",
                 )
             }
         }
         variant("debug") {
             verify {
-                rule { minBound(16, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.INSTRUCTION) }
-                rule { minBound(18, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH) }
+                rule { minBound(17, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.INSTRUCTION) }
+                rule { minBound(19, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH) }
             }
         }
     }
