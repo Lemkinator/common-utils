@@ -123,10 +123,11 @@ kover {
                     "*Hilt_*",
                     "*_HiltModules*",
                     "*_Factory",
+                    "*_Provide*",
                     "*_MembersInjector",
                     "dagger.hilt.*",
                     "hilt_aggregated_deps.*",
-                    "de.lemke.commonutils.di.*",
+                    "*.di.*",
                 )
             }
         }
