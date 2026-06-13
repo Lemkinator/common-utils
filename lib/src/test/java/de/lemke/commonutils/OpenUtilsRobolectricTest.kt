@@ -15,19 +15,48 @@
  */
 package de.lemke.commonutils
 
+import android.content.Context
+import android.provider.Settings
+import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class OpenUtilsApi36Test {
+    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `areAppLocalSettingsSupported returns true on API 33+`() {
         areAppLocalSettingsSupported().shouldBeTrue()
+    }
+
+    @Test
+    fun `openApplicationSettings fires ACTION_APPLICATION_DETAILS_SETTINGS intent`() {
+        ctx.openApplicationSettings().shouldBeTrue()
+        val intent = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
+        intent shouldNotBe null
+        intent.action shouldBe Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+    }
+
+    @Test
+    fun `openApp with tryLocalFirst false fires Play Store intent`() {
+        ctx.openApp("com.example.nonexistent", tryLocalFirst = false).shouldBeTrue()
+        shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
+    fun `openApp with tryLocalFirst true and unknown package falls back to store`() {
+        ctx.openApp("com.example.notinstalled", tryLocalFirst = true).shouldBeTrue()
+        shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
     }
 }
 
