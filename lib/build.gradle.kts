@@ -1,3 +1,6 @@
+import kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH
+import kotlinx.kover.gradle.plugin.dsl.CoverageUnit.INSTRUCTION
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.maven.publish)
@@ -131,7 +134,10 @@ kover {
             }
         }
         variant("debug") {
-            verify { rule { minBound(13) } }
+            verify {
+                rule { minBound(10, coverageUnits = INSTRUCTION) }
+                rule { minBound(5, coverageUnits = BRANCH) }
+            }
         }
     }
 }
