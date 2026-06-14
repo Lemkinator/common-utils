@@ -15,11 +15,14 @@
  */
 package de.lemke.commonutils
 
+import android.app.Activity
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
@@ -41,5 +44,15 @@ class URLUtilsRobolectricTest {
     @Test
     fun `openURL returns false for empty URL`() {
         ctx.openURL("").shouldBeFalse()
+    }
+
+    @Test
+    fun `openURL returns true for valid URL from Activity context`() {
+        Robolectric
+            .buildActivity(Activity::class.java)
+            .setup()
+            .get()
+            .openURL("https://example.com")
+            .shouldBeTrue()
     }
 }

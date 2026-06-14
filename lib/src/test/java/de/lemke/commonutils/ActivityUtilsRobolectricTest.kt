@@ -19,7 +19,9 @@ import android.app.Activity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.Robolectric
@@ -55,5 +57,13 @@ class ActivityUtilsRobolectricTest {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         CommonUtilsAboutMeActivity.onShareApp.invoke(activity)
         called shouldBe true
+    }
+
+    @Test
+    fun `setupCommonUtilsAboutActivity suspend version sets getAppVersion`() {
+        val getVersion: suspend () -> String = { "2.0.0" }
+        setupCommonUtilsAboutActivity(getVersion)
+        CommonUtilsAboutActivity.getAppVersion shouldNotBe null
+        CommonUtilsAboutActivity.optionalText.shouldBeNull()
     }
 }

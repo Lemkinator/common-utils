@@ -61,4 +61,16 @@ class EmailUtilsRobolectricTest {
         val intent = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
         intent.getStringExtra(Intent.EXTRA_TEXT) shouldBe "My Body"
     }
+
+    @Test
+    fun `sendEmailHelp returns true and fires intent`() {
+        ctx.sendEmailHelp("help@example.com", "Help Subject").shouldBeTrue()
+        shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
+    fun `sendEmailAboutMe returns true and fires intent`() {
+        ctx.sendEmailAboutMe("me@example.com", "About Subject").shouldBeTrue()
+        shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
+    }
 }
