@@ -16,10 +16,14 @@
 package de.lemke.commonutils
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
+import androidx.activity.result.ActivityResultLauncher
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldNotBeBlank
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
@@ -44,6 +48,17 @@ class ExportUtilsRobolectricTest {
     @Test
     fun `exportBitmap returns false when launcher is null and saveLocation is CUSTOM`() {
         ctx.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", null).shouldBeFalse()
+    }
+
+    @Test
+    fun `exportBitmap with non-null launcher and CUSTOM launches picker and returns true`() {
+        val launcher = mockk<ActivityResultLauncher<Intent>>(relaxed = true)
+        ctx.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", launcher).shouldBeTrue()
+    }
+
+    @Test
+    fun `exportBitmap DOWNLOADS on API 36 hits external storage path without crashing`() {
+        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null)
     }
 
     @Test
