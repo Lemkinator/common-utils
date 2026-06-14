@@ -38,7 +38,11 @@ android {
             isIncludeAndroidResources = true
             all {
                 it.useJUnitPlatform()
-                it.jvmArgs("-Djunit.platform.launcher.interceptors.enabled=true")
+                it.maxHeapSize = "2048m"
+                it.jvmArgs(
+                    "-Djunit.platform.launcher.interceptors.enabled=true",
+                    "-XX:+EnableDynamicAgentLoading",
+                )
             }
         }
     }
