@@ -23,6 +23,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Copy CI gradle.properties
+        run: mkdir -p ~/.gradle && cp .github/ci-gradle.properties ~/.gradle/gradle.properties
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
       - name: Run static analysis
@@ -42,6 +44,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Copy CI gradle.properties
+        run: mkdir -p ~/.gradle && cp .github/ci-gradle.properties ~/.gradle/gradle.properties
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
       - name: Run unit tests
@@ -79,6 +83,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Copy CI gradle.properties
+        run: mkdir -p ~/.gradle && cp .github/ci-gradle.properties ~/.gradle/gradle.properties
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
       - name: Assemble release
