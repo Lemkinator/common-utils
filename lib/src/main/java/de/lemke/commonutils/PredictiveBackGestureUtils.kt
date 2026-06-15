@@ -45,6 +45,7 @@ import kotlinx.coroutines.launch
 private const val TAG = "PredictiveBackGestureUtils"
 
 /** Registers [onBackPressedLogic] as the back handler, enabled whenever [backPressLogicEnabled] emits `true`. */
+@NoCoverage
 inline fun Fragment.addOnBackLogic(
     backPressLogicEnabled: StateFlow<Boolean>,
     crossinline onBackPressedLogic: () -> Unit = {},

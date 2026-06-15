@@ -36,13 +36,15 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            isReturnDefaultValues = true
             all {
                 it.useJUnitPlatform()
-                it.maxHeapSize = "2048m"
+                it.maxHeapSize = "4096m"
                 it.jvmArgs(
                     "-Djunit.platform.launcher.interceptors.enabled=true",
                     "-XX:+EnableDynamicAgentLoading",
                 )
+                it.systemProperty("robolectric.graphicsMode", "NATIVE")
             }
         }
     }
@@ -138,12 +140,14 @@ kover {
                     // Splash screen — zero-logic platform lifecycle hook
                     "*SplashUtilsKt",
                 )
+                // inline fun stubs that Kover cannot instrument at definition site
+                annotatedBy("de.lemke.commonutils.NoCoverage")
             }
         }
         variant("debug") {
             verify {
-                rule { minBound(28, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.INSTRUCTION) }
-                rule { minBound(28, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH) }
+                rule { minBound(37, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.INSTRUCTION) }
+                rule { minBound(37, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH) }
             }
         }
     }
