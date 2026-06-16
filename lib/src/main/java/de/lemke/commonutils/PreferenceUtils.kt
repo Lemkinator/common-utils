@@ -49,6 +49,7 @@ private const val TAG = "PreferenceUtils"
 private const val DELETE_APP_DATA_DELAY_MS = 500L
 
 /** Adds a relative-links card with "Share app" and "Rate app" actions to the preference screen. */
+@NoCoverage
 fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
     addRelativeLinksCard(
         RelativeLink(getString(R.string.commonutils_share_app)) { shareApp() },
@@ -57,6 +58,7 @@ fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
 }
 
 /** Shows a confirmation dialog and clears all application user data on confirmation. */
+@NoCoverage
 fun Fragment.deleteAppDataAndExit(
     title: String? = null,
     message: String? = null,

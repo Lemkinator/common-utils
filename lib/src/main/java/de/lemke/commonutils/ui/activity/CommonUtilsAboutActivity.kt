@@ -26,6 +26,7 @@ import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.play.core.appupdate.AppUpdateInfo
@@ -37,6 +38,7 @@ import com.google.android.play.core.install.model.AppUpdateType.IMMEDIATE
 import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
+import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.databinding.ActivityAboutBinding
@@ -68,14 +70,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         setCustomBackAnimation(binding.root)
         binding.appInfoLayout.apply {
             updateStatus = Loading
-            setMainButtonClickListener {
-                if (updateStatus == NoConnection) {
-                    binding.appInfoLayout.updateStatus = Loading
-                    checkUpdate()
-                } else {
-                    startUpdateFlow()
-                }
-            }
+            setMainButtonClickListener { onMainButtonClicked() }
         }
         appUpdateManager = AppUpdateManagerFactory.create(this)
         setVersionText()
@@ -86,17 +81,35 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         }
         activityResultLauncher =
             registerForActivityResult(StartIntentSenderForResult()) { result ->
-                when (result.resultCode) {
-                    // For immediate updates, you might not receive RESULT_OK because
-                    // the update should already be finished by the time control is given back to your app.
-                    RESULT_OK -> Log.d("InAppUpdate", "Update successful")
-
-                    RESULT_CANCELED -> Log.w("InAppUpdate", "Update canceled")
-
-                    RESULT_IN_APP_UPDATE_FAILED -> Log.e("InAppUpdate", "Update failed")
-                }
+                onUpdateFlowResult(result.resultCode)
             }
         checkUpdate()
+    }
+
+    /** Handles the main button click: retries update check when offline, or starts the update flow. */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onMainButtonClicked() {
+        if (binding.appInfoLayout.updateStatus == NoConnection) {
+            binding.appInfoLayout.updateStatus = Loading
+            checkUpdate()
+        } else {
+            startUpdateFlow()
+        }
+    }
+
+    /**
+     * Handles the activity result from the in-app update flow.
+     *
+     * For immediate updates [RESULT_OK] may never arrive because the update finishes
+     * before control is returned to the app.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onUpdateFlowResult(resultCode: Int) {
+        when (resultCode) {
+            RESULT_OK -> Log.d(TAG, "Update successful")
+            RESULT_CANCELED -> Log.w(TAG, "Update canceled")
+            RESULT_IN_APP_UPDATE_FAILED -> Log.e(TAG, "Update failed")
+        }
     }
 
     private fun setVersionText() {
@@ -132,12 +145,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         super.onResume()
         appUpdateManager
             .appUpdateInfo
-            .addOnSuccessListener { appUpdateInfo ->
-                if (appUpdateInfo.updateAvailability() == DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
-                    // If an in-app update is already running, resume the update.
-                    startUpdateFlow()
-                }
-            }
+            .addOnSuccessListener { info -> onResumeUpdateCheck(info) }
     }
 
     private fun checkUpdate() {
@@ -150,18 +158,37 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         }
 
         appUpdateManager.appUpdateInfo
-            .addOnSuccessListener { appUpdateInfo: AppUpdateInfo ->
-                this.appUpdateInfo = appUpdateInfo
-                when {
-                    appUpdateInfo.updateAvailability() == UPDATE_AVAILABLE -> binding.appInfoLayout.updateStatus = UpdateAvailable
-                    appUpdateInfo.updateAvailability() == UPDATE_NOT_AVAILABLE -> binding.appInfoLayout.updateStatus = NoUpdate
-                }
-            }.addOnFailureListener { appUpdateInfo: Exception ->
-                binding.appInfoLayout.updateStatus = NotUpdatable
-                Log.w(TAG, appUpdateInfo.message.toString())
-            }
+            .addOnSuccessListener { info -> onUpdateAvailabilityFetched(info) }
+            .addOnFailureListener { e -> onUpdateFetchFailed(e) }
     }
 
+    // Play Core callbacks — require a live Google Play Store connection, untestable in JVM tests.
+    // The generated thin-wrapper lambda classes are excluded by Kover class-name patterns in build.gradle.kts.
+
+    @NoCoverage
+    private fun onUpdateAvailabilityFetched(info: AppUpdateInfo) {
+        appUpdateInfo = info
+        when {
+            info.updateAvailability() == UPDATE_AVAILABLE -> binding.appInfoLayout.updateStatus = UpdateAvailable
+            info.updateAvailability() == UPDATE_NOT_AVAILABLE -> binding.appInfoLayout.updateStatus = NoUpdate
+        }
+    }
+
+    @NoCoverage
+    private fun onUpdateFetchFailed(exception: Exception) {
+        binding.appInfoLayout.updateStatus = NotUpdatable
+        Log.w(TAG, exception.message.toString())
+    }
+
+    @NoCoverage
+    private fun onResumeUpdateCheck(info: AppUpdateInfo) {
+        if (info.updateAvailability() == DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+            startUpdateFlow()
+        }
+    }
+
+    // startUpdateFlow calls Play Core's startUpdateFlowForResult which requires the live Play Store.
+    @NoCoverage
     @Suppress("TooGenericExceptionCaught")
     private fun startUpdateFlow() {
         try {
