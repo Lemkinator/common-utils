@@ -45,4 +45,14 @@ class DelegatesAdvancedApi29Test {
         }
         Holder().location shouldBe SaveLocation.CUSTOM
     }
+
+    @Test
+    fun `saveLocation setter on API 29 always stores CUSTOM in prefs`() {
+        class Holder {
+            var location: SaveLocation by prefs.delegates.saveLocation()
+        }
+        val h = Holder()
+        h.location = SaveLocation.DOWNLOADS // setter must store CUSTOM on API <= Q
+        prefs.getString("location", null) shouldBe SaveLocation.CUSTOM.name
+    }
 }

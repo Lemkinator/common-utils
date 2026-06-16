@@ -21,6 +21,7 @@ import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
@@ -91,6 +92,14 @@ class NoEntryViewTest {
         val v = view()
         v.text = "No results found"
         v.text shouldBe "No results found"
+    }
+
+    @Test
+    fun `attrs constructor covers attrs-not-null branch`() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        // Non-null attrs triggers the if-branch in init (withStyledAttributes).
+        val attrs = Robolectric.buildAttributeSet().build()
+        NoEntryView(ctx, attrs)
     }
 
     @Test

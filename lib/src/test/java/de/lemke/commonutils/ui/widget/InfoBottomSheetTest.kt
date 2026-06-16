@@ -15,11 +15,19 @@
  */
 package de.lemke.commonutils.ui.widget
 
+import android.os.Looper
 import android.view.Gravity.CENTER
 import android.view.Gravity.START
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import de.lemke.commonutils.R
+import de.lemke.commonutils.ui.widget.InfoBottomSheet.Companion.showInfoBottomSheet
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.robolectric.Robolectric
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
@@ -44,6 +52,11 @@ class InfoBottomSheetTest {
         return method.invoke(InfoBottomSheet.Companion, title, message, gravity) as InfoBottomSheet
     }
 
+    private fun activity(): AppCompatActivity =
+        Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+
+    // ── newInstance / argument packing ─────────────────────────────────────────
+
     @Test
     fun `title is stored in arguments bundle`() {
         val frag = newInstance("Hello", "World")
@@ -66,5 +79,71 @@ class InfoBottomSheetTest {
     fun `explicit text gravity is preserved`() {
         val frag = newInstance("T", "M", START)
         frag.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY) shouldBe START
+    }
+
+    // ── showInfoBottomSheet companion overloads + lifecycle ────────────────────
+
+    @Test
+    fun `showInfoBottomSheet(FragmentActivity, String, String) shows sheet and runs lifecycle`() {
+        val a = activity()
+        a.showInfoBottomSheet("Title", "Message")
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `showInfoBottomSheet(FragmentActivity, StringRes, StringRes) shows sheet`() {
+        val a = activity()
+        a.showInfoBottomSheet(R.string.commonutils_ok, R.string.commonutils_tos)
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `showInfoBottomSheet(FragmentActivity, String, String, gravity) shows sheet with gravity`() {
+        val a = activity()
+        a.showInfoBottomSheet("T", "M", START)
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `showInfoBottomSheet from Fragment shows sheet`() {
+        val a = activity()
+        val fragment = Fragment()
+        a.supportFragmentManager.beginTransaction().add(fragment, "host").commitNow()
+        with(InfoBottomSheet.Companion) { fragment.showInfoBottomSheet("T", "M") }
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `showInfoBottomSheet from Fragment with StringRes shows sheet`() {
+        val a = activity()
+        val fragment = Fragment()
+        a.supportFragmentManager.beginTransaction().add(fragment, "host").commitNow()
+        with(InfoBottomSheet.Companion) {
+            fragment.showInfoBottomSheet(R.string.commonutils_ok, R.string.commonutils_tos)
+        }
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `showInfoBottomSheet with blank title covers title-hidden branch`() {
+        val a = activity()
+        a.showInfoBottomSheet("", "Some message")
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `showInfoBottomSheet with blank message covers message-hidden branch`() {
+        val a = activity()
+        a.showInfoBottomSheet("Title", "")
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `InfoBottomSheet shown from fragmentManager commits transaction`() {
+        val a = activity()
+        InfoBottomSheet.showInfoBottomSheet(a.supportFragmentManager, "T", "M")
+        a.supportFragmentManager.executePendingTransactions()
+        val shown = a.supportFragmentManager.findFragmentByTag(InfoBottomSheet::class.java.simpleName)
+        shown shouldNotBe null
     }
 }

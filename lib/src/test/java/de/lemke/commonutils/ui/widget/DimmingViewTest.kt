@@ -23,6 +23,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
@@ -55,5 +56,13 @@ class DimmingViewTest {
         Color.red(bg.color) shouldBe 0
         Color.green(bg.color) shouldBe 0
         Color.blue(bg.color) shouldBe 0
+    }
+
+    @Test
+    fun `attrs constructor covers withStyledAttributes branch`() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        // Non-null attrs triggers the else branch in init (withStyledAttributes).
+        val attrs = Robolectric.buildAttributeSet().build()
+        DimmingView(ctx, attrs)
     }
 }
