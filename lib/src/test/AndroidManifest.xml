@@ -5,5 +5,20 @@
         <activity
             android:name="androidx.appcompat.app.AppCompatActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name="de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name="de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name="de.lemke.commonutils.ui.activity.CommonUtilsLibsActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name="de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name="de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 </manifest>

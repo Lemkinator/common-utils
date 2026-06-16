@@ -135,10 +135,32 @@ kover {
                     "hilt_aggregated_deps.*",
                     "*.di.*",
                     // Play Core — requires live device + Play Store, untestable in CI
-                    "*AppUpdateManagerUtilsKt",
-                    "*InAppReviewUtilsKt",
+                    "*AppUpdateManagerUtilsKt*",
+                    "*InAppReviewUtilsKt*",
                     // Splash screen — zero-logic platform lifecycle hook
-                    "*SplashUtilsKt",
+                    "*SplashUtilsKt*",
+                    // CommonUtilsAboutActivity Play Core listener lambdas and thin wrappers —
+                    // require live Google Play Store connection, untestable in JVM test environment.
+                    // The extracted Play-Core methods are annotated @NoCoverage (caught below via
+                    // annotatedBy); these patterns exclude the generated thin-wrapper lambda classes
+                    // that delegate to those methods and cannot be excluded via annotatedBy alone.
+                    "*CommonUtilsAboutActivity\$checkUpdate\$lambda*",
+                    "*CommonUtilsAboutActivity\$onResume\$lambda*",
+                    "*CommonUtilsAboutActivity\$onCreate\$lambda\$0\$0",
+                    // TipPopupUtils — requires OneUI TipPopup widget + Activity decorView root;
+                    // the widget cannot be instantiated under Robolectric without a full OneUI theme.
+                    "*TipPopupUtilsKt*",
+                    // PreferenceUtils — addRelativeLinksCard (OneUI listView NPE) and
+                    // setOnClickListenerWithProgress (OneUI extension) are @NoCoverage;
+                    // these globs exclude generated lambda classes inside those methods.
+                    "*PreferenceUtilsKt\$addShareAppAndRateRelativeLinksCard*",
+                    "*PreferenceUtilsKt\$deleteAppDataAndExit*",
+                    // DrawerUtils — setupHeaderAndNavRail and onNavigationSingleClick require OneUI
+                    // NavDrawerLayout / DrawerNavigationView; lambda classes from those methods also excluded.
+                    "*DrawerUtilsKt\$setupHeaderAndNavRail*",
+                    "*DrawerUtilsKt\$onNavigationSingleClick*",
+                    // Default empty-lambda objects for crossinline params of inline restoreSearchAndActionMode.
+                    "*DrawerUtilsKt\$restoreSearchAndActionMode\$*",
                 )
                 // inline fun stubs that Kover cannot instrument at definition site
                 annotatedBy("de.lemke.commonutils.NoCoverage")
