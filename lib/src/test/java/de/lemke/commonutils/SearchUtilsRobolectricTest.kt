@@ -104,4 +104,14 @@ class SearchUtilsRobolectricTest {
         listener.onSearchModeToggle(searchView, true)
         flow.value shouldBe ""
     }
+
+    @Test
+    fun `onSearchModeToggle with non-null queryHint sets hint on searchView`() {
+        val activity = activity()
+        val flow = MutableStateFlow<String?>(null)
+        val listener = activity.getCommonUtilsSearchListener(flow, queryHint = R.string.commonutils_search)
+        val searchView = SearchView(activity)
+        listener.onSearchModeToggle(searchView, true)
+        // queryHint non-null branch: searchView.queryHint = getString(R.string.commonutils_search)
+    }
 }

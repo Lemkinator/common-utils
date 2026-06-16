@@ -18,7 +18,10 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.os.Looper
 import android.view.View
+import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -93,6 +96,58 @@ class TransformationUtilsRobolectricTest {
     }
 
     @Test
+    fun `View transformToActivity with Activity context runs full transition path`() {
+        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val view = View(a)
+        val intent = Intent(a, Activity::class.java)
+        // context IS Activity → suspendStateListAnimator + makeSceneTransitionAnimation + startActivity
+        view.transformToActivity(intent)
+        shadowOf(a).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
+    fun `View transformTo animates between views in a container`() {
+        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        // Attach container to window so View.post() actually posts to the Looper
+        val container = FrameLayout(a)
+        val v1 = View(a)
+        val v2 = View(a)
+        container.addView(v1)
+        container.addView(v2)
+        a.setContentView(container)
+        v1.transformTo(v2)
+        // Flush the posted runnable so the lambda body (getContainerTransform) executes
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `Activity transformToActivity with found viewId triggers view transition`() {
+        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val view = View(a)
+        view.id = android.R.id.text1
+        a.setContentView(view)
+        val intent = Intent(a, Activity::class.java)
+        a.transformToActivity(android.R.id.text1, intent)
+        shadowOf(a).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
+    fun `Activity transformToActivity class overload delegates to intent overload`() {
+        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        // Int.MAX_VALUE view not found → plain startActivity fallback
+        a.transformToActivity(Int.MAX_VALUE, Activity::class.java)
+        shadowOf(a).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
+    fun `View transformToActivity cls overload starts activity via Activity context`() {
+        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val view = View(a)
+        view.transformToActivity(Activity::class.java)
+        shadowOf(a).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
     fun `overrideFadeOpenTransition does not throw`() {
         activity().overrideFadeOpenTransition()
     }
@@ -108,6 +163,28 @@ class TransformationUtilsRobolectricTest {
     fun `getTransitionContainerTransform returns transform with default duration`() {
         val transform = activity().getTransitionContainerTransform()
         transform.duration shouldBe DEFAULT_DURATION
+    }
+
+    @Test
+    fun `prepareActivityTransformationFrom onDestroy while finishing clears exit callback`() {
+        // Must call before create() — requestFeature() must precede window content setup
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java)
+        val a = controller.get()
+        a.prepareActivityTransformationFrom()
+        controller.setup() // create/start/resume after feature is requested
+        a.finish()
+        controller.destroy()
+    }
+
+    @Test
+    fun `prepareActivityTransformationTo onDestroy while finishing clears enter callback`() {
+        val intent = Intent().apply { putExtra("commonUtilsTransitionNameKey", "testTransition") }
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent)
+        val a = controller.get()
+        a.prepareActivityTransformationTo()
+        controller.setup()
+        a.finish()
+        controller.destroy()
     }
 }
 

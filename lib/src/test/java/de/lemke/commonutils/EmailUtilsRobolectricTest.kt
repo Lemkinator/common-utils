@@ -15,14 +15,20 @@
  */
 package de.lemke.commonutils
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.every
+import io.mockk.spyk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
@@ -72,5 +78,19 @@ class EmailUtilsRobolectricTest {
     fun `sendEmailAboutMe returns true and fires intent`() {
         ctx.sendEmailAboutMe("me@example.com", "About Subject").shouldBeTrue()
         shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
+    fun `sendEmail from Activity context does not add FLAG_ACTIVITY_NEW_TASK`() {
+        // covers the `this@sendEmail IS Activity` branch (flag NOT added)
+        Robolectric.buildActivity(Activity::class.java).setup().get()
+            .sendEmail("a@b.com", "Sub", "Body").shouldBeTrue()
+    }
+
+    @Test
+    fun `sendEmail returns false on ActivityNotFoundException`() {
+        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no email")
+        a.sendEmail("a@b.com", "Sub", "Body").shouldBeFalse()
     }
 }

@@ -15,19 +15,33 @@
  */
 package de.lemke.commonutils
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.provider.Settings
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.every
+import io.mockk.spyk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
+
+/** Fragment subclass that always throws ActivityNotFoundException from startActivity. */
+class ThrowingStartActivityFragment : Fragment() {
+    override fun startActivity(intent: Intent) = throw ActivityNotFoundException("no locale settings")
+}
 
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
@@ -57,6 +71,39 @@ class OpenUtilsApi36Test {
     fun `openApp with tryLocalFirst true and unknown package falls back to store`() {
         ctx.openApp("com.example.notinstalled", tryLocalFirst = true).shouldBeTrue()
         shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
+    fun `openAppWithPackageNameOnStore all URIs fail returns false`() {
+        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no store")
+        a.openApp("com.example.pkg", tryLocalFirst = false).shouldBeFalse()
+    }
+
+    @Test
+    fun `openApplicationSettings ActivityNotFoundException returns false`() {
+        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no settings")
+        a.openApplicationSettings().shouldBeFalse()
+    }
+
+    @Test
+    fun `openApp tryLocalFirst with installed package launches app directly`() {
+        // Make getLaunchIntentForPackage return non-null via mocked PM
+        val spyCtx = spyk(ctx)
+        val pm = spyk(ctx.packageManager)
+        every { spyCtx.packageManager } returns pm
+        val fakeIntent = Intent("android.intent.action.MAIN").setPackage("com.example.installed")
+        every { pm.getLaunchIntentForPackage("com.example.installed") } returns fakeIntent
+        spyCtx.openApp("com.example.installed", tryLocalFirst = true).shouldBeTrue()
+    }
+
+    @Test
+    fun `openAppLocaleSettings ActivityNotFoundException returns false`() {
+        val a = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val frag = ThrowingStartActivityFragment()
+        a.supportFragmentManager.beginTransaction().add(frag, "test").commitNow()
+        frag.openAppLocaleSettings().shouldBeFalse()
     }
 }
 

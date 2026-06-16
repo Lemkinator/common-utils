@@ -15,15 +15,23 @@
  */
 package de.lemke.commonutils
 
+import android.content.ActivityNotFoundException
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Environment
 import androidx.activity.result.ActivityResultLauncher
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldNotBeBlank
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
+import java.io.File
+import java.io.OutputStream
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
@@ -85,5 +93,61 @@ class ExportUtilsRobolectricTest {
     fun `getLocalizedEntries returns four entries`() {
         val entries = SaveLocation.getLocalizedEntries(ctx)
         assert(entries.size == 4)
+    }
+
+    @Test
+    fun `saveBitmapToUri success returns true when stream opens and compress succeeds`() {
+        val file = File(ctx.cacheDir, "export_test.png").also { it.createNewFile() }
+        val uri = Uri.fromFile(file)
+        ctx.saveBitmapToUri(uri, bitmap).shouldBeTrue()
+    }
+
+    @Test
+    fun `saveBitmapToUri compress fail returns false`() {
+        val file = File(ctx.cacheDir, "export_fail.png").also { it.createNewFile() }
+        val uri = Uri.fromFile(file)
+        val failBitmap = mockk<Bitmap>()
+        every { failBitmap.compress(any(), any(), any<OutputStream>()) } returns false
+        ctx.saveBitmapToUri(uri, failBitmap).shouldBeFalse()
+    }
+
+    @Test
+    fun `saveBitmapToUri exception returns false`() {
+        // Pass a content URI with no registered provider → openOutputStream throws
+        val uri = Uri.parse("content://de.lemke.nonexistent/data/1")
+        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+    }
+
+    @Test
+    fun `saveBitmapToUri null stream returns false`() {
+        // Mock contentResolver.openOutputStream to return null → ?: run branch
+        val mockResolver = mockk<ContentResolver>()
+        every { mockResolver.openOutputStream(any()) } returns null
+        val spyCtx = spyk(ctx)
+        every { spyCtx.contentResolver } returns mockResolver
+        spyCtx.saveBitmapToUri(Uri.parse("content://test/1"), bitmap).shouldBeFalse()
+    }
+
+    @Test
+    fun `exportBitmap PICTURES on API 36 directory success returns true`() {
+        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        dir.mkdirs()
+        ctx.exportBitmap(SaveLocation.PICTURES, bitmap, "test", null).shouldBeTrue()
+    }
+
+    @Test
+    fun `exportBitmap DCIM on API 36 directory compress-fail returns false`() {
+        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+        dir.mkdirs()
+        val failBitmap = mockk<Bitmap>()
+        every { failBitmap.compress(any(), any(), any<OutputStream>()) } returns false
+        ctx.exportBitmap(SaveLocation.DCIM, failBitmap, "test", null).shouldBeFalse()
+    }
+
+    @Test
+    fun `exportBitmap launcher throws ActivityNotFoundException returns false`() {
+        val launcher = mockk<ActivityResultLauncher<Intent>>()
+        every { launcher.launch(any()) } throws ActivityNotFoundException("no picker")
+        ctx.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", launcher).shouldBeFalse()
     }
 }
