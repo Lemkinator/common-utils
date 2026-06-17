@@ -15,7 +15,7 @@
  */
 package de.lemke.commonutils
 
-/** Marks a function or class that Kover cannot instrument — e.g. `inline fun` whose bytecode is copied to each call site. */
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
+/** Marks a function, property getter, or class that Kover cannot instrument — e.g. `inline fun` whose bytecode is copied to each call site. */
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.PROPERTY_GETTER)
 @Retention(AnnotationRetention.BINARY)
 internal annotation class NoCoverage

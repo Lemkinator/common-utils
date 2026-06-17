@@ -93,7 +93,7 @@ fun Context.exportBitmap(
                 when (saveLocation) {
                     SaveLocation.DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
                     SaveLocation.PICTURES -> Environment.DIRECTORY_PICTURES
-                    SaveLocation.DCIM -> Environment.DIRECTORY_DCIM
+                    else -> Environment.DIRECTORY_DCIM // SaveLocation.DCIM; CUSTOM excluded by outer if
                 }
             if (Files
                     .newOutputStream(

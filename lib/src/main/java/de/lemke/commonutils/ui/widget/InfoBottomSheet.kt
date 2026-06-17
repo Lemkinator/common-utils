@@ -119,7 +119,7 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
         private fun newInstance(
             title: String,
             message: String,
-            textGravity: Int = CENTER,
+            textGravity: Int,
         ) = InfoBottomSheet().apply {
             arguments =
                 Bundle().apply {
