@@ -139,28 +139,46 @@ kover {
                     "*InAppReviewUtilsKt*",
                     // Splash screen — zero-logic platform lifecycle hook
                     "*SplashUtilsKt*",
-                    // CommonUtilsAboutActivity Play Core listener lambdas and thin wrappers —
-                    // require live Google Play Store connection, untestable in JVM test environment.
-                    // The extracted Play-Core methods are annotated @NoCoverage (caught below via
-                    // annotatedBy); these patterns exclude the generated thin-wrapper lambda classes
-                    // that delegate to those methods and cannot be excluded via annotatedBy alone.
-                    "*CommonUtilsAboutActivity\$checkUpdate\$lambda*",
-                    "*CommonUtilsAboutActivity\$onResume\$lambda*",
-                    "*CommonUtilsAboutActivity\$onCreate\$lambda\$0\$0",
                     // TipPopupUtils — requires OneUI TipPopup widget + Activity decorView root;
                     // the widget cannot be instantiated under Robolectric without a full OneUI theme.
                     "*TipPopupUtilsKt*",
-                    // PreferenceUtils — addRelativeLinksCard (OneUI listView NPE) and
-                    // setOnClickListenerWithProgress (OneUI extension) are @NoCoverage;
-                    // these globs exclude generated lambda classes inside those methods.
+                    // PreferenceUtils — addRelativeLinksCard uses OneUI's listView extension;
+                    // the generated lambda/anonymous class cannot be exercised under Robolectric.
                     "*PreferenceUtilsKt\$addShareAppAndRateRelativeLinksCard*",
-                    "*PreferenceUtilsKt\$deleteAppDataAndExit*",
-                    // DrawerUtils — setupHeaderAndNavRail and onNavigationSingleClick require OneUI
-                    // NavDrawerLayout / DrawerNavigationView; lambda classes from those methods also excluded.
-                    "*DrawerUtilsKt\$setupHeaderAndNavRail*",
-                    "*DrawerUtilsKt\$onNavigationSingleClick*",
-                    // Default empty-lambda objects for crossinline params of inline restoreSearchAndActionMode.
+                    // DrawerOneUIExtensions — setupHeaderAndNavRail and onNavigationSingleClick require OneUI
+                    // NavDrawerLayout / DrawerNavigationView and their lambda bodies cannot be exercised in JVM tests.
+                    "*DrawerOneUIExtensionsKt*",
+                    // DeleteAppDataUtils — deleteAppDataAndExit uses setOnClickListenerWithProgress (OneUI widget)
+                    // with a coroutine body that cannot be exercised without a real device context.
+                    "*DeleteAppDataUtilsKt*",
+                    // restoreSearchAndActionMode is inline; definition-site stubs are phantom.
                     "*DrawerUtilsKt\$restoreSearchAndActionMode\$*",
+                    // CommonUtilsLibsActivity setContent {} — Compose lambda body requires full UI rendering,
+                    // which cannot run in JVM unit tests without Compose test infrastructure.
+                    "*CommonUtilsLibsActivity*",
+                    // Default suspend lambda property values — these are the initial instances stored
+                    // in companion/top-level properties (e.g. `var getAppVersion = suspend { "" }`).
+                    // Every test replaces them before launching the activity, so the defaults are
+                    // never invoked; they cannot be reset to their original instance after replacement.
+                    "*CommonUtilsAboutActivity\$Companion\$getAppVersion*",
+                    "*CommonUtilsSettingsActivity\$Companion\$initPreferences*",
+                    "*ActivityUtilsKt\$setupCommonUtilsSettingsActivity*",
+                    // setVersionTextView coroutine — the suspend state-machine's suspension-check
+                    // instructions are never exercised in JVM tests (coroutine completes synchronously).
+                    "*CommonUtilsAboutActivity\$setVersionTextView*",
+                    // AboutAppBarListener.onOffsetChanged — else/else-if branches unreachable under Robolectric
+                    // because AppBarLayout.totalScrollRange = 0 (no layout engine), making abs >= 0/2 always true.
+                    "*CommonUtilsAboutMeActivity\$AboutAppBarListener*",
+                    // invokeOnBack anonymous OnBackPressedCallback — created from the inlined invokeOnBack()
+                    // in initOnBackPressed(); callback is initially disabled (callbackIsActive = false),
+                    // so handleOnBackPressed/Started/Progressed/Cancelled are never called by tests.
+                    "*CommonUtilsAboutMeActivity*initOnBackPressed*",
+                    // setCustomBackAnimation anonymous callback — handleOnBackPressed calls showInAppReviewOrFinish()
+                    // and handleOnBackProgressed has `if (showInAppReview) return` — both require Play Core.
+                    "*PredictiveBackGestureUtilsKt\$setCustomBackAnimation\$callback*",
+                    // OOBEActivity initFooterButton coroutine state machine — suspension-check instructions
+                    // in invokeSuspend are never exercised because the coroutine completes synchronously.
+                    "*CommonUtilsOOBEActivity\$initFooterButton*",
                 )
                 // inline fun stubs that Kover cannot instrument at definition site
                 annotatedBy("de.lemke.commonutils.NoCoverage")
