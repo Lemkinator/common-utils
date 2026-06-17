@@ -15,9 +15,6 @@
  */
 package de.lemke.commonutils
 
-import android.app.ActivityManager
-import android.content.Context.ACTIVITY_SERVICE
-import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import android.util.Log
@@ -26,8 +23,6 @@ import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.DropDownPreference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
@@ -37,16 +32,11 @@ import de.lemke.commonutils.data.commonUtilsSettings
 import dev.oneuiproject.oneui.ktx.addRelativeLinksCard
 import dev.oneuiproject.oneui.ktx.onClick
 import dev.oneuiproject.oneui.ktx.onNewValue
-import dev.oneuiproject.oneui.ktx.setOnClickListenerWithProgress
 import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
 import dev.oneuiproject.oneui.widget.RelativeLink
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "PreferenceUtils"
-private const val DELETE_APP_DATA_DELAY_MS = 500L
 
 /** Adds a relative-links card with "Share app" and "Rate app" actions to the preference screen. */
 @NoCoverage
@@ -55,34 +45,6 @@ fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
         RelativeLink(getString(R.string.commonutils_share_app)) { shareApp() },
         RelativeLink(getString(R.string.commonutils_rate_app)) { openApp(requireContext().packageName, false) },
     )
-}
-
-/** Shows a confirmation dialog and clears all application user data on confirmation. */
-@NoCoverage
-fun Fragment.deleteAppDataAndExit(
-    title: String? = null,
-    message: String? = null,
-    cancel: String? = null,
-    delete: String? = null,
-) {
-    val dialog =
-        AlertDialog
-            .Builder(requireContext())
-            .setTitle(title ?: getString(R.string.commonutils_delete_appdata_and_exit))
-            .setMessage(message ?: getString(R.string.commonutils_delete_appdata_and_exit_warning))
-            .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
-            .setPositiveButton(delete ?: getString(R.string.commonutils_delete), null)
-            .create()
-    dialog.show()
-    dialog.getButton(BUTTON_POSITIVE).apply {
-        setTextColor(requireContext().getColor(designR.color.oui_des_functional_red_color))
-        setOnClickListenerWithProgress { _, _ ->
-            lifecycleScope.launch {
-                delay(DELETE_APP_DATA_DELAY_MS.milliseconds)
-                (requireContext().getSystemService(ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
-            }
-        }
-    }
 }
 
 /** Initializes the standard common-utils preferences (dark mode, save location, language, dev options, more info). */

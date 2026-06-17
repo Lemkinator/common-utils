@@ -17,11 +17,14 @@ package de.lemke.commonutils.ui.activity
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.DialogInterface
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.view.View
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -176,10 +179,25 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             .Builder(this)
             .setTitle(getString(R.string.commonutils_playstore_ad))
             .setMessage(getString(R.string.commonutils_playstore_redirect_message))
-            .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ ->
-                openURL(getString(R.string.commonutils_playstore_developer_page_link))
-            }.setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
+            .setPositiveButton(getString(R.string.commonutils_yes), this::onPlayStoreConfirmed)
+            .setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
             .show()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onPlayStoreConfirmed(dialog: DialogInterface, which: Int) {
+        openURL(getString(R.string.commonutils_playstore_developer_page_link))
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun handleShareApp(view: View) {
+        onShareApp(this)
+        shareApp()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun handleWriteEmail(view: View) {
+        sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
     }
 
     private fun setupOnClickListeners() {
@@ -193,13 +211,8 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             aboutBottomRelativeWebsite.setOnClickListener { openURL(getString(R.string.commonutils_my_website)) }
             aboutBottomRelativeTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
             aboutBottomRateApp.setOnClickListener { openApp(packageName, false) }
-            aboutBottomShareApp.setOnClickListener {
-                onShareApp(this@CommonUtilsAboutMeActivity)
-                shareApp()
-            }
-            aboutBottomWriteEmail.setOnClickListener {
-                sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
-            }
+            aboutBottomShareApp.setOnClickListener(::handleShareApp)
+            aboutBottomWriteEmail.setOnClickListener(::handleWriteEmail)
         }
     }
 

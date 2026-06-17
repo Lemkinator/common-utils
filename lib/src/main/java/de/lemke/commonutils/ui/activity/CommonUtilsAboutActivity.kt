@@ -23,6 +23,7 @@ import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.widget.TextView
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
@@ -79,10 +80,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         binding.aboutButtonOpenSourceLicenses.apply {
             setOnClickListener { transformToActivity(CommonUtilsLibsActivity::class.java, transitionName = "CommonUtilsLibsTransition") }
         }
-        activityResultLauncher =
-            registerForActivityResult(StartIntentSenderForResult()) { result ->
-                onUpdateFlowResult(result.resultCode)
-            }
+        activityResultLauncher = registerForActivityResult(StartIntentSenderForResult(), ::onActivityResult)
         checkUpdate()
     }
 
@@ -143,11 +141,10 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
     // However, you should execute this check at all entry points into the app.
     override fun onResume() {
         super.onResume()
-        appUpdateManager
-            .appUpdateInfo
-            .addOnSuccessListener { info -> onResumeUpdateCheck(info) }
+        appUpdateManager.appUpdateInfo.addOnSuccessListener(::onResumeUpdateCheck)
     }
 
+    @NoCoverage
     private fun checkUpdate() {
         Log.i(TAG, "Checking for updates")
         val connectivityManager = getSystemService(ConnectivityManager::class.java)
@@ -158,9 +155,12 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         }
 
         appUpdateManager.appUpdateInfo
-            .addOnSuccessListener { info -> onUpdateAvailabilityFetched(info) }
-            .addOnFailureListener { e -> onUpdateFetchFailed(e) }
+            .addOnSuccessListener(::onUpdateAvailabilityFetched)
+            .addOnFailureListener(::onUpdateFetchFailed)
     }
+
+    @NoCoverage
+    private fun onActivityResult(result: ActivityResult) = onUpdateFlowResult(result.resultCode)
 
     // Play Core callbacks — require a live Google Play Store connection, untestable in JVM tests.
     // The generated thin-wrapper lambda classes are excluded by Kover class-name patterns in build.gradle.kts.
