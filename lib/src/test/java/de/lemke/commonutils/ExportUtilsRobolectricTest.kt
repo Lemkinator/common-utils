@@ -145,6 +145,20 @@ class ExportUtilsRobolectricTest {
     }
 
     @Test
+    fun `exportBitmap DCIM on API 36 directory success returns true`() {
+        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+        dir.mkdirs()
+        ctx.exportBitmap(SaveLocation.DCIM, bitmap, "test", null).shouldBeTrue()
+    }
+
+    @Test
+    fun `exportBitmap DOWNLOADS on API 36 directory success returns true`() {
+        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        dir.mkdirs()
+        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null).shouldBeTrue()
+    }
+
+    @Test
     fun `exportBitmap launcher throws ActivityNotFoundException returns false`() {
         val launcher = mockk<ActivityResultLauncher<Intent>>()
         every { launcher.launch(any()) } throws ActivityNotFoundException("no picker")

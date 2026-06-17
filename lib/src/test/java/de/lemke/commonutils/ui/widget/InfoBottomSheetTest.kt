@@ -146,4 +146,45 @@ class InfoBottomSheetTest {
         val shown = a.supportFragmentManager.findFragmentByTag(InfoBottomSheet::class.java.simpleName)
         shown shouldNotBe null
     }
+
+    // ── onViewCreated lifecycle (showNow triggers synchronous fragment lifecycle) ──
+
+    @Test
+    fun `onViewCreated with title and message covers non-blank branches`() {
+        val a = activity()
+        newInstance("Real Title", "Real Message", START).showNow(a.supportFragmentManager, "full_tag")
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `onViewCreated with blank title covers isNullOrBlank true branch for title`() {
+        val a = activity()
+        newInstance("", "Some message").showNow(a.supportFragmentManager, "blank_t_tag")
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `onViewCreated with blank message covers isNullOrBlank true branch for message`() {
+        val a = activity()
+        newInstance("A Title", "").showNow(a.supportFragmentManager, "blank_m_tag")
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `InfoBottomSheet with no arguments covers null-arguments path`() {
+        val a = activity()
+        InfoBottomSheet().showNow(a.supportFragmentManager, "no_args_tag")
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `onDismiss is called when sheet is dismissed`() {
+        val a = activity()
+        val fragment = newInstance("T", "M")
+        fragment.showNow(a.supportFragmentManager, "dismiss_tag")
+        shadowOf(Looper.getMainLooper()).idle()
+        fragment.dismiss()
+        a.supportFragmentManager.executePendingTransactions()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
 }

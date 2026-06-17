@@ -244,6 +244,22 @@ class DelegatesAdvancedTest {
     }
 
     @Test
+    fun `string with explicit key uses that key in prefs`() {
+        class Holder { var s: String by prefs.delegates.string(default = "", key = "my_string_key") }
+        val h = Holder()
+        h.s = "hello"
+        prefs.getString("my_string_key", null) shouldBe "hello"
+    }
+
+    @Test
+    fun `stringSet with explicit key uses that key in prefs`() {
+        class Holder { var ss: Set<String> by prefs.delegates.stringSet(default = emptySet(), key = "my_set_key") }
+        val h = Holder()
+        h.ss = setOf("x", "y")
+        prefs.getStringSet("my_set_key", null) shouldContainExactlyInAnyOrder setOf("x", "y")
+    }
+
+    @Test
     fun `boolean with all-defaults produces a working delegate`() {
         class Holder { var flag: Boolean by prefs.delegates.boolean() }
         val h = Holder()

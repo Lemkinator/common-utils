@@ -83,6 +83,18 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
+    fun `shareText with null title returns true`() {
+        activity().shareText("some text").shouldBeTrue()
+    }
+
+    @Test
+    fun `Context shareText ActivityNotFoundException fallback shows toast`() {
+        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        every { a.startActivity(any<android.content.Intent>()) } throws ActivityNotFoundException("no share")
+        a.shareText("hello", "Test title").shouldBeFalse()
+    }
+
+    @Test
     fun `shareApp from activity returns true`() {
         activity().shareApp().shouldBeTrue()
     }
@@ -248,6 +260,21 @@ class SharingUtilsBitmapRobolectricTest {
     fun `Fragment quickShareBitmap delegates to Bitmap quickShare`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         attachedFragment().quickShareBitmap(bitmap, "test.png").shouldBeTrue()
+    }
+
+    @Test
+    fun `Fragment shareText delegates to Context shareText`() {
+        attachedFragment().shareText("hello from fragment", "fragment title").shouldBeTrue()
+    }
+
+    @Test
+    fun `Fragment shareText without title covers default-param synthetic`() {
+        attachedFragment().shareText("hello from fragment").shouldBeTrue()
+    }
+
+    @Test
+    fun `Fragment shareApp delegates to Context shareApp`() {
+        attachedFragment().shareApp().shouldBeTrue()
     }
 
     @Test

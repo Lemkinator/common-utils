@@ -15,13 +15,16 @@
  */
 package de.lemke.commonutils.ui.activity
 
+import android.content.DialogInterface
 import android.content.res.Configuration
 import android.os.Looper
 import android.view.View
+import androidx.activity.BackEventCompat
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.R
 import de.lemke.commonutils.setupCommonUtilsAboutMeActivity
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowDialog
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 @ExtendWith(RobolectricExtension::class)
@@ -173,5 +177,59 @@ class CommonUtilsAboutMeActivityTest {
     fun `bottom tiktok click fires without crashing`() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.aboutBottomRelativeTiktok).performClick()
+    }
+
+    @Test
+    fun `bottom shareApp click invokes onShareApp and shareApp`() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.aboutBottomShareApp).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `playStore dialog positive button click opens URL`() {
+        val activity = launchActivity()
+        activity.findViewById<View>(R.id.aboutHeaderPlayStore).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+        val dialog = ShadowDialog.getLatestDialog() as? androidx.appcompat.app.AlertDialog
+        dialog shouldNotBe null
+        dialog!!.getButton(DialogInterface.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `back gesture start progressed and cancelled dispatches callbacks`() {
+        val activity = launchActivity()
+        // Enable callback by simulating fully-expanded app bar (offset=0 → updateCallbackState(true))
+        activity.dispatchAppBarOffset(0)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        val dispatcher = activity.onBackPressedDispatcher
+        val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
+        dispatcher.dispatchOnBackStarted(event)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        // progress > 0.5 → isExpanding = true branch
+        val highProgressEvent = BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT)
+        dispatcher.dispatchOnBackProgressed(highProgressEvent)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        // progress < 0.3 → collapse branch (isExpanding resets to false)
+        val lowProgressEvent = BackEventCompat(10f, 500f, 0.1f, BackEventCompat.EDGE_LEFT)
+        dispatcher.dispatchOnBackProgressed(lowProgressEvent)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        dispatcher.dispatchOnBackCancelled()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `back gesture pressed finishes activity`() {
+        val activity = launchActivity()
+        activity.dispatchAppBarOffset(0)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        activity.onBackPressedDispatcher.onBackPressed()
+        activity.isFinishing.shouldBeTrue()
     }
 }

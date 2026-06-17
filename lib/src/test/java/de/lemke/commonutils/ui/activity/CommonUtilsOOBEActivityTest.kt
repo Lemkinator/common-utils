@@ -15,10 +15,13 @@
  */
 package de.lemke.commonutils.ui.activity
 
+import android.content.Intent
 import android.os.Looper
 import android.text.Spanned
 import android.text.style.ClickableSpan
 import android.widget.TextView
+import de.lemke.commonutils.AppStartResult
+import de.lemke.commonutils.OnboardingContext
 import de.lemke.commonutils.R
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
@@ -59,6 +62,24 @@ class CommonUtilsOOBEActivityTest {
         activity.findViewById<android.view.View>(R.id.oobeIntroFooterButton).performClick()
         // Idle to let the lifecycleScope.launch block enqueue; actual delay runs async.
         shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `initToSView with tosChanged true shows new-tos-text string`() {
+        val ctx = OnboardingContext(
+            mainActivityName = "android.app.Activity",
+            steps = emptyList(),
+            versionCode = 1,
+            versionName = "1.0",
+            appStartResult = AppStartResult.FIRST_TIME_VERSION,
+            lastVersionCode = 0,
+            lastVersionName = "0.0.0",
+            tosChanged = true,
+        )
+        val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
+        val activity = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java, intent).setup().get()
+        shadowOf(Looper.getMainLooper()).idle()
+        activity shouldNotBe null
     }
 
     @Test

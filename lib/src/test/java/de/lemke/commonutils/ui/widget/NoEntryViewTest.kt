@@ -103,6 +103,13 @@ class NoEntryViewTest {
     }
 
     @Test
+    fun `four-arg constructor with explicit defStyleAttr and defStyleRes does not throw`() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val attrs = Robolectric.buildAttributeSet().build()
+        NoEntryView(ctx, attrs, 0, 0)
+    }
+
+    @Test
     fun `updateVisibility true hides companion view`() {
         val v = view()
         val other = View(ApplicationProvider.getApplicationContext()).also { it.isVisible = true }

@@ -111,6 +111,12 @@ class OnboardingUtilsRobolectricTest {
     }
 
     @Test
+    fun `setupOnboarding without args covers default-param synthetic`() {
+        setupOnboarding()
+        Onboarding.steps shouldBe emptyList()
+    }
+
+    @Test
     fun `setupOnboarding stores steps and Onboarding object reflects them`() {
         setupOnboarding(listOf(Activity::class.java))
         Onboarding.steps shouldBe listOf(Activity::class.java)
@@ -182,6 +188,17 @@ class OnboardingUtilsRobolectricTest {
         val result = a.onboardIfNeeded(1, "1.0")
         result shouldBe null
         shadowOf(a).nextStartedActivity shouldNotBe null
+    }
+
+    // onboardIfNeeded — covers tosChanged=true: FIRST_TIME_VERSION + TOS not accepted → starts OOBE
+    @Test
+    fun `onboardIfNeeded FIRST_TIME_VERSION with unaccepted TOS sets tosChanged true and starts OOBE`() {
+        commonUtilsSettings.lastVersionCode = 1
+        commonUtilsSettings.acceptedTosVersion = 0 // below any real tosVersion → !tosAccepted
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup()
+        val result = controller.get().onboardIfNeeded(2, "2.0")
+        result shouldBe null
+        shadowOf(controller.get()).nextStartedActivity shouldNotBe null
     }
 
     // onboardIfNeeded — Path 3: TOS accepted + same version → returns AppStart, commits

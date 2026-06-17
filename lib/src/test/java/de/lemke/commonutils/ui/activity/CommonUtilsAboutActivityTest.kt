@@ -19,6 +19,8 @@ import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.os.Looper
+import android.text.SpannableString
+import android.widget.Button
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -27,6 +29,7 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.setupCommonUtilsAboutActivity
+import dev.oneuiproject.oneui.design.R as designR
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
 import io.kotest.matchers.shouldNotBe
@@ -141,5 +144,24 @@ class CommonUtilsAboutActivityTest {
         val activity = launchActivity()
         activity.findViewById<android.widget.Button>(R.id.aboutButtonOpenSourceLicenses).performClick()
         shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `update button click covers setMainButtonClickListener lambda`() {
+        // Under Robolectric (no network) updateStatus = NoConnection → update button visible with listener set.
+        val activity = launchActivity()
+        activity.findViewById<Button>(designR.id.app_info_update)?.performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `activity with non-null optionalText covers non-null setOptionalText branch`() {
+        CommonUtilsAboutActivity.optionalText = SpannableString("Custom text for test")
+        try {
+            val activity = launchActivity()
+            activity shouldNotBe null
+        } finally {
+            CommonUtilsAboutActivity.optionalText = null
+        }
     }
 }
