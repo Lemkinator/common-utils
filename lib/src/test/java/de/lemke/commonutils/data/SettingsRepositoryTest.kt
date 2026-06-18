@@ -26,9 +26,30 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeEmpty
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
+
+class CommonUtilsSettingsLateinitTest {
+    @Test
+    fun `accessing commonUtilsSettings before initialization throws UninitializedPropertyAccessException`() {
+        // Normally testing Kotlin's lateinit mechanic is pointless — it's compiler-generated boilerplate.
+        // Still test it here to avoid @get:NoCoverage on production code.
+        val field =
+            Class
+                .forName("de.lemke.commonutils.data.SettingsRepositoryKt")
+                .getDeclaredField("commonUtilsSettings")
+                .apply { isAccessible = true }
+        val previous = field.get(null)
+        field.set(null, null)
+        try {
+            assertThrows<UninitializedPropertyAccessException> { commonUtilsSettings }
+        } finally {
+            field.set(null, previous)
+        }
+    }
+}
 
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])

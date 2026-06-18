@@ -22,11 +22,9 @@ import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.preference.PreferenceManager
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.SaveLocation
 
 /** Global singleton for accessing common-utils app settings; must be initialized via [initCommonUtilsSettingsAndSetDarkMode]. */
-@get:NoCoverage
 lateinit var commonUtilsSettings: SettingsRepository
 
 /** SharedPreferences-backed repository for common-utils app settings. */
