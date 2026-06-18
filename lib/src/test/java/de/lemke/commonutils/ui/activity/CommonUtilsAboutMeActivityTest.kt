@@ -26,7 +26,6 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.setupCommonUtilsAboutMeActivity
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldNotBe
-import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -243,21 +242,21 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `handleShareApp direct call covers share path`() {
         val activity = launchActivity()
-        activity.handleShareApp(mockk(relaxed = true))
+        activity.handleShareApp()
         shadowOf(Looper.getMainLooper()).idle()
     }
 
     @Test
     fun `handleWriteEmail direct call covers email path`() {
         val activity = launchActivity()
-        activity.handleWriteEmail(mockk(relaxed = true))
+        activity.handleWriteEmail()
         shadowOf(Looper.getMainLooper()).idle()
     }
 
     @Test
     fun `onPlayStoreConfirmed direct call opens URL`() {
         val activity = launchActivity()
-        activity.onPlayStoreConfirmed(mockk(relaxed = true), DialogInterface.BUTTON_POSITIVE)
+        activity.onPlayStoreConfirmed()
         shadowOf(Looper.getMainLooper()).idle()
     }
 
@@ -270,7 +269,7 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackStartedHandler sets isBackProgressing`() {
         val activity = launchActivity()
-        activity.onBackStartedHandler(BackEventCompat(0f, 0f, 0f, BackEventCompat.EDGE_LEFT))
+        activity.onBackStartedHandler()
     }
 
     @Test

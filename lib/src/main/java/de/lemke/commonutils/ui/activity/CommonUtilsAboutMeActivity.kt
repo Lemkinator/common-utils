@@ -17,13 +17,11 @@ package de.lemke.commonutils.ui.activity
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.DialogInterface
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.view.View
 import androidx.activity.BackEventCompat
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
@@ -106,7 +104,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         invokeOnBack(
             triggerStateFlow = callbackIsActive,
             onBackPressed = ::onBackPressedHandler,
-            onBackStarted = ::onBackStartedHandler,
+            onBackStarted = { onBackStartedHandler() },
             onBackProgressed = ::onBackProgressedHandler,
             onBackCancelled = ::onBackCancelledHandler,
         )
@@ -121,9 +119,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onBackStartedHandler(
-        @Suppress("UNUSED_PARAMETER") event: BackEventCompat,
-    ) {
+    internal fun onBackStartedHandler() {
         isBackProgressing = true
     }
 
@@ -198,32 +194,24 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             .Builder(this)
             .setTitle(getString(R.string.commonutils_playstore_ad))
             .setMessage(getString(R.string.commonutils_playstore_redirect_message))
-            .setPositiveButton(getString(R.string.commonutils_yes), this::onPlayStoreConfirmed)
+            .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ -> onPlayStoreConfirmed() }
             .setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
             .show()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    @Suppress("UNUSED_PARAMETER")
-    internal fun onPlayStoreConfirmed(
-        dialog: DialogInterface,
-        which: Int,
-    ) {
+    internal fun onPlayStoreConfirmed() {
         openURL(getString(R.string.commonutils_playstore_developer_page_link))
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleShareApp(
-        @Suppress("UNUSED_PARAMETER") view: View,
-    ) {
+    internal fun handleShareApp() {
         onShareApp(this)
         shareApp()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleWriteEmail(
-        @Suppress("UNUSED_PARAMETER") view: View,
-    ) {
+    internal fun handleWriteEmail() {
         sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
     }
 
@@ -238,8 +226,8 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             aboutBottomRelativeWebsite.setOnClickListener { openURL(getString(R.string.commonutils_my_website)) }
             aboutBottomRelativeTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
             aboutBottomRateApp.setOnClickListener { openApp(packageName, false) }
-            aboutBottomShareApp.setOnClickListener(::handleShareApp)
-            aboutBottomWriteEmail.setOnClickListener(::handleWriteEmail)
+            aboutBottomShareApp.setOnClickListener { handleShareApp() }
+            aboutBottomWriteEmail.setOnClickListener { handleWriteEmail() }
         }
     }
 

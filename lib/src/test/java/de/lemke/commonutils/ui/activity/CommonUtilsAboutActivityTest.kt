@@ -160,7 +160,7 @@ class CommonUtilsAboutActivityTest {
     @Test
     fun `handleMainButtonClick direct call covers view-to-onMainButtonClicked bridge`() {
         val activity = launchActivity()
-        activity.handleMainButtonClick(mockk(relaxed = true))
+        activity.handleMainButtonClick()
         shadowOf(Looper.getMainLooper()).idle()
     }
 
