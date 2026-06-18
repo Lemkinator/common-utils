@@ -121,7 +121,9 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onBackStartedHandler(event: BackEventCompat) {
+    internal fun onBackStartedHandler(
+        @Suppress("UNUSED_PARAMETER") event: BackEventCompat,
+    ) {
         isBackProgressing = true
     }
 
@@ -202,6 +204,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Suppress("UNUSED_PARAMETER")
     internal fun onPlayStoreConfirmed(
         dialog: DialogInterface,
         which: Int,
@@ -210,13 +213,17 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleShareApp(view: View) {
+    internal fun handleShareApp(
+        @Suppress("UNUSED_PARAMETER") view: View,
+    ) {
         onShareApp(this)
         shareApp()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleWriteEmail(view: View) {
+    internal fun handleWriteEmail(
+        @Suppress("UNUSED_PARAMETER") view: View,
+    ) {
         sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
     }
 

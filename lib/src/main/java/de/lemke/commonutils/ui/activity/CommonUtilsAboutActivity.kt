@@ -86,7 +86,9 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleMainButtonClick(view: View) = onMainButtonClicked()
+    internal fun handleMainButtonClick(
+        @Suppress("UNUSED_PARAMETER") view: View,
+    ) = onMainButtonClicked()
 
     /** Handles the main button click: retries update check when offline, or starts the update flow. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
