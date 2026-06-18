@@ -61,8 +61,7 @@ class DimmingViewTest {
     @Test
     fun `attrs constructor covers withStyledAttributes branch`() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
-        // Non-null attrs triggers the else branch in init (withStyledAttributes).
         val attrs = Robolectric.buildAttributeSet().build()
-        DimmingView(ctx, attrs)
+        DimmingView(ctx, attrs).shouldNotBeNull()
     }
 }

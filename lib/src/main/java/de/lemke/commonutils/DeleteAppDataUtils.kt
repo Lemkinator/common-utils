@@ -51,7 +51,7 @@ fun Fragment.deleteAppDataAndExit(
         setOnClickListenerWithProgress { _, _ ->
             lifecycleScope.launch {
                 delay(DELETE_APP_DATA_DELAY_MS.milliseconds)
-                (requireContext().getSystemService(ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
+                (context?.getSystemService(ACTIVITY_SERVICE) as? ActivityManager)?.clearApplicationUserData()
             }
         }
     }

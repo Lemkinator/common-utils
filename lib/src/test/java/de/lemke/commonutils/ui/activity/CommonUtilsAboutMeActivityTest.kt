@@ -122,6 +122,7 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.aboutHeaderPlayStore).performClick()
         shadowOf(Looper.getMainLooper()).idle()
+        ShadowDialog.getLatestDialog() shouldNotBe null
     }
 
     @Test
@@ -170,6 +171,7 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.aboutBottomRelativePlayStore).performClick()
         shadowOf(Looper.getMainLooper()).idle()
+        ShadowDialog.getLatestDialog() shouldNotBe null
     }
 
     @Test

@@ -33,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.Robolectric
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
@@ -99,6 +100,7 @@ class FragmentExtensionsRobolectricTest {
     fun `Fragment sendEmailBugReport fires ACTION_SENDTO intent`() {
         fragment.sendEmailBugReport("bug@example.com", "Bug Subject")
         shadowOf(Looper.getMainLooper()).idle()
+        shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity.action shouldBe Intent.ACTION_SENDTO
     }
 
     // ── OpenUtils Fragment overloads ───────────────────────────────────────────

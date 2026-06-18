@@ -43,7 +43,9 @@ class OnboardingUtilsRobolectricTest {
     @BeforeEach
     fun initSettings() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
-        commonUtilsSettings = SettingsRepository(PreferenceManager.getDefaultSharedPreferences(ctx))
+        val prefs = PreferenceManager.getDefaultSharedPreferences(ctx)
+        prefs.edit().clear().commit()
+        commonUtilsSettings = SettingsRepository(prefs)
     }
 
     private fun onboardingContext(

@@ -22,6 +22,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -79,5 +80,7 @@ class AutoClearedUtilsRobolectricTest {
             .beginTransaction()
             .remove(fragment)
             .commitNow()
+        // Cached value is null; viewLifecycleOwner throws because the view is gone
+        shouldThrow<IllegalStateException> { fragment.cached }
     }
 }

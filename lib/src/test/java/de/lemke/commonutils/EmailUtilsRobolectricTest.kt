@@ -82,13 +82,9 @@ class EmailUtilsRobolectricTest {
 
     @Test
     fun `sendEmail from Activity context does not add FLAG_ACTIVITY_NEW_TASK`() {
-        // covers the `this@sendEmail IS Activity` branch (flag NOT added)
-        Robolectric
-            .buildActivity(Activity::class.java)
-            .setup()
-            .get()
-            .sendEmail("a@b.com", "Sub", "Body")
-            .shouldBeTrue()
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        activity.sendEmail("a@b.com", "Sub", "Body").shouldBeTrue()
+        (shadowOf(activity).nextStartedActivity.flags and Intent.FLAG_ACTIVITY_NEW_TASK) shouldBe 0
     }
 
     @Test

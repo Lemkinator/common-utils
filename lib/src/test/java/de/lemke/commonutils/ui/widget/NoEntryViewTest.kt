@@ -97,9 +97,8 @@ class NoEntryViewTest {
     @Test
     fun `attrs constructor covers attrs-not-null branch`() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
-        // Non-null attrs triggers the if-branch in init (withStyledAttributes).
         val attrs = Robolectric.buildAttributeSet().build()
-        NoEntryView(ctx, attrs)
+        NoEntryView(ctx, attrs).isVisible shouldBe false
     }
 
     @Test
@@ -119,7 +118,7 @@ class NoEntryViewTest {
     fun `four-arg constructor with explicit defStyleAttr and defStyleRes does not throw`() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
         val attrs = Robolectric.buildAttributeSet().build()
-        NoEntryView(ctx, attrs, 0, 0)
+        NoEntryView(ctx, attrs, 0, 0).isVisible shouldBe false
     }
 
     @Test

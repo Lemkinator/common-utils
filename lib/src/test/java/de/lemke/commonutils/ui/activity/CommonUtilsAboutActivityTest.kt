@@ -30,8 +30,10 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.setupCommonUtilsAboutActivity
+import de.lemke.commonutils.ui.activity.CommonUtilsLibsActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockk
@@ -147,6 +149,8 @@ class CommonUtilsAboutActivityTest {
         val activity = launchActivity()
         activity.findViewById<Button>(R.id.aboutButtonOpenSourceLicenses).performClick()
         shadowOf(Looper.getMainLooper()).idle()
+        shadowOf(activity).nextStartedActivity.component?.className shouldBe
+            CommonUtilsLibsActivity::class.java.name
     }
 
     @Test

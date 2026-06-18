@@ -23,7 +23,9 @@ import android.widget.TextView
 import de.lemke.commonutils.AppStartResult
 import de.lemke.commonutils.OnboardingContext
 import de.lemke.commonutils.R
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import org.robolectric.shadows.ShadowDialog
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.Robolectric
@@ -51,9 +53,10 @@ class CommonUtilsOOBEActivityTest {
         val tosText = activity.findViewById<TextView>(R.id.oobeIntroFooterTosText)
         val spanned = tosText.text as Spanned
         val spans = spanned.getSpans(0, spanned.length, ClickableSpan::class.java)
-        // Click the ToS span → shows AlertDialog
-        spans.firstOrNull()?.onClick(tosText)
+        spans.isNotEmpty() shouldBe true
+        spans.first().onClick(tosText)
         shadowOf(Looper.getMainLooper()).idle()
+        ShadowDialog.getLatestDialog() shouldNotBe null
     }
 
     @Test
@@ -80,7 +83,8 @@ class CommonUtilsOOBEActivityTest {
         val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
         val activity = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java, intent).setup().get()
         shadowOf(Looper.getMainLooper()).idle()
-        activity shouldNotBe null
+        val tosText = activity.findViewById<TextView>(R.id.oobeIntroFooterTosText)
+        tosText.text.isNotEmpty() shouldBe true
     }
 
     @Test

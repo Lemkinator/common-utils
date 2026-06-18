@@ -112,6 +112,6 @@ class SearchUtilsRobolectricTest {
         val listener = activity.getCommonUtilsSearchListener(flow, queryHint = R.string.commonutils_search)
         val searchView = SearchView(activity)
         listener.onSearchModeToggle(searchView, true)
-        // queryHint non-null branch: searchView.queryHint = getString(R.string.commonutils_search)
+        searchView.queryHint.toString() shouldBe activity.getString(R.string.commonutils_search)
     }
 }

@@ -17,6 +17,7 @@ package de.lemke.commonutils.ui.activity
 
 import android.content.Context
 import android.os.Looper
+import androidx.preference.DropDownPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.test.core.app.ApplicationProvider
@@ -25,6 +26,7 @@ import de.lemke.commonutils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.setupCommonUtilsSettingsActivity
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.just
@@ -280,6 +282,12 @@ class CommonUtilsSettingsActivitySdk29Test {
         )
         val controller = Robolectric.buildActivity(CommonUtilsSettingsActivity::class.java).setup()
         shadowOf(Looper.getMainLooper()).idle()
-        controller.get() shouldNotBe null
+        val activity = controller.get()
+        val fragment = activity.supportFragmentManager.fragments.filterIsInstance<PreferenceFragmentCompat>().first()
+        val key = ApplicationProvider.getApplicationContext<Context>().getString(R.string.commonutils_preference_key_image_save_location)
+        val pref = fragment.findPreference<DropDownPreference>(key)
+        pref shouldNotBe null
+        pref!!.isEnabled shouldBe false
+        pref.value shouldBe "CUSTOM"
     }
 }

@@ -93,8 +93,9 @@ class PredictiveBackGestureUtilsRobolectricTest {
         dispatcher.dispatchOnBackStarted(event)
         dispatcher.dispatchOnBackProgressed(event)
         dispatcher.dispatchOnBackCancelled()
-        view.translationX shouldNotBe null
-        view.scaleX shouldNotBe null
+        view.translationX shouldBe 0f
+        view.scaleX shouldBe 1f
+        view.scaleY shouldBe 1f
     }
 
     @Test

@@ -16,6 +16,7 @@
 package de.lemke.commonutils
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Looper
@@ -92,7 +93,7 @@ class TransformationUtilsRobolectricTest {
         // Non-Activity context path requires FLAG_ACTIVITY_NEW_TASK
         val intent = Intent(ctx, Activity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
         view.transformToActivity(intent)
-        // non-Activity context branch: falls through to context.startActivity
+        shadowOf(ctx as Application).nextStartedActivity shouldNotBe null
     }
 
     @Test

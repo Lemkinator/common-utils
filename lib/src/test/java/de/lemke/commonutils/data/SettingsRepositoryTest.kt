@@ -17,6 +17,7 @@ package de.lemke.commonutils.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.SaveLocation
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -37,8 +38,8 @@ class InitCommonUtilsSettingsTest {
     @Test
     fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode true - FOLLOW_SYSTEM branch`() {
         ctx.initCommonUtilsSettingsAndSetDarkMode()
-        // autoDarkMode defaults to true → MODE_NIGHT_FOLLOW_SYSTEM branch
         commonUtilsSettings.autoDarkMode.shouldBeTrue()
+        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
     }
 
     @Test
@@ -46,10 +47,8 @@ class InitCommonUtilsSettingsTest {
         ctx.initCommonUtilsSettingsAndSetDarkMode()
         commonUtilsSettings.autoDarkMode = false
         commonUtilsSettings.darkMode = true
-        // Re-initialize to hit the darkMode branch
         ctx.initCommonUtilsSettingsAndSetDarkMode()
-        // After re-init, autoDarkMode loaded from default prefs (true) → FOLLOW_SYSTEM
-        // We verify no crash; all 3 branches touched across both calls.
+        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_YES
     }
 
     @Test
@@ -65,6 +64,7 @@ class InitCommonUtilsSettingsTest {
         ctx.initCommonUtilsSettingsAndSetDarkMode()
         commonUtilsSettings.autoDarkMode.shouldBeFalse()
         commonUtilsSettings.darkMode.shouldBeFalse()
+        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_NO
     }
 }
 

@@ -17,6 +17,7 @@
 
 package de.lemke.commonutils
 
+import android.os.SystemClock
 import android.widget.ImageButton
 import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
@@ -53,7 +54,7 @@ fun DrawerNavigationView.onNavigationSingleClick(
 ) {
     var lastClick = 0L
     setNavigationItemSelectedListener { item ->
-        val currentTime = System.currentTimeMillis()
+        val currentTime = SystemClock.elapsedRealtime()
         if (currentTime - lastClick < interval) return@setNavigationItemSelectedListener false
         lastClick = currentTime
         listener.onNavigationItemSelected(item)

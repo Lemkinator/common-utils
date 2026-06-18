@@ -92,7 +92,7 @@ class ExportUtilsRobolectricTest {
     @Test
     fun `getLocalizedEntries returns four entries`() {
         val entries = SaveLocation.getLocalizedEntries(ctx)
-        assert(entries.size == 4)
+        entries.size shouldBe 4
     }
 
     @Test
