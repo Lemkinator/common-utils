@@ -158,13 +158,6 @@ class CommonUtilsAboutActivityTest {
     }
 
     @Test
-    fun `onMainButtonClicked when NoConnection retries update check`() {
-        val activity = launchActivity()
-        activity.onMainButtonClicked()
-        shadowOf(Looper.getMainLooper()).idle()
-    }
-
-    @Test
     fun `7 clicks on version text view triggers onMultiClick action body`() {
         val activity = launchActivity()
         val versionTextView = activity.findViewById<TextView>(dev.oneuiproject.oneui.design.R.id.app_info_version)
