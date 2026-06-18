@@ -25,12 +25,12 @@ import de.lemke.commonutils.OnboardingContext
 import de.lemke.commonutils.R
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import org.robolectric.shadows.ShadowDialog
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowDialog
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 @ExtendWith(RobolectricExtension::class)

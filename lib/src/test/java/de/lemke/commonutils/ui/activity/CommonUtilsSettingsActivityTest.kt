@@ -283,7 +283,10 @@ class CommonUtilsSettingsActivitySdk29Test {
         val controller = Robolectric.buildActivity(CommonUtilsSettingsActivity::class.java).setup()
         shadowOf(Looper.getMainLooper()).idle()
         val activity = controller.get()
-        val fragment = activity.supportFragmentManager.fragments.filterIsInstance<PreferenceFragmentCompat>().first()
+        val fragment =
+            activity.supportFragmentManager.fragments
+                .filterIsInstance<PreferenceFragmentCompat>()
+                .first()
         val key = ApplicationProvider.getApplicationContext<Context>().getString(R.string.commonutils_preference_key_image_save_location)
         val pref = fragment.findPreference<DropDownPreference>(key)
         pref shouldNotBe null
