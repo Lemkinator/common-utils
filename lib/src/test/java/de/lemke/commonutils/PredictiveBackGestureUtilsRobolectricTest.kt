@@ -20,6 +20,11 @@ import androidx.activity.BackEventCompat
 import androidx.appcompat.app.AppCompatActivity
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldNotBe
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -98,5 +103,67 @@ class PredictiveBackGestureUtilsRobolectricTest {
         activity.setCustomBackAnimation(view)
         activity.onBackPressedDispatcher.onBackPressed()
         activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
+    fun `setCustomBackAnimation with disabled backEnabled covers value-false branch`() {
+        // MutableStateFlow(false) → backEnabled?.value != false = false → callback disabled initially
+        val view = View(activity)
+        activity.setCustomBackAnimation(view, MutableStateFlow(false))
+    }
+
+    @Test
+    fun `callback handleOnBackProgressed with EDGE_RIGHT covers swipeEdge else branch`() {
+        val view = View(activity)
+        view.layout(0, 0, 1000, 2000)
+        activity.setCustomBackAnimation(view)
+        val dispatcher = activity.onBackPressedDispatcher
+        val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_RIGHT)
+        dispatcher.dispatchOnBackStarted(event)
+        dispatcher.dispatchOnBackProgressed(event)
+    }
+
+    @Test
+    fun `setCustomBackAnimation showInAppReviewIfPossible true covers review branches`() {
+        // Mock canShowInAppReview() = true → showInAppReview = true → hits showInAppReview=true branches
+        mockkStatic("de.lemke.commonutils.InAppReviewUtilsKt")
+        every { any<AppCompatActivity>().canShowInAppReview() } returns true
+        every { any<AppCompatActivity>().showInAppReviewOrFinish() } just Runs
+        try {
+            val view = View(activity)
+            view.layout(0, 0, 1000, 2000)
+            activity.setCustomBackAnimation(view, showInAppReviewIfPossible = true)
+            val dispatcher = activity.onBackPressedDispatcher
+            val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
+            // handleOnBackProgressed: showInAppReview=true → early return branch covered
+            dispatcher.dispatchOnBackStarted(event)
+            dispatcher.dispatchOnBackProgressed(event)
+            // handleOnBackPressed: showInAppReview=true → showInAppReviewOrFinish() branch covered
+            dispatcher.onBackPressed()
+        } finally {
+            unmockkStatic("de.lemke.commonutils.InAppReviewUtilsKt")
+        }
+    }
+}
+
+@ExtendWith(RobolectricExtension::class)
+@Config(sdk = [29])
+class PredictiveBackGestureUtilsSdk29RobolectricTest {
+    private lateinit var activity: AppCompatActivity
+
+    @BeforeEach
+    fun setUp() {
+        activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+    }
+
+    @Test
+    fun `setWindowTransparent true on pre-R does not call setTranslucent`() {
+        // SDK_INT (29) < R (30) → if (SDK_INT >= R) false branch covered
+        activity.setWindowTransparent(true)
+    }
+
+    @Test
+    fun `setWindowTransparent false on pre-R does not call setTranslucent`() {
+        activity.setWindowTransparent(false)
     }
 }

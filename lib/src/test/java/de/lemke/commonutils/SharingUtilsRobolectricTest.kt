@@ -118,7 +118,9 @@ class SharingUtilsRobolectricTest {
 @Config(sdk = [36])
 class SharingUtilsBitmapRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+
     private fun activity(): android.app.Activity = Robolectric.buildActivity(android.app.Activity::class.java).setup().get()
+
     private val fakeUri: Uri = Uri.parse("content://de.lemke.test.fileprovider/share/test.png")
 
     @BeforeEach
@@ -246,7 +248,10 @@ class SharingUtilsBitmapRobolectricTest {
     private fun attachedFragment(): Fragment {
         val a = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val frag = Fragment()
-        a.supportFragmentManager.beginTransaction().add(frag, "f").commitNow()
+        a.supportFragmentManager
+            .beginTransaction()
+            .add(frag, "f")
+            .commitNow()
         return frag
     }
 

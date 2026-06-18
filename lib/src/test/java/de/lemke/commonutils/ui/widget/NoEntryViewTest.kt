@@ -103,6 +103,19 @@ class NoEntryViewTest {
     }
 
     @Test
+    fun `attrs constructor with noEntryText attribute covers getText non-null let branch`() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        // Adding noEntryText attribute → getText returns non-null → let block executes
+        val attrs =
+            Robolectric
+                .buildAttributeSet()
+                .addAttribute(de.lemke.commonutils.R.attr.noEntryText, "No results")
+                .build()
+        val v = NoEntryView(ctx, attrs)
+        v.text shouldBe "No results"
+    }
+
+    @Test
     fun `four-arg constructor with explicit defStyleAttr and defStyleRes does not throw`() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
         val attrs = Robolectric.buildAttributeSet().build()

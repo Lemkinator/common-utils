@@ -52,8 +52,7 @@ class InfoBottomSheetTest {
         return method.invoke(InfoBottomSheet.Companion, title, message, gravity) as InfoBottomSheet
     }
 
-    private fun activity(): AppCompatActivity =
-        Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+    private fun activity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
 
     // ── newInstance / argument packing ─────────────────────────────────────────
 
@@ -108,7 +107,10 @@ class InfoBottomSheetTest {
     fun `showInfoBottomSheet from Fragment shows sheet`() {
         val a = activity()
         val fragment = Fragment()
-        a.supportFragmentManager.beginTransaction().add(fragment, "host").commitNow()
+        a.supportFragmentManager
+            .beginTransaction()
+            .add(fragment, "host")
+            .commitNow()
         with(InfoBottomSheet.Companion) { fragment.showInfoBottomSheet("T", "M") }
         shadowOf(Looper.getMainLooper()).idle()
     }
@@ -117,7 +119,10 @@ class InfoBottomSheetTest {
     fun `showInfoBottomSheet from Fragment with StringRes shows sheet`() {
         val a = activity()
         val fragment = Fragment()
-        a.supportFragmentManager.beginTransaction().add(fragment, "host").commitNow()
+        a.supportFragmentManager
+            .beginTransaction()
+            .add(fragment, "host")
+            .commitNow()
         with(InfoBottomSheet.Companion) {
             fragment.showInfoBottomSheet(R.string.commonutils_ok, R.string.commonutils_tos)
         }

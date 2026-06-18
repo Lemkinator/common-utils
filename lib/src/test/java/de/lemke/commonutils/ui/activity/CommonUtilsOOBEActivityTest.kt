@@ -66,16 +66,17 @@ class CommonUtilsOOBEActivityTest {
 
     @Test
     fun `initToSView with tosChanged true shows new-tos-text string`() {
-        val ctx = OnboardingContext(
-            mainActivityName = "android.app.Activity",
-            steps = emptyList(),
-            versionCode = 1,
-            versionName = "1.0",
-            appStartResult = AppStartResult.FIRST_TIME_VERSION,
-            lastVersionCode = 0,
-            lastVersionName = "0.0.0",
-            tosChanged = true,
-        )
+        val ctx =
+            OnboardingContext(
+                mainActivityName = "android.app.Activity",
+                steps = emptyList(),
+                versionCode = 1,
+                versionName = "1.0",
+                appStartResult = AppStartResult.FIRST_TIME_VERSION,
+                lastVersionCode = 0,
+                lastVersionName = "0.0.0",
+                tosChanged = true,
+            )
         val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
         val activity = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java, intent).setup().get()
         shadowOf(Looper.getMainLooper()).idle()
@@ -86,10 +87,24 @@ class CommonUtilsOOBEActivityTest {
     fun `initFooterButton narrow screen sets MATCH_PARENT width`() {
         // Override configuration so screenWidthDp < MIN_FULL_BUTTON_WIDTH_DP (360)
         val controller = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java)
-        controller.get().resources.configuration.screenWidthDp = 300
+        controller
+            .get()
+            .resources.configuration.screenWidthDp = 300
         controller.setup()
         shadowOf(Looper.getMainLooper()).idle()
         // Activity still launches without crash — MATCH_PARENT branch exercised.
+        controller.get() shouldNotBe null
+    }
+
+    @Test
+    fun `initFooterButton wide screen does not set MATCH_PARENT width`() {
+        // screenWidthDp >= MIN_FULL_BUTTON_WIDTH_DP (360) → false branch of the width check
+        val controller = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java)
+        controller
+            .get()
+            .resources.configuration.screenWidthDp = 400
+        controller.setup()
+        shadowOf(Looper.getMainLooper()).idle()
         controller.get() shouldNotBe null
     }
 }

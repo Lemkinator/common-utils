@@ -33,14 +33,16 @@ internal class ConcreteSharedAxisFragment : TransitionFragmentSharedAxis(0, Mate
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class TransitionFragmentTest {
-    private fun activity(): AppCompatActivity =
-        Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+    private fun activity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
 
     @Test
     fun `TransitionFragment onCreate wires transitions`() {
         val activity = activity()
         val fragment = ConcreteTransitionFragment()
-        activity.supportFragmentManager.beginTransaction().add(fragment, "tf").commitNow()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(fragment, "tf")
+            .commitNow()
         shadowOf(Looper.getMainLooper()).idle()
         fragment.enterTransition shouldNotBe null
     }
@@ -49,7 +51,10 @@ class TransitionFragmentTest {
     fun `TransitionFragmentSharedAxis onCreate wires MaterialSharedAxis transitions`() {
         val activity = activity()
         val fragment = ConcreteSharedAxisFragment()
-        activity.supportFragmentManager.beginTransaction().add(fragment, "saf").commitNow()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(fragment, "saf")
+            .commitNow()
         shadowOf(Looper.getMainLooper()).idle()
         fragment.enterTransition shouldNotBe null
     }

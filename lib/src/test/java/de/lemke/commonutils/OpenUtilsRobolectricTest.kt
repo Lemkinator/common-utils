@@ -113,7 +113,10 @@ class OpenUtilsApi36Test {
     fun `openAppLocaleSettings ActivityNotFoundException returns false`() {
         val a = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val frag = ThrowingStartActivityFragment()
-        a.supportFragmentManager.beginTransaction().add(frag, "test").commitNow()
+        a.supportFragmentManager
+            .beginTransaction()
+            .add(frag, "test")
+            .commitNow()
         frag.openAppLocaleSettings().shouldBeFalse()
     }
 }

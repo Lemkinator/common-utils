@@ -57,7 +57,8 @@ class InitCommonUtilsSettingsTest {
         // Write preferences so the else branch is hit on init.
         // Key = property name (from delegates); darkMode stores as "1"/"0" string.
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit()
+        prefs
+            .edit()
             .putBoolean("autoDarkMode", false)
             .putString("darkMode", "0")
             .apply()

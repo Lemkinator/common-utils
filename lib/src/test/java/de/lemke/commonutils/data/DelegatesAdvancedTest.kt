@@ -232,20 +232,28 @@ class DelegatesAdvancedTest {
     fun `string returns default when stored value is null`() {
         // Store null explicitly → getString returns null → ?: default kicks in
         prefs.edit().putString("s", null).apply()
-        class Holder { var s: String by prefs.delegates.string(default = "fallback") }
+
+        class Holder {
+            var s: String by prefs.delegates.string(default = "fallback")
+        }
         Holder().s shouldBe "fallback"
     }
 
     @Test
     fun `stringSet returns default when stored value is null`() {
         prefs.edit().putStringSet("ss", null).apply()
-        class Holder { var ss: Set<String> by prefs.delegates.stringSet(default = setOf("default")) }
+
+        class Holder {
+            var ss: Set<String> by prefs.delegates.stringSet(default = setOf("default"))
+        }
         Holder().ss shouldContainExactlyInAnyOrder setOf("default")
     }
 
     @Test
     fun `string with explicit key uses that key in prefs`() {
-        class Holder { var s: String by prefs.delegates.string(default = "", key = "my_string_key") }
+        class Holder {
+            var s: String by prefs.delegates.string(default = "", key = "my_string_key")
+        }
         val h = Holder()
         h.s = "hello"
         prefs.getString("my_string_key", null) shouldBe "hello"
@@ -253,7 +261,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `stringSet with explicit key uses that key in prefs`() {
-        class Holder { var ss: Set<String> by prefs.delegates.stringSet(default = emptySet(), key = "my_set_key") }
+        class Holder {
+            var ss: Set<String> by prefs.delegates.stringSet(default = emptySet(), key = "my_set_key")
+        }
         val h = Holder()
         h.ss = setOf("x", "y")
         prefs.getStringSet("my_set_key", null) shouldContainExactlyInAnyOrder setOf("x", "y")
@@ -261,7 +271,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `boolean with all-defaults produces a working delegate`() {
-        class Holder { var flag: Boolean by prefs.delegates.boolean() }
+        class Holder {
+            var flag: Boolean by prefs.delegates.boolean()
+        }
         val h = Holder()
         h.flag.shouldBeFalse()
         h.flag = true
@@ -270,7 +282,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `int with all-defaults produces a working delegate`() {
-        class Holder { var n: Int by prefs.delegates.int() }
+        class Holder {
+            var n: Int by prefs.delegates.int()
+        }
         val h = Holder()
         h.n shouldBe 0
         h.n = 7
@@ -279,7 +293,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `float with all-defaults produces a working delegate`() {
-        class Holder { var f: Float by prefs.delegates.float() }
+        class Holder {
+            var f: Float by prefs.delegates.float()
+        }
         val h = Holder()
         h.f shouldBe 0f
         h.f = 1.5f
@@ -288,7 +304,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `long with all-defaults produces a working delegate`() {
-        class Holder { var l: Long by prefs.delegates.long() }
+        class Holder {
+            var l: Long by prefs.delegates.long()
+        }
         val h = Holder()
         h.l shouldBe 0L
         h.l = 42L
@@ -297,7 +315,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `string with all-defaults produces a working delegate`() {
-        class Holder { var s: String by prefs.delegates.string() }
+        class Holder {
+            var s: String by prefs.delegates.string()
+        }
         val h = Holder()
         h.s shouldBe ""
         h.s = "hello"
@@ -306,7 +326,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `stringSet with all-defaults produces a working delegate`() {
-        class Holder { var ss: Set<String> by prefs.delegates.stringSet() }
+        class Holder {
+            var ss: Set<String> by prefs.delegates.stringSet()
+        }
         val h = Holder()
         h.ss shouldContainExactlyInAnyOrder emptySet()
         h.ss = setOf("a")
@@ -315,7 +337,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `darkMode with all-defaults produces a working delegate`() {
-        class Holder { var dm: Boolean by prefs.delegates.darkMode() }
+        class Holder {
+            var dm: Boolean by prefs.delegates.darkMode()
+        }
         val h = Holder()
         h.dm.shouldBeFalse()
         h.dm = true
@@ -324,7 +348,9 @@ class DelegatesAdvancedTest {
 
     @Test
     fun `saveLocation with all-defaults produces a working delegate`() {
-        class Holder { var loc: SaveLocation by prefs.delegates.saveLocation() }
+        class Holder {
+            var loc: SaveLocation by prefs.delegates.saveLocation()
+        }
         val h = Holder()
         h.loc shouldBe SaveLocation.CUSTOM
         h.loc = SaveLocation.PICTURES

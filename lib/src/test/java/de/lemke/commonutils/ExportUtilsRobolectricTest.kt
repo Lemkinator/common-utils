@@ -164,4 +164,34 @@ class ExportUtilsRobolectricTest {
         every { launcher.launch(any()) } throws ActivityNotFoundException("no picker")
         ctx.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", launcher).shouldBeFalse()
     }
+
+    @Test
+    fun `saveBitmapToUri non-null uri and null bitmap returns false`() {
+        // uri != null → check second: bitmap == null → true → if-body → false (covers || right-side branch)
+        val uri = Uri.fromFile(File(ctx.cacheDir, "null_bitmap_test.png"))
+        ctx.saveBitmapToUri(uri, null).shouldBeFalse()
+    }
+
+    @Test
+    fun `exportBitmap IOException from compress covers catch block`() {
+        // Make Bitmap.compress throw IOException inside the try block → caught → returns false
+        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+        dir.mkdirs()
+        val throwingBitmap = mockk<Bitmap>()
+        every { throwingBitmap.compress(any(), any(), any<OutputStream>()) } throws java.io.IOException("simulated IO error")
+        ctx.exportBitmap(SaveLocation.PICTURES, throwingBitmap, "test", null).shouldBeFalse()
+    }
+}
+
+@ExtendWith(RobolectricExtension::class)
+@Config(sdk = [29])
+class ExportUtilsSdk29RobolectricTest {
+    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+    private val bitmap: Bitmap get() = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+
+    @Test
+    fun `exportBitmap DOWNLOADS on API 29 SDK not gt Q falls through to else-if branch`() {
+        // SDK_INT (29) > Q (29) = false → else-if: activityResultLauncher == null → toast + false
+        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null).shouldBeFalse()
+    }
 }

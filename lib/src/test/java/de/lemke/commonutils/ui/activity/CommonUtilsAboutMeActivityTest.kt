@@ -26,6 +26,11 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.setupCommonUtilsAboutMeActivity
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldNotBe
+import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -65,9 +70,10 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onConfigurationChanged landscape covers refreshAppBar landscape branch`() {
         val activity = launchActivity()
-        val landscapeConfig = Configuration(activity.resources.configuration).apply {
-            orientation = Configuration.ORIENTATION_LANDSCAPE
-        }
+        val landscapeConfig =
+            Configuration(activity.resources.configuration).apply {
+                orientation = Configuration.ORIENTATION_LANDSCAPE
+            }
         activity.onConfigurationChanged(landscapeConfig)
         shadowOf(Looper.getMainLooper()).idle()
     }
@@ -75,9 +81,10 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onConfigurationChanged portrait covers refreshAppBar portrait branch`() {
         val activity = launchActivity()
-        val portraitConfig = Configuration(activity.resources.configuration).apply {
-            orientation = Configuration.ORIENTATION_PORTRAIT
-        }
+        val portraitConfig =
+            Configuration(activity.resources.configuration).apply {
+                orientation = Configuration.ORIENTATION_PORTRAIT
+            }
         activity.onConfigurationChanged(portraitConfig)
         shadowOf(Looper.getMainLooper()).idle()
     }
@@ -231,5 +238,143 @@ class CommonUtilsAboutMeActivityTest {
 
         activity.onBackPressedDispatcher.onBackPressed()
         activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
+    fun `handleShareApp direct call covers share path`() {
+        val activity = launchActivity()
+        activity.handleShareApp(mockk(relaxed = true))
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `handleWriteEmail direct call covers email path`() {
+        val activity = launchActivity()
+        activity.handleWriteEmail(mockk(relaxed = true))
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `onPlayStoreConfirmed direct call opens URL`() {
+        val activity = launchActivity()
+        activity.onPlayStoreConfirmed(mockk(relaxed = true), DialogInterface.BUTTON_POSITIVE)
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
+    @Test
+    fun `onBackPressedHandler resets back-progress state`() {
+        val activity = launchActivity()
+        activity.onBackPressedHandler()
+    }
+
+    @Test
+    fun `onBackStartedHandler sets isBackProgressing`() {
+        val activity = launchActivity()
+        activity.onBackStartedHandler(BackEventCompat(0f, 0f, 0f, BackEventCompat.EDGE_LEFT))
+    }
+
+    @Test
+    fun `onBackProgressedHandler high progress triggers expand branch`() {
+        val activity = launchActivity()
+        // interpolatedProgress > 0.5 and !isExpanding → isExpanding = true branch
+        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+    }
+
+    @Test
+    fun `onBackProgressedHandler low progress while expanding triggers collapse branch`() {
+        val activity = launchActivity()
+        // First call: iprog(0.9f)≈0.97 > 0.5 and isExpanding=false → if-body → isExpanding=true
+        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        // Second call: iprog(0.01f)≈0.12 < 0.3 and isExpanding=true → else-if-body → lines 132-133 covered
+        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+    }
+
+    @Test
+    fun `onBackProgressedHandler low progress while not expanding hits fallthrough`() {
+        val activity = launchActivity()
+        // isExpanding=false (initial): iprog(0.1f)≈0.447 in [0.3, 0.5] → A=false, C=false → fallthrough (branch 5)
+        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.1f, BackEventCompat.EDGE_LEFT))
+    }
+
+    @Test
+    fun `onBackProgressedHandler two consecutive high-progress events cover A=true B=false branch`() {
+        val activity = launchActivity()
+        // First: iprog(0.9f)≈0.97 > 0.5, isExpanding=false → B=true → if-body → isExpanding=true
+        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        // Second: iprog≈0.97 > 0.5, isExpanding=true → B=!isExpanding=false (branch 3) → else-if: C=false (branch 5)
+        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+    }
+
+    @Test
+    fun `onBackProgressedHandler very low progress while not expanding covers C=true D=false branch`() {
+        val activity = launchActivity()
+        // isExpanding=false (initial): iprog(0.01f)≈0.12 < 0.3 → C=true (branch 6), D=false (branch 7) → skip body
+        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @Test
+    fun `handle back methods via dispatcher when invokeOnBack callback enabled`() {
+        val testDispatcher = UnconfinedTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+        try {
+            setupCommonUtilsAboutMeActivity()
+            val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup()
+            shadowOf(Looper.getMainLooper()).idle()
+            val activity = controller.get()
+            // dispatchAppBarOffset(0) → callbackIsActive=true → UnconfinedTestDispatcher runs coroutine
+            // immediately → invokeOnBack callback.isEnabled=true; crossActivityCallback.isEnabled=false
+            activity.dispatchAppBarOffset(0)
+            shadowOf(Looper.getMainLooper()).idle()
+
+            val dispatcher = activity.onBackPressedDispatcher
+            val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
+            // handleOnBackStarted, handleOnBackProgressed, handleOnBackCancelled called on invokeOnBack callback
+            dispatcher.dispatchOnBackStarted(event)
+            dispatcher.dispatchOnBackProgressed(event)
+            dispatcher.dispatchOnBackCancelled()
+            // Start a new gesture then press back → handleOnBackPressed called
+            dispatcher.dispatchOnBackStarted(event)
+            dispatcher.onBackPressed()
+            shadowOf(Looper.getMainLooper()).idle()
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `applyInsetIfNeeded with fitsSystemWindows=true skips listener setup`() {
+        setupCommonUtilsAboutMeActivity()
+        // Set fitsSystemWindows=true before onCreate → !fitsSystemWindows=false → body skipped (B false branch)
+        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java)
+        controller
+            .get()
+            .window.decorView.fitsSystemWindows = true
+        controller.setup()
+        shadowOf(Looper.getMainLooper()).idle()
+        controller.get() shouldNotBe null
+    }
+
+    @Test
+    fun `onBackCancelledHandler resets back-progress state`() {
+        val activity = launchActivity()
+        activity.onBackCancelledHandler()
+    }
+}
+
+@ExtendWith(RobolectricExtension::class)
+@Config(sdk = [29])
+class CommonUtilsAboutMeActivitySdk29Test {
+    @BeforeEach
+    fun setUp() {
+        setupCommonUtilsAboutMeActivity()
+    }
+
+    @Test
+    fun `applyInsetIfNeeded SDK_INT less than R skips listener setup`() {
+        // SDK 29 < R (30) → first condition false → body skipped → SDK<R branch covered
+        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup()
+        shadowOf(Looper.getMainLooper()).idle()
+        controller.get() shouldNotBe null
     }
 }

@@ -19,8 +19,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Looper
-import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.result.ActivityResultLauncher
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SettingsRepository
@@ -46,14 +46,19 @@ class FragmentExtensionsRobolectricTest {
 
     @BeforeEach
     fun setUp() {
-        val prefs = ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("frag_ext_test", Context.MODE_PRIVATE)
+        val prefs =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getSharedPreferences("frag_ext_test", Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
         commonUtilsSettings = SettingsRepository(prefs)
 
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         fragment = Fragment()
-        activity.supportFragmentManager.beginTransaction().add(fragment, "testFrag").commitNow()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(fragment, "testFrag")
+            .commitNow()
     }
 
     // ── ToastUtils Fragment overloads ──────────────────────────────────────────
@@ -149,7 +154,10 @@ class OpenAppLocaleSettingsApi33Test {
     fun `Fragment openAppLocaleSettings on API 33+ starts locale settings intent`() {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val fragment = Fragment()
-        activity.supportFragmentManager.beginTransaction().add(fragment, "tag").commitNow()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(fragment, "tag")
+            .commitNow()
         // SDK 36 ≥ TIRAMISU → should start ACTION_APP_LOCALE_SETTINGS
         fragment.openAppLocaleSettings().shouldBeTrue()
     }
@@ -163,7 +171,10 @@ class OpenAppLocaleSettingsApi32Test {
     fun `Fragment openAppLocaleSettings below API 33 returns false`() {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val fragment = Fragment()
-        activity.supportFragmentManager.beginTransaction().add(fragment, "tag").commitNow()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(fragment, "tag")
+            .commitNow()
         fragment.openAppLocaleSettings().shouldBeFalse()
     }
 }

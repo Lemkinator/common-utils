@@ -45,8 +45,10 @@ import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 class CommonUtilsSettingsActivityTest {
     @BeforeEach
     fun setUp() {
-        val prefs = ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("settings_test", Context.MODE_PRIVATE)
+        val prefs =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getSharedPreferences("settings_test", Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
         commonUtilsSettings = SettingsRepository(prefs)
         // addRelativeLinksCard requires a ListView not available under Robolectric.
@@ -88,16 +90,20 @@ class CommonUtilsSettingsActivityTest {
 
     private fun getSettingsFragment(activity: CommonUtilsSettingsActivity): PreferenceFragmentCompat =
         activity.supportFragmentManager.findFragmentByTag("") as? PreferenceFragmentCompat
-            ?: activity.supportFragmentManager.fragments.filterIsInstance<PreferenceFragmentCompat>().first()
+            ?: activity.supportFragmentManager.fragments
+                .filterIsInstance<PreferenceFragmentCompat>()
+                .first()
 
     private fun Preference.triggerClick() {
-        Preference::class.java.getDeclaredMethod("callClickListener")
+        Preference::class.java
+            .getDeclaredMethod("callClickListener")
             .also { it.isAccessible = true }
             .invoke(this)
     }
 
     private fun Preference.triggerChange(newValue: Any) {
-        Preference::class.java.getDeclaredMethod("callChangeListener", Any::class.java)
+        Preference::class.java
+            .getDeclaredMethod("callChangeListener", Any::class.java)
             .also { it.isAccessible = true }
             .invoke(this, newValue)
     }
@@ -135,8 +141,10 @@ class CommonUtilsSettingsActivityTest {
         commonUtilsSettings.autoDarkMode = true
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
-        val key = ApplicationProvider.getApplicationContext<Context>()
-            .getString(R.string.commonutils_preference_key_auto_dark_mode)
+        val key =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getString(R.string.commonutils_preference_key_auto_dark_mode)
         val pref = fragment.findPreference<Preference>(key)
         pref?.triggerChange(false)
         shadowOf(Looper.getMainLooper()).idle()
@@ -148,8 +156,10 @@ class CommonUtilsSettingsActivityTest {
         commonUtilsSettings.darkMode = true
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
-        val key = ApplicationProvider.getApplicationContext<Context>()
-            .getString(R.string.commonutils_preference_key_auto_dark_mode)
+        val key =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getString(R.string.commonutils_preference_key_auto_dark_mode)
         val pref = fragment.findPreference<Preference>(key)
         pref?.triggerChange(false)
         shadowOf(Looper.getMainLooper()).idle()
@@ -160,8 +170,10 @@ class CommonUtilsSettingsActivityTest {
         commonUtilsSettings.autoDarkMode = false
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
-        val key = ApplicationProvider.getApplicationContext<Context>()
-            .getString(R.string.commonutils_preference_key_auto_dark_mode)
+        val key =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getString(R.string.commonutils_preference_key_auto_dark_mode)
         val pref = fragment.findPreference<Preference>(key)
         pref?.triggerChange(true)
         shadowOf(Looper.getMainLooper()).idle()
@@ -172,8 +184,10 @@ class CommonUtilsSettingsActivityTest {
         commonUtilsSettings.autoDarkMode = false
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
-        val key = ApplicationProvider.getApplicationContext<Context>()
-            .getString(R.string.commonutils_preference_key_dark_mode)
+        val key =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getString(R.string.commonutils_preference_key_dark_mode)
         val pref = fragment.findPreference<Preference>(key)
         pref?.triggerChange("1")
         shadowOf(Looper.getMainLooper()).idle()
@@ -184,8 +198,10 @@ class CommonUtilsSettingsActivityTest {
         commonUtilsSettings.autoDarkMode = false
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
-        val key = ApplicationProvider.getApplicationContext<Context>()
-            .getString(R.string.commonutils_preference_key_dark_mode)
+        val key =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getString(R.string.commonutils_preference_key_dark_mode)
         val pref = fragment.findPreference<Preference>(key)
         pref?.triggerChange("0")
         shadowOf(Looper.getMainLooper()).idle()
@@ -195,8 +211,10 @@ class CommonUtilsSettingsActivityTest {
     fun `privacy policy preference click fires without crashing`() {
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
-        val key = ApplicationProvider.getApplicationContext<Context>()
-            .getString(R.string.commonutils_preference_key_privacy_policy)
+        val key =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getString(R.string.commonutils_preference_key_privacy_policy)
         val pref = fragment.findPreference<Preference>(key)
         pref?.triggerClick()
         shadowOf(Looper.getMainLooper()).idle()
@@ -206,8 +224,10 @@ class CommonUtilsSettingsActivityTest {
     fun `tos preference click fires without crashing`() {
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
-        val key = ApplicationProvider.getApplicationContext<Context>()
-            .getString(R.string.commonutils_preference_key_tos)
+        val key =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getString(R.string.commonutils_preference_key_tos)
         val pref = fragment.findPreference<Preference>(key)
         pref?.triggerClick()
         shadowOf(Looper.getMainLooper()).idle()
@@ -217,8 +237,10 @@ class CommonUtilsSettingsActivityTest {
     fun `report bug preference click fires without crashing`() {
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
-        val key = ApplicationProvider.getApplicationContext<Context>()
-            .getString(R.string.commonutils_preference_key_report_bug)
+        val key =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getString(R.string.commonutils_preference_key_report_bug)
         val pref = fragment.findPreference<Preference>(key)
         pref?.triggerClick()
         shadowOf(Looper.getMainLooper()).idle()
@@ -230,8 +252,10 @@ class CommonUtilsSettingsActivityTest {
 class CommonUtilsSettingsActivitySdk29Test {
     @BeforeEach
     fun setUp() {
-        val prefs = ApplicationProvider.getApplicationContext<Context>()
-            .getSharedPreferences("settings_test_29", Context.MODE_PRIVATE)
+        val prefs =
+            ApplicationProvider
+                .getApplicationContext<Context>()
+                .getSharedPreferences("settings_test_29", Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
         commonUtilsSettings = SettingsRepository(prefs)
         mockkStatic("de.lemke.commonutils.PreferenceUtilsKt")

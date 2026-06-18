@@ -220,7 +220,11 @@ class TransformationUtilsRobolectricTest {
     fun `prepareActivityTransformationTo with transition name on plain Activity warns and returns early`() {
         // Plain Activity is NOT a LifecycleOwner → hits the LifecycleOwner null-check warning path
         val intent = Intent().apply { putExtra("commonUtilsTransitionNameKey", "testTransition") }
-        Robolectric.buildActivity(Activity::class.java, intent).setup().get().prepareActivityTransformationTo()
+        Robolectric
+            .buildActivity(Activity::class.java, intent)
+            .setup()
+            .get()
+            .prepareActivityTransformationTo()
     }
 
     @Test

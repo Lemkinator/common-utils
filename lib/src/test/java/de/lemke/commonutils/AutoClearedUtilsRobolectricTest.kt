@@ -33,8 +33,11 @@ import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 internal class AutoClearedViewFragment : Fragment() {
     val cached: String by autoCleared { "initial" }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        FrameLayout(requireContext())
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View = FrameLayout(requireContext())
 }
 
 @ExtendWith(RobolectricExtension::class)
@@ -43,7 +46,10 @@ class AutoClearedUtilsRobolectricTest {
     private fun launchFragment(): AutoClearedViewFragment {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val fragment = AutoClearedViewFragment()
-        activity.supportFragmentManager.beginTransaction().add(android.R.id.content, fragment).commitNow()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(android.R.id.content, fragment)
+            .commitNow()
         return fragment
     }
 
@@ -62,10 +68,16 @@ class AutoClearedUtilsRobolectricTest {
     fun `onDestroy clears the cached value`() {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val fragment = AutoClearedViewFragment()
-        activity.supportFragmentManager.beginTransaction().add(android.R.id.content, fragment).commitNow()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(android.R.id.content, fragment)
+            .commitNow()
         // Access value to populate cache and register observer
         fragment.cached shouldBe "initial"
         // Remove the fragment → triggers onDestroyView → onDestroy on the observer → clears cache
-        activity.supportFragmentManager.beginTransaction().remove(fragment).commitNow()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .remove(fragment)
+            .commitNow()
     }
 }
