@@ -216,18 +216,20 @@ class OnboardingUtilsRobolectricTest {
 
     @Test
     fun `OnboardingContext parcels and unparcels correctly`() {
-        val original = onboardingContext(
-            mainActivityName = "com.example.MainActivity",
-            steps = listOf("com.example.StepA", "com.example.StepB"),
-        )
+        val original =
+            onboardingContext(
+                mainActivityName = "com.example.MainActivity",
+                steps = listOf("com.example.StepA", "com.example.StepB"),
+            )
         val parcel = android.os.Parcel.obtain()
         try {
             original.writeToParcel(parcel, 0)
             parcel.setDataPosition(0)
             @Suppress("UNCHECKED_CAST")
-            val creator = OnboardingContext::class.java
-                .getDeclaredField("CREATOR")
-                .get(null) as android.os.Parcelable.Creator<OnboardingContext>
+            val creator =
+                OnboardingContext::class.java
+                    .getDeclaredField("CREATOR")
+                    .get(null) as android.os.Parcelable.Creator<OnboardingContext>
             val restored = creator.createFromParcel(parcel)
             restored shouldBe original
         } finally {
