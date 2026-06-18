@@ -154,7 +154,3 @@ tasks.register("staticAnalysis") {
         dependsOn(sub.tasks.matching { it.name in setOf("spotlessCheck", "detekt") })
     }
 }
-
-tasks.register<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
-}
