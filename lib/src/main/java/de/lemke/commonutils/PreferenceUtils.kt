@@ -34,7 +34,6 @@ import dev.oneuiproject.oneui.ktx.onClick
 import dev.oneuiproject.oneui.ktx.onNewValue
 import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
 import dev.oneuiproject.oneui.widget.RelativeLink
-import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "PreferenceUtils"
 
