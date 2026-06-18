@@ -158,9 +158,9 @@ class CommonUtilsAboutActivityTest {
     }
 
     @Test
-    fun `handleMainButtonClick direct call covers view-to-onMainButtonClicked bridge`() {
+    fun `onMainButtonClicked when NoConnection retries update check`() {
         val activity = launchActivity()
-        activity.handleMainButtonClick()
+        activity.onMainButtonClicked()
         shadowOf(Looper.getMainLooper()).idle()
     }
 

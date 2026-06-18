@@ -71,7 +71,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         setCustomBackAnimation(binding.root)
         binding.appInfoLayout.apply {
             updateStatus = Loading
-            setMainButtonClickListener { handleMainButtonClick() }
+            setMainButtonClickListener { onMainButtonClicked() }
         }
         appUpdateManager = AppUpdateManagerFactory.create(this)
         setVersionText()
@@ -83,9 +83,6 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         activityResultLauncher = registerForActivityResult(StartIntentSenderForResult(), ::onActivityResult)
         checkUpdate()
     }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleMainButtonClick() = onMainButtonClicked()
 
     /** Handles the main button click: retries update check when offline, or starts the update flow. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
