@@ -254,6 +254,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var s: String by prefs.delegates.string(default = "", key = "my_string_key")
         }
+
         val h = Holder()
         h.s = "hello"
         prefs.getString("my_string_key", null) shouldBe "hello"
@@ -264,6 +265,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var ss: Set<String> by prefs.delegates.stringSet(default = emptySet(), key = "my_set_key")
         }
+
         val h = Holder()
         h.ss = setOf("x", "y")
         prefs.getStringSet("my_set_key", null) shouldContainExactlyInAnyOrder setOf("x", "y")
@@ -274,6 +276,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var flag: Boolean by prefs.delegates.boolean()
         }
+
         val h = Holder()
         h.flag.shouldBeFalse()
         h.flag = true
@@ -285,6 +288,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var n: Int by prefs.delegates.int()
         }
+
         val h = Holder()
         h.n shouldBe 0
         h.n = 7
@@ -296,6 +300,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var f: Float by prefs.delegates.float()
         }
+
         val h = Holder()
         h.f shouldBe 0f
         h.f = 1.5f
@@ -307,6 +312,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var l: Long by prefs.delegates.long()
         }
+
         val h = Holder()
         h.l shouldBe 0L
         h.l = 42L
@@ -318,6 +324,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var s: String by prefs.delegates.string()
         }
+
         val h = Holder()
         h.s shouldBe ""
         h.s = "hello"
@@ -329,6 +336,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var ss: Set<String> by prefs.delegates.stringSet()
         }
+
         val h = Holder()
         h.ss shouldContainExactlyInAnyOrder emptySet()
         h.ss = setOf("a")
@@ -340,6 +348,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var dm: Boolean by prefs.delegates.darkMode()
         }
+
         val h = Holder()
         h.dm.shouldBeFalse()
         h.dm = true
@@ -351,6 +360,7 @@ class DelegatesAdvancedTest {
         class Holder {
             var loc: SaveLocation by prefs.delegates.saveLocation()
         }
+
         val h = Holder()
         h.loc shouldBe SaveLocation.CUSTOM
         h.loc = SaveLocation.PICTURES

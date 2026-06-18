@@ -162,7 +162,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
     @NoCoverage
     private fun onActivityResult(result: ActivityResult) = onUpdateFlowResult(result.resultCode)
 
-    // Play Core callbacks — require a live Google Play Store connection, untestable in JVM tests.
+    // Play Core callbacks: require a live Google Play Store connection, untestable in JVM tests.
     // The generated thin-wrapper lambda classes are excluded by Kover class-name patterns in build.gradle.kts.
 
     @NoCoverage

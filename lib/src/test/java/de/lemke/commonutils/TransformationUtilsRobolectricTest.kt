@@ -229,7 +229,7 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `prepareActivityTransformationFrom onDestroy while finishing clears exit callback`() {
-        // Must call before create() — requestFeature() must precede window content setup
+        // Must call before create() - requestFeature() must precede window content setup
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java)
         val a = controller.get()
         a.prepareActivityTransformationFrom()

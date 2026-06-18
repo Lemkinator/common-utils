@@ -20,7 +20,6 @@ import android.content.res.Configuration
 import android.os.Looper
 import android.view.View
 import androidx.activity.BackEventCompat
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.R
 import de.lemke.commonutils.setupCommonUtilsAboutMeActivity
@@ -58,7 +57,7 @@ class CommonUtilsAboutMeActivityTest {
         val listenerField = CommonUtilsAboutMeActivity::class.java.getDeclaredField("appBarListener")
         listenerField.isAccessible = true
         val listener = listenerField.get(this) as OnOffsetChangedListener
-        listener.onOffsetChanged(findViewById<AppBarLayout>(R.id.aboutAppBar), offset)
+        listener.onOffsetChanged(findViewById(R.id.aboutAppBar), offset)
     }
 
     @Test
@@ -89,7 +88,7 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `AboutAppBarListener onOffsetChanged abs gt half range — alpha-zero branch`() {
+    fun `AboutAppBarListener onOffsetChanged abs gt half range - alpha-zero branch`() {
         val activity = launchActivity()
         // abs(-500) >= totalScrollRange/2 → alpha = 0, setBottomContentEnabled(true)
         activity.dispatchAppBarOffset(-500)
@@ -97,7 +96,7 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `AboutAppBarListener onOffsetChanged abs equals zero — alpha-one branch`() {
+    fun `AboutAppBarListener onOffsetChanged abs equals zero - alpha-one branch`() {
         val activity = launchActivity()
         // abs(0) == 0 → alpha = 1, setBottomContentEnabled(false)
         activity.dispatchAppBarOffset(0)
@@ -105,7 +104,7 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `AboutAppBarListener onOffsetChanged intermediate offset — else interpolated-alpha branch`() {
+    fun `AboutAppBarListener onOffsetChanged intermediate offset - else interpolated-alpha branch`() {
         val activity = launchActivity()
         // offset = -10: abs = 10, not >= range/2 and not == 0 → else branch
         activity.dispatchAppBarOffset(-10)
@@ -144,7 +143,7 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `setupCommonUtilsAboutMeActivity stores onShareApp callback — invoked via companion`() {
+    fun `setupCommonUtilsAboutMeActivity stores onShareApp callback - invoked via companion`() {
         var invoked = false
         setupCommonUtilsAboutMeActivity(onShareApp = { invoked = true })
         val activity = launchActivity()

@@ -146,7 +146,7 @@ class InfoBottomSheetTest {
     @Test
     fun `InfoBottomSheet shown from fragmentManager commits transaction`() {
         val a = activity()
-        InfoBottomSheet.showInfoBottomSheet(a.supportFragmentManager, "T", "M")
+        showInfoBottomSheet(a.supportFragmentManager, "T", "M")
         a.supportFragmentManager.executePendingTransactions()
         val shown = a.supportFragmentManager.findFragmentByTag(InfoBottomSheet::class.java.simpleName)
         shown shouldNotBe null

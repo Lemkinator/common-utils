@@ -60,7 +60,7 @@ class OnboardingUtilsTest : ShouldSpec(
         val stepB = "com.example.StepB"
 
         context("OOBE is the only step") {
-            should("return null — no next after OOBE") {
+            should("return null - no next after OOBE") {
                 nextInChain(listOf(oobeClass), oobeClass).shouldBeNull()
             }
         }

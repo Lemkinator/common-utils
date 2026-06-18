@@ -51,6 +51,7 @@ class DelegatesAdvancedApi29Test {
         class Holder {
             var location: SaveLocation by prefs.delegates.saveLocation()
         }
+
         val h = Holder()
         h.location = SaveLocation.DOWNLOADS // setter must store CUSTOM on API <= Q
         prefs.getString("location", null) shouldBe SaveLocation.CUSTOM.name

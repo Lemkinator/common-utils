@@ -35,14 +35,14 @@ class InitCommonUtilsSettingsTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode true — FOLLOW_SYSTEM branch`() {
+    fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode true - FOLLOW_SYSTEM branch`() {
         ctx.initCommonUtilsSettingsAndSetDarkMode()
         // autoDarkMode defaults to true → MODE_NIGHT_FOLLOW_SYSTEM branch
         commonUtilsSettings.autoDarkMode.shouldBeTrue()
     }
 
     @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with darkMode true — MODE_NIGHT_YES branch`() {
+    fun `initCommonUtilsSettingsAndSetDarkMode with darkMode true - MODE_NIGHT_YES branch`() {
         ctx.initCommonUtilsSettingsAndSetDarkMode()
         commonUtilsSettings.autoDarkMode = false
         commonUtilsSettings.darkMode = true
@@ -53,7 +53,7 @@ class InitCommonUtilsSettingsTest {
     }
 
     @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode false and darkMode false — MODE_NIGHT_NO branch`() {
+    fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode false and darkMode false - MODE_NIGHT_NO branch`() {
         // Write preferences so the else branch is hit on init.
         // Key = property name (from delegates); darkMode stores as "1"/"0" string.
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)

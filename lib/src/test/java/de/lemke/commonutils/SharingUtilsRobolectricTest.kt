@@ -119,7 +119,7 @@ class SharingUtilsRobolectricTest {
 class SharingUtilsBitmapRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
-    private fun activity(): android.app.Activity = Robolectric.buildActivity(android.app.Activity::class.java).setup().get()
+    private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
 
     private val fakeUri: Uri = Uri.parse("content://de.lemke.test.fileprovider/share/test.png")
 
@@ -146,13 +146,13 @@ class SharingUtilsBitmapRobolectricTest {
     // ── copyToClipboard(Bitmap) ─────────────────────────────────────────────────
 
     @Test
-    fun `copyToClipboard bitmap success — clips bitmap URI and returns true`() {
+    fun `copyToClipboard bitmap success - clips bitmap URI and returns true`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeTrue()
     }
 
     @Test
-    fun `copyToClipboard bitmap compress-fail — returns false`() {
+    fun `copyToClipboard bitmap compress-fail - returns false`() {
         val bitmap = mockk<Bitmap>()
         every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
         ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
@@ -167,26 +167,26 @@ class SharingUtilsBitmapRobolectricTest {
     // ── Bitmap.share ────────────────────────────────────────────────────────────
 
     @Test
-    fun `Bitmap share success — starts chooser intent and returns true`() {
+    fun `Bitmap share success - starts chooser intent and returns true`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.share(activity(), "test.png").shouldBeTrue()
     }
 
     @Test
-    fun `Bitmap share with shareText — includes text extra`() {
+    fun `Bitmap share with shareText - includes text extra`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.share(activity(), "test.png", "optional text").shouldBeTrue()
     }
 
     @Test
-    fun `Bitmap share compress-fail — returns false`() {
+    fun `Bitmap share compress-fail - returns false`() {
         val bitmap = mockk<Bitmap>()
         every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
         bitmap.share(ctx, "test.png").shouldBeFalse()
     }
 
     @Test
-    fun `Bitmap share FileProvider throws — exception caught, returns false`() {
+    fun `Bitmap share FileProvider throws - exception caught, returns false`() {
         every { FileProvider.getUriForFile(any(), any(), any()) } throws RuntimeException("test")
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.share(ctx, "test.png").shouldBeFalse()
@@ -201,13 +201,13 @@ class SharingUtilsBitmapRobolectricTest {
     // ── Bitmap.quickShare ───────────────────────────────────────────────────────
 
     @Test
-    fun `quickShare success — starts activity and returns true`() {
+    fun `quickShare success - starts activity and returns true`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.quickShare(activity(), "test.png").shouldBeTrue()
     }
 
     @Test
-    fun `quickShare compress-fail — returns false`() {
+    fun `quickShare compress-fail - returns false`() {
         val bitmap = mockk<Bitmap>()
         every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
         bitmap.quickShare(ctx, "test.png").shouldBeFalse()
@@ -222,21 +222,21 @@ class SharingUtilsBitmapRobolectricTest {
     // ── File / List<File>.share ──────────────────────────────────────────────────
 
     @Test
-    fun `single File share — starts activity and returns true`() {
+    fun `single File share - starts activity and returns true`() {
         val act = activity()
         val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
         file.share(act).shouldBeTrue()
     }
 
     @Test
-    fun `single-element List share — uses ACTION_SEND and returns true`() {
+    fun `single-element List share - uses ACTION_SEND and returns true`() {
         val act = activity()
         val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
         listOf(file).share(act).shouldBeTrue()
     }
 
     @Test
-    fun `multi-element List share — uses ACTION_SEND_MULTIPLE and returns true`() {
+    fun `multi-element List share - uses ACTION_SEND_MULTIPLE and returns true`() {
         val act = activity()
         val f1 = File(act.cacheDir, "img1.png").also { it.createNewFile() }
         val f2 = File(act.cacheDir, "img2.png").also { it.createNewFile() }

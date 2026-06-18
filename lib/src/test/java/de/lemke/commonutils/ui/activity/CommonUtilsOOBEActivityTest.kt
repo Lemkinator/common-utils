@@ -92,7 +92,7 @@ class CommonUtilsOOBEActivityTest {
             .resources.configuration.screenWidthDp = 300
         controller.setup()
         shadowOf(Looper.getMainLooper()).idle()
-        // Activity still launches without crash — MATCH_PARENT branch exercised.
+        // Activity still launches without crash - MATCH_PARENT branch exercised.
         controller.get() shouldNotBe null
     }
 

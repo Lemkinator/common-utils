@@ -86,14 +86,14 @@ class CommonUtilsAboutActivityTest {
     }
 
     @Test
-    fun `activity launches with blank appVersion — getAppVersion suspend lambda is called`() {
+    fun `activity launches with blank appVersion - getAppVersion suspend lambda is called`() {
         setupCommonUtilsAboutActivity(getAppVersion = suspend { "2.0.0" })
         val activity = launchActivity()
         activity shouldNotBe null
     }
 
     @Test
-    fun `activity launches with devModeEnabled — dev suffix path executed`() {
+    fun `activity launches with devModeEnabled - dev suffix path executed`() {
         commonUtilsSettings.devModeEnabled = true
         val activity = launchActivity()
         activity shouldNotBe null
@@ -139,13 +139,13 @@ class CommonUtilsAboutActivityTest {
     @Test
     fun `openInStore button click does not throw`() {
         val activity = launchActivity()
-        activity.findViewById<android.widget.Button>(R.id.aboutButtonOpenInStore).performClick()
+        activity.findViewById<Button>(R.id.aboutButtonOpenInStore).performClick()
     }
 
     @Test
     fun `openSourceLicenses button click starts CommonUtilsLibsActivity`() {
         val activity = launchActivity()
-        activity.findViewById<android.widget.Button>(R.id.aboutButtonOpenSourceLicenses).performClick()
+        activity.findViewById<Button>(R.id.aboutButtonOpenSourceLicenses).performClick()
         shadowOf(Looper.getMainLooper()).idle()
     }
 
@@ -160,7 +160,7 @@ class CommonUtilsAboutActivityTest {
     @Test
     fun `7 clicks on version text view triggers onMultiClick action body`() {
         val activity = launchActivity()
-        val versionTextView = activity.findViewById<TextView>(dev.oneuiproject.oneui.design.R.id.app_info_version)
+        val versionTextView = activity.findViewById<TextView>(designR.id.app_info_version)
         // onMultiClick requires 7 consecutive clicks within 1000 ms to invoke the action body
         repeat(7) { versionTextView.performClick() }
         shadowOf(Looper.getMainLooper()).idle()

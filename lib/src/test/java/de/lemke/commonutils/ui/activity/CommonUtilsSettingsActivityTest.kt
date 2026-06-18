@@ -65,7 +65,7 @@ class CommonUtilsSettingsActivityTest {
     private fun launchWithEmptyPrefs(): CommonUtilsSettingsActivity {
         // Empty preferences list → onCreatePreferences iterates nothing,
         // then initCommonUtilsPreferences runs with all findPreference calls returning null
-        // — covers all the Log.w else paths.
+        // - covers all the Log.w else paths.
         setupCommonUtilsSettingsActivity(emptyList())
         val controller = Robolectric.buildActivity(CommonUtilsSettingsActivity::class.java).setup()
         shadowOf(Looper.getMainLooper()).idle()
@@ -109,29 +109,29 @@ class CommonUtilsSettingsActivityTest {
     }
 
     @Test
-    fun `activity launches with empty preferences — null paths covered`() {
+    fun `activity launches with empty preferences - null paths covered`() {
         launchWithEmptyPrefs() shouldNotBe null
     }
 
     @Test
-    fun `activity launches with default preferences — non-null init paths covered`() {
+    fun `activity launches with default preferences - non-null init paths covered`() {
         launchWithDefaultPrefs() shouldNotBe null
     }
 
     @Test
-    fun `activity launches with devModeEnabled — dev-options category is visible`() {
+    fun `activity launches with devModeEnabled - dev-options category is visible`() {
         commonUtilsSettings.devModeEnabled = true
         launchWithDefaultPrefs() shouldNotBe null
     }
 
     @Test
-    fun `activity launches with autoDarkMode true — darkMode prefs initialized with auto branch`() {
+    fun `activity launches with autoDarkMode true - darkMode prefs initialized with auto branch`() {
         commonUtilsSettings.autoDarkMode = true
         launchWithDefaultPrefs() shouldNotBe null
     }
 
     @Test
-    fun `activity launches with darkMode true — dark branch in initDarkMode`() {
+    fun `activity launches with darkMode true - dark branch in initDarkMode`() {
         commonUtilsSettings.darkMode = true
         launchWithDefaultPrefs() shouldNotBe null
     }

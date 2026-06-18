@@ -97,7 +97,6 @@ class OnboardingUtilsRobolectricTest {
     @Test
     fun `advanceOnboarding completes onboarding when last step in chain`() {
         // Chain: [OOBE, Activity]. Current = Activity → last → completeOnboarding starts main.
-        val oobeClass = de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity::class.java.name
         val stepClass = Activity::class.java.name
         val mainClass = Activity::class.java.name
         val ctx = onboardingContext(mainActivityName = mainClass, steps = listOf(stepClass))
@@ -168,7 +167,7 @@ class OnboardingUtilsRobolectricTest {
         shadowOf(controller.get()).nextStartedActivity shouldNotBe null
     }
 
-    // onboardIfNeeded — Path 1: intent carries onboarding context (post-onboarding re-launch)
+    // onboardIfNeeded - Path 1: intent carries onboarding context (post-onboarding re-launch)
     @Test
     fun `onboardIfNeeded with onboarding context returns AppStart and commits version`() {
         val ctx =
@@ -191,7 +190,7 @@ class OnboardingUtilsRobolectricTest {
         commonUtilsSettings.lastVersionCode shouldBe 1
     }
 
-    // onboardIfNeeded — Path 2: fresh install (lastVersionCode=-1 → shouldShowOOBE=true) → null
+    // onboardIfNeeded - Path 2: fresh install (lastVersionCode=-1 → shouldShowOOBE=true) → null
     @Test
     fun `onboardIfNeeded fresh install starts OOBE and returns null`() {
         // lastVersionCode defaults to -1 → isFirstTime = true → shouldShowOOBE = true
@@ -202,7 +201,7 @@ class OnboardingUtilsRobolectricTest {
         shadowOf(a).nextStartedActivity shouldNotBe null
     }
 
-    // onboardIfNeeded — covers tosChanged=true: FIRST_TIME_VERSION + TOS not accepted → starts OOBE
+    // onboardIfNeeded - covers tosChanged=true: FIRST_TIME_VERSION + TOS not accepted → starts OOBE
     @Test
     fun `onboardIfNeeded FIRST_TIME_VERSION with unaccepted TOS sets tosChanged true and starts OOBE`() {
         commonUtilsSettings.lastVersionCode = 1
@@ -213,7 +212,7 @@ class OnboardingUtilsRobolectricTest {
         shadowOf(controller.get()).nextStartedActivity shouldNotBe null
     }
 
-    // onboardIfNeeded — Path 3: TOS accepted + same version → returns AppStart, commits
+    // onboardIfNeeded - Path 3: TOS accepted + same version → returns AppStart, commits
     @Test
     fun `onboardIfNeeded with accepted TOS returns AppStart`() {
         commonUtilsSettings.lastVersionCode = 1

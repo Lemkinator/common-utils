@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.maven.publish)
@@ -66,11 +81,13 @@ spotless {
     }
     kotlinGradle {
         target("*.gradle.kts")
+        licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.kt"), "(^(?![\\/ ]\\*).*$)")
         ktlint(libs.versions.ktlint.get())
     }
     format("xml") {
         target("src/**/*.xml")
         targetExclude("**/build/**")
+        licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.xml"), "(<[^!?])")
         trimTrailingWhitespace()
         endWithNewline()
     }
@@ -134,36 +151,36 @@ kover {
                     "dagger.hilt.*",
                     "hilt_aggregated_deps.*",
                     "*.di.*",
-                    // Play Core — requires live device + Play Store, untestable in CI
+                    // Play Core: requires live device + Play Store, untestable in CI
                     "*AppUpdateManagerUtilsKt*",
                     "*InAppReviewUtilsKt*",
-                    // Splash screen — zero-logic platform lifecycle hook
+                    // Splash screen: zero-logic platform lifecycle hook
                     "*SplashUtilsKt*",
-                    // TipPopupUtils — requires OneUI TipPopup widget + Activity decorView root;
+                    // TipPopupUtils: requires OneUI TipPopup widget + Activity decorView root;
                     // the widget cannot be instantiated under Robolectric without a full OneUI theme.
                     "*TipPopupUtilsKt*",
-                    // PreferenceUtils — addRelativeLinksCard uses OneUI's listView extension;
+                    // PreferenceUtils: addRelativeLinksCard uses OneUI's listView extension;
                     // the generated lambda/anonymous class cannot be exercised under Robolectric.
                     "*PreferenceUtilsKt\$addShareAppAndRateRelativeLinksCard*",
-                    // DrawerOneUIExtensions — setupHeaderAndNavRail and onNavigationSingleClick require OneUI
+                    // DrawerOneUIExtensions: setupHeaderAndNavRail and onNavigationSingleClick require OneUI
                     // NavDrawerLayout / DrawerNavigationView and their lambda bodies cannot be exercised in JVM tests.
                     "*DrawerOneUIExtensionsKt*",
-                    // DeleteAppDataUtils — deleteAppDataAndExit uses setOnClickListenerWithProgress (OneUI widget)
+                    // DeleteAppDataUtils: deleteAppDataAndExit uses setOnClickListenerWithProgress (OneUI widget)
                     // with a coroutine body that cannot be exercised without a real device context.
                     "*DeleteAppDataUtilsKt*",
                     // restoreSearchAndActionMode is inline; definition-site stubs are phantom.
-                    "*DrawerUtilsKt\$restoreSearchAndActionMode\$*",
-                    // CommonUtilsLibsActivity setContent {} — Compose lambda body requires full UI rendering,
+                    "*DrawerUtilsKt\$restoreSearchAndActionMode$*",
+                    // CommonUtilsLibsActivity setContent {}: Compose lambda body requires full UI rendering,
                     // which cannot run in JVM unit tests without Compose test infrastructure.
                     "*CommonUtilsLibsActivity*",
-                    // Default suspend lambda property values — these are the initial instances stored
+                    // Default suspend lambda property values: these are the initial instances stored
                     // in companion/top-level properties (e.g. `var getAppVersion = suspend { "" }`).
                     // Every test replaces them before launching the activity, so the defaults are
                     // never invoked; they cannot be reset to their original instance after replacement.
                     "*CommonUtilsAboutActivity\$Companion\$getAppVersion*",
                     "*CommonUtilsSettingsActivity\$Companion\$initPreferences*",
                     "*ActivityUtilsKt\$setupCommonUtilsSettingsActivity*",
-                    // setVersionTextView coroutine — the suspend state-machine's suspension-check
+                    // setVersionTextView coroutine: the suspend state-machine's suspension-check
                     // instructions are never exercised in JVM tests (coroutine completes synchronously).
                     "*CommonUtilsAboutActivity\$setVersionTextView*",
                     // registerForActivityResult(StartIntentSenderForResult(), ::onActivityResult) and
@@ -176,11 +193,11 @@ kover {
                     // AutoClearedUtilsKt$autoCleared$1: the DESTROYED lifecycle branch in getValue
                     // requires a re-entrant call during Fragment.onDestroyView — not safely reproducible
                     // in unit tests without risking lifecycle-owner access-after-destroy crashes.
-                    "*AutoClearedUtilsKt\$autoCleared\$1*",
-                    // AboutAppBarListener.onOffsetChanged — else/else-if branches unreachable under Robolectric
+                    "*AutoClearedUtilsKt\$autoCleared$1*",
+                    // AboutAppBarListener.onOffsetChanged: else/else-if branches unreachable under Robolectric
                     // because AppBarLayout.totalScrollRange = 0 (no layout engine), making abs >= 0/2 always true.
                     "*CommonUtilsAboutMeActivity\$AboutAppBarListener*",
-                    // OOBEActivity initFooterButton coroutine state machine — suspension-check instructions
+                    // OOBEActivity initFooterButton coroutine state machine: suspension-check instructions
                     // in invokeSuspend are never exercised because the coroutine completes synchronously.
                     "*CommonUtilsOOBEActivity\$initFooterButton*",
                 )

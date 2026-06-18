@@ -146,7 +146,7 @@ class FragmentExtensionsRobolectricTest {
     }
 }
 
-/** Tests [openAppLocaleSettings] Fragment overload — requires API 33+. */
+/** Tests [openAppLocaleSettings] Fragment overload - requires API 33+. */
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class OpenAppLocaleSettingsApi33Test {
@@ -163,7 +163,7 @@ class OpenAppLocaleSettingsApi33Test {
     }
 }
 
-/** Tests [openAppLocaleSettings] Fragment overload below API 33 — shows error toast and returns false. */
+/** Tests [openAppLocaleSettings] Fragment overload below API 33 - shows error toast and returns false. */
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [32])
 class OpenAppLocaleSettingsApi32Test {
