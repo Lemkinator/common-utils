@@ -28,6 +28,7 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreferenceCompat
+import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.data.commonUtilsSettings
 import dev.oneuiproject.oneui.ktx.addRelativeLinksCard
 import dev.oneuiproject.oneui.ktx.onClick
@@ -103,6 +104,7 @@ private fun PreferenceFragmentCompat.initImageSaveLocation() {
     } ?: Log.w(TAG, "imageSaveLocation preference is null, skipping initialization")
 }
 
+@NoCoverage
 private fun PreferenceFragmentCompat.initDarkMode() {
     val darkModePref = findPreference<HorizontalRadioPreference>(getString(R.string.commonutils_preference_key_dark_mode))
     val autoDarkModePref = findPreference<SwitchPreferenceCompat>(getString(R.string.commonutils_preference_key_auto_dark_mode))

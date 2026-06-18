@@ -24,6 +24,7 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.view.View
+import androidx.activity.BackEventCompat
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +35,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
+import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityAboutMeBinding
 import de.lemke.commonutils.openApp
@@ -103,29 +105,43 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private fun initOnBackPressed() {
         invokeOnBack(
             triggerStateFlow = callbackIsActive,
-            onBackPressed = {
-                binding.aboutAppBar.setExpanded(true)
-                isBackProgressing = false
-                isExpanding = false
-            },
-            onBackStarted = { isBackProgressing = true },
-            onBackProgressed = {
-                val interpolatedProgress = progressInterpolator.getInterpolation(it.progress)
-                if (interpolatedProgress > .5 && !isExpanding) {
-                    isExpanding = true
-                    binding.aboutAppBar.setExpanded(true, true)
-                } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
-                    isExpanding = false
-                    binding.aboutAppBar.setExpanded(false, true)
-                }
-            },
-            onBackCancelled = {
-                binding.aboutAppBar.setExpanded(false)
-                isBackProgressing = false
-                isExpanding = false
-            },
+            onBackPressed = ::onBackPressedHandler,
+            onBackStarted = ::onBackStartedHandler,
+            onBackProgressed = ::onBackProgressedHandler,
+            onBackCancelled = ::onBackCancelledHandler,
         )
         updateCallbackState()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onBackPressedHandler() {
+        binding.aboutAppBar.setExpanded(true)
+        isBackProgressing = false
+        isExpanding = false
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onBackStartedHandler(event: BackEventCompat) {
+        isBackProgressing = true
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onBackProgressedHandler(event: BackEventCompat) {
+        val interpolatedProgress = progressInterpolator.getInterpolation(event.progress)
+        if (interpolatedProgress > .5 && !isExpanding) {
+            isExpanding = true
+            binding.aboutAppBar.setExpanded(true, true)
+        } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
+            isExpanding = false
+            binding.aboutAppBar.setExpanded(false, true)
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onBackCancelledHandler() {
+        binding.aboutAppBar.setExpanded(false)
+        isBackProgressing = false
+        isExpanding = false
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -134,6 +150,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         updateCallbackState()
     }
 
+    @NoCoverage
     @SuppressLint("RestrictedApi")
     private fun refreshAppBar(config: Configuration) {
         if (config.orientation != ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
@@ -185,7 +202,10 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onPlayStoreConfirmed(dialog: DialogInterface, which: Int) {
+    internal fun onPlayStoreConfirmed(
+        dialog: DialogInterface,
+        which: Int,
+    ) {
         openURL(getString(R.string.commonutils_playstore_developer_page_link))
     }
 
@@ -244,6 +264,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
+    @NoCoverage
     private fun updateCallbackState(enable: Boolean? = null) {
         if (isBackProgressing) return
         callbackIsActive.value =

@@ -22,6 +22,7 @@ import android.os.Bundle
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.util.Log
+import android.view.View
 import android.widget.TextView
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -71,7 +72,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         setCustomBackAnimation(binding.root)
         binding.appInfoLayout.apply {
             updateStatus = Loading
-            setMainButtonClickListener { onMainButtonClicked() }
+            setMainButtonClickListener(::handleMainButtonClick)
         }
         appUpdateManager = AppUpdateManagerFactory.create(this)
         setVersionText()
@@ -83,6 +84,9 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         activityResultLauncher = registerForActivityResult(StartIntentSenderForResult(), ::onActivityResult)
         checkUpdate()
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun handleMainButtonClick(view: View) = onMainButtonClicked()
 
     /** Handles the main button click: retries update check when offline, or starts the update flow. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

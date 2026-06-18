@@ -80,11 +80,12 @@ fun Activity.prepareActivityTransformationFrom() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
     setExitSharedElementCallback(MaterialContainerTransformSharedElementCallback())
     window.sharedElementsUseOverlay = false
-    val lifecycle =
-        (this as? LifecycleOwner)?.lifecycle ?: run {
+    val owner =
+        this as? LifecycleOwner ?: run {
             Log.w(TAG, "Activity is not a LifecycleOwner; exit transition cleanup skipped.")
             return
         }
+    val lifecycle = owner.lifecycle
     lifecycle.addObserver(
         object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
@@ -114,11 +115,12 @@ fun Activity.prepareActivityTransformationTo() {
     setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
     window.sharedElementEnterTransition = getTransitionContainerTransform()
     window.sharedElementReturnTransition = getTransitionContainerTransform()
-    val lifecycle =
-        (this as? LifecycleOwner)?.lifecycle ?: run {
+    val owner =
+        this as? LifecycleOwner ?: run {
             Log.w(TAG, "Activity is not a LifecycleOwner; enter transition cleanup skipped.")
             return
         }
+    val lifecycle = owner.lifecycle
     lifecycle.addObserver(
         object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
