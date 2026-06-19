@@ -77,6 +77,10 @@ fun Fragment.exportBitmap(
     activityResultLauncher: ActivityResultLauncher<Intent>?,
 ): Boolean = requireContext().exportBitmap(saveLocation, bitmap, filename, activityResultLauncher)
 
+// Wraps Files.newOutputStream so its platform-type null-check stays out of coverage reports.
+@NoCoverage
+private fun java.nio.file.Path.openOutputStream(): java.io.OutputStream = Files.newOutputStream(this)
+
 /** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */
 fun Context.exportBitmap(
     saveLocation: SaveLocation,
@@ -93,10 +97,10 @@ fun Context.exportBitmap(
                     SaveLocation.PICTURES -> Environment.DIRECTORY_PICTURES
                     else -> Environment.DIRECTORY_DCIM // SaveLocation.DCIM; CUSTOM excluded by outer if
                 }
-            if (Files
-                    .newOutputStream(
-                        File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG)).toPath(),
-                    ).use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }
+            if (File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG))
+                    .toPath()
+                    .openOutputStream()
+                    .use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }
             ) {
                 toast(getString(R.string.commonutils_image_saved) + ": ${saveLocation.toLocalizedString(this)}")
                 true
