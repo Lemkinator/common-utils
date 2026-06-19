@@ -85,8 +85,7 @@ fun Activity.prepareActivityTransformationFrom() {
             Log.w(TAG, "Activity is not a LifecycleOwner; exit transition cleanup skipped.")
             return
         }
-    val lifecycle = owner.lifecycle
-    lifecycle.addObserver(
+    owner.lifecycle.addObserver(
         object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 if (isFinishing) {
