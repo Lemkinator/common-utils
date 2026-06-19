@@ -162,12 +162,13 @@ kover {
                     // PreferenceUtils: addRelativeLinksCard uses OneUI's listView extension;
                     // the generated lambda/anonymous class cannot be exercised under Robolectric.
                     $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
-                    // DrawerOneUIExtensions: setupHeaderAndNavRail and onNavigationSingleClick require OneUI
+                    // setupHeaderAndNavRail and onNavigationSingleClick require OneUI
                     // NavDrawerLayout / DrawerNavigationView and their lambda bodies cannot be exercised in JVM tests.
-                    "*DrawerOneUIExtensionsKt*",
-                    // DeleteAppDataUtils: deleteAppDataAndExit uses setOnClickListenerWithProgress (OneUI widget)
+                    $$"*DrawerUtilsKt$setupHeaderAndNavRail*",
+                    $$"*DrawerUtilsKt$onNavigationSingleClick*",
+                    // deleteAppDataAndExit uses setOnClickListenerWithProgress (OneUI widget)
                     // with a coroutine body that cannot be exercised without a real device context.
-                    "*DeleteAppDataUtilsKt*",
+                    $$"*PreferenceUtilsKt$deleteAppDataAndExit*",
                     // restoreSearchAndActionMode is inline; definition-site stubs are phantom.
                     $$"*DrawerUtilsKt$restoreSearchAndActionMode$*",
                     // CommonUtilsLibsActivity setContent {}: Compose lambda body requires full UI rendering,
