@@ -126,7 +126,7 @@ Consumers see `@IoDispatcher` / `@DefaultDispatcher` / `@MainDispatcher`
 because those annotation classes live in our AAR, not in Hilt's runtime jar,
 so no transitive exposure is needed. Every consuming app already declares
 Hilt directly. A separate `:lib-di` subproject would let consumers opt out
-but adds a publish target for zero practical gain.
+but adds a publishing target for zero practical gain.
 
 ## Configuration
 

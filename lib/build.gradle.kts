@@ -163,7 +163,7 @@ kover {
                     // the generated lambda/anonymous class cannot be exercised under Robolectric.
                     $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
                     // setupHeaderAndNavRail and onNavigationSingleClick require OneUI
-                    // NavDrawerLayout / DrawerNavigationView and their lambda bodies cannot be exercised in JVM tests.
+                    // NavDrawerLayout / DrawerNavigationView, and their lambda bodies cannot be exercised in JVM tests.
                     $$"*DrawerUtilsKt$setupHeaderAndNavRail*",
                     $$"*DrawerUtilsKt$onNavigationSingleClick*",
                     // deleteAppDataAndExit uses setOnClickListenerWithProgress (OneUI widget)
@@ -181,7 +181,7 @@ kover {
                     $$"*CommonUtilsAboutActivity$Companion$getAppVersion*",
                     $$"*CommonUtilsSettingsActivity$Companion$initPreferences*",
                     $$"*ActivityUtilsKt$setupCommonUtilsSettingsActivity*",
-                    // setVersionTextView coroutine: the suspend state-machine's suspension-check
+                    // setVersionTextView coroutine: suspend state-machine's suspension-check
                     // instructions are never exercised in JVM tests (coroutine completes synchronously).
                     $$"*CommonUtilsAboutActivity$setVersionTextView*",
                     // registerForActivityResult(StartIntentSenderForResult(), ::onActivityResult) and
@@ -189,7 +189,7 @@ kover {
                     // inside onCreate; both delegate to @NoCoverage methods → excluded as a group.
                     $$"*CommonUtilsAboutActivity$onCreate*",
                     // SettingsRepositoryKt: @get:NoCoverage on `commonUtilsSettings` excludes instruction
-                    // miss but Kover 0.9.x does not exclude branch miss for property-getter annotations.
+                    // miss, but Kover 0.9.x does not exclude branch miss for property-getter annotations.
                     "*SettingsRepositoryKt*",
                     // AutoClearedUtilsKt$autoCleared$1: the DESTROYED lifecycle branch in getValue
                     // requires a re-entrant call during Fragment.onDestroyView - not safely reproducible

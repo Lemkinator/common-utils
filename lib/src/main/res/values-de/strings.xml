@@ -74,7 +74,7 @@
     <string name="commonutils_dnd_activated">Bitte-Nicht-Stören Modus wurde aktiviert</string>
     <string name="commonutils_dnd_deactivated">Bitte-Nicht-Stören Modus wurde deaktiviert</string>
     <string name="commonutils_mute">Stummschalten</string>
-    <string name="commonutils_failed_to_mute_streams">Hoppla, ich habs nicht geschafft alles Stummzuschalten…</string>
+    <string name="commonutils_failed_to_mute_streams">Hoppla, ich habe es nicht geschafft alles Stummzuschalten…</string>
     <string name="commonutils_need_access">Berechtigung benötigt</string>
     <string name="commonutils_need_access_dnd">Um den \"Bitte-Nicht-Stören\"-Modus zu aktivieren, benötigt die App die \"Nicht-Stören\"-Berechtigung</string>
     <string name="commonutils_grant_access">Berechtigung erteilen</string>
