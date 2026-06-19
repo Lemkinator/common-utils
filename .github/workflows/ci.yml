@@ -14,10 +14,12 @@ permissions:
 jobs:
   static-analysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -32,6 +34,18 @@ jobs:
         env:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+      - name: Upload detekt report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: detekt-report
+          path: lib/build/reports/detekt/
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lint-report
+          path: lib/build/reports/lint-results-*
 
   unit-tests:
     runs-on: ubuntu-latest
@@ -39,7 +53,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Set up JDK 21
+        with:
+          persist-credentials: false
+      - name: Set up JDK
         uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -78,7 +94,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Set up JDK 21
+        with:
+          persist-credentials: false
+      - name: Set up JDK
         uses: actions/setup-java@v5
         with:
           distribution: temurin
