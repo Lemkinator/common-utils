@@ -110,6 +110,9 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         }
     }
 
+    @NoCoverage
+    private fun onUpdateActivityResult(result: ActivityResult) = onUpdateFlowResult(result.resultCode)
+
     private fun setVersionText() {
         val version: TextView = binding.appInfoLayout.findViewById(designR.id.app_info_version)
         lifecycleScope.launch { setVersionTextView(version) }
@@ -159,9 +162,6 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
             .addOnFailureListener(::onUpdateFetchFailed)
     }
 
-    @NoCoverage
-    private fun onUpdateActivityResult(result: ActivityResult) = onUpdateFlowResult(result.resultCode)
-
     // Play Core callbacks: require a live Google Play Store connection, untestable in JVM tests.
     // The generated thin-wrapper lambda classes are excluded by Kover class-name patterns in build.gradle.kts.
 
@@ -187,7 +187,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         }
     }
 
-    // startUpdateFlow calls Play Core's startUpdateFlowForResult which requires the live Play Store.
+    // startUpdateFlow calls Play Core's startUpdateFlowForResult, which requires the live Play Store.
     @NoCoverage
     @Suppress("TooGenericExceptionCaught")
     private fun startUpdateFlow() {

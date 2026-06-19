@@ -133,12 +133,15 @@ fun Fragment.deleteAppDataAndExit(
     dialog.getButton(BUTTON_POSITIVE).apply {
         setTextColor(requireContext().getColor(designR.color.oui_des_functional_red_color))
         setOnClickListenerWithProgress { _, _ ->
-            lifecycleScope.launch {
-                delay(DELETE_APP_DATA_DELAY_MS.milliseconds)
-                (context?.getSystemService(ACTIVITY_SERVICE) as? ActivityManager)?.clearApplicationUserData()
-            }
+            lifecycleScope.launch { deleteAppData() }
         }
     }
+}
+
+@NoCoverage
+private suspend fun Fragment.deleteAppData() {
+    delay(DELETE_APP_DATA_DELAY_MS.milliseconds)
+    (context?.getSystemService(ACTIVITY_SERVICE) as? ActivityManager)?.clearApplicationUserData()
 }
 
 @NoCoverage

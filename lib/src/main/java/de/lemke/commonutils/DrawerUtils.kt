@@ -19,6 +19,8 @@ package de.lemke.commonutils
 
 import android.os.Bundle
 import android.os.SystemClock
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
@@ -79,13 +81,16 @@ fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
         icon = AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)!!,
         tooltipText = aboutApp,
-        listener = { button ->
-            button.transformToActivity(CommonUtilsAboutActivity::class.java, transitionName = "CommonUtilsAboutAppTransition")
-        },
+        listener = View::openAboutActivity,
     )
     setNavRailContentMinSideMargin(NAV_RAIL_MIN_SIDE_MARGIN_DP)
     closeNavRailOnBack = true
     context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
+}
+
+@NoCoverage
+private fun View.openAboutActivity() {
+    transformToActivity(CommonUtilsAboutActivity::class.java, transitionName = "CommonUtilsAboutAppTransition")
 }
 
 /** Wraps [listener] to ignore repeated clicks within [interval] milliseconds, preventing double-navigation. */
@@ -95,10 +100,15 @@ fun DrawerNavigationView.onNavigationSingleClick(
     listener: NavigationView.OnNavigationItemSelectedListener,
 ) {
     var lastClick = 0L
-    setNavigationItemSelectedListener { item ->
-        val currentTime = SystemClock.elapsedRealtime()
-        if (currentTime - lastClick < interval) return@setNavigationItemSelectedListener false
-        lastClick = currentTime
-        listener.onNavigationItemSelected(item)
-    }
+    setNavigationItemSelectedListener(
+        object : NavigationView.OnNavigationItemSelectedListener {
+            @NoCoverage
+            override fun onNavigationItemSelected(item: MenuItem): Boolean {
+                val currentTime = SystemClock.elapsedRealtime()
+                if (currentTime - lastClick < interval) return false
+                lastClick = currentTime
+                return listener.onNavigationItemSelected(item)
+            }
+        },
+    )
 }

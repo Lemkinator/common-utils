@@ -162,12 +162,13 @@ kover {
                     // PreferenceUtils: addRelativeLinksCard uses OneUI's listView extension;
                     // the generated lambda/anonymous class cannot be exercised under Robolectric.
                     $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
-                    // setupHeaderAndNavRail and onNavigationSingleClick require OneUI
-                    // NavDrawerLayout / DrawerNavigationView, and their lambda bodies cannot be exercised in JVM tests.
+                    // setupHeaderAndNavRail: openAboutActivity() helper + its method-reference SAM wrapper;
+                    // onNavigationSingleClick: anonymous OnNavigationItemSelectedListener class —
+                    // both require OneUI NavDrawerLayout / DrawerNavigationView, untestable in JVM tests.
                     $$"*DrawerUtilsKt$setupHeaderAndNavRail*",
                     $$"*DrawerUtilsKt$onNavigationSingleClick*",
-                    // deleteAppDataAndExit uses setOnClickListenerWithProgress (OneUI widget)
-                    // with a coroutine body that cannot be exercised without a real device context.
+                    // deleteAppDataAndExit: setOnClickListenerWithProgress lambda + deleteAppData()
+                    // coroutine body; requires a real device context to exercise.
                     $$"*PreferenceUtilsKt$deleteAppDataAndExit*",
                     // restoreSearchAndActionMode is inline; definition-site stubs are phantom.
                     $$"*DrawerUtilsKt$restoreSearchAndActionMode$*",
@@ -184,9 +185,9 @@ kover {
                     // setVersionTextView coroutine: suspend state-machine's suspension-check
                     // instructions are never exercised in JVM tests (coroutine completes synchronously).
                     $$"*CommonUtilsAboutActivity$setVersionTextView*",
-                    // registerForActivityResult(StartIntentSenderForResult(), ::onActivityResult) and
-                    // setMainButtonClickListener(::handleMainButtonClick) each create an anonymous class
-                    // inside onCreate; both delegate to @NoCoverage methods → excluded as a group.
+                    // registerForActivityResult and setMainButtonClickListener lambdas inside onCreate
+                    // generate SAM-wrapper classes/methods excluded here; these fire only via live
+                    // Play Store callbacks and cannot be triggered in JVM unit tests.
                     $$"*CommonUtilsAboutActivity$onCreate*",
                     // SettingsRepositoryKt: @get:NoCoverage on `commonUtilsSettings` excludes instruction
                     // miss, but Kover 0.9.x does not exclude branch miss for property-getter annotations.
