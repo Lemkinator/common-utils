@@ -114,7 +114,6 @@ private fun PreferenceFragmentCompat.initImageSaveLocation() {
 }
 
 /** Shows a confirmation dialog and clears all application user data on confirmation. */
-@NoCoverage
 fun Fragment.deleteAppDataAndExit(
     title: String? = null,
     message: String? = null,

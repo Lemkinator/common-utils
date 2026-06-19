@@ -166,8 +166,9 @@ kover {
                     // both require OneUI NavDrawerLayout / DrawerNavigationView, untestable in JVM tests.
                     $$"*DrawerUtilsKt$setupHeaderAndNavRail*",
                     $$"*DrawerUtilsKt$onNavigationSingleClick*",
-                    // deleteAppDataAndExit: setOnClickListenerWithProgress lambda + deleteAppData()
-                    // coroutine body; requires a real device context to exercise.
+                    // deleteAppDataAndExit coroutine continuation: the suspend lambda body
+                    // { deleteAppData() } compiles as an inner class whose invokeSuspend calls
+                    // deleteAppData() (delay + clearApplicationUserData), untestable in JVM.
                     $$"*PreferenceUtilsKt$deleteAppDataAndExit*",
                     // restoreSearchAndActionMode is inline; definition-site stubs are phantom.
                     $$"*DrawerUtilsKt$restoreSearchAndActionMode$*",
