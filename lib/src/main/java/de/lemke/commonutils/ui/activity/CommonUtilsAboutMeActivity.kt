@@ -22,6 +22,8 @@ import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import androidx.activity.BackEventCompat
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -31,6 +33,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
+import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityAboutMeBinding
 import de.lemke.commonutils.openApp
@@ -100,29 +103,43 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private fun initOnBackPressed() {
         invokeOnBack(
             triggerStateFlow = callbackIsActive,
-            onBackPressed = {
-                binding.aboutAppBar.setExpanded(true)
-                isBackProgressing = false
-                isExpanding = false
-            },
-            onBackStarted = { isBackProgressing = true },
-            onBackProgressed = {
-                val interpolatedProgress = progressInterpolator.getInterpolation(it.progress)
-                if (interpolatedProgress > .5 && !isExpanding) {
-                    isExpanding = true
-                    binding.aboutAppBar.setExpanded(true, true)
-                } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
-                    isExpanding = false
-                    binding.aboutAppBar.setExpanded(false, true)
-                }
-            },
-            onBackCancelled = {
-                binding.aboutAppBar.setExpanded(false)
-                isBackProgressing = false
-                isExpanding = false
-            },
+            onBackPressed = ::onBackPressedHandler,
+            onBackStarted = { onBackStartedHandler() },
+            onBackProgressed = ::onBackProgressedHandler,
+            onBackCancelled = ::onBackCancelledHandler,
         )
         updateCallbackState()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onBackPressedHandler() {
+        binding.aboutAppBar.setExpanded(true)
+        isBackProgressing = false
+        isExpanding = false
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onBackStartedHandler() {
+        isBackProgressing = true
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onBackProgressedHandler(event: BackEventCompat) {
+        val interpolatedProgress = progressInterpolator.getInterpolation(event.progress)
+        if (interpolatedProgress > .5 && !isExpanding) {
+            isExpanding = true
+            binding.aboutAppBar.setExpanded(true, true)
+        } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
+            isExpanding = false
+            binding.aboutAppBar.setExpanded(false, true)
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onBackCancelledHandler() {
+        binding.aboutAppBar.setExpanded(false)
+        isBackProgressing = false
+        isExpanding = false
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -131,6 +148,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         updateCallbackState()
     }
 
+    @NoCoverage
     @SuppressLint("RestrictedApi")
     private fun refreshAppBar(config: Configuration) {
         if (config.orientation != ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
@@ -176,10 +194,25 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             .Builder(this)
             .setTitle(getString(R.string.commonutils_playstore_ad))
             .setMessage(getString(R.string.commonutils_playstore_redirect_message))
-            .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ ->
-                openURL(getString(R.string.commonutils_playstore_developer_page_link))
-            }.setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
+            .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ -> onPlayStoreConfirmed() }
+            .setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
             .show()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onPlayStoreConfirmed() {
+        openURL(getString(R.string.commonutils_playstore_developer_page_link))
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun handleShareApp() {
+        onShareApp(this)
+        shareApp()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun handleWriteEmail() {
+        sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
     }
 
     private fun setupOnClickListeners() {
@@ -193,13 +226,8 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             aboutBottomRelativeWebsite.setOnClickListener { openURL(getString(R.string.commonutils_my_website)) }
             aboutBottomRelativeTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
             aboutBottomRateApp.setOnClickListener { openApp(packageName, false) }
-            aboutBottomShareApp.setOnClickListener {
-                onShareApp(this@CommonUtilsAboutMeActivity)
-                shareApp()
-            }
-            aboutBottomWriteEmail.setOnClickListener {
-                sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
-            }
+            aboutBottomShareApp.setOnClickListener { handleShareApp() }
+            aboutBottomWriteEmail.setOnClickListener { handleWriteEmail() }
         }
     }
 
@@ -231,6 +259,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
+    @NoCoverage
     private fun updateCallbackState(enable: Boolean? = null) {
         if (isBackProgressing) return
         callbackIsActive.value =

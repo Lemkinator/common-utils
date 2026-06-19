@@ -42,6 +42,17 @@ class OnboardingUtilsTest : ShouldSpec(
             }
         }
 
+        context("setupOnboarding accepts valid steps") {
+            should("accept empty steps without throwing") {
+                setupOnboarding(emptyList())
+                Onboarding.steps shouldBe emptyList()
+            }
+            should("accept unique non-OOBE steps without throwing") {
+                setupOnboarding(listOf(CommonUtilsLibsActivity::class.java))
+                Onboarding.steps shouldBe listOf(CommonUtilsLibsActivity::class.java)
+            }
+        }
+
         // --- nextInChain (the chain-walk logic used by advanceOnboarding) ---
 
         val oobeClass = CommonUtilsOOBEActivity::class.java.name
@@ -49,7 +60,7 @@ class OnboardingUtilsTest : ShouldSpec(
         val stepB = "com.example.StepB"
 
         context("OOBE is the only step") {
-            should("return null — no next after OOBE") {
+            should("return null - no next after OOBE") {
                 nextInChain(listOf(oobeClass), oobeClass).shouldBeNull()
             }
         }

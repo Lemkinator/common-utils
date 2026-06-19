@@ -17,14 +17,20 @@ Min SDK 26, Target SDK 36, Kotlin 2.3.21, Java 21.
 ./gradlew tasks          # List all tasks
 ./gradlew assembleRelease
 ./gradlew test           # Run unit tests
-./gradlew koverVerifyDebug    # Check coverage floor (≥13%, debug variant only)
+./gradlew koverVerifyDebug    # Check coverage floor (debug variant only)
 ```
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/`.
 
-**Test stack**: Kotest 6 (`ShouldSpec` style) + Robolectric via
-`kotest-extensions-robolectric` for Android tests. Konsist for architecture
-rules. Kover enforces ≥12% line coverage.
+**Test stack**: Kotest 6 (`ShouldSpec` style) for pure Kotlin tests; JUnit 5 `@Test` +
+`tech.apter.junit5.jupiter:robolectric-extension` for Android/Robolectric tests. Konsist
+for architecture rules.
+
+**Robolectric + JUnit 5**: uses `tech.apter.junit5.jupiter:robolectric-extension`
+(`RobolectricExtension`) — JUnit 5 native, no vintage engine needed. Works here
+because no production activity is `@AndroidEntryPoint`; tests bypass Hilt entirely
+using plain `Robolectric.buildActivity()` + `ApplicationProvider`.
+`@HiltAndroidTest`/`HiltAndroidRule` are JUnit 4 only, incompatible with this setup.
 
 ## Pre-commit Hook
 
@@ -120,7 +126,7 @@ Consumers see `@IoDispatcher` / `@DefaultDispatcher` / `@MainDispatcher`
 because those annotation classes live in our AAR, not in Hilt's runtime jar,
 so no transitive exposure is needed. Every consuming app already declares
 Hilt directly. A separate `:lib-di` subproject would let consumers opt out
-but adds a publish target for zero practical gain.
+but adds a publishing target for zero practical gain.
 
 ## Configuration
 

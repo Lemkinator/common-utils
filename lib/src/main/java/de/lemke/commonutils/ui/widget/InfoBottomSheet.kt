@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
-
 package de.lemke.commonutils.ui.widget
 
 import android.content.DialogInterface
@@ -119,7 +117,7 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
         private fun newInstance(
             title: String,
             message: String,
-            textGravity: Int = CENTER,
+            textGravity: Int,
         ) = InfoBottomSheet().apply {
             arguments =
                 Bundle().apply {

@@ -49,38 +49,12 @@ private const val TAG = "PreferenceUtils"
 private const val DELETE_APP_DATA_DELAY_MS = 500L
 
 /** Adds a relative-links card with "Share app" and "Rate app" actions to the preference screen. */
+@NoCoverage
 fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
     addRelativeLinksCard(
         RelativeLink(getString(R.string.commonutils_share_app)) { shareApp() },
         RelativeLink(getString(R.string.commonutils_rate_app)) { openApp(requireContext().packageName, false) },
     )
-}
-
-/** Shows a confirmation dialog and clears all application user data on confirmation. */
-fun Fragment.deleteAppDataAndExit(
-    title: String? = null,
-    message: String? = null,
-    cancel: String? = null,
-    delete: String? = null,
-) {
-    val dialog =
-        AlertDialog
-            .Builder(requireContext())
-            .setTitle(title ?: getString(R.string.commonutils_delete_appdata_and_exit))
-            .setMessage(message ?: getString(R.string.commonutils_delete_appdata_and_exit_warning))
-            .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
-            .setPositiveButton(delete ?: getString(R.string.commonutils_delete), null)
-            .create()
-    dialog.show()
-    dialog.getButton(BUTTON_POSITIVE).apply {
-        setTextColor(requireContext().getColor(designR.color.oui_des_functional_red_color))
-        setOnClickListenerWithProgress { _, _ ->
-            lifecycleScope.launch {
-                delay(DELETE_APP_DATA_DELAY_MS.milliseconds)
-                (requireContext().getSystemService(ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
-            }
-        }
-    }
 }
 
 /** Initializes the standard common-utils preferences (dark mode, save location, language, dev options, more info). */
@@ -139,6 +113,37 @@ private fun PreferenceFragmentCompat.initImageSaveLocation() {
     } ?: Log.w(TAG, "imageSaveLocation preference is null, skipping initialization")
 }
 
+/** Shows a confirmation dialog and clears all application user data on confirmation. */
+fun Fragment.deleteAppDataAndExit(
+    title: String? = null,
+    message: String? = null,
+    cancel: String? = null,
+    delete: String? = null,
+) {
+    val dialog =
+        AlertDialog
+            .Builder(requireContext())
+            .setTitle(title ?: getString(R.string.commonutils_delete_appdata_and_exit))
+            .setMessage(message ?: getString(R.string.commonutils_delete_appdata_and_exit_warning))
+            .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
+            .setPositiveButton(delete ?: getString(R.string.commonutils_delete), null)
+            .create()
+    dialog.show()
+    dialog.getButton(BUTTON_POSITIVE).apply {
+        setTextColor(requireContext().getColor(designR.color.oui_des_functional_red_color))
+        setOnClickListenerWithProgress { _, _ ->
+            lifecycleScope.launch { deleteAppData() }
+        }
+    }
+}
+
+@NoCoverage
+private suspend fun Fragment.deleteAppData() {
+    delay(DELETE_APP_DATA_DELAY_MS.milliseconds)
+    (context?.getSystemService(ACTIVITY_SERVICE) as? ActivityManager)?.clearApplicationUserData()
+}
+
+@NoCoverage
 private fun PreferenceFragmentCompat.initDarkMode() {
     val darkModePref = findPreference<HorizontalRadioPreference>(getString(R.string.commonutils_preference_key_dark_mode))
     val autoDarkModePref = findPreference<SwitchPreferenceCompat>(getString(R.string.commonutils_preference_key_auto_dark_mode))

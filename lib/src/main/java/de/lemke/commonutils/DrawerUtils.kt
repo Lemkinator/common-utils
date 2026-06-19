@@ -18,7 +18,9 @@
 package de.lemke.commonutils
 
 import android.os.Bundle
-import android.widget.ImageButton
+import android.os.SystemClock
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
@@ -26,39 +28,9 @@ import dev.oneuiproject.oneui.layout.Badge
 import dev.oneuiproject.oneui.layout.NavDrawerLayout
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import dev.oneuiproject.oneui.R as iconsR
-import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "DrawerUtils"
 private const val NAV_RAIL_MIN_SIDE_MARGIN_DP = 14
-
-/** Sets up the drawer header button with an info icon navigating to [CommonUtilsAboutActivity] and configures the nav rail. */
-fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
-    setupHeaderButton(
-        icon = AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)!!,
-        tooltipText = aboutApp,
-        listener = {
-            findViewById<ImageButton>(designR.id.oui_des_drawer_header_button)
-                .transformToActivity(CommonUtilsAboutActivity::class.java, transitionName = "CommonUtilsAboutAppTransition")
-        },
-    )
-    setNavRailContentMinSideMargin(NAV_RAIL_MIN_SIDE_MARGIN_DP)
-    closeNavRailOnBack = true
-    context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
-}
-
-/** Wraps [listener] to ignore repeated clicks within [interval] milliseconds, preventing double-navigation. */
-fun DrawerNavigationView.onNavigationSingleClick(
-    interval: Long = 600,
-    listener: NavigationView.OnNavigationItemSelectedListener,
-) {
-    var lastClick = 0L
-    setNavigationItemSelectedListener { item ->
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastClick < interval) return@setNavigationItemSelectedListener false
-        lastClick = currentTime
-        listener.onNavigationItemSelected(item)
-    }
-}
 
 /** Bundle key for persisting search mode state. */
 const val COMMONUTILS_KEY_IS_SEARCH_MODE = "commonutils_isSearchMode"
@@ -85,6 +57,7 @@ fun Bundle.saveSearchAndActionMode(
 }
 
 /** Restores search and action mode state from this bundle, invoking the provided callbacks as needed. */
+@NoCoverage
 inline fun Bundle?.restoreSearchAndActionMode(
     crossinline onSearchMode: () -> Unit = {},
     crossinline onActionMode: (selectedIds: Set<Long>) -> Unit = {},
@@ -100,4 +73,42 @@ inline fun Bundle?.restoreSearchAndActionMode(
             onActionMode(getLongArray(COMMONUTILS_KEY_SELECTED_IDS)?.toSet() ?: emptySet())
         }
     }
+}
+
+/** Sets up the drawer header button with an info icon navigating to [CommonUtilsAboutActivity] and configures the nav rail. */
+@NoCoverage
+fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
+    setupHeaderButton(
+        icon = AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)!!,
+        tooltipText = aboutApp,
+        listener = View::openAboutActivity,
+    )
+    setNavRailContentMinSideMargin(NAV_RAIL_MIN_SIDE_MARGIN_DP)
+    closeNavRailOnBack = true
+    context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
+}
+
+@NoCoverage
+private fun View.openAboutActivity() {
+    transformToActivity(CommonUtilsAboutActivity::class.java, transitionName = "CommonUtilsAboutAppTransition")
+}
+
+/** Wraps [listener] to ignore repeated clicks within [interval] milliseconds, preventing double-navigation. */
+@NoCoverage
+fun DrawerNavigationView.onNavigationSingleClick(
+    interval: Long = 600,
+    listener: NavigationView.OnNavigationItemSelectedListener,
+) {
+    var lastClick = 0L
+    setNavigationItemSelectedListener(
+        object : NavigationView.OnNavigationItemSelectedListener {
+            @NoCoverage
+            override fun onNavigationItemSelected(item: MenuItem): Boolean {
+                val currentTime = SystemClock.elapsedRealtime()
+                if (currentTime - lastClick < interval) return false
+                lastClick = currentTime
+                return listener.onNavigationItemSelected(item)
+            }
+        },
+    )
 }

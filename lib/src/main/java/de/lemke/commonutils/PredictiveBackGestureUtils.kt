@@ -45,6 +45,7 @@ import kotlinx.coroutines.launch
 private const val TAG = "PredictiveBackGestureUtils"
 
 /** Registers [onBackPressedLogic] as the back handler, enabled whenever [backPressLogicEnabled] emits `true`. */
+@NoCoverage
 inline fun Fragment.addOnBackLogic(
     backPressLogicEnabled: StateFlow<Boolean>,
     crossinline onBackPressedLogic: () -> Unit = {},
@@ -182,5 +183,6 @@ fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
 
 /** The theme-appropriate default window background color for this activity. */
 val AppCompatActivity.defaultWindowBackground: Int
+    @NoCoverage
     @SuppressLint("RestrictedApi", "PrivateResource")
     get() = if (isLightTheme(this)) sesl_round_and_bgcolor_light else sesl_round_and_bgcolor_dark

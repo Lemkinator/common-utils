@@ -62,14 +62,14 @@ class SharedPreferenceDelegates(
         default: String = "",
         key: String? = null,
     ): ReadWriteProperty<Any, String> =
-        create(default, key, { k, d -> prefs.getString(k, d) ?: d }, { k, v -> prefs.edit { putString(k, v) } })
+        create(default, key, { k, d -> prefs.getString(k, null) ?: d }, { k, v -> prefs.edit { putString(k, v) } })
 
     /** Delegate that reads/writes a [Set]<[String]> preference. */
     fun stringSet(
         default: Set<String> = emptySet(),
         key: String? = null,
     ): ReadWriteProperty<Any, Set<String>> =
-        create(default, key, { k, d -> prefs.getStringSet(k, d) ?: d }, { k, v -> prefs.edit { putStringSet(k, v) } })
+        create(default, key, { k, d -> prefs.getStringSet(k, null) ?: d }, { k, v -> prefs.edit { putStringSet(k, v) } })
 
     /** Delegate that reads/writes a dark mode flag stored as `"1"`/`"0"` for legacy HorizontalRadioPreference compatibility. */
     fun darkMode(
@@ -103,7 +103,7 @@ class SharedPreferenceDelegates(
 
     private fun <T> create(
         default: T,
-        key: String? = null,
+        key: String?,
         getter: (key: String, default: T) -> T,
         setter: (key: String, value: T) -> Unit,
     ) = object : ReadWriteProperty<Any, T> {

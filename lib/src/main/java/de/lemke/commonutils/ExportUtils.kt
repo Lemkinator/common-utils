@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
-
 package de.lemke.commonutils
 
 import android.content.ActivityNotFoundException
@@ -93,7 +91,7 @@ fun Context.exportBitmap(
                 when (saveLocation) {
                     SaveLocation.DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
                     SaveLocation.PICTURES -> Environment.DIRECTORY_PICTURES
-                    SaveLocation.DCIM -> Environment.DIRECTORY_DCIM
+                    else -> Environment.DIRECTORY_DCIM // SaveLocation.DCIM; CUSTOM excluded by outer if
                 }
             if (Files
                     .newOutputStream(
