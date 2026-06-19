@@ -51,7 +51,6 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
-            isReturnDefaultValues = true
             all {
                 it.useJUnitPlatform()
                 it.maxHeapSize = "4096m"
