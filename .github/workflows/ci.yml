@@ -12,9 +12,9 @@ permissions:
   contents: read
 
 jobs:
-  static-analysis:
+  check-formatting:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -29,8 +29,8 @@ jobs:
         run: mkdir -p ~/.gradle && cp .github/ci-gradle.properties ~/.gradle/gradle.properties
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
-      - name: Run static analysis
-        run: chmod +x ./gradlew && ./gradlew spotlessCheck detekt lintDebug --stacktrace
+      - name: Run formatting checks
+        run: chmod +x ./gradlew && ./gradlew spotlessCheck detekt --stacktrace
         env:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
@@ -40,6 +40,30 @@ jobs:
         with:
           name: detekt-report
           path: lib/build/reports/detekt/
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: check-formatting
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Copy CI gradle.properties
+        run: mkdir -p ~/.gradle && cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: Run lint
+        run: chmod +x ./gradlew && ./gradlew lintDebug --stacktrace
+        env:
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+          GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       - name: Upload lint report
         if: always()
         uses: actions/upload-artifact@v7
@@ -49,7 +73,8 @@ jobs:
 
   unit-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+    needs: check-formatting
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -89,8 +114,8 @@ jobs:
 
   assemble:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [ static-analysis, unit-tests ]
+    timeout-minutes: 20
+    needs: [ lint, unit-tests ]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
