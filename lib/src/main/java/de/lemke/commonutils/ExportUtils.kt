@@ -31,7 +31,6 @@ import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
 import java.io.File
-import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -77,10 +76,6 @@ fun Fragment.exportBitmap(
     activityResultLauncher: ActivityResultLauncher<Intent>?,
 ): Boolean = requireContext().exportBitmap(saveLocation, bitmap, filename, activityResultLauncher)
 
-// Wraps Files.newOutputStream so its platform-type null-check stays out of coverage reports.
-@NoCoverage
-private fun java.nio.file.Path.openOutputStream(): java.io.OutputStream = Files.newOutputStream(this)
-
 /** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */
 fun Context.exportBitmap(
     saveLocation: SaveLocation,
@@ -98,8 +93,7 @@ fun Context.exportBitmap(
                     else -> Environment.DIRECTORY_DCIM // SaveLocation.DCIM; CUSTOM excluded by outer if
                 }
             if (File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG))
-                    .toPath()
-                    .openOutputStream()
+                    .outputStream()
                     .use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }
             ) {
                 toast(getString(R.string.commonutils_image_saved) + ": ${saveLocation.toLocalizedString(this)}")

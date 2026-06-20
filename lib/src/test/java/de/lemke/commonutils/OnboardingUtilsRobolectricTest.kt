@@ -225,7 +225,7 @@ class OnboardingUtilsRobolectricTest {
                 OnboardingContext::class.java
                     .getDeclaredField("CREATOR")
                     .get(null) as android.os.Parcelable.Creator<OnboardingContext>
-            shouldThrow<Exception> { creator.createFromParcel(parcel) }
+            shouldThrow<NullPointerException> { creator.createFromParcel(parcel) }
         } finally {
             parcel.recycle()
         }
