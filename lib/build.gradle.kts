@@ -205,10 +205,9 @@ kover {
                     // OnboardingContext @Parcelize: createFromParcel null-checks each String field; on
                     // Linux/CI the branch is attributed to line 68 (`) : Parcelable`) but is never
                     // triggered in any test path. Kover's verify already excludes synthetic null-checks;
-                    // exclude the class + its @Parcelize-generated Creator so the JaCoCo XML doesn't
-                    // expose the miss to Codecov.
-                    "de.lemke.commonutils.OnboardingContext",
-                    $$"de.lemke.commonutils.OnboardingContext$$*",
+                    // exclude the class (and its @Parcelize-generated inner classes via *) so the
+                    // JaCoCo XML doesn't expose the miss to Codecov.
+                    "*OnboardingContext*",
                 )
                 // inline fun stubs that Kover cannot instrument at definition site
                 annotatedBy("de.lemke.commonutils.NoCoverage")
