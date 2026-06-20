@@ -6,6 +6,7 @@
     ":renovatePrefix",
     ":configMigration"
   ],
+  "platformAutomerge": true,
   "packageRules": [
     {
       "matchUpdateTypes": [
