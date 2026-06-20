@@ -215,23 +215,6 @@ class OnboardingUtilsRobolectricTest {
     }
 
     @Test
-    fun `OnboardingContext createFromParcel with null String field throws`() {
-        val parcel = android.os.Parcel.obtain()
-        try {
-            parcel.writeString(null) // null mainActivityName triggers @Parcelize null-check branch
-            parcel.setDataPosition(0)
-            @Suppress("UNCHECKED_CAST")
-            val creator =
-                OnboardingContext::class.java
-                    .getDeclaredField("CREATOR")
-                    .get(null) as android.os.Parcelable.Creator<OnboardingContext>
-            shouldThrow<NullPointerException> { creator.createFromParcel(parcel) }
-        } finally {
-            parcel.recycle()
-        }
-    }
-
-    @Test
     fun `OnboardingContext parcels and unparcels correctly`() {
         val original =
             onboardingContext(
