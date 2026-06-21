@@ -17,6 +17,9 @@ package de.lemke.commonutils
 
 import com.lemonappdev.konsist.api.KoModifier
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.declaration.KoFunctionDeclaration
+import com.lemonappdev.konsist.api.declaration.KoInitBlockDeclaration
+import com.lemonappdev.konsist.api.declaration.KoPropertyDeclaration
 import com.lemonappdev.konsist.api.ext.list.withPackage
 import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
@@ -38,6 +41,39 @@ class ArchitectureTest : ShouldSpec() {
                 .withPackage("de.lemke.commonutils.data..")
                 .assertFalse(testName = this.testCase.name.toString()) {
                     it.hasImport { import -> import.name.startsWith("de.lemke.commonutils.ui.") }
+                }
+        }
+        should("properties declared before functions in class body") {
+            codeScope
+                .classes()
+                .assertTrue(testName = this.testCase.name.toString()) { koClass ->
+                    val declarations = koClass.declarations(includeNested = false, includeLocal = false)
+                    val lastPropertyIndex = declarations.indexOfLast { it is KoPropertyDeclaration }
+                    val firstFunctionIndex = declarations.indexOfFirst { it is KoFunctionDeclaration }
+                    lastPropertyIndex == -1 || firstFunctionIndex == -1 || lastPropertyIndex < firstFunctionIndex
+                }
+        }
+        should("init blocks declared before functions in class body") {
+            codeScope
+                .classes()
+                .assertTrue(testName = this.testCase.name.toString()) { koClass ->
+                    val declarations = koClass.declarations(includeNested = false, includeLocal = false)
+                    val lastInitIndex = declarations.indexOfLast { it is KoInitBlockDeclaration }
+                    val firstFunctionIndex = declarations.indexOfFirst { it is KoFunctionDeclaration }
+                    lastInitIndex == -1 || firstFunctionIndex == -1 || lastInitIndex < firstFunctionIndex
+                }
+        }
+        should("override functions declared before non-override functions in class body") {
+            codeScope
+                .classes()
+                .assertTrue(testName = this.testCase.name.toString()) { koClass ->
+                    val functions =
+                        koClass
+                            .declarations(includeNested = false, includeLocal = false)
+                            .filterIsInstance<KoFunctionDeclaration>()
+                    val lastOverrideIndex = functions.indexOfLast { it.hasModifier(KoModifier.OVERRIDE) }
+                    val firstNonOverrideIndex = functions.indexOfFirst { !it.hasModifier(KoModifier.OVERRIDE) }
+                    lastOverrideIndex == -1 || firstNonOverrideIndex == -1 || firstNonOverrideIndex > lastOverrideIndex
                 }
         }
         should("companion object is last declaration in class body") {

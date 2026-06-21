@@ -78,6 +78,12 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         initOnBackPressed()
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        refreshAppBar(newConfig)
+        updateCallbackState()
+    }
+
     @Suppress("MagicNumber")
     private fun applyInsetIfNeeded() {
         if (SDK_INT >= Build.VERSION_CODES.R && !window.decorView.fitsSystemWindows) {
@@ -140,12 +146,6 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         binding.aboutAppBar.setExpanded(false)
         isBackProgressing = false
         isExpanding = false
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        refreshAppBar(newConfig)
-        updateCallbackState()
     }
 
     @NoCoverage
