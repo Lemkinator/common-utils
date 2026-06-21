@@ -91,8 +91,6 @@ class CommonUtilsLibsActivity : AppCompatActivity() {
                         LibrariesContainer(
                             Libs.Builder().withContext(this@CommonUtilsLibsActivity).build(),
                             modifier = Modifier.fillMaxSize(),
-                            showDescription = true,
-                            showFundingBadges = true,
                         )
                     }
                 }
