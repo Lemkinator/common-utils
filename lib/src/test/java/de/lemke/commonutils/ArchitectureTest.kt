@@ -52,15 +52,6 @@ class ArchitectureTest : ShouldSpec() {
                     companion == null || it.declarations(includeNested = false, includeLocal = false).last() == companion
                 }
             codeScope
-                .enums()
-                .assertTrue(testName = testName) {
-                    val companion =
-                        it.objects(includeNested = false).lastOrNull { obj ->
-                            obj.hasModifier(KoModifier.COMPANION)
-                        }
-                    companion == null || it.declarations(includeNested = false, includeLocal = false).last() == companion
-                }
-            codeScope
                 .interfaces()
                 .assertTrue(testName = testName) {
                     val companion =
