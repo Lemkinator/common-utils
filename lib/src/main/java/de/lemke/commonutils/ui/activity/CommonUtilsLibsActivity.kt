@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
+import com.mikepenz.aboutlibraries.ui.compose.variant.LibraryBadges
 import com.mikepenz.aboutlibraries.util.withContext
 import de.lemke.commonutils.R
 import de.lemke.commonutils.prepareActivityTransformationTo
@@ -91,8 +92,7 @@ class CommonUtilsLibsActivity : AppCompatActivity() {
                         LibrariesContainer(
                             Libs.Builder().withContext(this@CommonUtilsLibsActivity).build(),
                             modifier = Modifier.fillMaxSize(),
-                            showDescription = true,
-                            showFundingBadges = true,
+                            badges = LibraryBadges(description = true, funding = true),
                         )
                     }
                 }
