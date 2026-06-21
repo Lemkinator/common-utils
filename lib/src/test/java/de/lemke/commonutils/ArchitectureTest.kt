@@ -41,18 +41,33 @@ class ArchitectureTest : ShouldSpec() {
                 }
         }
         should("companion object is last declaration in class body") {
+            val testName = this.testCase.name.toString()
             codeScope
                 .classes()
-                .assertTrue(testName = this.testCase.name.toString()) {
+                .assertTrue(testName = testName) {
                     val companion =
                         it.objects(includeNested = false).lastOrNull { obj ->
                             obj.hasModifier(KoModifier.COMPANION)
                         }
-                    if (companion != null) {
-                        it.declarations(includeNested = false, includeLocal = false).last() == companion
-                    } else {
-                        true
-                    }
+                    companion == null || it.declarations(includeNested = false, includeLocal = false).last() == companion
+                }
+            codeScope
+                .enums()
+                .assertTrue(testName = testName) {
+                    val companion =
+                        it.objects(includeNested = false).lastOrNull { obj ->
+                            obj.hasModifier(KoModifier.COMPANION)
+                        }
+                    companion == null || it.declarations(includeNested = false, includeLocal = false).last() == companion
+                }
+            codeScope
+                .interfaces()
+                .assertTrue(testName = testName) {
+                    val companion =
+                        it.objects(includeNested = false).lastOrNull { obj ->
+                            obj.hasModifier(KoModifier.COMPANION)
+                        }
+                    companion == null || it.declarations(includeNested = false, includeLocal = false).last() == companion
                 }
         }
     }
