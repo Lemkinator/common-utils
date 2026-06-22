@@ -53,15 +53,19 @@ inline fun Fragment.addOnBackLogic(
     if (SDK_INT >= TIRAMISU) {
         val onBackInvokedCallback = OnBackInvokedCallback { onBackPressedLogic.invoke() }
         lifecycleScope.launch {
-            backPressLogicEnabled
-                .flowWithLifecycle(lifecycle)
-                .collectLatest { register ->
-                    if (register) {
-                        requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
-                    } else {
-                        requireActivity().onBackInvokedDispatcher.unregisterOnBackInvokedCallback(onBackInvokedCallback)
+            try {
+                backPressLogicEnabled
+                    .flowWithLifecycle(lifecycle)
+                    .collectLatest { register ->
+                        if (register) {
+                            requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
+                        } else {
+                            requireActivity().onBackInvokedDispatcher.unregisterOnBackInvokedCallback(onBackInvokedCallback)
+                        }
                     }
-                }
+            } finally {
+                activity?.onBackInvokedDispatcher?.unregisterOnBackInvokedCallback(onBackInvokedCallback)
+            }
         }
     } else {
         val onBackPressedCallback =
