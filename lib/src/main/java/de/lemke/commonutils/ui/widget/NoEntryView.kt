@@ -88,6 +88,7 @@ class NoEntryView @JvmOverloads constructor(
         lottieAnimationView.cancelAnimation()
         lottieAnimationView.progress = 0f
         isVisible = true
+        lottieAnimationView.clearValueCallback(KeyPath("**"), COLOR_FILTER)
         val callback = LottieValueCallback<ColorFilter>(SimpleColorFilter(context.getColor(R.color.primary_color_themed)))
         lottieAnimationView.addValueCallback(KeyPath("**"), COLOR_FILTER, callback)
         lottieAnimationView.postDelayed({ lottieAnimationView.playAnimation() }, ANIMATION_START_DELAY_MS)
