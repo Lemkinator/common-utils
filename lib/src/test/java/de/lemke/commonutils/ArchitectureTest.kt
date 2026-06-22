@@ -67,34 +67,33 @@ class ArchitectureTest : ShouldSpec() {
             codeScope
                 .classes()
                 .assertTrue(testName = this.testCase.name.toString()) { koClass ->
-                    val functions =
-                        koClass
-                            .declarations(includeNested = false, includeLocal = false)
-                            .filterIsInstance<KoFunctionDeclaration>()
+                    val functions = koClass.functions(includeNested = false, includeLocal = false)
                     val lastOverrideIndex = functions.indexOfLast { it.hasModifier(KoModifier.OVERRIDE) }
                     val firstNonOverrideIndex = functions.indexOfFirst { !it.hasModifier(KoModifier.OVERRIDE) }
                     lastOverrideIndex == -1 || firstNonOverrideIndex == -1 || firstNonOverrideIndex > lastOverrideIndex
                 }
         }
-        should("companion object is last declaration in class body") {
+        should("companion object declared before nested class declarations in class body") {
             val testName = this.testCase.name.toString()
             codeScope
                 .classes()
                 .assertTrue(testName = testName) {
-                    val companion =
-                        it.objects(includeNested = false).lastOrNull { obj ->
-                            obj.hasModifier(KoModifier.COMPANION)
+                    val declarations = it.declarations(includeNested = false, includeLocal = false)
+                    val companion = it.objects(includeNested = false).lastOrNull { obj -> obj.hasModifier(KoModifier.COMPANION) }
+                    companion == null ||
+                        declarations.drop(declarations.indexOf(companion) + 1).none { decl ->
+                            decl is KoPropertyDeclaration || decl is KoFunctionDeclaration || decl is KoInitBlockDeclaration
                         }
-                    companion == null || it.declarations(includeNested = false, includeLocal = false).last() == companion
                 }
             codeScope
                 .interfaces()
                 .assertTrue(testName = testName) {
-                    val companion =
-                        it.objects(includeNested = false).lastOrNull { obj ->
-                            obj.hasModifier(KoModifier.COMPANION)
+                    val declarations = it.declarations(includeNested = false, includeLocal = false)
+                    val companion = it.objects(includeNested = false).lastOrNull { obj -> obj.hasModifier(KoModifier.COMPANION) }
+                    companion == null ||
+                        declarations.drop(declarations.indexOf(companion) + 1).none { decl ->
+                            decl is KoPropertyDeclaration || decl is KoFunctionDeclaration || decl is KoInitBlockDeclaration
                         }
-                    companion == null || it.declarations(includeNested = false, includeLocal = false).last() == companion
                 }
         }
     }
