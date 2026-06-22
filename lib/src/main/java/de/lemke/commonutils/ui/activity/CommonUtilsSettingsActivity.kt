@@ -41,6 +41,20 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
         if (savedInstanceState == null) supportFragmentManager.beginTransaction().replace(R.id.settingsLayout, SettingsFragment()).commit()
     }
 
+    companion object {
+        /** Preference XML resource IDs inflated in order; configure via [setupCommonUtilsSettingsActivity]. */
+        var preferences =
+            listOf(
+                R.xml.preferences_design,
+                R.xml.preferences_general_language,
+                R.xml.preferences_dev_options_delete_app_data,
+                R.xml.preferences_more_info,
+            )
+
+        /** Optional suspend block run after preference inflation for app-specific init. */
+        var initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}
+    }
+
     /** [PreferenceFragmentCompat] that inflates the configured preference XML resources. */
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(
@@ -63,19 +77,5 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
             super.onViewCreated(view, savedInstanceState)
             addShareAppAndRateRelativeLinksCard()
         }
-    }
-
-    companion object {
-        /** Preference XML resource IDs inflated in order; configure via [setupCommonUtilsSettingsActivity]. */
-        var preferences =
-            listOf(
-                R.xml.preferences_design,
-                R.xml.preferences_general_language,
-                R.xml.preferences_dev_options_delete_app_data,
-                R.xml.preferences_more_info,
-            )
-
-        /** Optional suspend block run after preference inflation for app-specific init. */
-        var initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}
     }
 }

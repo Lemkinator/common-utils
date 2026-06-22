@@ -17,30 +17,25 @@ package de.lemke.commonutils
 
 import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.ext.list.withPackage
-import io.kotest.assertions.withClue
+import com.lemonappdev.konsist.api.verify.assertFalse
 import io.kotest.core.spec.style.ShouldSpec
-import io.kotest.matchers.booleans.shouldBeFalse
 
 class ArchitectureTest : ShouldSpec() {
     private val codeScope = Konsist.scopeFromProduction()
 
     init {
-        should("ui activities not depend on widget internals") {
+        should("ui activities do not depend on widget internals") {
             codeScope.files
                 .withPackage("de.lemke.commonutils.ui.activity..")
-                .forEach { file ->
-                    withClue("${file.path} imports widget internals") {
-                        file.imports.any { it.name.contains(".widget.internal.") }.shouldBeFalse()
-                    }
+                .assertFalse(testName = this.testCase.name.toString()) {
+                    it.hasImport { import -> import.name.contains(".widget.internal.") }
                 }
         }
-        should("data layer not depend on ui") {
+        should("data layer does not depend on ui") {
             codeScope.files
                 .withPackage("de.lemke.commonutils.data..")
-                .forEach { file ->
-                    withClue("${file.path} imports ui layer") {
-                        file.imports.any { it.name.startsWith("de.lemke.commonutils.ui.") }.shouldBeFalse()
-                    }
+                .assertFalse(testName = this.testCase.name.toString()) {
+                    it.hasImport { import -> import.name.startsWith("de.lemke.commonutils.ui.") }
                 }
         }
     }

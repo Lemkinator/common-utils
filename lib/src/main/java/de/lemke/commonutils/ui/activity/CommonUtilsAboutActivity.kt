@@ -84,6 +84,11 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         checkUpdate()
     }
 
+    override fun onResume() {
+        super.onResume()
+        appUpdateManager.appUpdateInfo.addOnSuccessListener(::onResumeUpdateCheck)
+    }
+
     /** Handles the main button click: retries update check when offline, or starts the update flow. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onMainButtonClicked() {
@@ -138,13 +143,6 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
             highlightColor = TRANSPARENT
             setLinkTextColor(getColor(R.color.primary_color_themed))
         }
-    }
-
-    // Checks that the update is not stalled during 'onResume()'.
-    // However, you should execute this check at all entry points into the app.
-    override fun onResume() {
-        super.onResume()
-        appUpdateManager.appUpdateInfo.addOnSuccessListener(::onResumeUpdateCheck)
     }
 
     @NoCoverage

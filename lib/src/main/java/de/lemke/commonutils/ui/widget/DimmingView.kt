@@ -29,10 +29,6 @@ open class DimmingView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : View(context, attrs) {
-    companion object {
-        private const val DEFAULT_ALPHA = 0.5f
-    }
-
     init {
         if (attrs == null) {
             layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
@@ -42,5 +38,9 @@ open class DimmingView @JvmOverloads constructor(
                 setBackgroundColor(Color.argb(getFloat(R.styleable.DimmingView_alpha, DEFAULT_ALPHA), 0f, 0f, 0f))
             }
         }
+    }
+
+    companion object {
+        private const val DEFAULT_ALPHA = 0.5f
     }
 }

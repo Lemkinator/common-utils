@@ -48,6 +48,15 @@ enum class SaveLocation {
     DCIM,
     ;
 
+    /** Returns a user-facing label for this save location. */
+    fun toLocalizedString(context: Context): String =
+        when (this) {
+            CUSTOM -> context.getString(R.string.commonutils_custom)
+            DOWNLOADS -> context.getString(R.string.commonutils_downloads)
+            PICTURES -> context.getString(R.string.commonutils_pictures)
+            DCIM -> context.getString(R.string.commonutils_dcim)
+        }
+
     companion object {
         val default = CUSTOM
 
@@ -57,15 +66,6 @@ enum class SaveLocation {
 
         fun getLocalizedEntries(context: Context) = entries.map { it.toLocalizedString(context) }.toTypedArray()
     }
-
-    /** Returns a user-facing label for this save location. */
-    fun toLocalizedString(context: Context): String =
-        when (this) {
-            CUSTOM -> context.getString(R.string.commonutils_custom)
-            DOWNLOADS -> context.getString(R.string.commonutils_downloads)
-            PICTURES -> context.getString(R.string.commonutils_pictures)
-            DCIM -> context.getString(R.string.commonutils_dcim)
-        }
 }
 
 /** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */
