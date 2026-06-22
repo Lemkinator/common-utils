@@ -75,7 +75,8 @@ private fun View.showTipPopupWithOverlay(
         context.activity
             ?.window
             ?.decorView
-            ?.rootView as ViewGroup
+            ?.rootView as? ViewGroup
+            ?: error("showTipPopup requires an Activity context with an initialized window")
     rootView.addView(overlay)
     return showTipPopup(rootView, overlay, message, actionText, action)
 }
