@@ -28,7 +28,11 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 private const val TAG = "InAppReviewUtils"
 private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
 
-/** Returns the timestamp of the last in-app review request in milliseconds, defaulting to now if unset. */
+/**
+ * Returns the timestamp of the last in-app review request in milliseconds.
+ * Defaults to [currentTimeMillis] when unset so a fresh install waits the full cooldown before
+ * the first prompt — avoids surfacing a review request immediately on first launch.
+ */
 fun AppCompatActivity.getLastInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).getLong("lastInAppReview", currentTimeMillis())
 
 /** Persists the current time as the last in-app review timestamp. */
@@ -67,6 +71,8 @@ private fun AppCompatActivity.showInAppReview(
         return
     }
     Log.d(TAG, "trying to show in app review")
+    // Stamp the cooldown before launching the flow so repeated rapid calls or process restarts
+    // during the request do not hammer Play Core. The 14-day window is intentionally pessimistic.
     setInAppReview()
     try {
         val manager = ReviewManagerFactory.create(this)
