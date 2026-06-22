@@ -29,7 +29,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.advanceOnboarding
 import de.lemke.commonutils.databinding.ActivityOobeBinding
@@ -72,7 +71,6 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
         }
     }
 
-    @NoCoverage
     private fun initToSView() {
         val tosChanged = intent.onboardingContext?.tosChanged ?: false
         val tos = getString(R.string.commonutils_tos)

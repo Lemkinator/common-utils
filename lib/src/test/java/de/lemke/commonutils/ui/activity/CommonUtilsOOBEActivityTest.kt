@@ -111,4 +111,16 @@ class CommonUtilsOOBEActivityTest {
         shadowOf(Looper.getMainLooper()).idle()
         controller.get() shouldNotBe null
     }
+
+    @Config(qualifiers = "en-rXX")
+    @Test
+    fun `initToSView falls back to plain text when tos is absent from tosText`() {
+        // en-rXX overrides commonutils_oobe_tos_text without %1$s so "Terms of Service"
+        // is absent → tosIndex < 0 → early return with plain text, no ClickableSpan
+        val activity = launchActivity()
+        val tosTextView = activity.findViewById<TextView>(R.id.oobeIntroFooterTosText)
+        val text = tosTextView.text as? Spanned
+        val spans = text?.getSpans(0, tosTextView.text.length, ClickableSpan::class.java) ?: emptyArray()
+        spans.isEmpty() shouldBe true
+    }
 }
