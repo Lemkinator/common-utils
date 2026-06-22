@@ -112,15 +112,20 @@ class CommonUtilsOOBEActivityTest {
         controller.get() shouldNotBe null
     }
 
-    @Config(qualifiers = "en-rXX")
     @Test
-    fun `initToSView falls back to plain text when tos is absent from tosText`() {
-        // en-rXX overrides commonutils_oobe_tos_text without %1$s so "Terms of Service"
-        // is absent → tosIndex < 0 → early return with plain text, no ClickableSpan
-        val activity = launchActivity()
-        val tosTextView = activity.findViewById<TextView>(R.id.oobeIntroFooterTosText)
-        val text = tosTextView.text as? Spanned
-        val spans = text?.getSpans(0, tosTextView.text.length, ClickableSpan::class.java) ?: emptyArray()
-        spans.isEmpty() shouldBe true
+    fun `buildTosSpannable returns null when tos is absent from tosText`() {
+        buildTosSpannable("By continuing, you agree to our terms.", "Terms of Service") {} shouldBe null
+    }
+
+    @Test
+    fun `buildTosSpannable wraps tos substring in a ClickableSpan at the correct position`() {
+        val tos = "Terms of Service"
+        val tosText = "By continuing, you agree to the $tos."
+        val spanned = checkNotNull(buildTosSpannable(tosText, tos) {})
+        val spans = spanned.getSpans(0, spanned.length, ClickableSpan::class.java)
+        spans.size shouldBe 1
+        val expectedStart = tosText.lastIndexOf(tos)
+        spanned.getSpanStart(spans[0]) shouldBe expectedStart
+        spanned.getSpanEnd(spans[0]) shouldBe expectedStart + tos.length
     }
 }
