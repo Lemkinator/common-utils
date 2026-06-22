@@ -84,8 +84,6 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         checkUpdate()
     }
 
-    // Checks that the update is not stalled during 'onResume()'.
-    // However, you should execute this check at all entry points into the app.
     override fun onResume() {
         super.onResume()
         appUpdateManager.appUpdateInfo.addOnSuccessListener(::onResumeUpdateCheck)
