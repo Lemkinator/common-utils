@@ -17,6 +17,8 @@ package de.lemke.commonutils.ui.widget
 
 import android.content.Context
 import android.graphics.ColorFilter
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
@@ -41,6 +43,9 @@ class NoEntryView @JvmOverloads constructor(
 ) : RoundedLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
     /** The Lottie animation view displayed in the center of this widget. */
     val lottieAnimationView: LottieAnimationView by lazy { findViewById(R.id.noEntryLottie) }
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var animationRunnable: Runnable? = null
 
     /** The label displayed below the animation. */
     val textView: TextView by lazy { findViewById(R.id.noEntryText) }
@@ -91,7 +96,10 @@ class NoEntryView @JvmOverloads constructor(
         lottieAnimationView.clearValueCallback(KeyPath("**"), COLOR_FILTER)
         val callback = LottieValueCallback<ColorFilter>(SimpleColorFilter(context.getColor(R.color.primary_color_themed)))
         lottieAnimationView.addValueCallback(KeyPath("**"), COLOR_FILTER, callback)
-        lottieAnimationView.postDelayed({ lottieAnimationView.playAnimation() }, ANIMATION_START_DELAY_MS)
+        animationRunnable?.let { mainHandler.removeCallbacks(it) }
+        val runnable = Runnable { if (isVisible) lottieAnimationView.playAnimation() }
+        animationRunnable = runnable
+        mainHandler.postDelayed(runnable, ANIMATION_START_DELAY_MS)
     }
 
     /** Hides this view. */

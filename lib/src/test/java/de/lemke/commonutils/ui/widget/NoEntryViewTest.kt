@@ -15,13 +15,16 @@
  */
 package de.lemke.commonutils.ui.widget
 
+import android.os.Looper
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.shouldBe
+import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.Robolectric
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
@@ -138,5 +141,30 @@ class NoEntryViewTest {
         v.updateVisibility(false, other)
         v.isVisible shouldBe false
         other.isVisible shouldBe true
+    }
+
+    @Test
+    fun `show twice cancels pending runnable before posting new one`() {
+        val v = view()
+        v.show()
+        v.show() // non-null animationRunnable → removeCallbacks branch
+        v.isVisible shouldBe true
+    }
+
+    @Test
+    fun `postDelayed runnable plays animation when view is still visible`() {
+        val v = view()
+        v.show()
+        shadowOf(Looper.getMainLooper()).idleFor(500, TimeUnit.MILLISECONDS)
+        v.isVisible shouldBe true
+    }
+
+    @Test
+    fun `postDelayed runnable skips animation when view was hidden before delay expired`() {
+        val v = view()
+        v.show()
+        v.hide()
+        shadowOf(Looper.getMainLooper()).idleFor(500, TimeUnit.MILLISECONDS)
+        v.isVisible shouldBe false
     }
 }
