@@ -16,23 +16,16 @@
 package de.lemke.commonutils.ui.widget
 
 import android.content.Context
-import android.graphics.ColorFilter
-import android.os.Handler
-import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.isVisible
 import com.airbnb.lottie.LottieAnimationView
-import com.airbnb.lottie.LottieProperty.COLOR_FILTER
-import com.airbnb.lottie.SimpleColorFilter
-import com.airbnb.lottie.model.KeyPath
-import com.airbnb.lottie.value.LottieValueCallback
+import de.lemke.commonutils.DEFAULT_LOTTIE_DELAY
 import de.lemke.commonutils.R
+import de.lemke.commonutils.play
 import dev.oneuiproject.oneui.widget.RoundedLinearLayout
-
-private const val ANIMATION_START_DELAY_MS = 400L
 
 /** Empty-state view that shows a Lottie animation and a label when a list has no entries. */
 class NoEntryView @JvmOverloads constructor(
@@ -43,9 +36,6 @@ class NoEntryView @JvmOverloads constructor(
 ) : RoundedLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
     /** The Lottie animation view displayed in the center of this widget. */
     val lottieAnimationView: LottieAnimationView by lazy { findViewById(R.id.noEntryLottie) }
-
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private var animationRunnable: Runnable? = null
 
     /** The label displayed below the animation. */
     val textView: TextView by lazy { findViewById(R.id.noEntryText) }
@@ -90,16 +80,8 @@ class NoEntryView @JvmOverloads constructor(
 
     /** Makes this view visible and starts the Lottie animation after a short delay. */
     fun show() {
-        lottieAnimationView.cancelAnimation()
-        lottieAnimationView.progress = 0f
         isVisible = true
-        lottieAnimationView.clearValueCallback(KeyPath("**"), COLOR_FILTER)
-        val callback = LottieValueCallback<ColorFilter>(SimpleColorFilter(context.getColor(R.color.primary_color_themed)))
-        lottieAnimationView.addValueCallback(KeyPath("**"), COLOR_FILTER, callback)
-        animationRunnable?.let { mainHandler.removeCallbacks(it) }
-        val runnable = Runnable { if (isVisible) lottieAnimationView.playAnimation() }
-        animationRunnable = runnable
-        mainHandler.postDelayed(runnable, ANIMATION_START_DELAY_MS)
+        lottieAnimationView.play(delay = DEFAULT_LOTTIE_DELAY)
     }
 
     /** Hides this view. */
