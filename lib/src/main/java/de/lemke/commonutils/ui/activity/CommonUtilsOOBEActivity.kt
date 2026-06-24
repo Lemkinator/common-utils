@@ -116,6 +116,10 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
     }
 }
 
+/**
+ * Builds a [SpannableString] from [tosText] where the last occurrence of [tos] is a clickable span
+ * that invokes [onClick]. Returns `null` if [tos] does not appear in [tosText].
+ */
 internal fun buildTosSpannable(
     tosText: String,
     tos: String,

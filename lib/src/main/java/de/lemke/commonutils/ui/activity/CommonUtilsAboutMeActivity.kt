@@ -117,6 +117,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         updateCallbackState()
     }
 
+    /** Expands the app bar and resets back-gesture state when the back press is confirmed. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onBackPressedHandler() {
         binding.aboutAppBar.setExpanded(true)
@@ -124,11 +125,13 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         isExpanding = false
     }
 
+    /** Records that a predictive back gesture has started. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onBackStartedHandler() {
         isBackProgressing = true
     }
 
+    /** Expands or collapses the app bar in response to predictive back gesture progress. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onBackProgressedHandler(event: BackEventCompat) {
         val interpolatedProgress = progressInterpolator.getInterpolation(event.progress)
@@ -141,6 +144,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
+    /** Collapses the app bar and resets back-gesture state when the gesture is cancelled. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onBackCancelledHandler() {
         binding.aboutAppBar.setExpanded(false)
@@ -199,17 +203,20 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Opens the developer's Play Store page after the user confirms the redirect dialog. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onPlayStoreConfirmed() {
         openURL(getString(R.string.commonutils_playstore_developer_page_link))
     }
 
+    /** Invokes the [onShareApp] callback and shares the app's Play Store link. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun handleShareApp() {
         onShareApp(this)
         shareApp()
     }
 
+    /** Opens a pre-filled contact email addressed to the developer. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun handleWriteEmail() {
         sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())

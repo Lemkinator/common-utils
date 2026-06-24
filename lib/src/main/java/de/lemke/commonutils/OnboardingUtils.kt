@@ -31,7 +31,11 @@ private const val EXTRA_ONBOARDING_CONTEXT = "commonUtilsOnboardingContext"
 /** Intent extra (honored only when the host opts in) that bypasses the onboarding chain, for benchmarks. */
 const val EXTRA_SKIP_ONBOARDING = "commonUtilsSkipOnboarding"
 
-/** Holds the ordered onboarding chain configuration. OOBE is always the implicit first step. */
+/**
+ * Holds the ordered onboarding chain configuration.
+ *
+ * OOBE ([CommonUtilsOOBEActivity]) is always the implicit first step and must not appear in [steps].
+ */
 object Onboarding {
     /** App-specific steps that run after OOBE in order. */
     var steps: List<Class<out Activity>> = emptyList()
@@ -54,7 +58,19 @@ fun setupOnboarding(steps: List<Class<out Activity>> = emptyList()) {
     Onboarding.steps = steps
 }
 
-/** Typed carrier for the full onboarding state, passed as one extra and forwarded unchanged across chain hops. */
+/**
+ * Typed carrier for the full onboarding state, passed as one Intent extra and forwarded unchanged
+ * across chain hops so the main activity can reconstruct the original [AppStart] on re-entry.
+ *
+ * @property mainActivityName Fully-qualified class name of the launcher activity that started onboarding.
+ * @property steps Ordered list of fully-qualified class names for the app-specific onboarding steps.
+ * @property versionCode The current app version code at the time onboarding was initiated.
+ * @property versionName The current app version name at the time onboarding was initiated.
+ * @property appStartResult The original [AppStartResult] from the fresh app-start check.
+ * @property lastVersionCode The version code recorded on the previous launch.
+ * @property lastVersionName The version name recorded on the previous launch.
+ * @property tosChanged `true` if the TOS version changed since the user last accepted.
+ */
 @Parcelize
 internal data class OnboardingContext(
     val mainActivityName: String,
@@ -69,6 +85,7 @@ internal data class OnboardingContext(
 
 private fun Intent.putOnboardingContext(ctx: OnboardingContext): Intent = putExtra(EXTRA_ONBOARDING_CONTEXT, ctx)
 
+/** Retrieves the [OnboardingContext] carrier from this intent, or `null` if not present. */
 internal val Intent.onboardingContext: OnboardingContext?
     get() = IntentCompat.getParcelableExtra(this, EXTRA_ONBOARDING_CONTEXT, OnboardingContext::class.java)
 

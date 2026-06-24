@@ -28,6 +28,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/** Default delay before a Lottie animation starts playing, to avoid flicker on fast data loads. */
 val DEFAULT_LOTTIE_DELAY = 400.milliseconds
 
 /**
