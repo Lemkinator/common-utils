@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
-
 package de.lemke.commonutils
 
 import android.animation.ObjectAnimator
@@ -34,7 +32,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val TAG = "SplashUtils"
 private const val SPLASH_ANIMATION_DURATION_MS = 400L
 private const val SPLASH_SCALE_FACTOR = 1.2f
 
