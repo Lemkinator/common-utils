@@ -19,6 +19,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_VIEW
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
@@ -50,7 +51,7 @@ fun Context.openURL(url: String?): Boolean =
             toast(getString(R.string.commonutils_error_cant_open_url))
             false
         } else {
-            startActivity(Intent(ACTION_VIEW, url.toUri()))
+            startActivity(Intent(ACTION_VIEW, url.toUri()).addFlags(FLAG_ACTIVITY_NEW_TASK))
             true
         }
     } catch (e: ActivityNotFoundException) {
