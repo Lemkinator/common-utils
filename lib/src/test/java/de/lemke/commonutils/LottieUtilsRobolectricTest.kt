@@ -61,4 +61,14 @@ class LottieUtilsRobolectricTest {
         lottieView.play(delay = DEFAULT_LOTTIE_DELAY)
         shadowOf(Looper.getMainLooper()).idleFor(600, TimeUnit.MILLISECONDS)
     }
+
+    @Test
+    fun `second play cancels pending delayed job`() {
+        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val lottieView = LottieAnimationView(activity)
+        activity.setContentView(lottieView)
+        lottieView.play(delay = DEFAULT_LOTTIE_DELAY)
+        lottieView.play(delay = DEFAULT_LOTTIE_DELAY) // cancels the first pending job
+        shadowOf(Looper.getMainLooper()).idleFor(600, TimeUnit.MILLISECONDS)
+    }
 }
