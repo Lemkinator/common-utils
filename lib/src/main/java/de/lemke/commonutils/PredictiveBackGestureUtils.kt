@@ -40,6 +40,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 private const val TAG = "PredictiveBackGestureUtils"
@@ -56,6 +57,7 @@ inline fun Fragment.addOnBackLogic(
             try {
                 backPressLogicEnabled
                     .flowWithLifecycle(lifecycle)
+                    .distinctUntilChanged()
                     .collectLatest { register ->
                         if (register) {
                             requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
