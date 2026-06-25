@@ -29,6 +29,7 @@ class LifecycleStateInViewModelTest : ShouldSpec(
         should("stateInViewModel initial value returned before upstream emits") {
             val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
             val state = flowOf(99).stateInViewModel(scope, 0)
+            // WhileSubscribed: upstream never starts without a subscriber, so initial-value read is race-free.
             state.value shouldBe 0
             scope.cancel()
         }

@@ -19,6 +19,9 @@ import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import com.google.android.gms.tasks.Task
+import com.google.android.play.core.review.ReviewInfo
+import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
 import java.lang.System.currentTimeMillis
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -73,19 +76,28 @@ private fun AppCompatActivity.showInAppReview(
     try {
         val manager = ReviewManagerFactory.create(this)
         manager.requestReviewFlow().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Log.d(TAG, "Review task successful")
-                manager.launchReviewFlow(this, task.result).addOnCompleteListener {
-                    Log.d(TAG, "Review flow complete")
-                    onCompleted()
-                }
-            } else {
-                Log.e(TAG, "Review task failed: ${task.exception?.message}")
-                onCompleted()
-            }
+            onReviewFlowRequested(manager, task, onCompleted)
         }
     } catch (e: Exception) {
         Log.e(TAG, "Error showing in-app review", e)
+        onCompleted()
+    }
+}
+
+@NoCoverage
+private fun AppCompatActivity.onReviewFlowRequested(
+    manager: ReviewManager,
+    task: Task<ReviewInfo>,
+    onCompleted: () -> Unit,
+) {
+    if (task.isSuccessful) {
+        Log.d(TAG, "Review task successful")
+        manager.launchReviewFlow(this, task.result).addOnCompleteListener {
+            Log.d(TAG, "Review flow complete")
+            onCompleted()
+        }
+    } else {
+        Log.e(TAG, "Review task failed: ${task.exception?.message}")
         onCompleted()
     }
 }
