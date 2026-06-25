@@ -217,7 +217,12 @@ kover {
                     // JaCoCo XML doesn't expose the miss to Codecov.
                     "*OnboardingContext*",
                 )
-                // inline fun stubs that Kover cannot instrument at definition site
+                // inline fun definition-site phantom stubs: JUnit 5 + RobolectricExtension
+                // initialises Robolectric's class loader after the JaCoCo JVM agent, so test
+                // classes are never instrumented — inlined call-site coverage never reaches
+                // JaCoCo. crossinline default-value lambdas always need @NoCoverage regardless
+                // of test runner (the default compiles to a definition-site private static
+                // method that is never invoked). See CLAUDE.md §@NoCoverage on inline fun.
                 annotatedBy("de.lemke.commonutils.NoCoverage")
             }
         }
