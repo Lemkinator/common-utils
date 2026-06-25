@@ -7,7 +7,7 @@ with code in this repository.
 
 Android utility library published to GitHub Packages as
 `io.github.lemkinator:common-utils`. Single `:lib` module.
-Min SDK 26, Target SDK 36, Kotlin 2.4.0, Java 21.
+See `gradle/libs.versions.toml` for SDK and language versions.
 
 ## Build Commands
 

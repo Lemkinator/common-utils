@@ -111,4 +111,23 @@ class DrawerUtilsRobolectricTest {
         listenerSlot.captured.onNavigationItemSelected(item) // immediate repeat: blocked
         delegateCallCount shouldBe 1
     }
+
+    @Test
+    fun `onNavigationSingleClick with default interval allows first click and blocks rapid repeat`() {
+        val navView = mockk<DrawerNavigationView>()
+        val listenerSlot = slot<NavigationView.OnNavigationItemSelectedListener>()
+        every { navView.setNavigationItemSelectedListener(capture(listenerSlot)) } answers { }
+        val item = mockk<MenuItem>()
+        var delegateCallCount = 0
+        // Default interval is 600ms; advance clock past it so the first click is not throttled.
+        android.os.SystemClock.sleep(601L)
+        navView.onNavigationSingleClick {
+            delegateCallCount++
+            true
+        }
+        listenerSlot.captured.onNavigationItemSelected(item) // first: allowed (elapsed > 600ms)
+        delegateCallCount shouldBe 1
+        listenerSlot.captured.onNavigationItemSelected(item) // immediate repeat: blocked
+        delegateCallCount shouldBe 1
+    }
 }
