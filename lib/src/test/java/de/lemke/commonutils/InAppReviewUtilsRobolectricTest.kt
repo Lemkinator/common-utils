@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import java.util.concurrent.TimeUnit.DAYS
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -33,12 +34,15 @@ class InAppReviewUtilsRobolectricTest {
     private fun setupActivity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
 
     @Test
-    fun `getLastInAppReview returns approximately current time when no timestamp is stored`() {
+    fun `getLastInAppReview records and returns current time on first call when no timestamp is stored`() {
         val activity = setupActivity()
         val before = System.currentTimeMillis()
-        val result = activity.getLastInAppReview()
+        val first = activity.getLastInAppReview()
         val after = System.currentTimeMillis()
-        (result in before..after).shouldBeTrue()
+        (first in before..after).shouldBeTrue()
+        // Second call returns the stored value, not a fresh currentTimeMillis()
+        val second = activity.getLastInAppReview()
+        second shouldBe first
     }
 
     @Test
@@ -77,7 +81,7 @@ class InAppReviewUtilsRobolectricTest {
     @Test
     fun `canShowInAppReview returns false on fresh activity with no stored timestamp`() {
         val activity = setupActivity()
-        // Default is currentTimeMillis() → 0 days elapsed → false
+        // First call records currentTimeMillis() as install timestamp → 0 days elapsed → false
         activity.canShowInAppReview().shouldBeFalse()
     }
 }

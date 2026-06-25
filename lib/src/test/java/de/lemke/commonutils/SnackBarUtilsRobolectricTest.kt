@@ -20,6 +20,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.Robolectric
@@ -101,6 +102,14 @@ class SnackBarUtilsActivityRobolectricTest {
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class SnackBarUtilsFragmentRobolectricTest {
+    @BeforeEach
+    fun clearPendingLooperTasks() {
+        // SnackbarManager is a singleton; auto-dismiss timers from previous tests can fire
+        // during runToEndOfTasks() in dismiss tests and corrupt the manager state. Clear all
+        // pending tasks before each test so the manager starts clean.
+        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
+    }
+
     private fun setupFragment(): ViewFragment {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val fragment = ViewFragment()
