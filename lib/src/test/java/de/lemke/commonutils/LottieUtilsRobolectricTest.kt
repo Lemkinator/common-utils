@@ -19,8 +19,6 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
 import com.airbnb.lottie.LottieAnimationView
-import io.mockk.every
-import io.mockk.mockk
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.Test
@@ -70,7 +68,7 @@ class LottieUtilsRobolectricTest {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val lottieView = LottieAnimationView(activity)
         activity.setContentView(lottieView)
-        val nullRef = mockk<WeakReference<LottieAnimationView>> { every { get() } returns null }
+        val nullRef: WeakReference<LottieAnimationView> = WeakReference(null)
         launchDelayedPlay(activity, nullRef, DEFAULT_LOTTIE_DELAY)
         shadowOf(Looper.getMainLooper()).idleFor(600, TimeUnit.MILLISECONDS)
     }

@@ -212,6 +212,11 @@ kover {
                     // OOBEActivity initFooterButton coroutine state machine: suspension-check instructions
                     // in invokeSuspend are never exercised because the coroutine completes synchronously.
                     $$"*CommonUtilsOOBEActivity$initFooterButton*",
+                    // LottieUtilsKt$launchDelayedPlay$1: coroutine continuation class — the null branch
+                    // of weakView.get()?.playAnimation() is tested via WeakReference(null), but JUnit 5 +
+                    // RobolectricExtension loads the continuation class after JaCoCo's JVM agent, so
+                    // the null branch is never attributed here (same root cause as inline fun stubs).
+                    $$"*LottieUtilsKt$launchDelayedPlay*",
                     // OnboardingContext @Parcelize: createFromParcel null-checks each String field; on
                     // Linux/CI the branch is attributed to `Parcelable` but is never
                     // triggered in any test path. Kover's verify already excludes synthetic null-checks;
