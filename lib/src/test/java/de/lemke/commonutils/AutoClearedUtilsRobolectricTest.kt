@@ -22,7 +22,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -32,7 +31,8 @@ import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 /** Fragment with a real view so [viewLifecycleOwner] is available. */
 internal class AutoClearedViewFragment : Fragment() {
-    val cached: String by autoCleared { "initial" }
+    var initCount = 0
+    val cached: String by autoCleared { "val${++initCount}" }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,10 +59,11 @@ class AutoClearedUtilsRobolectricTest {
         val fragment = launchFragment()
         // First call: runs initialize(), caches result, registers lifecycle observer
         val v1 = fragment.cached
-        // Second call: returns cached value (fast-path)
+        // Second call: returns cached value (fast-path) — initCount stays at 1
         val v2 = fragment.cached
-        v1 shouldBe "initial"
-        v2 shouldBe "initial"
+        v1 shouldBe "val1"
+        v2 shouldBe "val1"
+        fragment.initCount shouldBe 1
     }
 
     @Test
@@ -74,13 +75,15 @@ class AutoClearedUtilsRobolectricTest {
             .add(android.R.id.content, fragment)
             .commitNow()
         // Access value to populate cache and register observer
-        fragment.cached shouldBe "initial"
-        // Remove the fragment → triggers onDestroyView → onDestroy on the observer → clears cache
+        fragment.cached shouldBe "val1"
+        fragment.initCount shouldBe 1
+        // Remove the fragment → triggers onDestroyView → observer's onDestroy fires → clears cache
         activity.supportFragmentManager
             .beginTransaction()
             .remove(fragment)
             .commitNow()
-        // Cached value is null; viewLifecycleOwner throws because the view is gone
-        shouldThrow<IllegalStateException> { fragment.cached }
+        // Cache was cleared: view is now null, so initialize() runs again without re-caching
+        fragment.cached shouldBe "val2"
+        fragment.initCount shouldBe 2
     }
 }

@@ -27,6 +27,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.SESL_SNACKBAR_TYPE_SUGGESTION
 
 /** Shows a OneUI suggestive snackbar with [msg] string resource and an optional action. */
+@NoCoverage
 inline fun Fragment.suggestiveSnackBar(
     @StringRes msg: Int,
     view: View? = null,
@@ -36,6 +37,7 @@ inline fun Fragment.suggestiveSnackBar(
 ) = requireActivity().suggestiveSnackBar(msg, view, duration, actionText, action)
 
 /** Shows a OneUI suggestive snackbar with [msg] and an optional action. */
+@NoCoverage
 inline fun Fragment.suggestiveSnackBar(
     msg: String,
     view: View? = null,
@@ -45,6 +47,7 @@ inline fun Fragment.suggestiveSnackBar(
 ) = requireActivity().suggestiveSnackBar(msg, view, duration, actionText, action)
 
 /** Shows a OneUI suggestive snackbar with [msg] string resource and an optional action. */
+@NoCoverage
 inline fun Activity.suggestiveSnackBar(
     @StringRes msg: Int,
     view: View? = null,
@@ -54,6 +57,7 @@ inline fun Activity.suggestiveSnackBar(
 ) = suggestiveSnackBar(getString(msg), view, duration, actionText, action)
 
 /** Shows a OneUI suggestive snackbar with [msg] and an optional action. */
+@NoCoverage
 inline fun Activity.suggestiveSnackBar(
     msg: String,
     view: View? = null,

@@ -24,8 +24,6 @@ import dev.oneuiproject.oneui.ktx.activity
 import dev.oneuiproject.oneui.widget.TipPopup
 import dev.oneuiproject.oneui.design.R as designR
 
-private const val TAG = "TipPopupUtils"
-
 /** Shows a tip popup anchored to this view with a full-screen touch-blocking overlay. */
 @NoCoverage
 fun View.showTouchBlockingTipPopup(

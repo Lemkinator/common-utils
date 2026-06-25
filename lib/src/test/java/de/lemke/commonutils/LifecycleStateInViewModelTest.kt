@@ -15,13 +15,13 @@
  */
 package de.lemke.commonutils
 
+import app.cash.turbine.test
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 
 class LifecycleStateInViewModelTest : ShouldSpec(
@@ -34,9 +34,12 @@ class LifecycleStateInViewModelTest : ShouldSpec(
         }
 
         should("stateInViewModel emits upstream value after subscription") {
-            val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-            val state = flowOf(42).stateInViewModel(scope, 0)
-            state.first { it != 0 } shouldBe 42
+            val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+            flowOf(42).stateInViewModel(scope, 0).test {
+                skipItems(1) // skip initial value 0
+                awaitItem() shouldBe 42
+                cancelAndIgnoreRemainingEvents()
+            }
             scope.cancel()
         }
     },

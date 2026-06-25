@@ -230,6 +230,7 @@ fun Activity.transformToActivity(
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
  */
+@NoCoverage
 inline fun <reified T : Activity> Activity.transformToActivity(
     @IdRes viewId: Int,
     transitionName: String = DEFAULT_TRANSITION_NAME,
@@ -295,6 +296,7 @@ fun Activity.transformToActivity(
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
  */
+@NoCoverage
 inline fun <reified T : Activity> Activity.transformToActivity(
     view: View?,
     transitionName: String = DEFAULT_TRANSITION_NAME,

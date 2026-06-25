@@ -144,7 +144,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
-    /** Collapses the app bar and resets back-gesture state when the gesture is cancelled. */
+    /** Collapses the app bar and resets back-gesture state when the gesture is canceled. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onBackCancelledHandler() {
         binding.aboutAppBar.setExpanded(false)

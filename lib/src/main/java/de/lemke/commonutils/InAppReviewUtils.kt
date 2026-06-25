@@ -28,7 +28,7 @@ private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
 
 /**
  * Returns the timestamp of the last in-app review request in milliseconds.
- * Defaults to [currentTimeMillis] when unset so a fresh install waits the full cooldown before
+ * Defaults to [currentTimeMillis] when unset so a fresh installation waits the full cooldown before
  * the first prompt — avoids surfacing a review request immediately on first launch.
  */
 fun AppCompatActivity.getLastInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).getLong("lastInAppReview", currentTimeMillis())
@@ -37,18 +37,14 @@ fun AppCompatActivity.getLastInAppReview() = getSharedPreferences(TAG, MODE_PRIV
 fun AppCompatActivity.setInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).edit { putLong("lastInAppReview", currentTimeMillis()) }
 
 /** Returns `true` if at least 14 days have passed since the last in-app review was shown. */
-@Suppress("TooGenericExceptionCaught")
-fun AppCompatActivity.canShowInAppReview() =
-    try {
-        val daysSinceLastReview = MILLISECONDS.toDays(currentTimeMillis() - getLastInAppReview())
-        Log.d(TAG, "Days since last review: $daysSinceLastReview")
-        daysSinceLastReview >= MIN_DAYS_BETWEEN_REVIEWS
-    } catch (e: Exception) {
-        Log.e(TAG, "Error checking in-app review eligibility", e)
-        false
-    }
+fun AppCompatActivity.canShowInAppReview(): Boolean {
+    val daysSinceLastReview = MILLISECONDS.toDays(currentTimeMillis() - getLastInAppReview())
+    Log.d(TAG, "Days since last review: $daysSinceLastReview")
+    return daysSinceLastReview >= MIN_DAYS_BETWEEN_REVIEWS
+}
 
 /** Attempts to show the in-app review flow; finishes the activity whether the review is shown or skipped. */
+@NoCoverage
 fun AppCompatActivity.showInAppReviewOrFinish() =
     showInAppReview(
         onNotAllowed = { finishAfterTransition() },
@@ -56,8 +52,10 @@ fun AppCompatActivity.showInAppReviewOrFinish() =
     )
 
 /** Requests the in-app review flow if the cooldown period has elapsed; silently skips otherwise. */
+@NoCoverage
 fun AppCompatActivity.showInAppReviewIfPossible() = showInAppReview()
 
+@NoCoverage
 @Suppress("TooGenericExceptionCaught")
 private fun AppCompatActivity.showInAppReview(
     onNotAllowed: () -> Unit = {},

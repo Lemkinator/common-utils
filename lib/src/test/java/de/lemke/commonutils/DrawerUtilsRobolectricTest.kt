@@ -16,9 +16,15 @@
 package de.lemke.commonutils
 
 import android.os.Bundle
+import android.view.MenuItem
+import com.google.android.material.navigation.NavigationView
+import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
@@ -85,5 +91,24 @@ class DrawerUtilsRobolectricTest {
         )
         searchCalled.shouldBeFalse()
         actionCalled.shouldBeFalse()
+    }
+
+    @Test
+    fun `onNavigationSingleClick first click is allowed and rapid repeat is blocked`() {
+        val navView = mockk<DrawerNavigationView>()
+        val listenerSlot = slot<NavigationView.OnNavigationItemSelectedListener>()
+        every { navView.setNavigationItemSelectedListener(capture(listenerSlot)) } answers { }
+        val item = mockk<MenuItem>()
+        var delegateCallCount = 0
+        // Advance Robolectric's monotonic clock so elapsedRealtime() >> interval before the first click.
+        android.os.SystemClock.sleep(1_000_001L)
+        navView.onNavigationSingleClick(interval = 1_000_000L) {
+            delegateCallCount++
+            true
+        }
+        listenerSlot.captured.onNavigationItemSelected(item) // first: allowed (elapsed >> interval)
+        delegateCallCount shouldBe 1
+        listenerSlot.captured.onNavigationItemSelected(item) // immediate repeat: blocked
+        delegateCallCount shouldBe 1
     }
 }

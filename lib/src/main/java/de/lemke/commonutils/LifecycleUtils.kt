@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Launches [block] in the lifecycle scope, repeating it whenever the lifecycle reaches [minActiveState]. */
+@NoCoverage
 inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
     minActiveState: State = STARTED,
     crossinline block: suspend CoroutineScope.() -> Unit,
@@ -37,6 +38,7 @@ inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
 }
 
 /** Launches [block] in the view lifecycle scope, repeating it whenever the view lifecycle reaches [minActiveState]. */
+@NoCoverage
 inline fun Fragment.launchAndRepeatWithViewLifecycle(
     minActiveState: State = STARTED,
     crossinline block: suspend CoroutineScope.() -> Unit,
@@ -45,6 +47,7 @@ inline fun Fragment.launchAndRepeatWithViewLifecycle(
 }
 
 /** Collects [flow] emissions and delivers each value to [onEach] while the activity is at least [minActiveState]. */
+@NoCoverage
 inline fun <T> AppCompatActivity.collectState(
     flow: StateFlow<T>,
     minActiveState: State = STARTED,
@@ -54,6 +57,7 @@ inline fun <T> AppCompatActivity.collectState(
 }
 
 /** Collects [flow] emissions and delivers each value to [onEach] while the fragment view is at least [minActiveState]. */
+@NoCoverage
 inline fun <T> Fragment.collectState(
     flow: StateFlow<T>,
     minActiveState: State = STARTED,
@@ -63,6 +67,7 @@ inline fun <T> Fragment.collectState(
 }
 
 /** Collects [flow] events and delivers each to [onEach] while the activity is at least [minActiveState]. */
+@NoCoverage
 inline fun <T> AppCompatActivity.collectEvents(
     flow: Flow<T>,
     minActiveState: State = STARTED,
@@ -72,6 +77,7 @@ inline fun <T> AppCompatActivity.collectEvents(
 }
 
 /** Collects [flow] events and delivers each to [onEach] while the fragment view is at least [minActiveState]. */
+@NoCoverage
 inline fun <T> Fragment.collectEvents(
     flow: Flow<T>,
     minActiveState: State = STARTED,

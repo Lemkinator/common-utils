@@ -39,7 +39,7 @@ private val pendingPlayJobs = WeakHashMap<LottieAnimationView, Job>()
  * Optionally sets [animation], applies the theme color, and plays.
  * If [cancelFirst] is true (default), the current animation is canceled and reset to frame 0 first.
  * When [delay] is [Duration.ZERO] (default), plays immediately on the calling thread.
- * Otherwise requires an attached view tree lifecycle owner; does nothing if none is found.
+ * Otherwise, requires an attached view tree lifecycle owner; does nothing if none is found.
  */
 fun LottieAnimationView.play(
     animation: String? = null,

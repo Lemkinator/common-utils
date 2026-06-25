@@ -27,7 +27,6 @@ import dev.oneuiproject.oneui.layout.NavDrawerLayout
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import dev.oneuiproject.oneui.R as iconsR
 
-private const val TAG = "DrawerUtils"
 private const val NAV_RAIL_MIN_SIDE_MARGIN_DP = 14
 
 /** Bundle key for persisting search mode state. */
@@ -92,7 +91,6 @@ private fun View.openAboutActivity() {
 }
 
 /** Wraps [listener] to ignore repeated clicks within [interval] milliseconds, preventing double-navigation. */
-@NoCoverage
 fun DrawerNavigationView.onNavigationSingleClick(
     interval: Long = 600,
     listener: NavigationView.OnNavigationItemSelectedListener,
@@ -100,7 +98,6 @@ fun DrawerNavigationView.onNavigationSingleClick(
     var lastClick = 0L
     setNavigationItemSelectedListener(
         object : NavigationView.OnNavigationItemSelectedListener {
-            @NoCoverage
             override fun onNavigationItemSelected(item: MenuItem): Boolean {
                 val currentTime = SystemClock.elapsedRealtime()
                 if (currentTime - lastClick < interval) return false
