@@ -19,6 +19,9 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
 import com.airbnb.lottie.LottieAnimationView
+import io.mockk.every
+import io.mockk.mockk
+import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -59,6 +62,16 @@ class LottieUtilsRobolectricTest {
         val lottieView = LottieAnimationView(activity)
         activity.setContentView(lottieView)
         lottieView.play(delay = DEFAULT_LOTTIE_DELAY)
+        shadowOf(Looper.getMainLooper()).idleFor(600, TimeUnit.MILLISECONDS)
+    }
+
+    @Test
+    fun `launchDelayedPlay with GCed view skips playAnimation`() {
+        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val lottieView = LottieAnimationView(activity)
+        activity.setContentView(lottieView)
+        val nullRef = mockk<WeakReference<LottieAnimationView>> { every { get() } returns null }
+        launchDelayedPlay(activity, nullRef, DEFAULT_LOTTIE_DELAY)
         shadowOf(Looper.getMainLooper()).idleFor(600, TimeUnit.MILLISECONDS)
     }
 

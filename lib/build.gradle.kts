@@ -206,9 +206,6 @@ kover {
                     // requires a re-entrant call during Fragment.onDestroyView - not safely reproducible
                     // in unit tests without risking lifecycle-owner access-after-destroy crashes.
                     $$"*AutoClearedUtilsKt$autoCleared$1*",
-                    // LottieUtilsKt$play coroutine: WeakReference.get()?.playAnimation() null-check
-                    // branch is untestable — GC cannot be forced deterministically in JVM unit tests.
-                    $$"*LottieUtilsKt$play*",
                     // AboutAppBarListener.onOffsetChanged: else/else-if branches unreachable under Robolectric
                     // because AppBarLayout.totalScrollRange = 0 (no layout engine), making abs >= 0/2 always true.
                     $$"*CommonUtilsAboutMeActivity$AboutAppBarListener*",
