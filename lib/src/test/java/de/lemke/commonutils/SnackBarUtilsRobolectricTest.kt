@@ -20,6 +20,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -150,7 +151,11 @@ class SnackBarUtilsFragmentRobolectricTest {
         val snackbar = fragment.suggestiveSnackBar("msg", actionText = "Dismiss")
         shadowOf(Looper.getMainLooper()).idle()
         snackbar.view.findViewById<View>(MaterialR.id.snackbar_action)?.performClick()
-        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
+        // idleFor advances the virtual clock 300ms, past the Snackbar dismiss animation (250ms),
+        // so the view is detached and isShown reflects the final state. runToEndOfTasks() alone
+        // is not reliable here because @BeforeEach may have already advanced the clock, leaving
+        // the dismiss animation scheduled in the relative future.
+        shadowOf(Looper.getMainLooper()).idleFor(300, TimeUnit.MILLISECONDS)
         snackbar.isShown shouldBe false
     }
 
@@ -160,7 +165,7 @@ class SnackBarUtilsFragmentRobolectricTest {
         val snackbar = fragment.suggestiveSnackBar(android.R.string.ok, actionText = "Dismiss")
         shadowOf(Looper.getMainLooper()).idle()
         snackbar.view.findViewById<View>(MaterialR.id.snackbar_action)?.performClick()
-        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
+        shadowOf(Looper.getMainLooper()).idleFor(300, TimeUnit.MILLISECONDS)
         snackbar.isShown shouldBe false
     }
 }
