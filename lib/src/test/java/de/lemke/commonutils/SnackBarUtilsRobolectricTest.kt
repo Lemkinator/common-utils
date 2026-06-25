@@ -81,7 +81,9 @@ class SnackBarUtilsActivityRobolectricTest {
         val snackbar = activity.suggestiveSnackBar("msg", actionText = "Dismiss")
         shadowOf(Looper.getMainLooper()).idle()
         snackbar.view.findViewById<View>(MaterialR.id.snackbar_action)?.performClick()
-        shadowOf(Looper.getMainLooper()).idle()
+        // runToEndOfTasks advances past the Snackbar dismiss animation delay so isShown reflects
+        // the post-animation state (view removed from hierarchy).
+        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
         snackbar.isShown shouldBe false
     }
 
@@ -91,7 +93,7 @@ class SnackBarUtilsActivityRobolectricTest {
         val snackbar = activity.suggestiveSnackBar(android.R.string.ok, actionText = "Dismiss")
         shadowOf(Looper.getMainLooper()).idle()
         snackbar.view.findViewById<View>(MaterialR.id.snackbar_action)?.performClick()
-        shadowOf(Looper.getMainLooper()).idle()
+        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
         snackbar.isShown shouldBe false
     }
 }
@@ -139,7 +141,7 @@ class SnackBarUtilsFragmentRobolectricTest {
         val snackbar = fragment.suggestiveSnackBar("msg", actionText = "Dismiss")
         shadowOf(Looper.getMainLooper()).idle()
         snackbar.view.findViewById<View>(MaterialR.id.snackbar_action)?.performClick()
-        shadowOf(Looper.getMainLooper()).idle()
+        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
         snackbar.isShown shouldBe false
     }
 
@@ -149,7 +151,7 @@ class SnackBarUtilsFragmentRobolectricTest {
         val snackbar = fragment.suggestiveSnackBar(android.R.string.ok, actionText = "Dismiss")
         shadowOf(Looper.getMainLooper()).idle()
         snackbar.view.findViewById<View>(MaterialR.id.snackbar_action)?.performClick()
-        shadowOf(Looper.getMainLooper()).idle()
+        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
         snackbar.isShown shouldBe false
     }
 }
