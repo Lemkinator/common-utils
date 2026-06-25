@@ -31,16 +31,13 @@ private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
 
 /**
  * Returns the timestamp of the last in-app review request in milliseconds.
- * On the first call (no stored timestamp), records and returns the current time — this starts the
- * 14-day cooldown from first launch so a review is not surfaced immediately on first launch.
+ * On the first call (no stored timestamp), records the current time so the 14-day cooldown
+ * starts from first launch — avoids surfacing a review request immediately on first launch.
  */
 fun AppCompatActivity.getLastInAppReview(): Long {
     val prefs = getSharedPreferences(TAG, MODE_PRIVATE)
-    val stored = prefs.getLong("lastInAppReview", -1L)
-    if (stored >= 0L) return stored
-    val now = currentTimeMillis()
-    prefs.edit { putLong("lastInAppReview", now) }
-    return now
+    if (!prefs.contains("lastInAppReview")) prefs.edit { putLong("lastInAppReview", currentTimeMillis()) }
+    return prefs.getLong("lastInAppReview", currentTimeMillis())
 }
 
 /** Persists the current time as the last in-app review timestamp. */
