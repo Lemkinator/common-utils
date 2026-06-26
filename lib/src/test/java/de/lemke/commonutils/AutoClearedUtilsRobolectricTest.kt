@@ -22,6 +22,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -67,7 +68,7 @@ class AutoClearedUtilsRobolectricTest {
     }
 
     @Test
-    fun `onDestroy clears the cached value`() {
+    fun `onDestroy clears cached value and accessing after view destroy throws`() {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val fragment = AutoClearedViewFragment()
         activity.supportFragmentManager
@@ -82,8 +83,8 @@ class AutoClearedUtilsRobolectricTest {
             .beginTransaction()
             .remove(fragment)
             .commitNow()
-        // Cache was cleared: view is now null, so initialize() runs again without re-caching
-        fragment.cached shouldBe "val2"
-        fragment.initCount shouldBe 2
+        // View is null — accessing a view-bound property after onDestroyView is a programming error.
+        shouldThrow<IllegalStateException> { fragment.cached }
+        fragment.initCount shouldBe 1
     }
 }
