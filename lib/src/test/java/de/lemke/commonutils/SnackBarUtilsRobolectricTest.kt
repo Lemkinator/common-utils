@@ -20,7 +20,6 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -106,8 +105,10 @@ class SnackBarUtilsFragmentRobolectricTest {
     @BeforeEach
     fun clearPendingLooperTasks() {
         // SnackbarManager is a singleton; auto-dismiss timers from previous tests can fire
-        // during runToEndOfTasks() in dismiss tests and corrupt the manager state. Clear all
-        // pending tasks before each test so the manager starts clean.
+        // during runToEndOfTasks() in dismiss tests and corrupt the manager state. Run twice:
+        // the first pass fires pending auto-dismiss timers, which schedule dismiss animations;
+        // the second pass drains those animations so the manager starts fully clean.
+        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
         shadowOf(Looper.getMainLooper()).runToEndOfTasks()
     }
 
@@ -151,11 +152,7 @@ class SnackBarUtilsFragmentRobolectricTest {
         val snackbar = fragment.suggestiveSnackBar("msg", actionText = "Dismiss")
         shadowOf(Looper.getMainLooper()).idle()
         snackbar.view.findViewById<View>(MaterialR.id.snackbar_action)?.performClick()
-        // idleFor advances the virtual clock 300ms, past the Snackbar dismiss animation (250ms),
-        // so the view is detached and isShown reflects the final state. runToEndOfTasks() alone
-        // is not reliable here because @BeforeEach may have already advanced the clock, leaving
-        // the dismiss animation scheduled in the relative future.
-        shadowOf(Looper.getMainLooper()).idleFor(300, TimeUnit.MILLISECONDS)
+        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
         snackbar.isShown shouldBe false
     }
 
@@ -165,7 +162,7 @@ class SnackBarUtilsFragmentRobolectricTest {
         val snackbar = fragment.suggestiveSnackBar(android.R.string.ok, actionText = "Dismiss")
         shadowOf(Looper.getMainLooper()).idle()
         snackbar.view.findViewById<View>(MaterialR.id.snackbar_action)?.performClick()
-        shadowOf(Looper.getMainLooper()).idleFor(300, TimeUnit.MILLISECONDS)
+        shadowOf(Looper.getMainLooper()).runToEndOfTasks()
         snackbar.isShown shouldBe false
     }
 }
