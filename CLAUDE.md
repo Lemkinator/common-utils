@@ -97,13 +97,6 @@ bundled dependencies — be careful when adding new dependencies.
 - ViewModels expose events as `Channel<Event>(BUFFERED)`; state as
   `StateFlow<UiState>`
 
-## Hilt Dispatcher Qualifiers
-
-`@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher` are provided by
-`CoroutineDispatchersModule` (shipped in this artifact). Consumers with
-Hilt can inject them directly; the module installs into
-`SingletonComponent`.
-
 ## Version Policy
 
 **Default: use the latest stable version of every dependency.**
