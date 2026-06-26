@@ -89,6 +89,7 @@ dependencies {
     api(libs.core.splashscreen)
     api(libs.lottie)
     implementation(libs.hilt.android)
+    implementation(libs.kotlin.metadata.jvm)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.konsist)
