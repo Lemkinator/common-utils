@@ -128,18 +128,13 @@ Document any pin or downgrade with a `# Why pinned:` comment in
    duplicate-class errors. Renovate's `hilt` group bumps both repos
    together.
 
-## Hilt (same-module)
+## Hilt
 
-Hilt is added as a same-module `implementation` dep — qualifier annotations
+Hilt is added as a same-module `implementation` dep. Qualifier annotations
 (`@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher`) ship compiled into
 the published AAR. No Hilt module is published: libraries must not install
 bindings into consumer DI graphs uninvited. Each consumer app declares its own
-`DispatchersModule` that provides the three dispatchers. See GetIcon's
-`app/src/main/java/de/lemke/geticon/di/DispatchersModule.kt` as the reference.
-
-A separate `:lib-di` subproject would let consumers opt out but adds a publishing
-target for zero practical gain — the annotation-only approach is the correct
-boundary.
+`DispatchersModule`.
 
 ## Configuration
 
