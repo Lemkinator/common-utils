@@ -139,4 +139,12 @@ class NoEntryViewTest {
         v.isVisible shouldBe false
         other.isVisible shouldBe true
     }
+
+    @Test
+    fun `show twice does not crash`() {
+        val v = view()
+        v.show()
+        v.show()
+        v.isVisible shouldBe true
+    }
 }

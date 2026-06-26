@@ -111,4 +111,21 @@ class CommonUtilsOOBEActivityTest {
         shadowOf(Looper.getMainLooper()).idle()
         controller.get() shouldNotBe null
     }
+
+    @Test
+    fun `buildTosSpannable returns null when tos is absent from tosText`() {
+        buildTosSpannable("By continuing, you agree to our terms.", "Terms of Service") {} shouldBe null
+    }
+
+    @Test
+    fun `buildTosSpannable wraps tos substring in a ClickableSpan at the correct position`() {
+        val tos = "Terms of Service"
+        val tosText = "By continuing, you agree to the $tos."
+        val spanned = checkNotNull(buildTosSpannable(tosText, tos) {})
+        val spans = spanned.getSpans(0, spanned.length, ClickableSpan::class.java)
+        spans.size shouldBe 1
+        val expectedStart = tosText.lastIndexOf(tos)
+        spanned.getSpanStart(spans[0]) shouldBe expectedStart
+        spanned.getSpanEnd(spans[0]) shouldBe expectedStart + tos.length
+    }
 }

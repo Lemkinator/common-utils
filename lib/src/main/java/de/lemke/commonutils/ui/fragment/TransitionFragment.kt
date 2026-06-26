@@ -23,7 +23,15 @@ import com.google.android.material.transition.MaterialElevationScale
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.android.material.transition.MaterialSharedAxis.Axis
 
-/** Base [Fragment] that wires up shared-element transitions on `onCreate`. */
+/**
+ * Base [Fragment] that wires up shared-element transitions on `onCreate`.
+ *
+ * @param layoutResId Layout resource to inflate, forwarded to [Fragment].
+ * @param customEnterTransition Transition played when this fragment enters.
+ * @param customExitTransition Transition played when this fragment exits.
+ * @param customReenterTransition Transition played when this fragment re-enters after a pop.
+ * @param customReturnTransition Transition played when this fragment returns after a pop.
+ */
 abstract class TransitionFragment(
     @LayoutRes layoutResId: Int,
     private val customEnterTransition: Transition = MaterialElevationScale(true),
@@ -44,7 +52,12 @@ abstract class TransitionFragment(
     }
 }
 
-/** [TransitionFragment] variant that uses [MaterialSharedAxis] transitions along the given [axis]. */
+/**
+ * [TransitionFragment] variant that uses [MaterialSharedAxis] transitions along the given [axis].
+ *
+ * @param layoutResId Layout resource to inflate, forwarded to [Fragment].
+ * @param axis The [MaterialSharedAxis] axis along which the shared-axis transition runs.
+ */
 @Suppress("IncorrectFormatting")
 abstract class TransitionFragmentSharedAxis(
     @LayoutRes layoutResId: Int = 0,

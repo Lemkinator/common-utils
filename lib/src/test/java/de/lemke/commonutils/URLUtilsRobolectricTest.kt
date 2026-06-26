@@ -61,6 +61,11 @@ class URLUtilsRobolectricTest {
     }
 
     @Test
+    fun `openURL returns true for valid URL from Application context`() {
+        ctx.openURL("https://example.com").shouldBeTrue()
+    }
+
+    @Test
     fun `openURL returns false when startActivity throws ActivityNotFoundException`() {
         val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no browser")

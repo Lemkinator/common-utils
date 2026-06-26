@@ -32,7 +32,8 @@ import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 /** Fragment with a real view so [viewLifecycleOwner] is available. */
 internal class AutoClearedViewFragment : Fragment() {
-    val cached: String by autoCleared { "initial" }
+    var initCount = 0
+    val cached: String by autoCleared { "val${++initCount}" }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,14 +60,15 @@ class AutoClearedUtilsRobolectricTest {
         val fragment = launchFragment()
         // First call: runs initialize(), caches result, registers lifecycle observer
         val v1 = fragment.cached
-        // Second call: returns cached value (fast-path)
+        // Second call: returns cached value (fast-path) — initCount stays at 1
         val v2 = fragment.cached
-        v1 shouldBe "initial"
-        v2 shouldBe "initial"
+        v1 shouldBe "val1"
+        v2 shouldBe "val1"
+        fragment.initCount shouldBe 1
     }
 
     @Test
-    fun `onDestroy clears the cached value`() {
+    fun `onDestroy clears cached value and accessing after view destroy throws`() {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         val fragment = AutoClearedViewFragment()
         activity.supportFragmentManager
@@ -74,13 +76,15 @@ class AutoClearedUtilsRobolectricTest {
             .add(android.R.id.content, fragment)
             .commitNow()
         // Access value to populate cache and register observer
-        fragment.cached shouldBe "initial"
-        // Remove the fragment → triggers onDestroyView → onDestroy on the observer → clears cache
+        fragment.cached shouldBe "val1"
+        fragment.initCount shouldBe 1
+        // Remove the fragment → triggers onDestroyView → observer's onDestroy fires → clears cache
         activity.supportFragmentManager
             .beginTransaction()
             .remove(fragment)
             .commitNow()
-        // Cached value is null; viewLifecycleOwner throws because the view is gone
+        // View is null — accessing a view-bound property after onDestroyView is a programming error.
         shouldThrow<IllegalStateException> { fragment.cached }
+        fragment.initCount shouldBe 1
     }
 }

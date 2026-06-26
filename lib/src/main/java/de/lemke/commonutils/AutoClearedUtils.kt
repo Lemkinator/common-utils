@@ -41,10 +41,13 @@ fun <T> Fragment.autoCleared(initialize: () -> T): ReadOnlyProperty<Fragment, T>
         ): T {
             val current = cachedValue
             if (current != null) return current
+            check(thisRef.view != null) {
+                "${property.name} accessed after onDestroyView — do not access view-bound properties outside the view lifecycle"
+            }
             val value = initialize()
             // ON_DESTROY fires before onDestroyView() in modern AndroidX. If binding is accessed
             // during cleanup, skip caching — adding an observer to a DESTROYED lifecycle is a no-op.
-            val lifecycle = viewLifecycleOwner.lifecycle
+            val lifecycle = thisRef.viewLifecycleOwner.lifecycle
             if (lifecycle.currentState != Lifecycle.State.DESTROYED) {
                 cachedValue = value
                 lifecycle.addObserver(this)

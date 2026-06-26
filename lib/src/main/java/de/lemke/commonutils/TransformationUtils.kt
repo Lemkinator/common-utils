@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
-
 package de.lemke.commonutils
 
 import android.R.anim.fade_in
@@ -46,15 +44,18 @@ import com.google.android.material.transition.platform.MaterialContainerTransfor
 private const val TAG = "TransformationUtils"
 private const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"
 
+/** Default shared-element transition name used when no explicit name is supplied. */
 @PublishedApi
 internal const val DEFAULT_TRANSITION_NAME = "commonUtilsActivityTransitionName"
 private const val DURATION_KEY = "commonUtilsDurationKey"
 
+/** Default transition duration in milliseconds. */
 @PublishedApi
 internal const val DEFAULT_DURATION = 400L
 private const val STATE_ANIMATOR_RESTORE_DELAY_MS = 1_000L
 private const val FADE_MODE_KEY = "commonUtilsFadeModeKey"
 
+/** Default fade mode for container transforms; uses cross-fade between entering and leaving content. */
 @PublishedApi
 internal const val DEFAULT_FADE_MODE = FADE_MODE_CROSS
 
@@ -229,6 +230,7 @@ fun Activity.transformToActivity(
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
  */
+@NoCoverage
 inline fun <reified T : Activity> Activity.transformToActivity(
     @IdRes viewId: Int,
     transitionName: String = DEFAULT_TRANSITION_NAME,
@@ -294,6 +296,7 @@ fun Activity.transformToActivity(
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
  */
+@NoCoverage
 inline fun <reified T : Activity> Activity.transformToActivity(
     view: View?,
     transitionName: String = DEFAULT_TRANSITION_NAME,

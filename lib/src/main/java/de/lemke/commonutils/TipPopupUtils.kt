@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
-
 package de.lemke.commonutils
 
 import android.view.View
@@ -25,8 +23,6 @@ import de.lemke.commonutils.ui.widget.TouchBlockingView
 import dev.oneuiproject.oneui.ktx.activity
 import dev.oneuiproject.oneui.widget.TipPopup
 import dev.oneuiproject.oneui.design.R as designR
-
-private const val TAG = "TipPopupUtils"
 
 /** Shows a tip popup anchored to this view with a full-screen touch-blocking overlay. */
 @NoCoverage
@@ -75,7 +71,8 @@ private fun View.showTipPopupWithOverlay(
         context.activity
             ?.window
             ?.decorView
-            ?.rootView as ViewGroup
+            ?.rootView as? ViewGroup
+            ?: error("showTipPopup requires an Activity context with an initialized window")
     rootView.addView(overlay)
     return showTipPopup(rootView, overlay, message, actionText, action)
 }

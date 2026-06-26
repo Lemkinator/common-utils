@@ -23,7 +23,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Launches [block] in the lifecycle scope, repeating it whenever the lifecycle reaches [minActiveState]. */
@@ -83,3 +85,19 @@ inline fun <T> Fragment.collectEvents(
 ) = launchAndRepeatWithViewLifecycle(minActiveState) {
     flow.collect { onEach(it) }
 }
+
+private const val FLOW_STOP_TIMEOUT_MS = 5_000L
+
+/**
+ * Returns a [StateFlow] backed by this flow, using [SharingStarted.WhileSubscribed] with a
+ * 5-second timeout. Intended for ViewModel state derived from a repository flow.
+ */
+fun <T> Flow<T>.stateInViewModel(
+    scope: CoroutineScope,
+    initialValue: T,
+): StateFlow<T> =
+    stateIn(
+        scope = scope,
+        started = SharingStarted.WhileSubscribed(FLOW_STOP_TIMEOUT_MS),
+        initialValue = initialValue,
+    )

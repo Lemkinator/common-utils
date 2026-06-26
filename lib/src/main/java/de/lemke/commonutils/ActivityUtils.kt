@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
-
 package de.lemke.commonutils
 
 import android.app.Activity
@@ -23,8 +21,6 @@ import androidx.preference.PreferenceFragmentCompat
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
-
-private const val TAG = "ActivityUtils"
 
 /** Configures the settings activity with the given preference XML resources and optional init block. */
 fun setupCommonUtilsSettingsActivity(

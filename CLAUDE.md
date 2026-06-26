@@ -7,7 +7,7 @@ with code in this repository.
 
 Android utility library published to GitHub Packages as
 `io.github.lemkinator:common-utils`. Single `:lib` module.
-Min SDK 26, Target SDK 36, Kotlin 2.3.21, Java 21.
+See `gradle/libs.versions.toml` for SDK and language versions.
 
 ## Build Commands
 
@@ -31,6 +31,16 @@ for architecture rules.
 because no production activity is `@AndroidEntryPoint`; tests bypass Hilt entirely
 using plain `Robolectric.buildActivity()` + `ApplicationProvider`.
 `@HiltAndroidTest`/`HiltAndroidRule` are JUnit 4 only, incompatible with this setup.
+
+**`@NoCoverage` on `inline fun`**: Kover maps inline call-site coverage back to the original
+definition via JaCoCo SMAP data. Under JUnit 5 + `RobolectricExtension`, Robolectric's class
+loader initialises after the JaCoCo JVM agent — test classes are never instrumented, so inlined
+call-site instructions are invisible to coverage and definition-site phantom stubs remain
+uncovered. This requires `@NoCoverage` on all `inline fun` that are never called non-inline.
+`crossinline` default-value lambdas always need `@NoCoverage` regardless of test runner: the
+default compiles to a definition-site private static method that is never invoked (the default
+is inlined at every call site). Apps using JUnit 4 + `RobolectricTestRunner` (e.g. the
+OneUI-Sample-App) don't have this problem and carry far fewer `@NoCoverage` annotations.
 
 ## Pre-commit Hook
 
@@ -118,15 +128,13 @@ Document any pin or downgrade with a `# Why pinned:` comment in
    duplicate-class errors. Renovate's `hilt` group bumps both repos
    together.
 
-## Hilt (same-module)
+## Hilt
 
-Hilt is added as a same-module `implementation` dep — qualifiers and
-`CoroutineDispatchersModule` ship compiled into the published AAR.
-Consumers see `@IoDispatcher` / `@DefaultDispatcher` / `@MainDispatcher`
-because those annotation classes live in our AAR, not in Hilt's runtime jar,
-so no transitive exposure is needed. Every consuming app already declares
-Hilt directly. A separate `:lib-di` subproject would let consumers opt out
-but adds a publishing target for zero practical gain.
+Hilt is added as a same-module `implementation` dep. Qualifier annotations
+(`@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher`) ship compiled into
+the published AAR. No Hilt module is published: libraries must not install
+bindings into consumer DI graphs uninvited. Each consumer app declares its own
+`DispatchersModule`.
 
 ## Configuration
 

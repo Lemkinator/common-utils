@@ -42,9 +42,16 @@ private const val COMPRESS_QUALITY_MAX = 100
 
 /** Target directory for exported images. */
 enum class SaveLocation {
+    /** User selects the destination via the system document picker. */
     CUSTOM,
+
+    /** Saves to [android.os.Environment.DIRECTORY_DOWNLOADS]. */
     DOWNLOADS,
+
+    /** Saves to [android.os.Environment.DIRECTORY_PICTURES]. */
     PICTURES,
+
+    /** Saves to [android.os.Environment.DIRECTORY_DCIM]. */
     DCIM,
     ;
 
@@ -58,12 +65,16 @@ enum class SaveLocation {
         }
 
     companion object {
+        /** The default save location used when no preference has been set. */
         val default = CUSTOM
 
+        /** Returns the [SaveLocation] whose name matches [string], or [default] if no match is found. */
         fun fromStringOrDefault(string: String?): SaveLocation = entries.firstOrNull { it.toString() == string } ?: default
 
+        /** Array of [SaveLocation] name strings, suitable for use as `DropDownPreference` entry values. */
         val entryValues = entries.map { it.name }.toTypedArray()
 
+        /** Returns an array of localized display strings for each [SaveLocation]. */
         fun getLocalizedEntries(context: Context) = entries.map { it.toLocalizedString(context) }.toTypedArray()
     }
 }

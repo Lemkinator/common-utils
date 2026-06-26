@@ -31,13 +31,28 @@ lateinit var commonUtilsSettings: SettingsRepository
 class SettingsRepository(
     preferences: SharedPreferences,
 ) {
+    /** Whether dark mode is explicitly enabled (stored as `"1"`/`"0"` for legacy `HorizontalRadioPreference` compatibility). */
     var darkMode: Boolean by preferences.delegates.darkMode(false)
+
+    /** Whether to follow the system dark mode setting instead of the explicit [darkMode] value. */
     var autoDarkMode: Boolean by preferences.delegates.boolean(true)
+
+    /** The version code recorded on the previous app launch, or -1 if never set. */
     var lastVersionCode: Int by preferences.delegates.int(-1)
+
+    /** The version name recorded on the previous app launch. */
     var lastVersionName: String by preferences.delegates.string("0.0.0")
+
+    /** The highest TOS version the user has accepted, or -1 if the user has never accepted. */
     var acceptedTosVersion: Int by preferences.delegates.int(-1)
+
+    /** Whether developer mode is currently enabled. */
     var devModeEnabled: Boolean by preferences.delegates.boolean(false)
+
+    /** The last search query entered by the user. */
     var search: String by preferences.delegates.string("")
+
+    /** The preferred location for exported images. */
     var imageSaveLocation: SaveLocation by preferences.delegates.saveLocation(SaveLocation.default)
 }
 

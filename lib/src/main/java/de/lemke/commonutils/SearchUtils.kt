@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
-
 package de.lemke.commonutils
 
 import androidx.annotation.StringRes
@@ -24,8 +22,6 @@ import de.lemke.commonutils.data.commonUtilsSettings
 import dev.oneuiproject.oneui.ktx.hideSoftInput
 import dev.oneuiproject.oneui.layout.ToolbarLayout
 import kotlinx.coroutines.flow.MutableStateFlow
-
-private const val TAG = "SearchUtils"
 
 /** Returns a [ToolbarLayout.SearchModeListener] that updates [search] on query changes and persists the last query. */
 fun AppCompatActivity.getCommonUtilsSearchListener(

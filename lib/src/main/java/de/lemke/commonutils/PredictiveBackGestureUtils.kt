@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
-
 package de.lemke.commonutils
 
 import android.annotation.SuppressLint
@@ -40,9 +38,8 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-
-private const val TAG = "PredictiveBackGestureUtils"
 
 /** Registers [onBackPressedLogic] as the back handler, enabled whenever [backPressLogicEnabled] emits `true`. */
 @NoCoverage
@@ -52,17 +49,21 @@ inline fun Fragment.addOnBackLogic(
 ) {
     if (SDK_INT >= TIRAMISU) {
         val onBackInvokedCallback = OnBackInvokedCallback { onBackPressedLogic.invoke() }
-        requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
         lifecycleScope.launch {
-            backPressLogicEnabled
-                .flowWithLifecycle(lifecycle)
-                .collectLatest { register ->
-                    if (register) {
-                        requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
-                    } else {
-                        requireActivity().onBackInvokedDispatcher.unregisterOnBackInvokedCallback(onBackInvokedCallback)
+            try {
+                backPressLogicEnabled
+                    .flowWithLifecycle(lifecycle)
+                    .distinctUntilChanged()
+                    .collectLatest { register ->
+                        if (register) {
+                            requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(PRIORITY_DEFAULT, onBackInvokedCallback)
+                        } else {
+                            requireActivity().onBackInvokedDispatcher.unregisterOnBackInvokedCallback(onBackInvokedCallback)
+                        }
                     }
-                }
+            } finally {
+                activity?.onBackInvokedDispatcher?.unregisterOnBackInvokedCallback(onBackInvokedCallback)
+            }
         }
     } else {
         val onBackPressedCallback =
