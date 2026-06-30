@@ -39,7 +39,7 @@ oneui-design = "0.9.13+oneui8"
 oneui-icons = "1.1.0"
 review = "2.0.2"
 robolectric = "4.16.1"
-spotless = "8.7.0"
+spotless = "8.8.0"
 turbine = "1.2.1"
 
 [libraries]
