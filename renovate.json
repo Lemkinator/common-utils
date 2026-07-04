@@ -14,9 +14,7 @@
         "digest"
       ],
       "matchCurrentVersion": "!/^0/",
-      "automerge": true,
-      "automergeType": "branch",
-      "platformAutomerge": true
+      "automerge": true
     },
     {
       "matchUpdateTypes": [
@@ -36,23 +34,27 @@
       "groupName": "kotlin",
       "matchPackageNames": [
         "org.jetbrains.kotlin:**",
-        "org.jetbrains.kotlin.android",
+        "org.jetbrains.kotlin.*:**",
         "com.google.devtools.ksp**"
       ]
     },
     {
       "groupName": "hilt",
       "matchPackageNames": [
-        "com.google.dagger:**",
-        "com.google.dagger.hilt.android"
+        "com.google.dagger**"
       ]
     },
     {
       "groupName": "androidx-test",
       "matchPackageNames": [
-        "androidx.test:**",
-        "androidx.test.ext:**",
-        "androidx.test.espresso:**"
+        "androidx.test**"
+      ]
+    },
+    {
+      "groupName": "kotest",
+      "matchPackageNames": [
+        "io.kotest**",
+        "de.mannodermaus.android-junit**"
       ]
     },
     {
@@ -62,7 +64,7 @@
         "org.junit.jupiter:**",
         "org.junit.platform:**",
         "org.junit.vintage:**",
-        "de.mannodermaus.android-junit"
+        "tech.apter.junit5.jupiter:**"
       ]
     },
     {
@@ -72,11 +74,17 @@
       ]
     },
     {
+      "groupName": "github-actions",
+      "matchManagers": [
+        "github-actions"
+      ]
+    },
+    {
       "groupName": "static-analysis",
       "matchPackageNames": [
-        "dev.detekt:**",
+        "dev.detekt**",
         "io.gitlab.arturbosch.detekt**",
-        "com.diffplug.spotless"
+        "com.diffplug.spotless**"
       ]
     },
     {
