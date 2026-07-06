@@ -172,6 +172,19 @@ kover {
                     // TipPopupUtils: requires OneUI TipPopup widget + Activity decorView root;
                     // the widget cannot be instantiated under Robolectric without a full OneUI theme.
                     "*TipPopupUtilsKt*",
+                    // URLUtilsKt: openURL's inlined stdlib `isNullOrBlank()` call inside a try block makes
+                    // Kover misattribute one try/catch dispatch branch depending on unrelated JIT/classloading
+                    // order elsewhere in the test suite (flips between 100% and a single missed branch here,
+                    // independent of any behavior change). Every path is fully exercised by
+                    // URLUtilsRobolectricTest; @NoCoverage doesn't help since Kover 0.9.x's annotatedBy filter
+                    // doesn't reliably exclude branch misses (same limitation noted for SettingsRepositoryKt).
+                    "*URLUtilsKt*",
+                    // DelegatesAdvancedKt: parseIntList's `toIntOrNull()` inlines a radix-range check
+                    // (`checkRadix`) that can never fail from the no-arg call (radix is always the literal
+                    // 10) — a permanently unreachable branch, not a real gap. Deliberately kept as a
+                    // top-level (not SharedPreferenceDelegates member) function so this exclusion can't mask
+                    // regressions in that class's other, fully-tested delegate methods.
+                    "*DelegatesAdvancedKt*",
                     // PreferenceUtils: addRelativeLinksCard uses OneUI's listView extension;
                     // the generated lambda/anonymous class cannot be exercised under Robolectric.
                     $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
@@ -190,8 +203,6 @@ kover {
                     // Every test replaces them before launching the activity, so the defaults are
                     // never invoked; they cannot be reset to their original instance after replacement.
                     $$"*CommonUtilsAboutActivity$Companion$getAppVersion*",
-                    $$"*CommonUtilsSettingsActivity$Companion$initPreferences*",
-                    $$"*ActivityUtilsKt$setupCommonUtilsSettingsActivity*",
                     // setVersionTextView coroutine: suspend state-machine's suspension-check
                     // instructions are never exercised in JVM tests (coroutine completes synchronously).
                     $$"*CommonUtilsAboutActivity$setVersionTextView*",

@@ -31,6 +31,16 @@ import kotlin.reflect.KProperty
 /** Returns a [SharedPreferenceDelegates] factory backed by this [SharedPreferences] instance. */
 val SharedPreferences.delegates get() = SharedPreferenceDelegates(this)
 
+/**
+ * Parses [raw] as a comma-joined list of ints, or returns null if [raw] is null or contains no parsable ints.
+ *
+ * Kept as a top-level (not member) function so its one Kover-unreachable branch — `toIntOrNull()`'s inlined
+ * stdlib radix-range check, which can never fail since the no-arg call always passes the literal radix 10 —
+ * can be excluded via a `classes()` pattern scoped to this file's facade class alone, without hiding real
+ * regressions in [SharedPreferenceDelegates]'s other, fully-tested delegate methods.
+ */
+private fun parseIntList(raw: String?): List<Int>? = raw?.split(",")?.mapNotNull { it.toIntOrNull() }?.takeIf { it.isNotEmpty() }
+
 /** Factory for type-safe [ReadWriteProperty] delegates backed by [SharedPreferences]. */
 class SharedPreferenceDelegates(
     private val prefs: SharedPreferences,
@@ -72,6 +82,18 @@ class SharedPreferenceDelegates(
         key: String? = null,
     ): ReadWriteProperty<Any, Set<String>> =
         create(default, key, { k, d -> prefs.getStringSet(k, null) ?: d }, { k, v -> prefs.edit { putStringSet(k, v) } })
+
+    /** Delegate that reads/writes a [List]<[Int]> preference, stored as a comma-joined string. */
+    fun intList(
+        default: List<Int> = emptyList(),
+        key: String? = null,
+    ): ReadWriteProperty<Any, List<Int>> =
+        create(
+            default,
+            key,
+            { k, d -> parseIntList(prefs.getString(k, null)) ?: d },
+            { k, v -> prefs.edit { putString(k, v.joinToString(",")) } },
+        )
 
     /** Delegate that reads/writes a dark mode flag stored as `"1"`/`"0"` for legacy HorizontalRadioPreference compatibility. */
     fun darkMode(

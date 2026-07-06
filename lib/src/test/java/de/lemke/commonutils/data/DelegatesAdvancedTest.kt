@@ -218,6 +218,79 @@ class DelegatesAdvancedTest {
     }
 
     @Test
+    fun `intList returns default when key absent`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = listOf(1, 2, 3))
+        }
+        Holder().list shouldBe listOf(1, 2, 3)
+    }
+
+    @Test
+    fun `intList round-trips written value`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = emptyList())
+        }
+
+        val h = Holder()
+        h.list = listOf(4, 5, 6)
+        Holder().list shouldBe listOf(4, 5, 6)
+        prefs.getString("list", null) shouldBe "4,5,6"
+    }
+
+    @Test
+    fun `intList returns default when stored value has no parsable ints`() {
+        prefs.edit().putString("list", "a,b,c").apply()
+
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = listOf(9))
+        }
+        Holder().list shouldBe listOf(9)
+    }
+
+    @Test
+    fun `intList filters out empty segments produced by consecutive commas`() {
+        prefs.edit().putString("list", "1,,2").apply()
+
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = emptyList())
+        }
+        Holder().list shouldBe listOf(1, 2)
+    }
+
+    @Test
+    fun `intList parses negative ints`() {
+        prefs.edit().putString("list", "-1,2,-3").apply()
+
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = emptyList())
+        }
+        Holder().list shouldBe listOf(-1, 2, -3)
+    }
+
+    @Test
+    fun `intList with all-defaults produces a working delegate`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList()
+        }
+
+        val h = Holder()
+        h.list shouldBe emptyList()
+        h.list = listOf(1)
+        Holder().list shouldBe listOf(1)
+    }
+
+    @Test
+    fun `intList with explicit key uses that key in prefs`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = emptyList(), key = "my_int_list_key")
+        }
+
+        val h = Holder()
+        h.list = listOf(7, 8)
+        prefs.getString("my_int_list_key", null) shouldBe "7,8"
+    }
+
+    @Test
     fun `boolean with explicit key uses that key in prefs`() {
         class Holder {
             var flag: Boolean by prefs.delegates.boolean(default = false, key = "my_custom_key")

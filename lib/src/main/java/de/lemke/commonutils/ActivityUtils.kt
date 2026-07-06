@@ -17,27 +17,18 @@ package de.lemke.commonutils
 
 import android.app.Activity
 import android.text.SpannableString
-import androidx.preference.PreferenceFragmentCompat
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
-/** Configures the settings activity with the given preference XML resources and optional init block. */
-fun setupCommonUtilsSettingsActivity(
-    vararg preferences: Int,
-    initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {},
-) {
+/** Configures the settings activity with the given preference XML resources. */
+fun setupCommonUtilsSettingsActivity(vararg preferences: Int) {
     CommonUtilsSettingsActivity.preferences = preferences.toList()
-    CommonUtilsSettingsActivity.initPreferences = initPreferences
 }
 
-/** Configures the settings activity with the given preference XML resource list and optional init block. */
-fun setupCommonUtilsSettingsActivity(
-    preferences: List<Int>,
-    initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {},
-) {
+/** Configures the settings activity with the given preference XML resource list. */
+fun setupCommonUtilsSettingsActivity(preferences: List<Int>) {
     CommonUtilsSettingsActivity.preferences = preferences
-    CommonUtilsSettingsActivity.initPreferences = initPreferences
 }
 
 /** Configures the About Me activity with an optional share-app callback. */

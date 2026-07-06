@@ -18,7 +18,6 @@ package de.lemke.commonutils.ui.activity
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceFragmentCompat
 import de.lemke.commonutils.R
 import de.lemke.commonutils.addShareAppAndRateRelativeLinksCard
@@ -26,7 +25,6 @@ import de.lemke.commonutils.databinding.ActivitySettingsCommonUtilsBinding
 import de.lemke.commonutils.initCommonUtilsPreferences
 import de.lemke.commonutils.prepareActivityTransformationTo
 import de.lemke.commonutils.setCustomBackAnimation
-import kotlinx.coroutines.launch
 
 /** Pre-built settings screen backed by a [PreferenceFragmentCompat] with common-utils defaults. */
 class CommonUtilsSettingsActivity : AppCompatActivity() {
@@ -50,9 +48,6 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
                 R.xml.preferences_dev_options_delete_app_data,
                 R.xml.preferences_more_info,
             )
-
-        /** Optional suspend block run after preference inflation for app-specific init. */
-        var initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}
     }
 
     /** [PreferenceFragmentCompat] that inflates the configured preference XML resources. */
@@ -67,7 +62,6 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
         override fun onCreate(bundle: Bundle?) {
             super.onCreate(bundle)
             initCommonUtilsPreferences()
-            lifecycleScope.launch { initPreferences() }
         }
 
         override fun onViewCreated(
