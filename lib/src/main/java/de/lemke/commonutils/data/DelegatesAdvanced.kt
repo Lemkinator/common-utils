@@ -32,12 +32,31 @@ import kotlin.reflect.KProperty
 val SharedPreferences.delegates get() = SharedPreferenceDelegates(this)
 
 /**
+ * Wraps this delegate so [sanitize] is applied to every value on both read and write — e.g., clamping a size to a
+ * valid range, or capping a list to a max length. Sanitizing on writing as well as reading keeps the stored value itself
+ * valid, so every future read is inexpensive, and every consumer (not just this property) sees an already-sanitized value.
+ */
+fun <T> ReadWriteProperty<Any, T>.sanitized(sanitize: (T) -> T): ReadWriteProperty<Any, T> =
+    object : ReadWriteProperty<Any, T> {
+        override fun getValue(
+            thisRef: Any,
+            property: KProperty<*>,
+        ): T = sanitize(this@sanitized.getValue(thisRef, property))
+
+        override fun setValue(
+            thisRef: Any,
+            property: KProperty<*>,
+            value: T,
+        ) = this@sanitized.setValue(thisRef, property, sanitize(value))
+    }
+
+/**
  * Parses [raw] as a comma-joined list of ints, or returns null if [raw] is null or contains no parsable ints.
  *
  * Kept as a top-level (not member) function so its one Kover-unreachable branch — `toIntOrNull()`'s inlined
- * stdlib radix-range check, which can never fail since the no-arg call always passes the literal radix 10 —
- * can be excluded via a `classes()` pattern scoped to this file's facade class alone, without hiding real
- * regressions in [SharedPreferenceDelegates]'s other, fully-tested delegate methods.
+ * stdlib radix-range check, which can never fail since the no-arg call always passes the literal radix 10.
+ * This can be excluded via a `classes()` pattern scoped to this file's facade class alone, without hiding real
+ * regressions in [SharedPreferenceDelegates]'s other, fully tested delegate methods.
  */
 private fun parseIntList(raw: String?): List<Int>? = raw?.split(",")?.mapNotNull { it.toIntOrNull() }?.takeIf { it.isNotEmpty() }
 

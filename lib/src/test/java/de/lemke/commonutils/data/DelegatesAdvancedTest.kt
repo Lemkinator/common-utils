@@ -291,6 +291,48 @@ class DelegatesAdvancedTest {
     }
 
     @Test
+    fun `sanitized clamps a value already out of range in storage on read`() {
+        prefs.edit().putInt("size", 9999).apply()
+
+        class Holder {
+            var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+        }
+        Holder().size shouldBe 1024
+    }
+
+    @Test
+    fun `sanitized clamps on write so the stored value itself is valid`() {
+        class Holder {
+            var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+        }
+
+        val h = Holder()
+        h.size = -5
+        prefs.getInt("size", -1) shouldBe 16
+    }
+
+    @Test
+    fun `sanitized passes through in-range values unchanged`() {
+        class Holder {
+            var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+        }
+
+        val h = Holder()
+        h.size = 256
+        Holder().size shouldBe 256
+    }
+
+    @Test
+    fun `sanitized composes with intList to cap a stored list on read`() {
+        prefs.edit().putString("colors", "1,2,3,4,5,6,7,8").apply()
+
+        class Holder {
+            var colors: List<Int> by prefs.delegates.intList(default = emptyList()).sanitized { it.take(6) }
+        }
+        Holder().colors shouldBe listOf(1, 2, 3, 4, 5, 6)
+    }
+
+    @Test
     fun `boolean with explicit key uses that key in prefs`() {
         class Holder {
             var flag: Boolean by prefs.delegates.boolean(default = false, key = "my_custom_key")
