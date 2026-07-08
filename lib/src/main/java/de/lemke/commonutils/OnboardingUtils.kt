@@ -62,8 +62,8 @@ fun setupOnboarding(steps: List<Class<out Activity>> = emptyList()) {
  * Typed carrier for the full onboarding state, passed as one Intent extra and forwarded unchanged
  * across chain hops so the main activity can reconstruct the original [AppStart] on re-entry.
  *
- * @property mainActivityName Fully-qualified class name of the launcher activity that started onboarding.
- * @property steps Ordered list of fully-qualified class names for the app-specific onboarding steps.
+ * @property mainActivityName Fully qualified class name of the launcher activity that started onboarding.
+ * @property steps Ordered list of fully qualified class names for the app-specific onboarding steps.
  * @property versionCode The current app version code at the time onboarding was initiated.
  * @property versionName The current app version name at the time onboarding was initiated.
  * @property appStartResult The original [AppStartResult] from the fresh app-start check.
