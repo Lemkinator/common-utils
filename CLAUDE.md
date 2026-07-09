@@ -24,13 +24,29 @@ Tests live under `lib/src/test/java/de/lemke/commonutils/`.
 
 **Test stack**: Kotest 6 (`ShouldSpec` style) for pure Kotlin tests; JUnit 5 `@Test` +
 `tech.apter.junit5.jupiter:robolectric-extension` for Android/Robolectric tests. Konsist
-for architecture rules.
+for architecture rules. Plus a small **JUnit 4 island** (see below) for the two
+`@AndroidEntryPoint` activities' tests.
 
 **Robolectric + JUnit 5**: uses `tech.apter.junit5.jupiter:robolectric-extension`
-(`RobolectricExtension`) — JUnit 5 native, no vintage engine needed. Works here
-because no production activity is `@AndroidEntryPoint`; tests bypass Hilt entirely
-using plain `Robolectric.buildActivity()` + `ApplicationProvider`.
-`@HiltAndroidTest`/`HiltAndroidRule` are JUnit 4 only, incompatible with this setup.
+(`RobolectricExtension`) — JUnit 5 native, no vintage engine needed. This is the
+default for every test in the module *except* the two below.
+
+**JUnit 4 island (Hilt activities only)**: `CommonUtilsAboutActivity`/
+`CommonUtilsSettingsActivity` (+ nested `SettingsFragment`) are `@AndroidEntryPoint`
+with `@Inject lateinit var settings: SettingsRepository`. Their tests
+(`CommonUtilsAboutActivityTest`, `CommonUtilsSettingsActivityTest`) need
+`@HiltAndroidTest`/`HiltAndroidRule`, which are JUnit 4-only — incompatible with
+`RobolectricExtension`. These two files alone use
+`@RunWith(RobolectricTestRunner::class)` + JUnit 4 `org.junit.Test`/`org.junit.Before`,
+mirroring GetIcon's own proven pattern (`app/src/test/java/de/lemke/geticon/ui/*`).
+`org.junit.vintage:junit-vintage-engine` on `testRuntimeOnly` lets the JUnit Platform
+(`useJUnitPlatform()`) discover and run them alongside the rest of the Kotest/JUnit 5
+suite — do not extend this island to any other test file; everything else stays
+JUnit 5/Kotest. Every `@HiltAndroidTest` Robolectric activity test must destroy its
+launched `ActivityController` in `@After` — `AppCompatDelegate.setDefaultNightMode()`
+recreates every live `AppCompatActivity` process-wide (including ones left over from a
+previous test class), and a leaked activity's Hilt injection then fails against its
+now-dead test component.
 
 **`@NoCoverage` on `inline fun`**: Kover maps inline call-site coverage back to the original
 definition via JaCoCo SMAP data. Under JUnit 5 + `RobolectricExtension`, Robolectric's class

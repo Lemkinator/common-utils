@@ -15,16 +15,12 @@
  */
 package de.lemke.commonutils
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Looper
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.test.core.app.ApplicationProvider
-import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.data.commonUtilsSettings
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -47,13 +43,6 @@ class FragmentExtensionsRobolectricTest {
 
     @BeforeEach
     fun setUp() {
-        val prefs =
-            ApplicationProvider
-                .getApplicationContext<Context>()
-                .getSharedPreferences("frag_ext_test", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
-        commonUtilsSettings = SettingsRepository(prefs)
-
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         fragment = Fragment()
         activity.supportFragmentManager

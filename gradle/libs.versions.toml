@@ -23,6 +23,7 @@ detekt = "2.0.0-alpha.5"
 gradle = "9.2.1"
 hilt = "2.60.1"
 junit-jupiter = "6.1.1"
+junit4 = "4.13.2"
 konsist = "0.17.3"
 kotest = "6.2.2"
 kotest-robolectric = "0.9.0"
@@ -51,9 +52,12 @@ androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-te
 app-update = { module = "com.google.android.play:app-update", version.ref = "app-update" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-jupiter" }
+junit-vintage-engine = { group = "org.junit.vintage", name = "junit-vintage-engine", version.ref = "junit-jupiter" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-extensions-robolectric = { module = "tech.apter.junit5.jupiter:robolectric-extension", version.ref = "kotest-robolectric" }

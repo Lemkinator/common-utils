@@ -26,9 +26,12 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.ActivityResult.RESULT_IN_APP_UPDATE_FAILED
+import dagger.hilt.android.testing.BindValue
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.setupCommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
@@ -38,30 +41,46 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 import dev.oneuiproject.oneui.design.R as designR
 
-@ExtendWith(RobolectricExtension::class)
-@Config(sdk = [36])
+/**
+ * JUnit4 (not JUnit5/Kotest like the rest of this module): `HiltAndroidRule`/`@HiltAndroidTest`
+ * require a JUnit4 `@RunWith(RobolectricTestRunner::class)` runner, so this class runs under the
+ * `junit-vintage-engine` island — see `lib/build.gradle.kts` test dependencies.
+ */
+@HiltAndroidTest
+@RunWith(RobolectricTestRunner::class)
+@Config(application = HiltTestApplication::class, sdk = [36])
 class CommonUtilsAboutActivityTest {
-    private lateinit var mockAppUpdateManager: AppUpdateManager
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
 
-    @BeforeEach
-    fun setUp() {
-        val prefs =
+    @BindValue
+    @JvmField
+    val fakeSettings: SettingsRepository =
+        SettingsRepository(
             ApplicationProvider
                 .getApplicationContext<Context>()
                 .getSharedPreferences("about_test", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
-        commonUtilsSettings = SettingsRepository(prefs)
+                .apply { edit().clear().apply() },
+        )
 
+    private lateinit var mockAppUpdateManager: AppUpdateManager
+    private var activityController: ActivityController<CommonUtilsAboutActivity>? = null
+
+    @Before
+    fun setUp() {
+        hiltRule.inject()
         mockAppUpdateManager = mockk<AppUpdateManager>(relaxed = true)
         mockkStatic(AppUpdateManagerFactory::class)
         every { AppUpdateManagerFactory.create(any()) } returns mockAppUpdateManager
@@ -69,13 +88,18 @@ class CommonUtilsAboutActivityTest {
         setupCommonUtilsAboutActivity("1.0.0")
     }
 
-    @AfterEach
+    @After
     fun tearDown() {
+        // Destroy the launched activity so AppCompatDelegate's static delegate registry (used by
+        // setDefaultNightMode's cross-activity recreate broadcast) doesn't retain a reference into this
+        // test class's now-dead Hilt component after the next @HiltAndroidTest class starts.
+        activityController?.destroy()
         unmockkAll()
     }
 
     private fun launchActivity(): CommonUtilsAboutActivity {
         val controller = Robolectric.buildActivity(CommonUtilsAboutActivity::class.java).setup()
+        activityController = controller
         shadowOf(Looper.getMainLooper()).idle()
         return controller.get()
     }
@@ -95,7 +119,7 @@ class CommonUtilsAboutActivityTest {
 
     @Test
     fun `activity launches with devModeEnabled - dev suffix path executed`() {
-        commonUtilsSettings.devModeEnabled = true
+        fakeSettings.devModeEnabled = true
         val activity = launchActivity()
         activity shouldNotBe null
     }

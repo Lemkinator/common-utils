@@ -30,68 +30,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.robolectric.annotation.Config
 import tech.apter.junit.jupiter.robolectric.RobolectricExtension
-
-class CommonUtilsSettingsLateinitTest {
-    @Test
-    fun `accessing commonUtilsSettings before initialization throws UninitializedPropertyAccessException`() {
-        // Normally testing Kotlin's lateinit mechanic is pointless — it's compiler-generated boilerplate.
-        // Still test it here to avoid @get:NoCoverage on production code.
-        val field =
-            Class
-                .forName("de.lemke.commonutils.data.SettingsRepositoryKt")
-                .getDeclaredField("commonUtilsSettings")
-                .apply { isAccessible = true }
-        val previous = field.get(null)
-        field.set(null, null)
-        try {
-            assertThrows<UninitializedPropertyAccessException> { commonUtilsSettings }
-        } finally {
-            field.set(null, previous)
-        }
-    }
-}
-
-@ExtendWith(RobolectricExtension::class)
-@Config(sdk = [36])
-class InitCommonUtilsSettingsTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-
-    @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode true - FOLLOW_SYSTEM branch`() {
-        ctx.initCommonUtilsSettingsAndSetDarkMode()
-        commonUtilsSettings.autoDarkMode.shouldBeTrue()
-        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-    }
-
-    @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with darkMode true - MODE_NIGHT_YES branch`() {
-        ctx.initCommonUtilsSettingsAndSetDarkMode()
-        commonUtilsSettings.autoDarkMode = false
-        commonUtilsSettings.darkMode = true
-        ctx.initCommonUtilsSettingsAndSetDarkMode()
-        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_YES
-    }
-
-    @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode false and darkMode false - MODE_NIGHT_NO branch`() {
-        // Write preferences so the else branch is hit on init.
-        // Key = property name (from delegates); darkMode stores as "1"/"0" string.
-        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs
-            .edit()
-            .putBoolean("autoDarkMode", false)
-            .putString("darkMode", "0")
-            .apply()
-        ctx.initCommonUtilsSettingsAndSetDarkMode()
-        commonUtilsSettings.autoDarkMode.shouldBeFalse()
-        commonUtilsSettings.darkMode.shouldBeFalse()
-        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_NO
-    }
-}
 
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
@@ -198,33 +139,6 @@ class SettingsRepositoryTest {
     }
 }
 
-private class TestUserSettings(
-    preferences: SharedPreferences,
-) : SettingsRepository(preferences) {
-    var extra: Int by preferences.delegates.int(-7)
-}
-
-@ExtendWith(RobolectricExtension::class)
-@Config(sdk = [36])
-class CreateCommonUtilsSettingsTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-
-    @Test
-    fun `createCommonUtilsSettings assigns commonUtilsSettings without applying dark mode`() {
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_UNSPECIFIED)
-        val settings = ctx.createCommonUtilsSettings(::SettingsRepository)
-        commonUtilsSettings shouldBe settings
-        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_UNSPECIFIED
-    }
-
-    @Test
-    fun `createCommonUtilsSettings supports a SettingsRepository subclass factory`() {
-        val settings = ctx.createCommonUtilsSettings(::TestUserSettings)
-        commonUtilsSettings shouldBe settings
-        settings.extra shouldBe -7
-    }
-}
-
 @ExtendWith(RobolectricExtension::class)
 @Config(sdk = [36])
 class ApplyDarkModeTest {
@@ -264,20 +178,6 @@ class ApplyDarkModeTest {
             }
         repo.applyDarkMode()
         AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_NO
-    }
-}
-
-@ExtendWith(RobolectricExtension::class)
-@Config(sdk = [36])
-class InitCommonUtilsSettingsFactoryTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-
-    @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with factory assigns subclass instance and applies dark mode`() {
-        val settings = ctx.initCommonUtilsSettingsAndSetDarkMode(::TestUserSettings)
-        commonUtilsSettings shouldBe settings
-        settings.extra shouldBe -7
-        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
     }
 }
 

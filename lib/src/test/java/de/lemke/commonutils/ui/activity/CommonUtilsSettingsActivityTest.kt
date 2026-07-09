@@ -21,10 +21,13 @@ import androidx.preference.DropDownPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.test.core.app.ApplicationProvider
+import dagger.hilt.android.testing.BindValue
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
 import de.lemke.commonutils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.data.commonUtilsSettings
 import de.lemke.commonutils.setupCommonUtilsSettingsActivity
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -33,34 +36,56 @@ import io.mockk.just
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkAll
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
-@Config(sdk = [36])
+/**
+ * JUnit4 (not JUnit5/Kotest like the rest of this module): `HiltAndroidRule`/`@HiltAndroidTest`
+ * require a JUnit4 `@RunWith(RobolectricTestRunner::class)` runner, so this class runs under the
+ * `junit-vintage-engine` island — see `lib/build.gradle.kts` test dependencies.
+ */
+@HiltAndroidTest
+@RunWith(RobolectricTestRunner::class)
+@Config(application = HiltTestApplication::class, sdk = [36])
 class CommonUtilsSettingsActivityTest {
-    @BeforeEach
-    fun setUp() {
-        val prefs =
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+
+    @BindValue
+    @JvmField
+    val fakeSettings: SettingsRepository =
+        SettingsRepository(
             ApplicationProvider
                 .getApplicationContext<Context>()
                 .getSharedPreferences("settings_test", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
-        commonUtilsSettings = SettingsRepository(prefs)
+                .apply { edit().clear().apply() },
+        )
+
+    private var activityController: ActivityController<CommonUtilsSettingsActivity>? = null
+
+    @Before
+    fun setUp() {
+        hiltRule.inject()
         // addRelativeLinksCard requires a ListView not available under Robolectric.
         // mockkStatic intercepts the Kt-file static; any<> matches any receiver.
         mockkStatic("de.lemke.commonutils.PreferenceUtilsKt")
         every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
     }
 
-    @AfterEach
+    @After
     fun tearDown() {
+        // Destroy the launched activity so AppCompatDelegate's static delegate registry (used by
+        // setDefaultNightMode's cross-activity recreate broadcast) doesn't retain a reference into this
+        // test class's now-dead Hilt component after the next @HiltAndroidTest class starts.
+        activityController?.destroy()
         unmockkAll()
     }
 
@@ -70,6 +95,7 @@ class CommonUtilsSettingsActivityTest {
         // - covers all the Log.w else paths.
         setupCommonUtilsSettingsActivity(emptyList())
         val controller = Robolectric.buildActivity(CommonUtilsSettingsActivity::class.java).setup()
+        activityController = controller
         shadowOf(Looper.getMainLooper()).idle()
         return controller.get()
     }
@@ -86,6 +112,7 @@ class CommonUtilsSettingsActivityTest {
             ),
         )
         val controller = Robolectric.buildActivity(CommonUtilsSettingsActivity::class.java).setup()
+        activityController = controller
         shadowOf(Looper.getMainLooper()).idle()
         return controller.get()
     }
@@ -122,25 +149,25 @@ class CommonUtilsSettingsActivityTest {
 
     @Test
     fun `activity launches with devModeEnabled - dev-options category is visible`() {
-        commonUtilsSettings.devModeEnabled = true
+        fakeSettings.devModeEnabled = true
         launchWithDefaultPrefs() shouldNotBe null
     }
 
     @Test
     fun `activity launches with autoDarkMode true - darkMode prefs initialized with auto branch`() {
-        commonUtilsSettings.autoDarkMode = true
+        fakeSettings.autoDarkMode = true
         launchWithDefaultPrefs() shouldNotBe null
     }
 
     @Test
     fun `activity launches with darkMode true - dark branch in initDarkMode`() {
-        commonUtilsSettings.darkMode = true
+        fakeSettings.darkMode = true
         launchWithDefaultPrefs() shouldNotBe null
     }
 
     @Test
     fun `autoDarkMode switch change to false triggers onNewValue dark mode branch`() {
-        commonUtilsSettings.autoDarkMode = true
+        fakeSettings.autoDarkMode = true
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
         val key =
@@ -154,8 +181,8 @@ class CommonUtilsSettingsActivityTest {
 
     @Test
     fun `autoDarkMode false with darkMode true triggers MODE_NIGHT_YES in onNewValue`() {
-        commonUtilsSettings.autoDarkMode = true
-        commonUtilsSettings.darkMode = true
+        fakeSettings.autoDarkMode = true
+        fakeSettings.darkMode = true
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
         val key =
@@ -169,7 +196,7 @@ class CommonUtilsSettingsActivityTest {
 
     @Test
     fun `autoDarkMode switch change to true triggers follow-system branch`() {
-        commonUtilsSettings.autoDarkMode = false
+        fakeSettings.autoDarkMode = false
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
         val key =
@@ -183,7 +210,7 @@ class CommonUtilsSettingsActivityTest {
 
     @Test
     fun `darkMode radio change to 1 triggers MODE_NIGHT_YES branch`() {
-        commonUtilsSettings.autoDarkMode = false
+        fakeSettings.autoDarkMode = false
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
         val key =
@@ -197,7 +224,7 @@ class CommonUtilsSettingsActivityTest {
 
     @Test
     fun `darkMode radio change to 0 triggers MODE_NIGHT_NO branch`() {
-        commonUtilsSettings.autoDarkMode = false
+        fakeSettings.autoDarkMode = false
         val activity = launchWithDefaultPrefs()
         val fragment = getSettingsFragment(activity)
         val key =
@@ -249,23 +276,40 @@ class CommonUtilsSettingsActivityTest {
     }
 }
 
-@ExtendWith(RobolectricExtension::class)
-@Config(sdk = [29])
+/**
+ * JUnit4 (not JUnit5/Kotest like the rest of this module) — see [CommonUtilsSettingsActivityTest]'s
+ * class doc for why.
+ */
+@HiltAndroidTest
+@RunWith(RobolectricTestRunner::class)
+@Config(application = HiltTestApplication::class, sdk = [29])
 class CommonUtilsSettingsActivitySdk29Test {
-    @BeforeEach
-    fun setUp() {
-        val prefs =
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+
+    @BindValue
+    @JvmField
+    val fakeSettings: SettingsRepository =
+        SettingsRepository(
             ApplicationProvider
                 .getApplicationContext<Context>()
                 .getSharedPreferences("settings_test_29", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
-        commonUtilsSettings = SettingsRepository(prefs)
+                .apply { edit().clear().apply() },
+        )
+
+    private var activityController: ActivityController<CommonUtilsSettingsActivity>? = null
+
+    @Before
+    fun setUp() {
+        hiltRule.inject()
         mockkStatic("de.lemke.commonutils.PreferenceUtilsKt")
         every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
     }
 
-    @AfterEach
+    @After
     fun tearDown() {
+        // See CommonUtilsSettingsActivityTest.tearDown for why this matters.
+        activityController?.destroy()
         unmockkAll()
     }
 
@@ -281,6 +325,7 @@ class CommonUtilsSettingsActivitySdk29Test {
             ),
         )
         val controller = Robolectric.buildActivity(CommonUtilsSettingsActivity::class.java).setup()
+        activityController = controller
         shadowOf(Looper.getMainLooper()).idle()
         val activity = controller.get()
         val fragment =

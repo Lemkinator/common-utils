@@ -102,6 +102,15 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
+
+    // JUnit4 island: HiltAndroidRule/@HiltAndroidTest are JUnit4-only, needed by the two
+    // CommonUtils{About,Settings}ActivityTest classes now that those activities are @AndroidEntryPoint.
+    // junit-vintage-engine lets the JUnit Platform (useJUnitPlatform() above) discover and run them
+    // alongside the rest of this module's Kotest/JUnit5 suite.
+    testImplementation(libs.junit4)
+    testImplementation(libs.hilt.android.testing)
+    testRuntimeOnly(libs.junit.vintage.engine)
+    kspTest(libs.hilt.compiler)
 }
 
 spotless {
