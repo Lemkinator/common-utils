@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
 import android.R.anim.fade_in
 import android.R.anim.fade_out
@@ -40,6 +40,7 @@ import com.google.android.material.transition.platform.MaterialArcMotion
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_CROSS
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
+import de.lemke.commonutils.NoCoverage
 
 private const val TAG = "TransformationUtils"
 private const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"

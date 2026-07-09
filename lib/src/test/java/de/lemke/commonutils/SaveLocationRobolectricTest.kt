@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.data.SaveLocation
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test

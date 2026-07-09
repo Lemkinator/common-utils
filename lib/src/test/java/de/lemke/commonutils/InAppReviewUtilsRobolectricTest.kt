@@ -18,6 +18,9 @@ package de.lemke.commonutils
 import android.content.Context.MODE_PRIVATE
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import de.lemke.commonutils.ui.utils.canShowInAppReview
+import de.lemke.commonutils.ui.utils.getLastInAppReview
+import de.lemke.commonutils.ui.utils.setInAppReview
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe

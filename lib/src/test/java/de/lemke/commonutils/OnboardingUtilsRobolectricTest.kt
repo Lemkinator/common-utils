@@ -22,6 +22,12 @@ import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.domain.AppStartResult
+import de.lemke.commonutils.ui.utils.Onboarding
+import de.lemke.commonutils.ui.utils.OnboardingContext
+import de.lemke.commonutils.ui.utils.advanceOnboarding
+import de.lemke.commonutils.ui.utils.isOnboardingStep
+import de.lemke.commonutils.ui.utils.onboardIfNeeded
+import de.lemke.commonutils.ui.utils.setupOnboarding
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue

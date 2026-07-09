@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import de.lemke.commonutils.data.SaveLocation
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

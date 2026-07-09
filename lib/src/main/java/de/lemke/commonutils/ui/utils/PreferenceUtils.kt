@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
 import android.app.ActivityManager
 import android.content.Context.ACTIVITY_SERVICE
@@ -33,6 +33,9 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreferenceCompat
+import de.lemke.commonutils.NoCoverage
+import de.lemke.commonutils.R
+import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.data.SettingsRepository
 import dev.oneuiproject.oneui.ktx.addRelativeLinksCard
 import dev.oneuiproject.oneui.ktx.onClick

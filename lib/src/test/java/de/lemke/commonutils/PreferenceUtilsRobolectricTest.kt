@@ -20,6 +20,7 @@ import android.os.Looper
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.ui.utils.deleteAppDataAndExit
 import io.kotest.matchers.booleans.shouldBeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

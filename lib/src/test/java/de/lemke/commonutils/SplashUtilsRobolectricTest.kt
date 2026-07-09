@@ -19,6 +19,7 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen
+import de.lemke.commonutils.ui.utils.configureCommonUtilsSplashScreen
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test

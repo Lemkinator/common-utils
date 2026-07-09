@@ -15,6 +15,10 @@
  */
 package de.lemke.commonutils
 
+import de.lemke.commonutils.ui.utils.urlEncode
+import de.lemke.commonutils.ui.utils.urlEncodeAmpersand
+import de.lemke.commonutils.ui.utils.withHttps
+import de.lemke.commonutils.ui.utils.withoutHttps
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 

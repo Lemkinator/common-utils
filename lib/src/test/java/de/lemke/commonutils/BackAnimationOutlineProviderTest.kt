@@ -18,6 +18,7 @@ package de.lemke.commonutils
 import android.graphics.Outline
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.BackAnimationOutlineProvider
 import io.kotest.matchers.floats.shouldBeExactly
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

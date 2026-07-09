@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
 import android.os.Bundle
 import android.os.SystemClock
@@ -21,6 +21,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
+import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.Badge
 import dev.oneuiproject.oneui.layout.NavDrawerLayout

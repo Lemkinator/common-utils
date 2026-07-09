@@ -22,6 +22,8 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.ui.utils.collectEvents
+import de.lemke.commonutils.ui.utils.collectState
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

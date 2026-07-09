@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
 import android.R.id.content
 import android.app.Activity
@@ -23,6 +23,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_SHORT
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.SESL_SNACKBAR_TYPE_SUGGESTION
+import de.lemke.commonutils.NoCoverage
 
 /** Shows a OneUI suggestive snackbar with [msg] string resource and an optional action. */
 @NoCoverage

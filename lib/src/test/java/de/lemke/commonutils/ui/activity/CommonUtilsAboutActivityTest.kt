@@ -32,7 +32,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.setupCommonUtilsAboutActivity
+import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
 import io.kotest.matchers.shouldBe

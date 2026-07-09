@@ -18,6 +18,7 @@ package de.lemke.commonutils
 import android.os.Looper
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import de.lemke.commonutils.ui.utils.suggestiveSnackBar
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.time.Duration

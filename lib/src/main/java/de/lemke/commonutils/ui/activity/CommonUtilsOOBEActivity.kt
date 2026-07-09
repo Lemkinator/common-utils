@@ -31,10 +31,10 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
-import de.lemke.commonutils.advanceOnboarding
 import de.lemke.commonutils.databinding.ActivityOobeBinding
-import de.lemke.commonutils.onboardingContext
-import de.lemke.commonutils.overrideFadeOpenTransition
+import de.lemke.commonutils.ui.utils.advanceOnboarding
+import de.lemke.commonutils.ui.utils.onboardingContext
+import de.lemke.commonutils.ui.utils.overrideFadeOpenTransition
 import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay

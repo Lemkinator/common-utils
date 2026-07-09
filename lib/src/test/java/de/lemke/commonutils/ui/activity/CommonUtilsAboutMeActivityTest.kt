@@ -22,7 +22,7 @@ import android.view.View
 import androidx.activity.BackEventCompat
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.R
-import de.lemke.commonutils.setupCommonUtilsAboutMeActivity
+import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.Dispatchers

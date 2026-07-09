@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -30,6 +30,9 @@ import android.os.Environment
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.NoCoverage
+import de.lemke.commonutils.R
+import de.lemke.commonutils.data.SaveLocation
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -39,45 +42,6 @@ private const val TAG = "ExportUtils"
 private const val MIME_TYPE_PNG = "image/png"
 private const val EXTENSION_PNG = ".png"
 private const val COMPRESS_QUALITY_MAX = 100
-
-/** Target directory for exported images. */
-enum class SaveLocation {
-    /** User selects the destination via the system document picker. */
-    CUSTOM,
-
-    /** Saves to [android.os.Environment.DIRECTORY_DOWNLOADS]. */
-    DOWNLOADS,
-
-    /** Saves to [android.os.Environment.DIRECTORY_PICTURES]. */
-    PICTURES,
-
-    /** Saves to [android.os.Environment.DIRECTORY_DCIM]. */
-    DCIM,
-    ;
-
-    /** Returns a user-facing label for this save location. */
-    fun toLocalizedString(context: Context): String =
-        when (this) {
-            CUSTOM -> context.getString(R.string.commonutils_custom)
-            DOWNLOADS -> context.getString(R.string.commonutils_downloads)
-            PICTURES -> context.getString(R.string.commonutils_pictures)
-            DCIM -> context.getString(R.string.commonutils_dcim)
-        }
-
-    companion object {
-        /** The default save location used when no preference has been set. */
-        val default = CUSTOM
-
-        /** Returns the [SaveLocation] whose name matches [string], or [default] if no match is found. */
-        fun fromStringOrDefault(string: String?): SaveLocation = entries.firstOrNull { it.toString() == string } ?: default
-
-        /** Array of [SaveLocation] name strings, suitable for use as `DropDownPreference` entry values. */
-        val entryValues = entries.map { it.name }.toTypedArray()
-
-        /** Returns an array of localized display strings for each [SaveLocation]. */
-        fun getLocalizedEntries(context: Context) = entries.map { it.toLocalizedString(context) }.toTypedArray()
-    }
-}
 
 /** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */
 fun Fragment.exportBitmap(

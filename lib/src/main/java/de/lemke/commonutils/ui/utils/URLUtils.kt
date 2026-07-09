@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -23,6 +23,7 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.R
 import java.net.URLEncoder
 
 private const val TAG = "URLUtils"

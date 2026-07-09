@@ -19,6 +19,9 @@ import android.app.Activity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
+import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
+import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
+import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

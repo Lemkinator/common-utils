@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
 import android.content.Context
 import android.util.Log
@@ -22,6 +22,7 @@ import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_T
 import com.google.android.play.core.install.model.UpdateAvailability.UNKNOWN
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
+import de.lemke.commonutils.NoCoverage
 
 private const val TAG = "AppUpdateManagerUtils"
 

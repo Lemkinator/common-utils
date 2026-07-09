@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import de.lemke.commonutils.ui.utils.toSafeFileName
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.string.shouldEndWith

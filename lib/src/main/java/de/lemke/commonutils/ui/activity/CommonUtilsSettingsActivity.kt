@@ -21,12 +21,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import dagger.hilt.android.AndroidEntryPoint
 import de.lemke.commonutils.R
-import de.lemke.commonutils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.databinding.ActivitySettingsCommonUtilsBinding
-import de.lemke.commonutils.initCommonUtilsPreferences
-import de.lemke.commonutils.prepareActivityTransformationTo
-import de.lemke.commonutils.setCustomBackAnimation
+import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
+import de.lemke.commonutils.ui.utils.initCommonUtilsPreferences
+import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
+import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import javax.inject.Inject
 
 /** Pre-built settings screen backed by a [PreferenceFragmentCompat] with common-utils defaults. */

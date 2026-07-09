@@ -26,6 +26,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.copyToClipboard
+import de.lemke.commonutils.ui.utils.getFileUri
+import de.lemke.commonutils.ui.utils.isSamsungQuickShareAvailable
+import de.lemke.commonutils.ui.utils.quickShare
+import de.lemke.commonutils.ui.utils.quickShareBitmap
+import de.lemke.commonutils.ui.utils.share
+import de.lemke.commonutils.ui.utils.shareApp
+import de.lemke.commonutils.ui.utils.shareBitmap
+import de.lemke.commonutils.ui.utils.shareText
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe

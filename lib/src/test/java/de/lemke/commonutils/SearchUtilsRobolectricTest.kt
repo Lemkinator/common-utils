@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.ui.utils.getCommonUtilsSearchListener
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull

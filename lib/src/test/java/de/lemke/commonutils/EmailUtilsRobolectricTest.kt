@@ -20,6 +20,9 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.sendEmail
+import de.lemke.commonutils.ui.utils.sendEmailAboutMe
+import de.lemke.commonutils.ui.utils.sendEmailHelp
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe

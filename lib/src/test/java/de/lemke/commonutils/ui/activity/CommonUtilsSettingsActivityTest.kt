@@ -26,9 +26,9 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
-import de.lemke.commonutils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.setupCommonUtilsSettingsActivity
+import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
+import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
@@ -76,7 +76,7 @@ class CommonUtilsSettingsActivityTest {
         hiltRule.inject()
         // addRelativeLinksCard requires a ListView not available under Robolectric.
         // mockkStatic intercepts the Kt-file static; any<> matches any receiver.
-        mockkStatic("de.lemke.commonutils.PreferenceUtilsKt")
+        mockkStatic("de.lemke.commonutils.ui.utils.PreferenceUtilsKt")
         every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
     }
 
@@ -302,7 +302,7 @@ class CommonUtilsSettingsActivitySdk29Test {
     @Before
     fun setUp() {
         hiltRule.inject()
-        mockkStatic("de.lemke.commonutils.PreferenceUtilsKt")
+        mockkStatic("de.lemke.commonutils.ui.utils.PreferenceUtilsKt")
         every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
     }
 

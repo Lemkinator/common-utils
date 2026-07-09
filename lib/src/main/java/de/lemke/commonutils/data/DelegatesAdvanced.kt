@@ -19,7 +19,6 @@ import android.content.SharedPreferences
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import androidx.core.content.edit
-import de.lemke.commonutils.SaveLocation
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 

@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.toast
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

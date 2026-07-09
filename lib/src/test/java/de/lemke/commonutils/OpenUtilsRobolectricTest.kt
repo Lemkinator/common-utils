@@ -23,6 +23,10 @@ import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.areAppLocalSettingsSupported
+import de.lemke.commonutils.ui.utils.openApp
+import de.lemke.commonutils.ui.utils.openAppLocaleSettings
+import de.lemke.commonutils.ui.utils.openApplicationSettings
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe

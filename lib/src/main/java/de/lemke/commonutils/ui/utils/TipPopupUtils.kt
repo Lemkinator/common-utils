@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
+import de.lemke.commonutils.NoCoverage
+import de.lemke.commonutils.R
 import de.lemke.commonutils.ui.widget.DimmingView
 import de.lemke.commonutils.ui.widget.TouchBlockingView
 import dev.oneuiproject.oneui.ktx.activity

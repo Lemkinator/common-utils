@@ -44,10 +44,10 @@ import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.databinding.ActivityAboutBinding
-import de.lemke.commonutils.openApp
-import de.lemke.commonutils.prepareActivityTransformationBetween
-import de.lemke.commonutils.setCustomBackAnimation
-import de.lemke.commonutils.transformToActivity
+import de.lemke.commonutils.ui.utils.openApp
+import de.lemke.commonutils.ui.utils.prepareActivityTransformationBetween
+import de.lemke.commonutils.ui.utils.setCustomBackAnimation
+import de.lemke.commonutils.ui.utils.transformToActivity
 import dev.oneuiproject.oneui.ktx.onMultiClick
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoConnection
