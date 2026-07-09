@@ -219,8 +219,11 @@ kover {
                     // generate SAM-wrapper classes/methods excluded here; these fire only via live
                     // Play Store callbacks and cannot be triggered in JVM unit tests.
                     $$"*CommonUtilsAboutActivity$onCreate*",
-                    // SettingsRepositoryKt: @get:NoCoverage on `commonUtilsSettings` excludes instruction
-                    // miss, but Kover 0.9.x does not exclude branch miss for property-getter annotations.
+                    // SettingsRepositoryKt: applyDarkMode() is now the only top-level declaration in this
+                    // file (the old commonUtilsSettings global + its @get:NoCoverage annotation are gone).
+                    // Its when-branch is fully exercised by ApplyDarkModeTest, but this file class remains
+                    // subject to the same Kover/JaCoCo branch-misattribution flakiness described for
+                    // URLUtilsKt above (order-dependent JIT/classloading, not a real coverage gap).
                     "*SettingsRepositoryKt*",
                     // AutoClearedUtilsKt$autoCleared$1: the DESTROYED lifecycle branch in getValue
                     // requires a re-entrant call during Fragment.onDestroyView - not safely reproducible

@@ -19,6 +19,9 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
 import com.airbnb.lottie.LottieAnimationView
+import de.lemke.commonutils.ui.utils.DEFAULT_LOTTIE_DELAY
+import de.lemke.commonutils.ui.utils.launchDelayedPlay
+import de.lemke.commonutils.ui.utils.play
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.Test
