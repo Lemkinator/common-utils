@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.widget
 
 import android.content.Context
 import androidx.annotation.Keep
@@ -27,7 +27,7 @@ import androidx.picker.model.viewdata.AppInfoViewData
 import androidx.picker.model.viewdata.ViewData
 
 /**
- * [AppItemStrategy] for `SeslAppPickerGridView` (`app:strategy="de.lemke.commonutils.AppPickerStrategy"`
+ * [AppItemStrategy] for `SeslAppPickerGridView` (`app:strategy="de.lemke.commonutils.ui.widget.AppPickerStrategy"`
  * in layout XML) that makes every app entry searchable by both its label and package name, so users can
  * find an app whether they remember its display name or its package identifier.
  */

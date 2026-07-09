@@ -25,6 +25,8 @@ import androidx.picker.model.AppInfo
 import androidx.picker.model.AppInfoDataImpl
 import androidx.picker.model.viewdata.AppInfoViewData
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.widget.AppPickerStrategy
+import de.lemke.commonutils.ui.widget.getInstalledAppsForPicker
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
