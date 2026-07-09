@@ -17,7 +17,6 @@ package de.lemke.commonutils.domain
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import de.lemke.commonutils.AppStartResult
 import de.lemke.commonutils.data.SettingsRepository
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach

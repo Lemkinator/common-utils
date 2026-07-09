@@ -18,8 +18,6 @@ package de.lemke.commonutils.domain
 import android.content.Context
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
-import de.lemke.commonutils.AppStart
-import de.lemke.commonutils.AppStartResult
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import javax.inject.Inject

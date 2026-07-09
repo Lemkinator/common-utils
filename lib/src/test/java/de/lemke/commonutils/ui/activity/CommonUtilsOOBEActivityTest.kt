@@ -20,9 +20,9 @@ import android.os.Looper
 import android.text.Spanned
 import android.text.style.ClickableSpan
 import android.widget.TextView
-import de.lemke.commonutils.AppStartResult
 import de.lemke.commonutils.OnboardingContext
 import de.lemke.commonutils.R
+import de.lemke.commonutils.domain.AppStartResult
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test

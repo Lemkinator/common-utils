@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.domain
 
 /** Result category of an app launch relative to the previously recorded version. */
 enum class AppStartResult {

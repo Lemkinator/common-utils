@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.domain.AppStartResult
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue

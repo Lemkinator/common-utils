@@ -22,6 +22,8 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.domain.AppStart
+import de.lemke.commonutils.domain.AppStartResult
 import de.lemke.commonutils.domain.CheckAppStartUseCase
 import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 import kotlinx.parcelize.Parcelize
