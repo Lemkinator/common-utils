@@ -33,7 +33,7 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreferenceCompat
-import de.lemke.commonutils.data.commonUtilsSettings
+import de.lemke.commonutils.data.SettingsRepository
 import dev.oneuiproject.oneui.ktx.addRelativeLinksCard
 import dev.oneuiproject.oneui.ktx.onClick
 import dev.oneuiproject.oneui.ktx.onNewValue
@@ -58,12 +58,12 @@ fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
 }
 
 /** Initializes the standard common-utils preferences (dark mode, save location, language, dev options, more info). */
-fun PreferenceFragmentCompat.initCommonUtilsPreferences() {
-    initDarkMode()
+fun PreferenceFragmentCompat.initCommonUtilsPreferences(settings: SettingsRepository) {
+    initDarkMode(settings)
     initImageSaveLocation()
     initMoreInfo()
     findPreference<PreferenceCategory>(getString(R.string.commonutils_preference_key_dev_options))?.apply {
-        isVisible = commonUtilsSettings.devModeEnabled
+        isVisible = settings.devModeEnabled
     } ?: Log.w(TAG, "dev options preference category is null, skipping initialization")
 
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_delete_app_data))?.apply {
@@ -144,23 +144,23 @@ private suspend fun Fragment.deleteAppData() {
 }
 
 @NoCoverage
-private fun PreferenceFragmentCompat.initDarkMode() {
+private fun PreferenceFragmentCompat.initDarkMode(settings: SettingsRepository) {
     val darkModePref = findPreference<HorizontalRadioPreference>(getString(R.string.commonutils_preference_key_dark_mode))
     val autoDarkModePref = findPreference<SwitchPreferenceCompat>(getString(R.string.commonutils_preference_key_auto_dark_mode))
     if (autoDarkModePref == null || darkModePref == null) {
         Log.e(TAG, "autoDarkModePref or darkModePref is null, skipping initialization")
     } else {
-        darkModePref.isEnabled = !commonUtilsSettings.autoDarkMode
-        darkModePref.value = if (commonUtilsSettings.darkMode) "1" else "0"
+        darkModePref.isEnabled = !settings.autoDarkMode
+        darkModePref.value = if (settings.darkMode) "1" else "0"
         darkModePref.setDividerEnabled(false)
         darkModePref.setTouchEffectEnabled(false)
-        autoDarkModePref.isChecked = commonUtilsSettings.autoDarkMode
+        autoDarkModePref.isChecked = settings.autoDarkMode
         autoDarkModePref.onNewValue {
             darkModePref.isEnabled = !it
             if (it) {
                 setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
             } else {
-                if (commonUtilsSettings.darkMode) {
+                if (settings.darkMode) {
                     setDefaultNightMode(MODE_NIGHT_YES)
                 } else {
                     setDefaultNightMode(MODE_NIGHT_NO)
@@ -168,7 +168,7 @@ private fun PreferenceFragmentCompat.initDarkMode() {
             }
         }
         darkModePref.onNewValue {
-            commonUtilsSettings.darkMode = it == "1"
+            settings.darkMode = it == "1"
             setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
         }
     }

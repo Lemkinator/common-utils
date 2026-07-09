@@ -21,7 +21,8 @@ import android.os.Parcelable
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
-import de.lemke.commonutils.data.commonUtilsSettings
+import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.domain.CheckAppStartUseCase
 import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 import kotlinx.parcelize.Parcelize
 
@@ -96,10 +97,11 @@ internal val Intent.onboardingContext: OnboardingContext?
 private fun AppCompatActivity.commitAppStart(
     versionCode: Int,
     versionName: String,
+    settings: SettingsRepository,
 ) {
-    commonUtilsSettings.lastVersionCode = versionCode
-    commonUtilsSettings.lastVersionName = versionName
-    commonUtilsSettings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
+    settings.lastVersionCode = versionCode
+    settings.lastVersionName = versionName
+    settings.acceptedTosVersion = resources.getInteger(R.integer.commonutils_tos_version)
 }
 
 /**
@@ -115,6 +117,7 @@ private fun AppCompatActivity.commitAppStart(
 fun AppCompatActivity.onboardIfNeeded(
     versionCode: Int,
     versionName: String,
+    settings: SettingsRepository,
     allowSkip: Boolean = false,
 ): AppStart? {
     val ctx = intent.onboardingContext
@@ -133,7 +136,7 @@ fun AppCompatActivity.onboardIfNeeded(
                 tosVersion,
             ).also { Log.d(TAG, "onboardIfNeeded (post-onboarding): $it") }
         } else {
-            val freshAppStart = checkAppStart(versionCode, versionName)
+            val freshAppStart = CheckAppStartUseCase(this, settings)(versionCode, versionName)
             if (freshAppStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))) {
                 startActivity(
                     Intent(this, CommonUtilsOOBEActivity::class.java).putOnboardingContext(
@@ -154,7 +157,7 @@ fun AppCompatActivity.onboardIfNeeded(
             }
             freshAppStart
         }
-    commitAppStart(versionCode, versionName)
+    commitAppStart(versionCode, versionName, settings)
     overrideFadeOpenTransition()
     return appStart
 }

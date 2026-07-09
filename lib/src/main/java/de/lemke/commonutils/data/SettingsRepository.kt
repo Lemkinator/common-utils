@@ -15,13 +15,11 @@
  */
 package de.lemke.commonutils.data
 
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
-import androidx.preference.PreferenceManager
 import de.lemke.commonutils.SaveLocation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
@@ -30,9 +28,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
-
-/** Global singleton for accessing common-utils app settings; must be initialized via [initCommonUtilsSettingsAndSetDarkMode]. */
-lateinit var commonUtilsSettings: SettingsRepository
 
 /** SharedPreferences-backed repository for common-utils app settings; open so apps can add their own fields via subclassing. */
 open class SettingsRepository(
@@ -79,30 +74,11 @@ open class SettingsRepository(
         }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, snapshot())
 }
 
-/**
- * Constructs a [SettingsRepository] (or subclass) from the default shared preferences and assigns
- * [commonUtilsSettings]. Pure construction — no side effects.
- */
-fun <T : SettingsRepository> Context.createCommonUtilsSettings(factory: (SharedPreferences) -> T): T =
-    factory(PreferenceManager.getDefaultSharedPreferences(this)).also { commonUtilsSettings = it }
-
-/** Applies [commonUtilsSettings]'s dark mode setting to the app's default night mode. */
+/** Applies this [SettingsRepository]'s dark mode setting to the app's default night mode. */
 fun SettingsRepository.applyDarkMode() {
     when {
         autoDarkMode -> setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
         darkMode -> setDefaultNightMode(MODE_NIGHT_YES)
         else -> setDefaultNightMode(MODE_NIGHT_NO)
     }
-}
-
-/**
- * Constructs a [SettingsRepository] subclass via [factory], assigns it to [commonUtilsSettings],
- * and applies the saved dark mode setting.
- */
-fun <T : SettingsRepository> Context.initCommonUtilsSettingsAndSetDarkMode(factory: (SharedPreferences) -> T): T =
-    createCommonUtilsSettings(factory).also { it.applyDarkMode() }
-
-/** Initializes [commonUtilsSettings] from the default shared preferences and applies the saved dark mode setting. */
-fun Context.initCommonUtilsSettingsAndSetDarkMode() {
-    initCommonUtilsSettingsAndSetDarkMode(::SettingsRepository)
 }

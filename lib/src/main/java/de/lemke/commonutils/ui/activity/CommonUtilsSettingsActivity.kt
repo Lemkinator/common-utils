@@ -19,14 +19,18 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
+import dagger.hilt.android.AndroidEntryPoint
 import de.lemke.commonutils.R
 import de.lemke.commonutils.addShareAppAndRateRelativeLinksCard
+import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.databinding.ActivitySettingsCommonUtilsBinding
 import de.lemke.commonutils.initCommonUtilsPreferences
 import de.lemke.commonutils.prepareActivityTransformationTo
 import de.lemke.commonutils.setCustomBackAnimation
+import javax.inject.Inject
 
 /** Pre-built settings screen backed by a [PreferenceFragmentCompat] with common-utils defaults. */
+@AndroidEntryPoint
 class CommonUtilsSettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsCommonUtilsBinding
 
@@ -51,7 +55,11 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
     }
 
     /** [PreferenceFragmentCompat] that inflates the configured preference XML resources. */
+    @AndroidEntryPoint
     class SettingsFragment : PreferenceFragmentCompat() {
+        @Inject
+        lateinit var settings: SettingsRepository
+
         override fun onCreatePreferences(
             bundle: Bundle?,
             str: String?,
@@ -61,7 +69,7 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
 
         override fun onCreate(bundle: Bundle?) {
             super.onCreate(bundle)
-            initCommonUtilsPreferences()
+            initCommonUtilsPreferences(settings)
         }
 
         override fun onViewCreated(
