@@ -125,7 +125,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
 
     private fun setVersionText() {
         val version: TextView = binding.appInfoLayout.findViewById(designR.id.app_info_version)
-        lifecycleScope.launch { setVersionTextView(version) }
+        setVersionTextView(version)
         version.onMultiClick {
             settings.devModeEnabled = !settings.devModeEnabled
             setVersionTextView(version)

@@ -139,7 +139,7 @@ fun AppCompatActivity.onboardIfNeeded(
                 tosVersion,
             ).also { Log.d(TAG, "onboardIfNeeded (post-onboarding): $it") }
         } else {
-            val freshAppStart = CheckAppStartUseCase(this, settings)(versionCode, versionName)
+            val freshAppStart = CheckAppStartUseCase(applicationContext, settings)(versionCode, versionName)
             if (freshAppStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))) {
                 startActivity(
                     Intent(this, CommonUtilsOOBEActivity::class.java).putOnboardingContext(
