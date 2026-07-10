@@ -27,13 +27,13 @@ import io.kotest.matchers.string.shouldBeEmpty
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SettingsRepositoryTest {
     private lateinit var prefs: SharedPreferences
@@ -41,7 +41,7 @@ class SettingsRepositoryTest {
 
     private fun reload() = SettingsRepository(prefs)
 
-    @BeforeEach
+    @Before
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         prefs = ctx.getSharedPreferences("settings_test", Context.MODE_PRIVATE)
@@ -138,12 +138,12 @@ class SettingsRepositoryTest {
     }
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class ApplyDarkModeTest {
     private lateinit var prefs: SharedPreferences
 
-    @BeforeEach
+    @Before
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         prefs = ctx.getSharedPreferences("apply_dark_mode_test", Context.MODE_PRIVATE)
@@ -186,12 +186,12 @@ private class FlowSettings(
     fun devModeFlow(scope: CoroutineScope): StateFlow<Boolean> = settingsFlow(scope) { devModeEnabled }
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SettingsFlowTest {
     private lateinit var prefs: SharedPreferences
 
-    @BeforeEach
+    @Before
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         prefs = ctx.getSharedPreferences("settings_flow_test", Context.MODE_PRIVATE)

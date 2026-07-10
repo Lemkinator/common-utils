@@ -35,23 +35,23 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 /** Tests that Fragment overloads correctly delegate to their Context counterparts. */
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class FragmentExtensionsRobolectricTest {
     private lateinit var fragment: Fragment
 
-    @BeforeEach
+    @Before
     fun setUp() {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
         fragment = Fragment()
@@ -148,7 +148,7 @@ class FragmentExtensionsRobolectricTest {
 }
 
 /** Tests [openAppLocaleSettings] Fragment overload - requires API 33+. */
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class OpenAppLocaleSettingsApi33Test {
     @Test
@@ -165,7 +165,7 @@ class OpenAppLocaleSettingsApi33Test {
 }
 
 /** Tests [openAppLocaleSettings] Fragment overload below API 33 - shows error toast and returns false. */
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32])
 class OpenAppLocaleSettingsApi32Test {
     @Test

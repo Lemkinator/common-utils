@@ -30,20 +30,20 @@ import de.lemke.commonutils.ui.widget.getInstalledAppsForPicker
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class AppPickerUtilsTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
     @Suppress("DEPRECATION")
-    @BeforeEach
+    @Before
     fun registerFakeLauncherApp() {
         val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         shadowOf(context.packageManager).setResolveInfosForIntent(

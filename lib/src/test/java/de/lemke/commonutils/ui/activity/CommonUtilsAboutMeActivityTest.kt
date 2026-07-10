@@ -29,19 +29,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class CommonUtilsAboutMeActivityTest {
-    @BeforeEach
+    @Before
     fun setUp() {
         setupCommonUtilsAboutMeActivity()
     }
@@ -362,10 +362,10 @@ class CommonUtilsAboutMeActivityTest {
     }
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
 class CommonUtilsAboutMeActivitySdk29Test {
-    @BeforeEach
+    @Before
     fun setUp() {
         setupCommonUtilsAboutMeActivity()
     }

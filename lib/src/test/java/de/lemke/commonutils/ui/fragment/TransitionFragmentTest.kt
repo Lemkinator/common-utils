@@ -19,18 +19,18 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.transition.MaterialSharedAxis
 import io.kotest.matchers.shouldNotBe
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 internal class ConcreteTransitionFragment : TransitionFragment(0)
 
 internal class ConcreteSharedAxisFragment : TransitionFragmentSharedAxis(0, MaterialSharedAxis.X)
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class TransitionFragmentTest {
     private fun activity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()

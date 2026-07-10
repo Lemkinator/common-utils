@@ -19,18 +19,18 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
 class DelegatesAdvancedApi29Test {
     private lateinit var prefs: SharedPreferences
 
-    @BeforeEach
+    @Before
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         prefs = ctx.getSharedPreferences("test_prefs_api29", Context.MODE_PRIVATE)

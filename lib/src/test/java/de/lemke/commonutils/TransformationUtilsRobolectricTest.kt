@@ -39,14 +39,14 @@ import de.lemke.commonutils.ui.utils.transformToActivity
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class TransformationUtilsRobolectricTest {
     private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
@@ -284,7 +284,7 @@ class TransformationUtilsRobolectricTest {
     }
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class TransformationUtilsSdk33RobolectricTest {
     private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()

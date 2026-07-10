@@ -45,16 +45,16 @@ import io.mockk.spyk
 import io.mockk.unmockkAll
 import java.io.File
 import java.io.OutputStream
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SharingUtilsRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
@@ -123,7 +123,7 @@ class SharingUtilsRobolectricTest {
 }
 
 /** Tests for bitmap and file sharing paths that require mocking [FileProvider]. */
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SharingUtilsBitmapRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
@@ -132,13 +132,13 @@ class SharingUtilsBitmapRobolectricTest {
 
     private val fakeUri: Uri = Uri.parse("content://de.lemke.test.fileprovider/share/test.png")
 
-    @BeforeEach
+    @Before
     fun setUp() {
         mockkStatic(FileProvider::class)
         every { FileProvider.getUriForFile(any(), any(), any()) } returns fakeUri
     }
 
-    @AfterEach
+    @After
     fun tearDown() {
         unmockkAll()
     }
