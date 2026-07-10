@@ -26,7 +26,6 @@ junit-jupiter = "6.1.1"
 junit4 = "4.13.2"
 konsist = "0.17.3"
 kotest = "6.2.2"
-kotest-robolectric = "0.9.0"
 kotlin = "2.4.0"
 kover = "0.9.8"
 ksp = "2.3.9"
@@ -60,7 +59,6 @@ junit-vintage-engine = { group = "org.junit.vintage", name = "junit-vintage-engi
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
-kotest-extensions-robolectric = { module = "tech.apter.junit5.jupiter:robolectric-extension", version.ref = "kotest-robolectric" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }

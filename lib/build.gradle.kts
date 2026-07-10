@@ -59,10 +59,7 @@ android {
             all { test ->
                 test.useJUnitPlatform()
                 test.maxHeapSize = "4096m"
-                test.jvmArgs(
-                    "-Djunit.platform.launcher.interceptors.enabled=true",
-                    "-XX:+EnableDynamicAgentLoading",
-                )
+                test.jvmArgs("-XX:+EnableDynamicAgentLoading")
                 test.systemProperty("robolectric.graphicsMode", "NATIVE")
             }
         }
@@ -94,7 +91,6 @@ dependencies {
     testImplementation(libs.konsist)
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.kotest.assertions.core)
-    testImplementation(libs.kotest.extensions.robolectric)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockk)
@@ -103,10 +99,9 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
 
-    // JUnit4 island: HiltAndroidRule/@HiltAndroidTest are JUnit4-only, needed by the two
-    // CommonUtils{About,Settings}ActivityTest classes now that those activities are @AndroidEntryPoint.
-    // junit-vintage-engine lets the JUnit Platform (useJUnitPlatform() above) discover and run them
-    // alongside the rest of this module's Kotest/JUnit5 suite.
+    // JUnit4 island: Robolectric has no native JUnit5 support, and HiltAndroidRule/@HiltAndroidTest
+    // are JUnit4-only. junit-vintage-engine lets the JUnit Platform (useJUnitPlatform() above)
+    // discover and run them alongside the rest of this module's Kotest/JUnit5 suite.
     testImplementation(libs.junit4)
     testImplementation(libs.hilt.android.testing)
     testRuntimeOnly(libs.junit.vintage.engine)
