@@ -160,7 +160,7 @@ class OnboardingUtilsRobolectricTest {
 
     @Test
     fun `onboardIfNeeded with allowSkip and skip extra bypasses OOBE and returns AppStart`() {
-        // shouldShowOOBE=true (fresh install) but allowSkip=true + EXTRA_SKIP_ONBOARDING=true → skip
+        // shouldShowOOBE=true (fresh install), but allowSkip=true + EXTRA_SKIP_ONBOARDING=true → skip
         val intent = Intent().apply { putExtra("commonUtilsSkipOnboarding", true) }
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent).setup()
         val result = controller.get().onboardIfNeeded(1, "1.0", settings, allowSkip = true)

@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 private const val TAG = "CheckAppStartUseCase"
 
-/** Checks whether this is the first run, a version upgrade, or a normal start. Version info is committed by the caller. */
+/** Checks whether this is the first run, a version upgrade, or a normal start. The caller commits version info. */
 class CheckAppStartUseCase @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val settings: SettingsRepository,

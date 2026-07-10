@@ -27,7 +27,7 @@ import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 /**
  * Robolectric-backed (not a mocked [Context]/[Resources]): [CheckAppStartUseCase] calls
- * `android.util.Log.d(...)` on every path, which throws under a plain, un-shadowed JVM `Log` stub
+ * `android.util.Log.d(...)` on every path, which throws under a plain, unshadowed JVM `Log` stub
  * — a real Robolectric context is the simplest way to exercise it end-to-end.
  */
 @ExtendWith(RobolectricExtension::class)
