@@ -45,6 +45,7 @@ fun setupCommonUtilsAboutActivity(
 ) {
     CommonUtilsAboutActivity.apply {
         this.appVersion = appVersion
+        this.getAppVersion = suspend { "" }
         this.optionalText = optionalText
     }
 }
@@ -55,6 +56,7 @@ fun setupCommonUtilsAboutActivity(
     optionalText: SpannableString? = null,
 ) {
     CommonUtilsAboutActivity.apply {
+        this.appVersion = ""
         this.getAppVersion = getAppVersion
         this.optionalText = optionalText
     }

@@ -22,18 +22,36 @@ import de.lemke.commonutils.ui.utils.suggestiveSnackBar
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.time.Duration
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.After
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 import com.google.android.material.R as MaterialR
 
-@ExtendWith(RobolectricExtension::class)
+/**
+ * com.google.android.material.snackbar.SnackbarManager is a real static singleton, not a
+ * Robolectric shadow — Robolectric's per-test reset never touches it. Snackbar
+ * show/auto-dismiss/dismiss-animation tasks left pending by one test accumulate and corrupt
+ * SnackbarManager state for whichever test (in this class, the sibling class below, or any other
+ * class — Robolectric reuses sandboxes across classes with identical @Config) runs next. Drain
+ * until the queue is empty as `@After` cleanup so no test ever leaves state behind.
+ */
+private fun drainStaleLooperTasks() {
+    val shadow = shadowOf(Looper.getMainLooper())
+    while (shadow.lastScheduledTaskTime != Duration.ZERO) {
+        shadow.runToEndOfTasks()
+    }
+}
+
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SnackBarUtilsActivityRobolectricTest {
+    @After
+    fun tearDown() = drainStaleLooperTasks()
+
     private fun setupActivity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
 
     @Test
@@ -101,19 +119,11 @@ class SnackBarUtilsActivityRobolectricTest {
     }
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SnackBarUtilsFragmentRobolectricTest {
-    @BeforeEach
-    fun drainStaleLooperTasks() {
-        // RobolectricExtension reuses the main Looper across tests in the same class.
-        // Snackbar show/auto-dismiss/dismiss-animation tasks left by previous tests
-        // accumulate and corrupt SnackbarManager state. Drain until the queue is empty.
-        val shadow = shadowOf(Looper.getMainLooper())
-        while (shadow.lastScheduledTaskTime != Duration.ZERO) {
-            shadow.runToEndOfTasks()
-        }
-    }
+    @After
+    fun tearDown() = drainStaleLooperTasks()
 
     private fun setupFragment(): ViewFragment {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()

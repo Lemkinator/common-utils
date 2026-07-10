@@ -33,27 +33,30 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class OnboardingUtilsRobolectricTest {
     private lateinit var settings: SettingsRepository
 
     private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
 
-    @BeforeEach
+    @Before
     fun initSettings() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
         val prefs = PreferenceManager.getDefaultSharedPreferences(ctx)
         prefs.edit().clear().commit()
         settings = SettingsRepository(prefs)
+        // Onboarding.steps is a JVM-static set by setupOnboarding() — reset it so tests that don't
+        // call setupOnboarding themselves don't inherit a value left by a previous test.
+        setupOnboarding(emptyList())
     }
 
     private fun onboardingContext(
