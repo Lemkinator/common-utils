@@ -22,41 +22,51 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/`.
 
-**Test stack**: Kotest 6 (`ShouldSpec` style) for pure Kotlin tests; JUnit 5 `@Test` +
-`tech.apter.junit5.jupiter:robolectric-extension` for Android/Robolectric tests. Konsist
-for architecture rules. Plus a small **JUnit 4 island** (see below) for the two
-`@AndroidEntryPoint` activities' tests.
+**Test stack**: Kotest 6 (`ShouldSpec` style) for pure Kotlin tests; plain JUnit 4
+(`@RunWith(RobolectricTestRunner::class)`) for every Android/Robolectric test. Konsist
+for architecture rules.
 
-**Robolectric + JUnit 5**: uses `tech.apter.junit5.jupiter:robolectric-extension`
-(`RobolectricExtension`) — JUnit 5 native, no vintage engine needed. This is the
-default for every test in the module *except* the two below.
+**Robolectric + JUnit 5**: Robolectric has no native JUnit 5 support, so every Robolectric
+test in this module runs on plain JUnit 4 via `org.junit.vintage:junit-vintage-engine` on
+`testRuntimeOnly`, which lets the JUnit Platform (`useJUnitPlatform()`) discover and run
+them alongside the rest of the module's Kotest/JUnit 5 suite — mirrors GetIcon's own
+long-standing pattern (`app/src/test/java/de/lemke/geticon/ui/*`) exactly, including for
+the two `@AndroidEntryPoint` activities' `@HiltAndroidTest`/`HiltAndroidRule` tests
+(JUnit 4-only either way). This repo previously bridged Robolectric onto JUnit 5 via the
+experimental `tech.apter.junit5.jupiter:robolectric-extension`; it was reverted because
+that bridge only isolates state **per test class**, not per test method, which let shared
+Robolectric/Android state leak between a class's own test methods (worked around at the
+time by hand-draining the main Looper, or collapsing multiple tests into one) and,
+because Robolectric reuses its sandbox classloader across test classes with identical
+`@Config`, potentially between unrelated classes too. Plain `RobolectricTestRunner`
+resets Application/Looper state before every test method, which removed the need for
+those workarounds.
 
-**JUnit 4 island (Hilt activities only)**: `CommonUtilsAboutActivity`/
-`CommonUtilsSettingsActivity` (+ nested `SettingsFragment`) are `@AndroidEntryPoint`
-with `@Inject lateinit var settings: SettingsRepository`. Their tests
-(`CommonUtilsAboutActivityTest`, `CommonUtilsSettingsActivityTest`) need
-`@HiltAndroidTest`/`HiltAndroidRule`, which are JUnit 4-only — incompatible with
-`RobolectricExtension`. These two files alone use
-`@RunWith(RobolectricTestRunner::class)` + JUnit 4 `org.junit.Test`/`org.junit.Before`,
-mirroring GetIcon's own proven pattern (`app/src/test/java/de/lemke/geticon/ui/*`).
-`org.junit.vintage:junit-vintage-engine` on `testRuntimeOnly` lets the JUnit Platform
-(`useJUnitPlatform()`) discover and run them alongside the rest of the Kotest/JUnit 5
-suite — do not extend this island to any other test file; everything else stays
-JUnit 5/Kotest. Every `@HiltAndroidTest` Robolectric activity test must destroy its
-launched `ActivityController` in `@After` — `AppCompatDelegate.setDefaultNightMode()`
-recreates every live `AppCompatActivity` process-wide (including ones left over from a
-previous test class), and a leaked activity's Hilt injection then fails against its
-now-dead test component.
+Every `@HiltAndroidTest` Robolectric activity test must destroy its launched
+`ActivityController` in `@After` — `AppCompatDelegate.setDefaultNightMode()` recreates
+every live `AppCompatActivity` process-wide (including ones left over from a previous test
+class), and a leaked activity's Hilt injection then fails against its now-dead test
+component. More generally: Robolectric only resets its **own** shadowed framework
+statics between tests — a real third-party static singleton (e.g.
+`com.google.android.material.snackbar.SnackbarManager`, see `SnackBarUtilsRobolectricTest`)
+is not a shadow and keeps whatever state a previous test left it in. Drain/reset any such
+singleton in `@After`, not just defensively in `@Before`.
+
+**Test order independence**: `io.kotest.provided.ProjectConfig` sets
+`specExecutionOrder = SpecExecutionOrder.Random`, so Kotest spec execution order varies
+run to run — this is Kotest's own engine (`kotest-runner-junit5`), separate from Jupiter,
+so it does not affect the JUnit 4/Robolectric classes below. Those run via
+`junit-vintage-engine`, which has no native class-order-randomization hook exposed
+through Gradle; order-independence there is enforced by test hygiene (no shared mutable
+state left behind) rather than by a randomizer — verified by repeated full-suite runs.
 
 **`@NoCoverage` on `inline fun`**: Kover maps inline call-site coverage back to the original
-definition via JaCoCo SMAP data. Under JUnit 5 + `RobolectricExtension`, Robolectric's class
-loader initialises after the JaCoCo JVM agent — test classes are never instrumented, so inlined
-call-site instructions are invisible to coverage and definition-site phantom stubs remain
-uncovered. This requires `@NoCoverage` on all `inline fun` that are never called non-inline.
-`crossinline` default-value lambdas always need `@NoCoverage` regardless of test runner: the
-default compiles to a definition-site private static method that is never invoked (the default
-is inlined at every call site). Apps using JUnit 4 + `RobolectricTestRunner` (e.g. the
-OneUI-Sample-App) don't have this problem and carry far fewer `@NoCoverage` annotations.
+definition via JaCoCo SMAP data. This requires `@NoCoverage` on all `inline fun` that are
+never called non-inline, and unconditionally on `crossinline` default-value lambdas (the
+default compiles to a definition-site private static method that's never invoked, since the
+default is inlined at every call site regardless of runner). These annotations predate the
+JUnit 4 migration above and haven't been re-audited against the new runner — some may now
+be unnecessary; treat that as an open follow-up, not a settled fact.
 
 ## Pre-commit Hook
 
