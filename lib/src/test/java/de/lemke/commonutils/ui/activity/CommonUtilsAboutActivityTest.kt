@@ -111,13 +111,6 @@ class CommonUtilsAboutActivityTest {
     }
 
     @Test
-    fun `activity launches with blank appVersion - getAppVersion suspend lambda is called`() {
-        setupCommonUtilsAboutActivity(getAppVersion = suspend { "2.0.0" })
-        val activity = launchActivity()
-        activity shouldNotBe null
-    }
-
-    @Test
     fun `activity launches with devModeEnabled - dev suffix path executed`() {
         fakeSettings.devModeEnabled = true
         val activity = launchActivity()

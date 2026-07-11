@@ -22,10 +22,7 @@ import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -48,11 +45,10 @@ class ActivityUtilsRobolectricTest {
     }
 
     @Test
-    fun `setupCommonUtilsAboutActivity string version sets appVersion and resets getAppVersion`() {
+    fun `setupCommonUtilsAboutActivity sets appVersion`() {
         setupCommonUtilsAboutActivity("1.2.3")
         CommonUtilsAboutActivity.appVersion shouldBe "1.2.3"
         CommonUtilsAboutActivity.optionalText shouldBe null
-        runBlocking { CommonUtilsAboutActivity.getAppVersion() shouldBe "" }
     }
 
     @Test
@@ -62,14 +58,5 @@ class ActivityUtilsRobolectricTest {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         CommonUtilsAboutMeActivity.onShareApp.invoke(activity)
         called shouldBe true
-    }
-
-    @Test
-    fun `setupCommonUtilsAboutActivity suspend version sets getAppVersion and resets appVersion`() {
-        val getVersion: suspend () -> String = { "2.0.0" }
-        setupCommonUtilsAboutActivity(getVersion)
-        CommonUtilsAboutActivity.getAppVersion shouldNotBe null
-        CommonUtilsAboutActivity.optionalText.shouldBeNull()
-        CommonUtilsAboutActivity.appVersion shouldBe ""
     }
 }

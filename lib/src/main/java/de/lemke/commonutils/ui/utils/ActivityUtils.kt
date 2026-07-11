@@ -45,19 +45,6 @@ fun setupCommonUtilsAboutActivity(
 ) {
     CommonUtilsAboutActivity.apply {
         this.appVersion = appVersion
-        this.getAppVersion = suspend { "" }
-        this.optionalText = optionalText
-    }
-}
-
-/** Configures the About activity with a suspend function that resolves the version string at display time and optional extra text. */
-fun setupCommonUtilsAboutActivity(
-    getAppVersion: suspend () -> String,
-    optionalText: SpannableString? = null,
-) {
-    CommonUtilsAboutActivity.apply {
-        this.appVersion = ""
-        this.getAppVersion = getAppVersion
         this.optionalText = optionalText
     }
 }

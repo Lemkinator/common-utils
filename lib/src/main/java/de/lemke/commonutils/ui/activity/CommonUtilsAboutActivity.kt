@@ -29,7 +29,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -55,7 +54,6 @@ import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoUpdate
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NotUpdatable
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.UpdateAvailable
 import javax.inject.Inject
-import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Pre-built About screen that shows the app version, optional text, and an in-app update check. */
@@ -133,12 +131,7 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
     }
 
     private fun setVersionTextView(textView: TextView) {
-        lifecycleScope.launch {
-            appVersion.ifBlank { getAppVersion() }.let { appVersion ->
-                textView.text =
-                    getString(designR.string.oui_des_version_info, appVersion + if (settings.devModeEnabled) " (dev)" else "")
-            }
-        }
+        textView.text = getString(designR.string.oui_des_version_info, appVersion + if (settings.devModeEnabled) " (dev)" else "")
     }
 
     private fun setOptionalText() {
@@ -206,11 +199,8 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "CommonUtilsAboutActivity"
 
-        /** Static version string displayed in the about screen; takes precedence if non-empty. */
+        /** Static version string displayed in the about screen. */
         var appVersion = ""
-
-        /** Suspend function used to resolve the version string at display time; used when [appVersion] is empty. */
-        var getAppVersion = suspend { "" }
 
         /** Optional extra text shown below the version; rendered as a [SpannableString] for clickable spans. */
         var optionalText: SpannableString? = null

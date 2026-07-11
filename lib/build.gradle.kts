@@ -181,10 +181,6 @@ kover {
                     $$"*PreferenceUtilsKt$deleteAppDataAndExit*",
                     // CommonUtilsLibsActivity: Compose setContent{} lambda needs UI rendering; no Compose test infra here.
                     "*CommonUtilsLibsActivity*",
-                    // CommonUtilsAboutActivity: default suspend-lambda property values, always replaced by tests before use.
-                    $$"*CommonUtilsAboutActivity$Companion$getAppVersion*",
-                    // CommonUtilsAboutActivity: setVersionTextView's coroutine completes synchronously, suspension path unreachable.
-                    $$"*CommonUtilsAboutActivity$setVersionTextView*",
                     // CommonUtilsAboutActivity: onCreate's SAM wrappers fire only via live Play Store callbacks.
                     $$"*CommonUtilsAboutActivity$onCreate*",
                     // SettingsRepositoryKt: same order-dependent branch-misattribution flakiness as URLUtilsKt, not a real gap.
