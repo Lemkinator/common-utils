@@ -171,8 +171,6 @@ kover {
                     "*TipPopupUtilsKt*",
                     // URLUtilsKt: order-dependent JIT branch-misattribution flakiness, not a real gap (see SettingsRepositoryKt).
                     "*URLUtilsKt*",
-                    // DelegatesAdvancedKt: toIntOrNull()'s inlined radix-range check is unreachable at radix=10.
-                    "*DelegatesAdvancedKt*",
                     // PreferenceUtilsKt: OneUI listView extension lambda, can't exercise under Robolectric.
                     $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
                     // DrawerUtilsKt: requires OneUI NavDrawerLayout, untestable in JVM tests.
