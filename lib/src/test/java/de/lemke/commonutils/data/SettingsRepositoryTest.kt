@@ -211,12 +211,13 @@ class SettingsFlowTest {
         }
 
     @Test
-    fun `settingsFlow does not re-emit when the value is unchanged`() =
+    fun `settingsFlow does not emit a duplicate item when the same value is written twice`() =
         runTest {
             val repo = FlowSettings(prefs)
             repo.devModeFlow(backgroundScope).test {
                 awaitItem() shouldBe false
                 repo.devModeEnabled = false
+                expectNoEvents()
                 repo.devModeEnabled = true
                 awaitItem() shouldBe true
                 cancelAndIgnoreRemainingEvents()
