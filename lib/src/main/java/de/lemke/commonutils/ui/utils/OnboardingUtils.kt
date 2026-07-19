@@ -104,10 +104,6 @@ private fun AppCompatActivity.commitAppStart(
 ) {
     settings.lastVersionCode = versionCode
     settings.lastVersionName = versionName
-    // applicationContext, not the Activity's own resources: CheckAppStartUseCase reads this same resource via
-    // applicationContext too, and a consuming Activity could override its own configuration (locale/night
-    // mode/font scale) without that ever reaching Application — reading through the Activity here would risk
-    // committing a value that silently disagrees with the one that actually gated onboarding.
     settings.acceptedTosVersion = applicationContext.resources.getInteger(R.integer.commonutils_tos_version)
 }
 
@@ -132,7 +128,6 @@ fun AppCompatActivity.onboardIfNeeded(
         if (ctx != null) {
             // Post-onboarding: main activity re-launched after chain completed — reconstruct original AppStart.
             intent.removeExtra(EXTRA_ONBOARDING_CONTEXT)
-            // applicationContext here too — see commitAppStart above for why.
             val tosVersion = applicationContext.resources.getInteger(R.integer.commonutils_tos_version)
             AppStart(
                 ctx.appStartResult,
