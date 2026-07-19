@@ -16,17 +16,15 @@
 package de.lemke.commonutils.domain
 
 import android.content.Context
-import android.content.Intent
-import android.content.pm.ActivityInfo
-import android.content.pm.ApplicationInfo
-import android.content.pm.ResolveInfo
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.registerFakeLauncherApp
+import de.lemke.commonutils.ui.widget.getInstalledAppsForPicker
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -34,33 +32,13 @@ import org.robolectric.annotation.Config
 class GetInstalledAppsUseCaseTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
-    @Suppress("DEPRECATION")
     @Before
-    fun registerFakeLauncherApp() {
-        val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        shadowOf(context.packageManager).setResolveInfosForIntent(
-            launcherIntent,
-            listOf(
-                ResolveInfo().apply {
-                    nonLocalizedLabel = "FakeApp"
-                    activityInfo =
-                        ActivityInfo().apply {
-                            packageName = "de.lemke.commonutils.fakeapp"
-                            name = "de.lemke.commonutils.fakeapp.MainActivity"
-                            applicationInfo =
-                                ApplicationInfo().apply {
-                                    packageName = "de.lemke.commonutils.fakeapp"
-                                    nonLocalizedLabel = "FakeApp"
-                                    flags = ApplicationInfo.FLAG_INSTALLED
-                                }
-                        }
-                },
-            ),
-        )
-    }
+    fun registerFakeLauncherApp() = registerFakeLauncherApp(context)
 
     @Test
     fun `invoke delegates to getInstalledAppsForPicker`() {
-        GetInstalledAppsUseCase(context)().shouldNotBeEmpty()
+        val result = GetInstalledAppsUseCase(context)()
+        result.shouldNotBeEmpty()
+        result shouldBe context.getInstalledAppsForPicker()
     }
 }
