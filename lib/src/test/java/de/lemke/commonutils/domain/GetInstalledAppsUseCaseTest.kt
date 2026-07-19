@@ -21,12 +21,16 @@ import de.lemke.commonutils.registerFakeLauncherApp
 import de.lemke.commonutils.ui.widget.getInstalledAppsForPicker
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class GetInstalledAppsUseCaseTest {
@@ -36,9 +40,10 @@ class GetInstalledAppsUseCaseTest {
     fun registerFakeLauncherApp() = registerFakeLauncherApp(context)
 
     @Test
-    fun `invoke delegates to getInstalledAppsForPicker`() {
-        val result = GetInstalledAppsUseCase(context)()
-        result.shouldNotBeEmpty()
-        result shouldBe context.getInstalledAppsForPicker()
-    }
+    fun `invoke delegates to getInstalledAppsForPicker`() =
+        runTest {
+            val result = GetInstalledAppsUseCase(context, UnconfinedTestDispatcher())()
+            result.shouldNotBeEmpty()
+            result shouldBe context.getInstalledAppsForPicker()
+        }
 }
