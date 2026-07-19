@@ -133,15 +133,9 @@ class SharedPreferenceDelegates(
         create(
             default,
             key,
-            { k, d ->
-                if (SDK_INT <= VERSION_CODES.Q) {
-                    SaveLocation.CUSTOM
-                } else {
-                    SaveLocation.fromStringOrDefault(prefs.getString(k, d.name))
-                }
-            },
-            { k, v -> prefs.edit { putString(k, if (SDK_INT <= VERSION_CODES.Q) SaveLocation.CUSTOM.name else v.name) } },
-        )
+            { k, d -> SaveLocation.fromStringOrDefault(prefs.getString(k, d.name)) },
+            { k, v -> prefs.edit { putString(k, v.name) } },
+        ).sanitized { if (SDK_INT <= VERSION_CODES.Q) SaveLocation.CUSTOM else it }
 
     private fun <T> create(
         default: T,
