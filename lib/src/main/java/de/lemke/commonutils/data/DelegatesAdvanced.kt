@@ -35,15 +35,15 @@ val SharedPreferences.delegates get() = SharedPreferenceDelegates(this)
  * valid range, or capping a list to a max length. Sanitizing on writing as well as reading keeps the stored value itself
  * valid, so every future read is inexpensive, and every consumer (not just this property) sees an already-sanitized value.
  */
-fun <T> ReadWriteProperty<Any, T>.sanitized(sanitize: (T) -> T): ReadWriteProperty<Any, T> =
-    object : ReadWriteProperty<Any, T> {
+fun <R, T> ReadWriteProperty<R, T>.sanitized(sanitize: (T) -> T): ReadWriteProperty<R, T> =
+    object : ReadWriteProperty<R, T> {
         override fun getValue(
-            thisRef: Any,
+            thisRef: R,
             property: KProperty<*>,
         ): T = sanitize(this@sanitized.getValue(thisRef, property))
 
         override fun setValue(
-            thisRef: Any,
+            thisRef: R,
             property: KProperty<*>,
             value: T,
         ) = this@sanitized.setValue(thisRef, property, sanitize(value))
