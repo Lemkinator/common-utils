@@ -47,7 +47,7 @@ enum class SaveLocation {
         val default = CUSTOM
 
         /** Returns the [SaveLocation] whose name matches [string], or [default] if no match is found. */
-        fun fromStringOrDefault(string: String?): SaveLocation = entries.firstOrNull { it.toString() == string } ?: default
+        fun fromStringOrDefault(string: String?): SaveLocation = entries.firstOrNull { it.name == string } ?: default
 
         /** Array of [SaveLocation] name strings, suitable for use as `DropDownPreference` entry values. */
         val entryValues = entries.map { it.name }.toTypedArray()
