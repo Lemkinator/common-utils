@@ -18,6 +18,7 @@ package de.lemke.commonutils.domain
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.shouldBe
 import org.junit.Before
 import org.junit.Test
@@ -26,7 +27,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Robolectric-backed (not a mocked [Context]/[Resources]): [CheckAppStartUseCase] calls
+ * Robolectric-backed (not a mocked [Context]): [CheckAppStartUseCase] calls
  * `android.util.Log.d(...)` on every path, which throws under a plain, unshadowed JVM `Log` stub
  * — a real Robolectric context is the simplest way to exercise it end-to-end.
  */
@@ -39,9 +40,7 @@ class CheckAppStartUseCaseTest {
     @Before
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
-        val prefs = ctx.getSharedPreferences("check_app_start_test", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
-        settings = SettingsRepository(prefs)
+        settings = SettingsRepository(freshTestPreferences("check_app_start_test"))
         useCase = CheckAppStartUseCase(ctx, settings)
     }
 

@@ -15,11 +15,10 @@
  */
 package de.lemke.commonutils.data
 
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
+import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -43,9 +42,7 @@ class SettingsRepositoryTest {
 
     @Before
     fun setUp() {
-        val ctx = ApplicationProvider.getApplicationContext<Context>()
-        prefs = ctx.getSharedPreferences("settings_test", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        prefs = freshTestPreferences("settings_test")
         repo = SettingsRepository(prefs)
     }
 
@@ -145,9 +142,7 @@ class ApplyDarkModeTest {
 
     @Before
     fun setUp() {
-        val ctx = ApplicationProvider.getApplicationContext<Context>()
-        prefs = ctx.getSharedPreferences("apply_dark_mode_test", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        prefs = freshTestPreferences("apply_dark_mode_test")
     }
 
     @Test
@@ -193,9 +188,7 @@ class SettingsFlowTest {
 
     @Before
     fun setUp() {
-        val ctx = ApplicationProvider.getApplicationContext<Context>()
-        prefs = ctx.getSharedPreferences("settings_flow_test", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        prefs = freshTestPreferences("settings_flow_test")
     }
 
     @Test

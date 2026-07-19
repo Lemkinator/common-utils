@@ -17,13 +17,11 @@ package de.lemke.commonutils.ui.activity
 
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
-import android.content.Context
 import android.os.Looper
 import android.text.SpannableString
 import android.widget.Button
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
-import androidx.test.core.app.ApplicationProvider
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.ActivityResult.RESULT_IN_APP_UPDATE_FAILED
@@ -33,6 +31,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
@@ -66,13 +65,7 @@ class CommonUtilsAboutActivityTest {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository =
-        SettingsRepository(
-            ApplicationProvider
-                .getApplicationContext<Context>()
-                .getSharedPreferences("about_test", Context.MODE_PRIVATE)
-                .apply { edit().clear().apply() },
-        )
+    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences("about_test"))
 
     private lateinit var mockAppUpdateManager: AppUpdateManager
 

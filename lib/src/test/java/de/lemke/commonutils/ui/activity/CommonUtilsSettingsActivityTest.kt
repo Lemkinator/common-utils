@@ -28,6 +28,7 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
 import io.kotest.matchers.shouldBe
@@ -60,13 +61,7 @@ class CommonUtilsSettingsActivityTest {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository =
-        SettingsRepository(
-            ApplicationProvider
-                .getApplicationContext<Context>()
-                .getSharedPreferences("settings_test", Context.MODE_PRIVATE)
-                .apply { edit().clear().apply() },
-        )
+    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences("settings_test"))
 
     @Before
     fun setUp() {
@@ -284,13 +279,7 @@ class CommonUtilsSettingsActivitySdk29Test {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository =
-        SettingsRepository(
-            ApplicationProvider
-                .getApplicationContext<Context>()
-                .getSharedPreferences("settings_test_29", Context.MODE_PRIVATE)
-                .apply { edit().clear().apply() },
-        )
+    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences("settings_test_29"))
 
     @Before
     fun setUp() {

@@ -15,9 +15,8 @@
  */
 package de.lemke.commonutils.data
 
-import android.content.Context
 import android.content.SharedPreferences
-import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -35,9 +34,7 @@ class DelegatesAdvancedTest {
 
     @Before
     fun setUp() {
-        val ctx = ApplicationProvider.getApplicationContext<Context>()
-        prefs = ctx.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        prefs = freshTestPreferences("test_prefs")
     }
 
     @Test
