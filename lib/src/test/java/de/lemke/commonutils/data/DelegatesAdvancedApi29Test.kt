@@ -53,6 +53,6 @@ class DelegatesAdvancedApi29Test {
 
         val h = Holder()
         h.location = SaveLocation.DOWNLOADS // setter must store CUSTOM on API <= Q
-        prefs.getString("location", null) shouldBe SaveLocation.CUSTOM.name
+        prefs.getString("location", null) shouldBe "CUSTOM"
     }
 }
