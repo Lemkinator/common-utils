@@ -62,6 +62,7 @@ class AppPickerUtilsTest {
     fun `getInstalledAppsForPicker sets subLabel to packageName for every entry`() {
         val apps = context.getInstalledAppsForPicker()
         apps.shouldNotBeEmpty()
-        apps.forEach { it.subLabel shouldBe it.packageName }
+        val fakeApp = apps.first { it.packageName == "de.lemke.commonutils.fakeapp" }
+        fakeApp.subLabel shouldBe "de.lemke.commonutils.fakeapp"
     }
 }

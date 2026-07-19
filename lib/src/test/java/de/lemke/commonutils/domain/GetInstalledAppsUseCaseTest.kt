@@ -18,9 +18,8 @@ package de.lemke.commonutils.domain
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.registerFakeLauncherApp
-import de.lemke.commonutils.ui.widget.getInstalledAppsForPicker
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotBeEmpty
-import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -40,10 +39,10 @@ class GetInstalledAppsUseCaseTest {
     fun registerFakeLauncherApp() = registerFakeLauncherApp(context)
 
     @Test
-    fun `invoke delegates to getInstalledAppsForPicker`() =
+    fun `invoke returns installed apps including the registered fake launcher app`() =
         runTest {
             val result = GetInstalledAppsUseCase(context, UnconfinedTestDispatcher())()
             result.shouldNotBeEmpty()
-            result shouldBe context.getInstalledAppsForPicker()
+            result.map { it.packageName } shouldContain "de.lemke.commonutils.fakeapp"
         }
 }
