@@ -21,8 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import de.lemke.commonutils.ui.utils.suggestiveSnackBar
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import java.time.Duration
-import org.junit.After
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -31,26 +30,16 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import com.google.android.material.R as MaterialR
 
-/**
- * com.google.android.material.snackbar.SnackbarManager is a real static singleton, not a
- * Robolectric shadow — Robolectric's per-test reset never touches it. Snackbar
- * show/auto-dismiss/dismiss-animation tasks left pending by one test accumulate and corrupt
- * SnackbarManager state for whichever test (in this class, the sibling class below, or any other
- * class — Robolectric reuses sandboxes across classes with identical @Config) runs next. Drain
- * until the queue is empty as `@After` cleanup so no test ever leaves state behind.
- */
-private fun drainStaleLooperTasks() {
-    val shadow = shadowOf(Looper.getMainLooper())
-    while (shadow.lastScheduledTaskTime != Duration.ZERO) {
-        shadow.runToEndOfTasks()
-    }
-}
-
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SnackBarUtilsActivityRobolectricTest {
-    @After
-    fun tearDown() = drainStaleLooperTasks()
+    // com.google.android.material.snackbar.SnackbarManager is a real static singleton, not a
+    // Robolectric shadow — pending show/auto-dismiss/dismiss-animation tasks left by one test
+    // would otherwise corrupt SnackbarManager state for whichever test runs next (in this class,
+    // the sibling class below, or any other class — Robolectric reuses sandboxes across classes
+    // with identical @Config). See DrainMainLooperRule.
+    @get:Rule
+    val drainMainLooper = DrainMainLooperRule()
 
     private fun setupActivity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
 
@@ -122,8 +111,8 @@ class SnackBarUtilsActivityRobolectricTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SnackBarUtilsFragmentRobolectricTest {
-    @After
-    fun tearDown() = drainStaleLooperTasks()
+    @get:Rule
+    val drainMainLooper = DrainMainLooperRule()
 
     private fun setupFragment(): ViewFragment {
         val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()

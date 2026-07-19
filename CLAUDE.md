@@ -39,8 +39,9 @@ Robolectric/Android state leak between a class's own test methods (worked around
 time by hand-draining the main Looper, or collapsing multiple tests into one) and,
 because Robolectric reuses its sandbox classloader across test classes with identical
 `@Config`, potentially between unrelated classes too. Plain `RobolectricTestRunner`
-resets Application/Looper state before every test method, which removed the need for
-those workarounds.
+resets Robolectric's own shadowed framework/Looper state before every test method, which
+removed the need for hand-draining *that* state. It does **not** reset real third-party
+static singletons (see next paragraph) — those still need manual `@After` cleanup.
 
 Every `@HiltAndroidTest` Robolectric activity test must destroy its launched
 `ActivityController` in `@After` — `AppCompatDelegate.setDefaultNightMode()` recreates
@@ -50,7 +51,9 @@ component. More generally: Robolectric only resets its **own** shadowed framewor
 statics between tests — a real third-party static singleton (e.g.
 `com.google.android.material.snackbar.SnackbarManager`, see `SnackBarUtilsRobolectricTest`)
 is not a shadow and keeps whatever state a previous test left it in. Drain/reset any such
-singleton in `@After`, not just defensively in `@Before`.
+singleton after each test, not just defensively before it — for pending main-Looper tasks,
+add `@get:Rule val drainMainLooper = DrainMainLooperRule()` rather than hand-rolling an
+`@After` method per test class.
 
 **Test order independence**: `io.kotest.provided.ProjectConfig` sets
 `specExecutionOrder = SpecExecutionOrder.Random`, so Kotest spec execution order varies
