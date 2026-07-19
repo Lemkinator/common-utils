@@ -19,6 +19,7 @@ import android.content.SharedPreferences
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import androidx.core.content.edit
+import de.lemke.commonutils.NoCoverage
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -49,14 +50,8 @@ fun <R, T> ReadWriteProperty<R, T>.sanitized(sanitize: (T) -> T): ReadWritePrope
         ) = this@sanitized.setValue(thisRef, property, sanitize(value))
     }
 
-/**
- * Parses [raw] as a comma-joined list of ints, or returns null if [raw] is null or contains no parsable ints.
- *
- * Kept as a top-level (not member) function so its one Kover-unreachable branch — `toIntOrNull()`'s inlined
- * stdlib radix-range check, which can never fail since the no-arg call always passes the literal radix 10.
- * This can be excluded via a `classes()` pattern scoped to this file's facade class alone, without hiding real
- * regressions in [SharedPreferenceDelegates]'s other, fully tested delegate methods.
- */
+/** Parses [raw] as a comma-joined int list; null (→ delegate falls back to its default) if null, empty, or unparsable. */
+@NoCoverage // toIntOrNull()'s inlined radix-range check is unreachable at radix=10.
 private fun parseIntList(raw: String?): List<Int>? = raw?.split(",")?.mapNotNull { it.toIntOrNull() }?.takeIf { it.isNotEmpty() }
 
 /** Factory for type-safe [ReadWriteProperty] delegates backed by [SharedPreferences]. */

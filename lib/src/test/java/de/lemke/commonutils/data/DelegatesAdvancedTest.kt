@@ -237,6 +237,17 @@ class DelegatesAdvancedTest {
     }
 
     @Test
+    fun `intList falls back to default after writing an empty list`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = listOf(1, 2, 3))
+        }
+
+        val h = Holder()
+        h.list = emptyList()
+        Holder().list shouldBe listOf(1, 2, 3)
+    }
+
+    @Test
     fun `intList returns default when stored value has no parsable ints`() {
         prefs.edit().putString("list", "a,b,c").apply()
 
