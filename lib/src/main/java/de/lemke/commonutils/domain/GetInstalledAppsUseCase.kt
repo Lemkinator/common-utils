@@ -21,7 +21,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import de.lemke.commonutils.ui.widget.getInstalledAppsForPicker
 import javax.inject.Inject
 
-/** Returns installed apps ready for a `SeslAppPickerGridView`, as an injectable seam apps can substitute in tests. */
+/**
+ * Returns installed apps ready for a `SeslAppPickerGridView`, as an injectable seam apps can substitute in tests.
+ *
+ * [invoke] does blocking `PackageManager` enumeration — call it from a background dispatcher (e.g. `Dispatchers.IO`
+ * via `withContext`), not directly on the main thread.
+ */
 class GetInstalledAppsUseCase @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) {
