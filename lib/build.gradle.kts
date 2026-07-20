@@ -78,6 +78,11 @@ android {
     }
 }
 
+// AGP derives a testFixtures configuration's published capability from the Gradle project name
+// (":lib"), not from this module's "common-utils" artifactId override below — so consumers doing
+// testFixtures(libs.common.utils) can't resolve it without this. Capabilities are additive, so add
+// the correct one alongside AGP's rather than renaming the project (which would also silently
+// rename every :lib:* task to :common-utils:*).
 configurations
     .matching {
         it.name in
