@@ -78,6 +78,19 @@ android {
     }
 }
 
+configurations
+    .matching {
+        it.name in
+            setOf(
+                "releaseTestFixturesApiElements",
+                "releaseTestFixturesRuntimeElements",
+                "releaseTestFixturesVariantReleaseApiPublication",
+                "releaseTestFixturesVariantReleaseRuntimePublication",
+            )
+    }.configureEach {
+        outgoing.capability("io.github.lemkinator:common-utils-test-fixtures:${libs.versions.common.utils.get()}")
+    }
+
 dependencies {
     implementation(libs.oneui.design)
     implementation(libs.oneui.icons)
