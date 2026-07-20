@@ -24,17 +24,29 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.DEFAULT_DURATION
+import de.lemke.commonutils.ui.utils.DEFAULT_FADE_MODE
+import de.lemke.commonutils.ui.utils.finishWithFade
+import de.lemke.commonutils.ui.utils.getContainerTransform
+import de.lemke.commonutils.ui.utils.getTransitionContainerTransform
+import de.lemke.commonutils.ui.utils.overrideFadeOpenTransition
+import de.lemke.commonutils.ui.utils.performTransform
+import de.lemke.commonutils.ui.utils.prepareActivityTransformationBetween
+import de.lemke.commonutils.ui.utils.prepareActivityTransformationFrom
+import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
+import de.lemke.commonutils.ui.utils.transformTo
+import de.lemke.commonutils.ui.utils.transformToActivity
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class TransformationUtilsRobolectricTest {
     private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
@@ -272,7 +284,7 @@ class TransformationUtilsRobolectricTest {
     }
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class TransformationUtilsSdk33RobolectricTest {
     private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()

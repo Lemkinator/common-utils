@@ -15,30 +15,26 @@
  */
 package de.lemke.commonutils.data
 
-import android.content.Context
 import android.content.SharedPreferences
-import androidx.test.core.app.ApplicationProvider
-import de.lemke.commonutils.SaveLocation
+import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class DelegatesAdvancedTest {
     private lateinit var prefs: SharedPreferences
 
-    @BeforeEach
+    @Before
     fun setUp() {
-        val ctx = ApplicationProvider.getApplicationContext<Context>()
-        prefs = ctx.getSharedPreferences("test_prefs", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        prefs = freshTestPreferences()
     }
 
     @Test
@@ -215,6 +211,132 @@ class DelegatesAdvancedTest {
         val h = Holder()
         h.loc = SaveLocation.DCIM
         prefs.getString("loc", null) shouldBe "DCIM"
+    }
+
+    @Test
+    fun `intList returns default when key absent`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = listOf(1, 2, 3))
+        }
+        Holder().list shouldBe listOf(1, 2, 3)
+    }
+
+    @Test
+    fun `intList round-trips written value`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = emptyList())
+        }
+
+        val h = Holder()
+        h.list = listOf(4, 5, 6)
+        Holder().list shouldBe listOf(4, 5, 6)
+        prefs.getString("list", null) shouldBe "4,5,6"
+    }
+
+    @Test
+    fun `intList falls back to default after writing an empty list`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = listOf(1, 2, 3))
+        }
+
+        val h = Holder()
+        h.list = emptyList()
+        Holder().list shouldBe listOf(1, 2, 3)
+    }
+
+    @Test
+    fun `intList returns default when stored value has no parsable ints`() {
+        prefs.edit().putString("list", "a,b,c").apply()
+
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = listOf(9))
+        }
+        Holder().list shouldBe listOf(9)
+    }
+
+    @Test
+    fun `intList filters out empty segments produced by consecutive commas`() {
+        prefs.edit().putString("list", "1,,2").apply()
+
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = emptyList())
+        }
+        Holder().list shouldBe listOf(1, 2)
+    }
+
+    @Test
+    fun `intList parses negative ints`() {
+        prefs.edit().putString("list", "-1,2,-3").apply()
+
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = emptyList())
+        }
+        Holder().list shouldBe listOf(-1, 2, -3)
+    }
+
+    @Test
+    fun `intList with all-defaults produces a working delegate`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList()
+        }
+
+        val h = Holder()
+        h.list shouldBe emptyList()
+        h.list = listOf(1)
+        Holder().list shouldBe listOf(1)
+    }
+
+    @Test
+    fun `intList with explicit key uses that key in prefs`() {
+        class Holder {
+            var list: List<Int> by prefs.delegates.intList(default = emptyList(), key = "my_int_list_key")
+        }
+
+        val h = Holder()
+        h.list = listOf(7, 8)
+        prefs.getString("my_int_list_key", null) shouldBe "7,8"
+    }
+
+    @Test
+    fun `sanitized clamps a value already out of range in storage on read`() {
+        prefs.edit().putInt("size", 9999).apply()
+
+        class Holder {
+            var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+        }
+        Holder().size shouldBe 1024
+    }
+
+    @Test
+    fun `sanitized clamps on write so the stored value itself is valid`() {
+        class Holder {
+            var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+        }
+
+        val h = Holder()
+        h.size = -5
+        prefs.getInt("size", -1) shouldBe 16
+    }
+
+    @Test
+    fun `sanitized passes through in-range values unchanged`() {
+        class Holder {
+            var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+        }
+
+        val h = Holder()
+        h.size = 256
+        Holder().size shouldBe 256
+    }
+
+    @Test
+    fun `sanitized composes with intList to cap a stored list on read`() {
+        prefs.edit().putString("colors", "1,2,3,4,5,6,7,8").apply()
+
+        class Holder {
+            var colors: List<Int> by prefs.delegates.intList(default = emptyList()).sanitized { it.take(6) }
+        }
+        Holder().colors shouldBe listOf(1, 2, 3, 4, 5, 6)
     }
 
     @Test

@@ -18,6 +18,11 @@ package de.lemke.commonutils
 import android.view.View
 import androidx.activity.BackEventCompat
 import androidx.appcompat.app.AppCompatActivity
+import de.lemke.commonutils.ui.utils.canShowInAppReview
+import de.lemke.commonutils.ui.utils.defaultWindowBackground
+import de.lemke.commonutils.ui.utils.setCustomBackAnimation
+import de.lemke.commonutils.ui.utils.setWindowTransparent
+import de.lemke.commonutils.ui.utils.showInAppReviewOrFinish
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -27,19 +32,19 @@ import io.mockk.just
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class PredictiveBackGestureUtilsRobolectricTest {
     private lateinit var activity: AppCompatActivity
 
-    @BeforeEach
+    @Before
     fun setUp() {
         activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
     }
@@ -128,7 +133,7 @@ class PredictiveBackGestureUtilsRobolectricTest {
     @Test
     fun `setCustomBackAnimation showInAppReviewIfPossible true covers review branches`() {
         // Mock canShowInAppReview() = true → showInAppReview = true → hits showInAppReview=true branches
-        mockkStatic("de.lemke.commonutils.InAppReviewUtilsKt")
+        mockkStatic("de.lemke.commonutils.ui.utils.InAppReviewUtilsKt")
         every { any<AppCompatActivity>().canShowInAppReview() } returns true
         every { any<AppCompatActivity>().showInAppReviewOrFinish() } just Runs
         try {
@@ -143,17 +148,17 @@ class PredictiveBackGestureUtilsRobolectricTest {
             // handleOnBackPressed: showInAppReview=true → showInAppReviewOrFinish() branch covered
             dispatcher.onBackPressed()
         } finally {
-            unmockkStatic("de.lemke.commonutils.InAppReviewUtilsKt")
+            unmockkStatic("de.lemke.commonutils.ui.utils.InAppReviewUtilsKt")
         }
     }
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
 class PredictiveBackGestureUtilsSdk29RobolectricTest {
     private lateinit var activity: AppCompatActivity
 
-    @BeforeEach
+    @Before
     fun setUp() {
         activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
     }

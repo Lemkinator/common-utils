@@ -18,17 +18,19 @@ package de.lemke.commonutils.ui.activity
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceFragmentCompat
+import dagger.hilt.android.AndroidEntryPoint
 import de.lemke.commonutils.R
-import de.lemke.commonutils.addShareAppAndRateRelativeLinksCard
+import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.databinding.ActivitySettingsCommonUtilsBinding
-import de.lemke.commonutils.initCommonUtilsPreferences
-import de.lemke.commonutils.prepareActivityTransformationTo
-import de.lemke.commonutils.setCustomBackAnimation
-import kotlinx.coroutines.launch
+import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
+import de.lemke.commonutils.ui.utils.initCommonUtilsPreferences
+import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
+import de.lemke.commonutils.ui.utils.setCustomBackAnimation
+import javax.inject.Inject
 
 /** Pre-built settings screen backed by a [PreferenceFragmentCompat] with common-utils defaults. */
+@AndroidEntryPoint
 class CommonUtilsSettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsCommonUtilsBinding
 
@@ -50,13 +52,14 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
                 R.xml.preferences_dev_options_delete_app_data,
                 R.xml.preferences_more_info,
             )
-
-        /** Optional suspend block run after preference inflation for app-specific init. */
-        var initPreferences: suspend PreferenceFragmentCompat.() -> Unit = {}
     }
 
     /** [PreferenceFragmentCompat] that inflates the configured preference XML resources. */
+    @AndroidEntryPoint
     class SettingsFragment : PreferenceFragmentCompat() {
+        @Inject
+        lateinit var settings: SettingsRepository
+
         override fun onCreatePreferences(
             bundle: Bundle?,
             str: String?,
@@ -66,8 +69,7 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
 
         override fun onCreate(bundle: Bundle?) {
             super.onCreate(bundle)
-            initCommonUtilsPreferences()
-            lifecycleScope.launch { initPreferences() }
+            initCommonUtilsPreferences(settings)
         }
 
         override fun onViewCreated(

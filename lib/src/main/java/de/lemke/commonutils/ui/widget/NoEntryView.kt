@@ -22,9 +22,9 @@ import android.widget.TextView
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.isVisible
 import com.airbnb.lottie.LottieAnimationView
-import de.lemke.commonutils.DEFAULT_LOTTIE_DELAY
 import de.lemke.commonutils.R
-import de.lemke.commonutils.play
+import de.lemke.commonutils.ui.utils.DEFAULT_LOTTIE_DELAY
+import de.lemke.commonutils.ui.utils.play
 import dev.oneuiproject.oneui.widget.RoundedLinearLayout
 
 /** Empty-state view that shows a Lottie animation and a label when a list has no entries. */

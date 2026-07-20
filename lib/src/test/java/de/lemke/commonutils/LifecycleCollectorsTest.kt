@@ -17,41 +17,58 @@ package de.lemke.commonutils
 
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
+import de.lemke.commonutils.ui.utils.collectEvents
+import de.lemke.commonutils.ui.utils.collectState
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class LifecycleCollectorsTest {
-    @Test
-    fun `lifecycle collectors pin contract`() {
-        val activity =
-            Robolectric
-                .buildActivity(AppCompatActivity::class.java)
-                .create()
-                .start()
-                .resume()
-                .get()
-        val idle = { Shadows.shadowOf(Looper.getMainLooper()).idle() }
+    private fun launchActivity(): AppCompatActivity =
+        Robolectric
+            .buildActivity(AppCompatActivity::class.java)
+            .create()
+            .start()
+            .resume()
+            .get()
 
+    private fun idle() = Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+    @Test
+    fun `collectState delivers initial value`() {
+        val activity = launchActivity()
         val stateFlow = MutableStateFlow(42)
         val stateCollected = mutableListOf<Int>()
         activity.collectState(stateFlow) { stateCollected.add(it) }
         idle()
         stateCollected shouldBe listOf(42)
+    }
+
+    @Test
+    fun `collectState delivers updated value`() {
+        val activity = launchActivity()
+        val stateFlow = MutableStateFlow(42)
+        val stateCollected = mutableListOf<Int>()
+        activity.collectState(stateFlow) { stateCollected.add(it) }
+        idle()
 
         stateFlow.value = 99
         idle()
         stateCollected shouldBe listOf(42, 99)
+    }
 
+    @Test
+    fun `collectEvents delivers buffered event`() {
+        val activity = launchActivity()
         val channel = Channel<String>(Channel.BUFFERED)
         val eventCollected = mutableListOf<String>()
         channel.trySend("hello")

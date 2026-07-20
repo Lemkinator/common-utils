@@ -15,81 +15,24 @@
  */
 package de.lemke.commonutils.data
 
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.test.core.app.ApplicationProvider
-import de.lemke.commonutils.SaveLocation
+import app.cash.turbine.test
+import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeEmpty
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.extension.ExtendWith
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.test.runTest
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-class CommonUtilsSettingsLateinitTest {
-    @Test
-    fun `accessing commonUtilsSettings before initialization throws UninitializedPropertyAccessException`() {
-        // Normally testing Kotlin's lateinit mechanic is pointless — it's compiler-generated boilerplate.
-        // Still test it here to avoid @get:NoCoverage on production code.
-        val field =
-            Class
-                .forName("de.lemke.commonutils.data.SettingsRepositoryKt")
-                .getDeclaredField("commonUtilsSettings")
-                .apply { isAccessible = true }
-        val previous = field.get(null)
-        field.set(null, null)
-        try {
-            assertThrows<UninitializedPropertyAccessException> { commonUtilsSettings }
-        } finally {
-            field.set(null, previous)
-        }
-    }
-}
-
-@ExtendWith(RobolectricExtension::class)
-@Config(sdk = [36])
-class InitCommonUtilsSettingsTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-
-    @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode true - FOLLOW_SYSTEM branch`() {
-        ctx.initCommonUtilsSettingsAndSetDarkMode()
-        commonUtilsSettings.autoDarkMode.shouldBeTrue()
-        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-    }
-
-    @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with darkMode true - MODE_NIGHT_YES branch`() {
-        ctx.initCommonUtilsSettingsAndSetDarkMode()
-        commonUtilsSettings.autoDarkMode = false
-        commonUtilsSettings.darkMode = true
-        ctx.initCommonUtilsSettingsAndSetDarkMode()
-        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_YES
-    }
-
-    @Test
-    fun `initCommonUtilsSettingsAndSetDarkMode with autoDarkMode false and darkMode false - MODE_NIGHT_NO branch`() {
-        // Write preferences so the else branch is hit on init.
-        // Key = property name (from delegates); darkMode stores as "1"/"0" string.
-        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs
-            .edit()
-            .putBoolean("autoDarkMode", false)
-            .putString("darkMode", "0")
-            .apply()
-        ctx.initCommonUtilsSettingsAndSetDarkMode()
-        commonUtilsSettings.autoDarkMode.shouldBeFalse()
-        commonUtilsSettings.darkMode.shouldBeFalse()
-        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_NO
-    }
-}
-
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SettingsRepositoryTest {
     private lateinit var prefs: SharedPreferences
@@ -97,11 +40,9 @@ class SettingsRepositoryTest {
 
     private fun reload() = SettingsRepository(prefs)
 
-    @BeforeEach
+    @Before
     fun setUp() {
-        val ctx = ApplicationProvider.getApplicationContext<Context>()
-        prefs = ctx.getSharedPreferences("settings_test", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        prefs = freshTestPreferences()
         repo = SettingsRepository(prefs)
     }
 
@@ -192,4 +133,87 @@ class SettingsRepositoryTest {
         repo.lastVersionName = "2.5.0"
         reload().lastVersionName shouldBe "2.5.0"
     }
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36])
+class ApplyDarkModeTest {
+    private lateinit var prefs: SharedPreferences
+
+    @Before
+    fun setUp() {
+        prefs = freshTestPreferences()
+    }
+
+    @Test
+    fun `applyDarkMode sets FOLLOW_SYSTEM when autoDarkMode is true`() {
+        val repo = SettingsRepository(prefs).apply { autoDarkMode = true }
+        repo.applyDarkMode()
+        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+    }
+
+    @Test
+    fun `applyDarkMode sets MODE_NIGHT_YES when autoDarkMode false and darkMode true`() {
+        val repo =
+            SettingsRepository(prefs).apply {
+                autoDarkMode = false
+                darkMode = true
+            }
+        repo.applyDarkMode()
+        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_YES
+    }
+
+    @Test
+    fun `applyDarkMode sets MODE_NIGHT_NO when autoDarkMode and darkMode are both false`() {
+        val repo =
+            SettingsRepository(prefs).apply {
+                autoDarkMode = false
+                darkMode = false
+            }
+        repo.applyDarkMode()
+        AppCompatDelegate.getDefaultNightMode() shouldBe AppCompatDelegate.MODE_NIGHT_NO
+    }
+}
+
+private class FlowSettings(
+    preferences: SharedPreferences,
+) : SettingsRepository(preferences) {
+    fun devModeFlow(scope: CoroutineScope): StateFlow<Boolean> = settingsFlow(scope) { devModeEnabled }
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36])
+class SettingsFlowTest {
+    private lateinit var prefs: SharedPreferences
+
+    @Before
+    fun setUp() {
+        prefs = freshTestPreferences()
+    }
+
+    @Test
+    fun `settingsFlow emits initial snapshot and updates on preference change`() =
+        runTest {
+            val repo = FlowSettings(prefs)
+            repo.devModeFlow(backgroundScope).test {
+                awaitItem() shouldBe false
+                repo.devModeEnabled = true
+                awaitItem() shouldBe true
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `settingsFlow does not emit a duplicate item when the same value is written twice`() =
+        runTest {
+            val repo = FlowSettings(prefs)
+            repo.devModeFlow(backgroundScope).test {
+                awaitItem() shouldBe false
+                repo.devModeEnabled = false
+                expectNoEvents()
+                repo.devModeEnabled = true
+                awaitItem() shouldBe true
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

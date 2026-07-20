@@ -15,27 +15,23 @@
  */
 package de.lemke.commonutils.data
 
-import android.content.Context
 import android.content.SharedPreferences
-import androidx.test.core.app.ApplicationProvider
-import de.lemke.commonutils.SaveLocation
+import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
 class DelegatesAdvancedApi29Test {
     private lateinit var prefs: SharedPreferences
 
-    @BeforeEach
+    @Before
     fun setUp() {
-        val ctx = ApplicationProvider.getApplicationContext<Context>()
-        prefs = ctx.getSharedPreferences("test_prefs_api29", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
+        prefs = freshTestPreferences()
     }
 
     @Test
@@ -54,6 +50,6 @@ class DelegatesAdvancedApi29Test {
 
         val h = Holder()
         h.location = SaveLocation.DOWNLOADS // setter must store CUSTOM on API <= Q
-        prefs.getString("location", null) shouldBe SaveLocation.CUSTOM.name
+        prefs.getString("location", null) shouldBe "CUSTOM"
     }
 }

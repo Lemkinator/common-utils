@@ -16,6 +16,7 @@
 package de.lemke.commonutils
 
 import app.cash.turbine.test
+import de.lemke.commonutils.ui.utils.stateInViewModel
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope

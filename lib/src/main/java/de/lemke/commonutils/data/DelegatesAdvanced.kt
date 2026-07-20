@@ -19,7 +19,7 @@ import android.content.SharedPreferences
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import androidx.core.content.edit
-import de.lemke.commonutils.SaveLocation
+import de.lemke.commonutils.NoCoverage
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -30,6 +30,29 @@ import kotlin.reflect.KProperty
 
 /** Returns a [SharedPreferenceDelegates] factory backed by this [SharedPreferences] instance. */
 val SharedPreferences.delegates get() = SharedPreferenceDelegates(this)
+
+/**
+ * Wraps this delegate so [sanitize] is applied to every value on both read and write — e.g., clamping a size to a
+ * valid range, or capping a list to a max length. Sanitizing on writing as well as reading keeps the stored value itself
+ * valid, so every future read is inexpensive, and every consumer (not just this property) sees an already-sanitized value.
+ */
+fun <R, T> ReadWriteProperty<R, T>.sanitized(sanitize: (T) -> T): ReadWriteProperty<R, T> =
+    object : ReadWriteProperty<R, T> {
+        override fun getValue(
+            thisRef: R,
+            property: KProperty<*>,
+        ): T = sanitize(this@sanitized.getValue(thisRef, property))
+
+        override fun setValue(
+            thisRef: R,
+            property: KProperty<*>,
+            value: T,
+        ) = this@sanitized.setValue(thisRef, property, sanitize(value))
+    }
+
+/** Parses [raw] as a comma-joined int list; null (→ delegate falls back to its default) if null, empty, or unparsable. */
+@NoCoverage // toIntOrNull()'s inlined radix-range check is unreachable at radix=10.
+private fun parseIntList(raw: String?): List<Int>? = raw?.split(",")?.mapNotNull { it.toIntOrNull() }?.takeIf { it.isNotEmpty() }
 
 /** Factory for type-safe [ReadWriteProperty] delegates backed by [SharedPreferences]. */
 class SharedPreferenceDelegates(
@@ -73,6 +96,18 @@ class SharedPreferenceDelegates(
     ): ReadWriteProperty<Any, Set<String>> =
         create(default, key, { k, d -> prefs.getStringSet(k, null) ?: d }, { k, v -> prefs.edit { putStringSet(k, v) } })
 
+    /** Delegate that reads/writes a [List]<[Int]> preference, stored as a comma-joined string. */
+    fun intList(
+        default: List<Int> = emptyList(),
+        key: String? = null,
+    ): ReadWriteProperty<Any, List<Int>> =
+        create(
+            default,
+            key,
+            { k, d -> parseIntList(prefs.getString(k, null)) ?: d },
+            { k, v -> prefs.edit { putString(k, v.joinToString(",")) } },
+        )
+
     /** Delegate that reads/writes a dark mode flag stored as `"1"`/`"0"` for legacy HorizontalRadioPreference compatibility. */
     fun darkMode(
         default: Boolean = false,
@@ -93,15 +128,9 @@ class SharedPreferenceDelegates(
         create(
             default,
             key,
-            { k, d ->
-                if (SDK_INT <= VERSION_CODES.Q) {
-                    SaveLocation.CUSTOM
-                } else {
-                    SaveLocation.fromStringOrDefault(prefs.getString(k, d.name))
-                }
-            },
-            { k, v -> prefs.edit { putString(k, if (SDK_INT <= VERSION_CODES.Q) SaveLocation.CUSTOM.name else v.name) } },
-        )
+            { k, d -> SaveLocation.fromStringOrDefault(prefs.getString(k, d.name)) },
+            { k, v -> prefs.edit { putString(k, v.name) } },
+        ).sanitized { if (SDK_INT <= VERSION_CODES.Q) SaveLocation.CUSTOM else it }
 
     private fun <T> create(
         default: T,

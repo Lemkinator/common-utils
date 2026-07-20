@@ -19,16 +19,19 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.test.core.app.ApplicationProvider
 import com.airbnb.lottie.LottieAnimationView
+import de.lemke.commonutils.ui.utils.DEFAULT_LOTTIE_DELAY
+import de.lemke.commonutils.ui.utils.launchDelayedPlay
+import de.lemke.commonutils.ui.utils.play
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class LottieUtilsRobolectricTest {
     // Application context → findViewTreeLifecycleOwner() == null → delayed launch branch skipped

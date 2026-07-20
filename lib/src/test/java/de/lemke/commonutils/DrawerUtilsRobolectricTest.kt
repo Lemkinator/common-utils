@@ -18,6 +18,12 @@ package de.lemke.commonutils
 import android.os.Bundle
 import android.view.MenuItem
 import com.google.android.material.navigation.NavigationView
+import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_IS_ACTION_MODE
+import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_IS_SEARCH_MODE
+import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_SELECTED_IDS
+import de.lemke.commonutils.ui.utils.onNavigationSingleClick
+import de.lemke.commonutils.ui.utils.restoreSearchAndActionMode
+import de.lemke.commonutils.ui.utils.saveSearchAndActionMode
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -25,12 +31,12 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class DrawerUtilsRobolectricTest {
     @Test

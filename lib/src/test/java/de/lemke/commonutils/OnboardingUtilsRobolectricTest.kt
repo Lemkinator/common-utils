@@ -18,34 +18,40 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.PreferenceManager
-import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.data.commonUtilsSettings
+import de.lemke.commonutils.domain.AppStartResult
+import de.lemke.commonutils.ui.utils.Onboarding
+import de.lemke.commonutils.ui.utils.OnboardingContext
+import de.lemke.commonutils.ui.utils.advanceOnboarding
+import de.lemke.commonutils.ui.utils.isOnboardingStep
+import de.lemke.commonutils.ui.utils.onboardIfNeeded
+import de.lemke.commonutils.ui.utils.setupOnboarding
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class OnboardingUtilsRobolectricTest {
+    private lateinit var settings: SettingsRepository
+
     private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
 
-    @BeforeEach
+    @Before
     fun initSettings() {
-        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val prefs = PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().clear().commit()
-        commonUtilsSettings = SettingsRepository(prefs)
+        settings = SettingsRepository(freshTestPreferences())
+        // Onboarding.steps is a JVM-static set by setupOnboarding() — reset it so tests that don't
+        // call setupOnboarding themselves don't inherit a value left by a previous test.
+        setupOnboarding(emptyList())
     }
 
     private fun onboardingContext(
@@ -152,10 +158,10 @@ class OnboardingUtilsRobolectricTest {
 
     @Test
     fun `onboardIfNeeded with allowSkip and skip extra bypasses OOBE and returns AppStart`() {
-        // shouldShowOOBE=true (fresh install) but allowSkip=true + EXTRA_SKIP_ONBOARDING=true → skip
+        // shouldShowOOBE=true (fresh install), but allowSkip=true + EXTRA_SKIP_ONBOARDING=true → skip
         val intent = Intent().apply { putExtra("commonUtilsSkipOnboarding", true) }
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent).setup()
-        val result = controller.get().onboardIfNeeded(1, "1.0", allowSkip = true)
+        val result = controller.get().onboardIfNeeded(1, "1.0", settings, allowSkip = true)
         result shouldNotBe null
         shadowOf(controller.get()).nextStartedActivity shouldBe null
     }
@@ -164,7 +170,7 @@ class OnboardingUtilsRobolectricTest {
     fun `onboardIfNeeded allowSkip true but no skip extra starts OOBE`() {
         // allowSkip=true but no EXTRA_SKIP_ONBOARDING in intent → !(true && false) = true → start OOBE
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup()
-        val result = controller.get().onboardIfNeeded(1, "1.0", allowSkip = true)
+        val result = controller.get().onboardIfNeeded(1, "1.0", settings, allowSkip = true)
         result shouldBe null
         shadowOf(controller.get()).nextStartedActivity shouldNotBe null
     }
@@ -186,10 +192,10 @@ class OnboardingUtilsRobolectricTest {
         val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent).setup()
         val a = controller.get()
-        val result = a.onboardIfNeeded(1, "1.0")
+        val result = a.onboardIfNeeded(1, "1.0", settings)
         result shouldNotBe null
         result!!.result shouldBe AppStartResult.FIRST_TIME
-        commonUtilsSettings.lastVersionCode shouldBe 1
+        settings.lastVersionCode shouldBe 1
     }
 
     // onboardIfNeeded - Path 2: fresh install (lastVersionCode=-1 → shouldShowOOBE=true) → null
@@ -198,7 +204,7 @@ class OnboardingUtilsRobolectricTest {
         // lastVersionCode defaults to -1 → isFirstTime = true → shouldShowOOBE = true
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup()
         val a = controller.get()
-        val result = a.onboardIfNeeded(1, "1.0")
+        val result = a.onboardIfNeeded(1, "1.0", settings)
         result shouldBe null
         shadowOf(a).nextStartedActivity shouldNotBe null
     }
@@ -206,10 +212,10 @@ class OnboardingUtilsRobolectricTest {
     // onboardIfNeeded - covers tosChanged=true: FIRST_TIME_VERSION + TOS not accepted → starts OOBE
     @Test
     fun `onboardIfNeeded FIRST_TIME_VERSION with unaccepted TOS sets tosChanged true and starts OOBE`() {
-        commonUtilsSettings.lastVersionCode = 1
-        commonUtilsSettings.acceptedTosVersion = -1 // -1 < tosVersion(0) → !tosAccepted = true
+        settings.lastVersionCode = 1
+        settings.acceptedTosVersion = -1 // -1 < tosVersion(0) → !tosAccepted = true
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup()
-        val result = controller.get().onboardIfNeeded(2, "2.0")
+        val result = controller.get().onboardIfNeeded(2, "2.0", settings)
         result shouldBe null
         shadowOf(controller.get()).nextStartedActivity shouldNotBe null
     }
@@ -240,11 +246,11 @@ class OnboardingUtilsRobolectricTest {
     // onboardIfNeeded - Path 3: TOS accepted + same version → returns AppStart, commits
     @Test
     fun `onboardIfNeeded with accepted TOS returns AppStart`() {
-        commonUtilsSettings.lastVersionCode = 1
-        commonUtilsSettings.acceptedTosVersion = Int.MAX_VALUE // >= any tosVersion in resources
+        settings.lastVersionCode = 1
+        settings.acceptedTosVersion = Int.MAX_VALUE // >= any tosVersion in resources
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup()
         val a = controller.get()
-        val result = a.onboardIfNeeded(1, "1.0")
+        val result = a.onboardIfNeeded(1, "1.0", settings)
         result shouldNotBe null
         result!!.result shouldBe AppStartResult.NORMAL
     }

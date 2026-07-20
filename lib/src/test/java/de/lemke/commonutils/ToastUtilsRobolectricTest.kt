@@ -17,14 +17,15 @@ package de.lemke.commonutils
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.toast
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class ToastUtilsRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()

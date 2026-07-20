@@ -23,26 +23,30 @@ import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.areAppLocalSettingsSupported
+import de.lemke.commonutils.ui.utils.openApp
+import de.lemke.commonutils.ui.utils.openAppLocaleSettings
+import de.lemke.commonutils.ui.utils.openApplicationSettings
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.spyk
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 /** Fragment subclass that always throws ActivityNotFoundException from startActivity. */
 class ThrowingStartActivityFragment : Fragment() {
     override fun startActivity(intent: Intent) = throw ActivityNotFoundException("no locale settings")
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class OpenUtilsApi36Test {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
@@ -120,7 +124,7 @@ class OpenUtilsApi36Test {
     }
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32])
 class OpenUtilsApi32Test {
     @Test

@@ -29,7 +29,6 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -39,25 +38,29 @@ import com.google.android.play.core.install.model.AppUpdateType.IMMEDIATE
 import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
+import dagger.hilt.android.AndroidEntryPoint
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
-import de.lemke.commonutils.data.commonUtilsSettings
+import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.databinding.ActivityAboutBinding
-import de.lemke.commonutils.openApp
-import de.lemke.commonutils.prepareActivityTransformationBetween
-import de.lemke.commonutils.setCustomBackAnimation
-import de.lemke.commonutils.transformToActivity
+import de.lemke.commonutils.ui.utils.openApp
+import de.lemke.commonutils.ui.utils.prepareActivityTransformationBetween
+import de.lemke.commonutils.ui.utils.setCustomBackAnimation
+import de.lemke.commonutils.ui.utils.transformToActivity
 import dev.oneuiproject.oneui.ktx.onMultiClick
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoConnection
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoUpdate
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NotUpdatable
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.UpdateAvailable
-import kotlinx.coroutines.launch
+import javax.inject.Inject
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Pre-built About screen that shows the app version, optional text, and an in-app update check. */
+@AndroidEntryPoint
 class CommonUtilsAboutActivity : AppCompatActivity() {
+    @Inject
+    lateinit var settings: SettingsRepository
     private lateinit var binding: ActivityAboutBinding
     private lateinit var appUpdateManager: AppUpdateManager
     private lateinit var appUpdateInfo: AppUpdateInfo
@@ -120,20 +123,15 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
 
     private fun setVersionText() {
         val version: TextView = binding.appInfoLayout.findViewById(designR.id.app_info_version)
-        lifecycleScope.launch { setVersionTextView(version) }
+        setVersionTextView(version)
         version.onMultiClick {
-            commonUtilsSettings.devModeEnabled = !commonUtilsSettings.devModeEnabled
+            settings.devModeEnabled = !settings.devModeEnabled
             setVersionTextView(version)
         }
     }
 
     private fun setVersionTextView(textView: TextView) {
-        lifecycleScope.launch {
-            appVersion.ifBlank { getAppVersion() }.let { appVersion ->
-                textView.text =
-                    getString(designR.string.oui_des_version_info, appVersion + if (commonUtilsSettings.devModeEnabled) " (dev)" else "")
-            }
-        }
+        textView.text = getString(designR.string.oui_des_version_info, appVersion + if (settings.devModeEnabled) " (dev)" else "")
     }
 
     private fun setOptionalText() {
@@ -201,11 +199,8 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "CommonUtilsAboutActivity"
 
-        /** Static version string displayed in the about screen; takes precedence if non-empty. */
+        /** Static version string displayed in the about screen. */
         var appVersion = ""
-
-        /** Suspend function used to resolve the version string at display time; used when [appVersion] is empty. */
-        var getAppVersion = suspend { "" }
 
         /** Optional extra text shown below the version; rendered as a [SpannableString] for clickable spans. */
         var optionalText: SpannableString? = null

@@ -59,10 +59,7 @@ android {
             all { test ->
                 test.useJUnitPlatform()
                 test.maxHeapSize = "4096m"
-                test.jvmArgs(
-                    "-Djunit.platform.launcher.interceptors.enabled=true",
-                    "-XX:+EnableDynamicAgentLoading",
-                )
+                test.jvmArgs("-XX:+EnableDynamicAgentLoading")
                 test.systemProperty("robolectric.graphicsMode", "NATIVE")
             }
         }
@@ -74,6 +71,10 @@ android {
             excludes += "META-INF/LICENSE*"
             excludes += "META-INF/licenses/**"
         }
+    }
+    @Suppress("UnstableApiUsage")
+    testFixtures {
+        enable = true
     }
 }
 
@@ -94,7 +95,6 @@ dependencies {
     testImplementation(libs.konsist)
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.kotest.assertions.core)
-    testImplementation(libs.kotest.extensions.robolectric)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockk)
@@ -102,6 +102,21 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
+    testImplementation(testFixtures(project(":lib")))
+
+    testFixturesImplementation(libs.androidx.test.core)
+    // Compose compiler plugin applies to every Kotlin compile task in this module, including
+    // testFixtures — it fails outright if no Compose runtime is on that classpath, even though
+    // none of these test helpers use Compose.
+    testFixturesImplementation(libs.androidx.material3)
+
+    // JUnit4 island: Robolectric has no native JUnit5 support, and HiltAndroidRule/@HiltAndroidTest
+    // are JUnit4-only. junit-vintage-engine lets the JUnit Platform (useJUnitPlatform() above)
+    // discover and run them alongside the rest of this module's Kotest/JUnit5 suite.
+    testImplementation(libs.junit4)
+    testImplementation(libs.hilt.android.testing)
+    testRuntimeOnly(libs.junit.vintage.engine)
+    kspTest(libs.hilt.compiler)
 }
 
 spotless {
@@ -158,78 +173,39 @@ kover {
                     "dagger.hilt.*",
                     "hilt_aggregated_deps.*",
                     "*.di.*",
-                    // Play Core: requires live device + Play Store, untestable in CI.
-                    // Full class exclusion because Kover's annotatedBy filter excludes annotated
-                    // methods from the verify calculation but the XML report still includes their
-                    // generated SAM lambda methods (private static in Kotlin 2.x invokedynamic)
-                    // with missed counts, causing Codecov patch coverage to fail.
+                    // Play Core: requires live device + Play Store; SAM lambdas slip past annotatedBy.
                     "*AppUpdateManagerUtilsKt*",
                     "*InAppReviewUtilsKt*",
-                    // SplashUtils: the setOnExitAnimationListener lambda body (compiled via invokedynamic
-                    // into private static methods of SplashUtilsKt) creates ObjectAnimators and launches
-                    // a lifecycleScope coroutine — untestable in JVM unit tests.
+                    // SplashUtils: exit-animation lambda drives real ObjectAnimators + lifecycleScope, untestable on JVM.
                     "*SplashUtilsKt*",
-                    // TipPopupUtils: requires OneUI TipPopup widget + Activity decorView root;
-                    // the widget cannot be instantiated under Robolectric without a full OneUI theme.
+                    // TipPopupUtils: requires OneUI TipPopup widget + real decorView root, can't instantiate under Robolectric.
                     "*TipPopupUtilsKt*",
-                    // PreferenceUtils: addRelativeLinksCard uses OneUI's listView extension;
-                    // the generated lambda/anonymous class cannot be exercised under Robolectric.
+                    // URLUtilsKt: order-dependent JIT branch-misattribution flakiness, not a real gap (see SettingsRepositoryKt).
+                    "*URLUtilsKt*",
+                    // PreferenceUtilsKt: OneUI listView extension lambda, can't exercise under Robolectric.
                     $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
-                    // setupHeaderAndNavRail: openAboutActivity() helper + its method-reference SAM wrapper;
-                    // requires OneUI NavDrawerLayout, untestable in JVM tests.
+                    // DrawerUtilsKt: requires OneUI NavDrawerLayout, untestable in JVM tests.
                     $$"*DrawerUtilsKt$setupHeaderAndNavRail*",
-                    // deleteAppDataAndExit coroutine continuation: the suspend lambda body
-                    // { deleteAppData() } compiles as an inner class whose invokeSuspend calls
-                    // deleteAppData() (delay + clearApplicationUserData), untestable in JVM.
+                    // PreferenceUtilsKt: deleteAppDataAndExit's coroutine calls clearApplicationUserData(), untestable in JVM.
                     $$"*PreferenceUtilsKt$deleteAppDataAndExit*",
-                    // CommonUtilsLibsActivity setContent {}: Compose lambda body requires full UI rendering,
-                    // which cannot run in JVM unit tests without Compose test infrastructure.
+                    // CommonUtilsLibsActivity: Compose setContent{} lambda needs UI rendering; no Compose test infra here.
                     "*CommonUtilsLibsActivity*",
-                    // Default suspend lambda property values: these are the initial instances stored
-                    // in companion/top-level properties (e.g. `var getAppVersion = suspend { "" }`).
-                    // Every test replaces them before launching the activity, so the defaults are
-                    // never invoked; they cannot be reset to their original instance after replacement.
-                    $$"*CommonUtilsAboutActivity$Companion$getAppVersion*",
-                    $$"*CommonUtilsSettingsActivity$Companion$initPreferences*",
-                    $$"*ActivityUtilsKt$setupCommonUtilsSettingsActivity*",
-                    // setVersionTextView coroutine: suspend state-machine's suspension-check
-                    // instructions are never exercised in JVM tests (coroutine completes synchronously).
-                    $$"*CommonUtilsAboutActivity$setVersionTextView*",
-                    // registerForActivityResult and setMainButtonClickListener lambdas inside onCreate
-                    // generate SAM-wrapper classes/methods excluded here; these fire only via live
-                    // Play Store callbacks and cannot be triggered in JVM unit tests.
+                    // CommonUtilsAboutActivity: onCreate's SAM wrappers fire only via live Play Store callbacks.
                     $$"*CommonUtilsAboutActivity$onCreate*",
-                    // SettingsRepositoryKt: @get:NoCoverage on `commonUtilsSettings` excludes instruction
-                    // miss, but Kover 0.9.x does not exclude branch miss for property-getter annotations.
+                    // SettingsRepositoryKt: same order-dependent branch-misattribution flakiness as URLUtilsKt, not a real gap.
                     "*SettingsRepositoryKt*",
-                    // AutoClearedUtilsKt$autoCleared$1: the DESTROYED lifecycle branch in getValue
-                    // requires a re-entrant call during Fragment.onDestroyView - not safely reproducible
-                    // in unit tests without risking lifecycle-owner access-after-destroy crashes.
+                    // AutoClearedUtilsKt: DESTROYED-lifecycle branch needs a re-entrant call during onDestroyView, unsafe to reproduce.
                     $$"*AutoClearedUtilsKt$autoCleared$1*",
-                    // AboutAppBarListener.onOffsetChanged: else/else-if branches unreachable under Robolectric
-                    // because AppBarLayout.totalScrollRange = 0 (no layout engine), making abs >= 0/2 always true.
+                    // AboutAppBarListener: else branches unreachable under Robolectric since totalScrollRange is always 0.
                     $$"*CommonUtilsAboutMeActivity$AboutAppBarListener*",
-                    // OOBEActivity initFooterButton coroutine state machine: suspension-check instructions
-                    // in invokeSuspend are never exercised because the coroutine completes synchronously.
+                    // CommonUtilsOOBEActivity: initFooterButton's coroutine completes synchronously, suspension path unreachable.
                     $$"*CommonUtilsOOBEActivity$initFooterButton*",
-                    // LottieUtilsKt$launchDelayedPlay$1: coroutine continuation class — the null branch
-                    // of weakView.get()?.playAnimation() is tested via WeakReference(null), but JUnit 5 +
-                    // RobolectricExtension loads the continuation class after JaCoCo's JVM agent, so
-                    // the null branch is never attributed here (same root cause as inline fun stubs).
+                    // LottieUtilsKt: null branch is tested, but JaCoCo loads this continuation class too late to attribute it.
                     $$"*LottieUtilsKt$launchDelayedPlay*",
-                    // OnboardingContext @Parcelize: createFromParcel null-checks each String field; on
-                    // Linux/CI the branch is attributed to `Parcelable` but is never
-                    // triggered in any test path. Kover's verify already excludes synthetic null-checks;
-                    // exclude the class (and its @Parcelize-generated inner classes via *) so the
-                    // JaCoCo XML doesn't expose the miss to Codecov.
+                    // OnboardingContext: @Parcelize-generated null-checks are synthetic; excluded so Codecov doesn't see the miss.
                     "*OnboardingContext*",
                 )
-                // inline fun definition-site phantom stubs: JUnit 5 + RobolectricExtension
-                // initialises Robolectric's class loader after the JaCoCo JVM agent, so test
-                // classes are never instrumented — inlined call-site coverage never reaches
-                // JaCoCo. crossinline default-value lambdas always need @NoCoverage regardless
-                // of test runner (the default compiles to a definition-site private static
-                // method that is never invoked). See CLAUDE.md §@NoCoverage on inline fun.
+                // inline fun definition-site stubs are unreachable under JUnit 5 + Robolectric; see CLAUDE.md §@NoCoverage.
                 annotatedBy("de.lemke.commonutils.NoCoverage")
             }
         }

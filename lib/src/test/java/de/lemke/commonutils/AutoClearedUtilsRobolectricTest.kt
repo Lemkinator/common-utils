@@ -22,13 +22,14 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.ui.utils.autoCleared
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 
 /** Fragment with a real view so [viewLifecycleOwner] is available. */
 internal class AutoClearedViewFragment : Fragment() {
@@ -42,7 +43,7 @@ internal class AutoClearedViewFragment : Fragment() {
     ): View = FrameLayout(requireContext())
 }
 
-@ExtendWith(RobolectricExtension::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class AutoClearedUtilsRobolectricTest {
     private fun launchFragment(): AutoClearedViewFragment {

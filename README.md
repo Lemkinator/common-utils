@@ -18,7 +18,7 @@
 
 # Common utils
 
-This lib consists of common utils, that I use in my Android Apps.
+This lib consists of common utils that I use in my Android Apps.
 
 ## Apps using Common utils
 
