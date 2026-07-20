@@ -16,7 +16,8 @@
 package de.lemke.commonutils.ui.activity
 
 import android.content.Context
-import android.os.Looper
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.preference.DropDownPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -26,6 +27,7 @@ import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import de.lemke.commonutils.DrainMainLooperRule
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
@@ -44,7 +46,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
@@ -58,6 +59,9 @@ import org.robolectric.annotation.Config
 class CommonUtilsSettingsActivityTest {
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
+
+    @get:Rule
+    val drainMainLooper = DrainMainLooperRule()
 
     @BindValue
     @JvmField
@@ -75,6 +79,10 @@ class CommonUtilsSettingsActivityTest {
     @After
     fun tearDown() {
         unmockkAll()
+        // AppCompatDelegate.setDefaultNightMode() is a real static singleton, not a Robolectric
+        // shadow — the dark-mode tests below leave it set to whatever they last triggered, which
+        // would otherwise leak into whichever test runs next.
+        setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     }
 
     private fun launchWithEmptyPrefs(block: (CommonUtilsSettingsActivity) -> Unit) {
@@ -158,7 +166,6 @@ class CommonUtilsSettingsActivityTest {
                     .getString(R.string.commonutils_preference_key_auto_dark_mode)
             val pref = fragment.findPreference<Preference>(key)
             pref?.triggerChange(false)
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 
@@ -174,7 +181,6 @@ class CommonUtilsSettingsActivityTest {
                     .getString(R.string.commonutils_preference_key_auto_dark_mode)
             val pref = fragment.findPreference<Preference>(key)
             pref?.triggerChange(false)
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 
@@ -189,7 +195,6 @@ class CommonUtilsSettingsActivityTest {
                     .getString(R.string.commonutils_preference_key_auto_dark_mode)
             val pref = fragment.findPreference<Preference>(key)
             pref?.triggerChange(true)
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 
@@ -204,7 +209,6 @@ class CommonUtilsSettingsActivityTest {
                     .getString(R.string.commonutils_preference_key_dark_mode)
             val pref = fragment.findPreference<Preference>(key)
             pref?.triggerChange("1")
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 
@@ -219,7 +223,6 @@ class CommonUtilsSettingsActivityTest {
                     .getString(R.string.commonutils_preference_key_dark_mode)
             val pref = fragment.findPreference<Preference>(key)
             pref?.triggerChange("0")
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 
@@ -233,7 +236,6 @@ class CommonUtilsSettingsActivityTest {
                     .getString(R.string.commonutils_preference_key_privacy_policy)
             val pref = fragment.findPreference<Preference>(key)
             pref?.triggerClick()
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 
@@ -247,7 +249,6 @@ class CommonUtilsSettingsActivityTest {
                     .getString(R.string.commonutils_preference_key_tos)
             val pref = fragment.findPreference<Preference>(key)
             pref?.triggerClick()
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 
@@ -261,7 +262,6 @@ class CommonUtilsSettingsActivityTest {
                     .getString(R.string.commonutils_preference_key_report_bug)
             val pref = fragment.findPreference<Preference>(key)
             pref?.triggerClick()
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 }
