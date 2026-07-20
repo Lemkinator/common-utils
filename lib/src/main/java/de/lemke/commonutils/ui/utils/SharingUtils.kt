@@ -17,9 +17,7 @@ package de.lemke.commonutils.ui.utils
 
 import android.content.ActivityNotFoundException
 import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.content.Context.CLIPBOARD_SERVICE
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.ACTION_SEND_MULTIPLE
@@ -91,7 +89,7 @@ fun Context.copyToClipboard(
     text: String,
     label: String,
 ): Boolean {
-    (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText(label, text))
+    setClip(ClipData.newPlainText(label, text))
     toast(R.string.commonutils_copied_to_clipboard)
     return true
 }
@@ -109,7 +107,7 @@ fun Context.copyToClipboard(
         return false
     }
     val clip = ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this))
-    (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
+    setClip(clip)
     toast(R.string.commonutils_copied_to_clipboard)
     return true
 }
