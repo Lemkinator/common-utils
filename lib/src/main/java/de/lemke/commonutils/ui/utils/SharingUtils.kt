@@ -106,8 +106,7 @@ fun Context.copyToClipboard(
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
         return false
     }
-    val clip = ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this))
-    setClip(clip)
+    setClip(ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this)))
     toast(R.string.commonutils_copied_to_clipboard)
     return true
 }
