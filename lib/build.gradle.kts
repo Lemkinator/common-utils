@@ -72,6 +72,10 @@ android {
             excludes += "META-INF/licenses/**"
         }
     }
+    @Suppress("UnstableApiUsage")
+    testFixtures {
+        enable = true
+    }
 }
 
 dependencies {
@@ -98,6 +102,13 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
+    testImplementation(testFixtures(project(":lib")))
+
+    testFixturesImplementation(libs.androidx.test.core)
+    // Compose compiler plugin applies to every Kotlin compile task in this module, including
+    // testFixtures — it fails outright if no Compose runtime is on that classpath, even though
+    // none of these test helpers use Compose.
+    testFixturesImplementation(libs.androidx.material3)
 
     // JUnit4 island: Robolectric has no native JUnit5 support, and HiltAndroidRule/@HiltAndroidTest
     // are JUnit4-only. junit-vintage-engine lets the JUnit Platform (useJUnitPlatform() above)
