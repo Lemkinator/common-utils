@@ -127,11 +127,28 @@ class FakeSharedPreferences : SharedPreferences {
 
         override fun apply() = applyChanges()
 
+        // Mirrors real EditorImpl.commitToMemory(): only keys whose stored value actually changes are
+        // reported to listeners, and pending/clearAll are reset afterwards so a reused Editor can't replay
+        // already-applied changes.
         private fun applyChanges() {
-            if (clearAll) map.clear()
-            pending.forEach { (key, value) -> if (value === Removed) map.remove(key) else map[key] = value }
-            listeners.forEach { listener ->
-                pending.keys.forEach { key -> listener.onSharedPreferenceChanged(this@FakeSharedPreferences, key) }
+            val changedKeys = mutableSetOf<String>()
+            if (clearAll) {
+                changedKeys += map.keys
+                map.clear()
+            }
+            pending.forEach { (key, value) ->
+                if (value === Removed) {
+                    if (map.remove(key) != null) changedKeys += key
+                } else {
+                    if (map[key] != value) changedKeys += key
+                    map[key] = value
+                }
+            }
+            pending.clear()
+            clearAll = false
+            val listenersSnapshot = listeners.toList()
+            changedKeys.forEach { key ->
+                listenersSnapshot.forEach { listener -> listener.onSharedPreferenceChanged(this@FakeSharedPreferences, key) }
             }
         }
     }
