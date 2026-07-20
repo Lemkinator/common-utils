@@ -42,7 +42,7 @@ class SettingsRepositoryTest {
 
     @Before
     fun setUp() {
-        prefs = freshTestPreferences("settings_test")
+        prefs = freshTestPreferences()
         repo = SettingsRepository(prefs)
     }
 
@@ -142,7 +142,7 @@ class ApplyDarkModeTest {
 
     @Before
     fun setUp() {
-        prefs = freshTestPreferences("apply_dark_mode_test")
+        prefs = freshTestPreferences()
     }
 
     @Test
@@ -188,7 +188,7 @@ class SettingsFlowTest {
 
     @Before
     fun setUp() {
-        prefs = freshTestPreferences("settings_flow_test")
+        prefs = freshTestPreferences()
     }
 
     @Test

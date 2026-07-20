@@ -65,7 +65,7 @@ class CommonUtilsSettingsActivityTest {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences("settings_test"))
+    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
 
     @Before
     fun setUp() {
@@ -279,7 +279,7 @@ class CommonUtilsSettingsActivitySdk29Test {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences("settings_test_29"))
+    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
 
     @Before
     fun setUp() {

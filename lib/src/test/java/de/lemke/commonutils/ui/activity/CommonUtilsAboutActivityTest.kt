@@ -65,7 +65,7 @@ class CommonUtilsAboutActivityTest {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences("about_test"))
+    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
 
     private lateinit var mockAppUpdateManager: AppUpdateManager
 

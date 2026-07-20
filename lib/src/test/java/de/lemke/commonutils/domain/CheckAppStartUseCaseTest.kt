@@ -40,7 +40,7 @@ class CheckAppStartUseCaseTest {
     @Before
     fun setUp() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
-        settings = SettingsRepository(freshTestPreferences("check_app_start_test"))
+        settings = SettingsRepository(freshTestPreferences())
         useCase = CheckAppStartUseCase(ctx, settings)
     }
 

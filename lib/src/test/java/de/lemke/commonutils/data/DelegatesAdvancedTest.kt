@@ -34,7 +34,7 @@ class DelegatesAdvancedTest {
 
     @Before
     fun setUp() {
-        prefs = freshTestPreferences("test_prefs")
+        prefs = freshTestPreferences()
     }
 
     @Test

@@ -18,8 +18,6 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.PreferenceManager
-import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.domain.AppStartResult
 import de.lemke.commonutils.ui.utils.Onboarding
@@ -50,10 +48,7 @@ class OnboardingUtilsRobolectricTest {
 
     @Before
     fun initSettings() {
-        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val prefs = PreferenceManager.getDefaultSharedPreferences(ctx)
-        prefs.edit().clear().commit()
-        settings = SettingsRepository(prefs)
+        settings = SettingsRepository(freshTestPreferences())
         // Onboarding.steps is a JVM-static set by setupOnboarding() — reset it so tests that don't
         // call setupOnboarding themselves don't inherit a value left by a previous test.
         setupOnboarding(emptyList())
