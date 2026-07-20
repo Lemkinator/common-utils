@@ -29,10 +29,8 @@ for architecture rules.
 **Robolectric + JUnit 5**: Robolectric has no native JUnit 5 support, so every Robolectric
 test in this module runs on plain JUnit 4 via `org.junit.vintage:junit-vintage-engine` on
 `testRuntimeOnly`, which lets the JUnit Platform (`useJUnitPlatform()`) discover and run
-them alongside the rest of the module's Kotest/JUnit 5 suite — mirrors GetIcon's own
-long-standing pattern (`app/src/test/java/de/lemke/geticon/ui/*`) exactly, including for
-the two `@AndroidEntryPoint` activities' `@HiltAndroidTest`/`HiltAndroidRule` tests
-(JUnit 4-only either way). This repo previously bridged Robolectric onto JUnit 5 via the
+them alongside the rest of the module's Kotest/JUnit 5 suite.
+This repo previously bridged Robolectric onto JUnit 5 via the
 experimental `tech.apter.junit5.jupiter:robolectric-extension`; it was reverted because
 that bridge only isolates state **per test class**, not per test method, which let shared
 Robolectric/Android state leak between a class's own test methods (worked around at the
