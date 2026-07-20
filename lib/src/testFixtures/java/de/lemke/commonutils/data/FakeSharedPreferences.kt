@@ -83,12 +83,12 @@ class FakeSharedPreferences : SharedPreferences {
         override fun putString(
             key: String?,
             value: String?,
-        ) = apply { key?.let { pending[it] = value } }
+        ) = apply { key?.let { pending[it] = value ?: Removed } }
 
         override fun putStringSet(
             key: String?,
             values: MutableSet<String>?,
-        ) = apply { key?.let { pending[it] = values?.toSet() } }
+        ) = apply { key?.let { pending[it] = values?.toSet() ?: Removed } }
 
         override fun putInt(
             key: String?,
