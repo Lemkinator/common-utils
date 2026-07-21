@@ -1,7 +1,7 @@
 [versions]
 #lib version
 #noinspection UnusedVersionCatalogEntry
-common-utils = "1.2.1"
+common-utils = "1.2.2"
 
 #noinspection UnusedVersionCatalogEntry
 compileSdk = "37"
