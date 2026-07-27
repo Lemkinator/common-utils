@@ -50,6 +50,28 @@ fun <R, T> ReadWriteProperty<R, T>.sanitized(sanitize: (T) -> T): ReadWritePrope
         ) = this@sanitized.setValue(thisRef, property, sanitize(value))
     }
 
+/**
+ * Wraps this delegate to expose values as [S] instead of the natively-storable [T] — e.g. an enum or sealed type
+ * backed by a String delegate. [to] converts the stored value on read, [from] converts back on write. Unlike
+ * [sanitized] (same type in, same type out — for clamping/validating), [mapped] changes the exposed type entirely.
+ */
+fun <R, T, S> ReadWriteProperty<R, T>.mapped(
+    to: (T) -> S,
+    from: (S) -> T,
+): ReadWriteProperty<R, S> =
+    object : ReadWriteProperty<R, S> {
+        override fun getValue(
+            thisRef: R,
+            property: KProperty<*>,
+        ): S = to(this@mapped.getValue(thisRef, property))
+
+        override fun setValue(
+            thisRef: R,
+            property: KProperty<*>,
+            value: S,
+        ) = this@mapped.setValue(thisRef, property, from(value))
+    }
+
 /** Parses [raw] as a comma-joined int list; null (→ delegate falls back to its default) if null, empty, or unparsable. */
 @NoCoverage // toIntOrNull()'s inlined radix-range check is unreachable at radix=10.
 private fun parseIntList(raw: String?): List<Int>? = raw?.split(",")?.mapNotNull { it.toIntOrNull() }?.takeIf { it.isNotEmpty() }

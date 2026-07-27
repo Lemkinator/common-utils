@@ -340,6 +340,58 @@ class DelegatesAdvancedTest {
     }
 
     @Test
+    fun `mapped exposes a String delegate as an enum on read`() {
+        prefs.edit().putString("unit", "CELSIUS").apply()
+
+        class Holder {
+            var unit: TempUnit by prefs.delegates
+                .string(default = TempUnit.CELSIUS.name)
+                .mapped(to = { TempUnit.valueOf(it) }, from = { it.name })
+        }
+        Holder().unit shouldBe TempUnit.CELSIUS
+    }
+
+    @Test
+    fun `mapped round-trips a converted value through a fresh instance`() {
+        class Holder {
+            var unit: TempUnit by prefs.delegates
+                .string(default = TempUnit.CELSIUS.name)
+                .mapped(to = { TempUnit.valueOf(it) }, from = { it.name })
+        }
+
+        val h = Holder()
+        h.unit = TempUnit.FAHRENHEIT
+        Holder().unit shouldBe TempUnit.FAHRENHEIT
+    }
+
+    @Test
+    fun `mapped stores the converted-from representation in prefs`() {
+        class Holder {
+            var unit: TempUnit by prefs.delegates
+                .string(default = TempUnit.CELSIUS.name)
+                .mapped(to = { TempUnit.valueOf(it) }, from = { it.name })
+        }
+
+        val h = Holder()
+        h.unit = TempUnit.KELVIN
+        prefs.getString("unit", null) shouldBe "KELVIN"
+    }
+
+    @Test
+    fun `mapped composes with sanitized to clamp the mapped type`() {
+        class Holder {
+            var size: Size by prefs.delegates
+                .int(default = 16)
+                .mapped(to = { Size(it) }, from = { it.px })
+                .sanitized { Size(it.px.coerceIn(16, 1024)) }
+        }
+
+        val h = Holder()
+        h.size = Size(-5)
+        prefs.getInt("size", -1) shouldBe 16
+    }
+
+    @Test
     fun `boolean with explicit key uses that key in prefs`() {
         class Holder {
             var flag: Boolean by prefs.delegates.boolean(default = false, key = "my_custom_key")
@@ -488,4 +540,8 @@ class DelegatesAdvancedTest {
         h.loc = SaveLocation.PICTURES
         Holder().loc shouldBe SaveLocation.PICTURES
     }
+
+    private enum class TempUnit { CELSIUS, FAHRENHEIT, KELVIN }
+
+    private data class Size(val px: Int)
 }
