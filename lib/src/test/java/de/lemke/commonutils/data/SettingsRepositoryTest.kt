@@ -133,6 +133,59 @@ class SettingsRepositoryTest {
         repo.lastVersionName = "2.5.0"
         reload().lastVersionName shouldBe "2.5.0"
     }
+
+    // The tests below pin each property to its literal SharedPreferences key string, read back via the raw
+    // SharedPreferences accessor rather than through the (possibly-renamed) property. Delegates default their key to
+    // `property.name` via reflection, so an IDE rename of the property silently changes the stored key without a
+    // compile error - these tests catch that by hardcoding the key string instead of round-tripping through the property.
+
+    @Test
+    fun `darkMode persists under its literal SharedPreferences key`() {
+        repo.darkMode = true
+        prefs.getString("darkMode", "0") shouldBe "1"
+    }
+
+    @Test
+    fun `autoDarkMode persists under its literal SharedPreferences key`() {
+        repo.autoDarkMode = false
+        prefs.getBoolean("autoDarkMode", true) shouldBe false
+    }
+
+    @Test
+    fun `lastVersionCode persists under its literal SharedPreferences key`() {
+        repo.lastVersionCode = 42
+        prefs.getInt("lastVersionCode", -1) shouldBe 42
+    }
+
+    @Test
+    fun `lastVersionName persists under its literal SharedPreferences key`() {
+        repo.lastVersionName = "2.5.0"
+        prefs.getString("lastVersionName", "0.0.0") shouldBe "2.5.0"
+    }
+
+    @Test
+    fun `acceptedTosVersion persists under its literal SharedPreferences key`() {
+        repo.acceptedTosVersion = 3
+        prefs.getInt("acceptedTosVersion", -1) shouldBe 3
+    }
+
+    @Test
+    fun `devModeEnabled persists under its literal SharedPreferences key`() {
+        repo.devModeEnabled = true
+        prefs.getBoolean("devModeEnabled", false) shouldBe true
+    }
+
+    @Test
+    fun `search persists under its literal SharedPreferences key`() {
+        repo.search = "hello"
+        prefs.getString("search", "") shouldBe "hello"
+    }
+
+    @Test
+    fun `imageSaveLocation persists under its literal SharedPreferences key`() {
+        repo.imageSaveLocation = SaveLocation.DOWNLOADS
+        prefs.getString("imageSaveLocation", SaveLocation.default.name) shouldBe SaveLocation.DOWNLOADS.name
+    }
 }
 
 @RunWith(RobolectricTestRunner::class)
