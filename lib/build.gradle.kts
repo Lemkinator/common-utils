@@ -61,6 +61,13 @@ android {
                 test.maxHeapSize = "4096m"
                 test.jvmArgs("-XX:+EnableDynamicAgentLoading")
                 test.systemProperty("robolectric.graphicsMode", "NATIVE")
+                // TEMP: diagnosing a CI-only (not locally reproducible) failure in CommonUtilsSettingsActivityTest.
+                test.testLogging {
+                    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                    showStackTraces = true
+                    showCauses = true
+                    events("failed")
+                }
             }
         }
     }
