@@ -63,11 +63,9 @@ class CommonUtilsSettingsActivityTest {
     @get:Rule
     val drainMainLooper = DrainMainLooperRule()
 
-    // Not freshTestPreferences(): the real SettingsFragment's own PreferenceManager is not Hilt-aware and always
-    // persists to PreferenceManager.getDefaultSharedPreferences() regardless of what's @BindValue'd here, so
-    // fakeSettings must read/write that exact same file - otherwise darkMode/autoDarkMode's native persistence
-    // (initDarkMode no longer seeds it manually) diverges from what this test's assertions see. Cleared in
-    // setUp() for isolation between test methods instead.
+    // Not freshTestPreferences(): SettingsFragment's own PreferenceManager is not Hilt-aware and always persists
+    // to PreferenceManager.getDefaultSharedPreferences() regardless of what's @BindValue'd here, so fakeSettings
+    // must read/write that exact same file. Cleared in setUp() for isolation between test methods.
     @BindValue
     @JvmField
     val fakeSettings: SettingsRepository =
