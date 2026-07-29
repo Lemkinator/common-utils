@@ -126,6 +126,50 @@ screen), Play Core (in-app updates + reviews), Splashscreen.
 root `build.gradle.kts` to avoid version conflicts with OneUI Design's
 bundled dependencies — be careful when adding new dependencies.
 
+## Preference XML ↔ Settings Binding Convention
+
+Applies fleet-wide (every app's `UserSettings : SettingsRepository`), not just this library's own
+`preferences_*.xml`. For every preference widget that persists a value:
+
+1. `android:key` equals the Kotlin property name on the settings class (camelCase, no `_pref`
+   suffix) — delegates default their storage key to `property.name` via reflection
+   (`SharedPreferenceDelegates`), so this is what makes the XML key and the property the same key.
+2. `android:defaultValue` is declared and equals the delegate's own default. Nothing ever writes a
+   default into `SharedPreferences` on its own — `android:defaultValue` and the delegate's default
+   are two independent read-time fallbacks that must agree, or the widget renders the *opposite* of
+   how the app actually behaves until the user first touches it.
+3. The widget's persistence wire type matches the delegate's storage type — `TwoStatePreference` →
+   `Boolean`, `ListPreference`/`DropDownPreference`/`EditTextPreference`/`HorizontalRadioPreference`
+   → `String`, `SeekBarPreference` → `Int`. When the exposed property type differs, bridge with
+   `.mapped(to =, from =)` on a delegate of the *wire* type — see `DelegatesAdvanced.kt`'s `mapped`
+   (the bespoke `darkMode()` delegate, storing `"1"`/`"0"` for legacy `HorizontalRadioPreference`
+   compatibility, is the precedent this generalizes).
+4. No manual `isChecked = settings.x` / `onNewValue { settings.x = it }` sync in the fragment.
+   Native `Preference` persistence already does both — see `initDarkMode` in `PreferenceUtils.kt`.
+
+Non-persisting entries (`PreferenceCategory`, `PreferenceScreen`/`Preference` used as click targets)
+are pure UI ids: camelCase, and must not collide with a property name.
+
+**Allowed exceptions**, documented at the call site: genuinely bidirectional settings where another
+screen mutates the value while the preference screen is alive (keep a `collectLatest`/`onNewValue`
+observer for that one field only — not a full manual sync); and side-effect/veto handlers (e.g. a
+notification toggle that requests a runtime permission and can revert the switch) — the side effect
+stays, the *value write* still goes away.
+
+**`android:defaultValue` gotcha:** `HorizontalRadioPreference` persists a `String` via
+`getPersistedString`/`persistString`, not the type suggested by the delegate it backs — e.g.
+`darkMode` needs `android:defaultValue="0"` (not `"false"`).
+
+**Enforcement:** `assertPreferenceXmlBoundToSettings(xmlRes, factory)` in
+`lib/src/testFixtures/java/de/lemke/commonutils/data/PreferenceXmlParity.kt` — call it once per
+preference XML resource, per app, from a Robolectric test (see `PreferenceXmlParityTest.kt` for this
+library's own screens). It inflates the XML through a real, themed `PreferenceFragmentCompat` (not
+`PreferenceManager.setDefaultValues()` against a bare `Context`, which NPEs on theme-dependent custom
+widgets) and checks all four clauses above, including a raw-XML scan for clause 2 — some widgets
+(e.g. `HorizontalRadioPreference`) only call `persistX()` when the resolved value differs from their
+own in-memory starting field, so a *declared* default that happens to equal that field never gets
+written, and a write-based "was a default declared" check would misreport it as missing.
+
 ## Lifecycle Collection Convention
 
 - `StateFlow<UiState>` → `collectState` (current value, re-emits on
