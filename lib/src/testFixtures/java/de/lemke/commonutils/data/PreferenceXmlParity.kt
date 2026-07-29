@@ -105,6 +105,10 @@ private fun walk(
             // A bare androidx.preference.Preference (no subclass) is a plain click target - it never
             // calls persistXxx/getPersistedXxx, regardless of its `persistent`/`key` attributes.
             pref.javaClass == Preference::class.java -> containers += pref
+            // Explicit opt-out for a decorated-but-non-storing Preference subclass (e.g. a custom
+            // widget with its own onClick/widgetLayoutResource but no value concept) - set
+            // android:persistent="false" on it to mark it structural rather than value-bearing.
+            !pref.isPersistent -> containers += pref
             else -> valueBearing += pref
         }
     }
@@ -124,8 +128,8 @@ private fun findGetter(
  *
  * 1. Every value-bearing widget's `android:key` matches a property on the settings class produced by [factory]
  *    - catches a typo'd key or a property renamed without updating the XML.
- * 2. No purely-navigational key (category, click-target `PreferenceScreen`/`Preference`) collides with a
- *    property name.
+ * 2. No purely-navigational key (category, click-target `PreferenceScreen`/`Preference`, or any
+ *    `android:persistent="false"` widget) collides with a property name.
  * 3. Every value-bearing widget declares `android:defaultValue` in the XML itself (checked via
  *    [collectDeclaredDefaultValueKeys], not via post-inflation `SharedPreferences` contents - some widgets
  *    only call `persistX()` when the resolved value differs from their own in-memory starting field, so a
