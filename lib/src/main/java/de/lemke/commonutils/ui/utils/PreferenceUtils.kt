@@ -154,10 +154,8 @@ private fun PreferenceFragmentCompat.initDarkMode(settings: SettingsRepository) 
         Log.e(TAG, "autoDarkModePref or darkModePref is null, skipping initialization")
     } else {
         darkModePref.isEnabled = !settings.autoDarkMode
-        darkModePref.value = if (settings.darkMode) "1" else "0"
         darkModePref.setDividerEnabled(false)
         darkModePref.setTouchEffectEnabled(false)
-        autoDarkModePref.isChecked = settings.autoDarkMode
         autoDarkModePref.onNewValue {
             darkModePref.isEnabled = !it
             if (it) {
@@ -170,9 +168,6 @@ private fun PreferenceFragmentCompat.initDarkMode(settings: SettingsRepository) 
                 }
             }
         }
-        darkModePref.onNewValue {
-            settings.darkMode = it == "1"
-            setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
-        }
+        darkModePref.onNewValue { setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO) }
     }
 }
