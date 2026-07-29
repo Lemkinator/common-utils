@@ -15,9 +15,9 @@
  */
 package de.lemke.commonutils
 
-import android.content.Context.MODE_PRIVATE
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.preference.PreferenceManager
 import de.lemke.commonutils.ui.utils.canShowInAppReview
 import de.lemke.commonutils.ui.utils.getLastInAppReview
 import de.lemke.commonutils.ui.utils.setInAppReview
@@ -69,7 +69,7 @@ class InAppReviewUtilsRobolectricTest {
     fun `canShowInAppReview returns false when last review was 13 days ago`() {
         val activity = setupActivity()
         val thirteenDaysAgo = System.currentTimeMillis() - DAYS.toMillis(13)
-        activity.getSharedPreferences("InAppReviewUtils", MODE_PRIVATE).edit { putLong("lastInAppReview", thirteenDaysAgo) }
+        PreferenceManager.getDefaultSharedPreferences(activity).edit { putLong("lastInAppReview", thirteenDaysAgo) }
         activity.canShowInAppReview().shouldBeFalse()
     }
 
@@ -77,7 +77,7 @@ class InAppReviewUtilsRobolectricTest {
     fun `canShowInAppReview returns true when last review was 15 days ago`() {
         val activity = setupActivity()
         val fifteenDaysAgo = System.currentTimeMillis() - DAYS.toMillis(15)
-        activity.getSharedPreferences("InAppReviewUtils", MODE_PRIVATE).edit { putLong("lastInAppReview", fifteenDaysAgo) }
+        PreferenceManager.getDefaultSharedPreferences(activity).edit { putLong("lastInAppReview", fifteenDaysAgo) }
         activity.canShowInAppReview().shouldBeTrue()
     }
 
