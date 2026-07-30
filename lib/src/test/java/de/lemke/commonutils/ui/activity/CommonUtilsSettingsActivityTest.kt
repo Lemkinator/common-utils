@@ -50,12 +50,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 // SettingsFragment's own PreferenceManager is not Hilt-aware and always persists to
-// PreferenceManager.getDefaultSharedPreferences() regardless of what's @BindValue'd, so fakeSettings must
-// read/write that exact same file - not freshTestPreferences(). Shared by both classes below.
+// PreferenceManager.getDefaultSharedPreferences() regardless of what's @BindValue'd - not freshTestPreferences().
 private fun defaultSharedPreferencesFakeSettings(): SettingsRepository =
     SettingsRepository(PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext()))
 
-/** Cleared before each test method for isolation, since fakeSettings above persists into this shared file. */
 private fun clearDefaultSharedPreferences() {
     PreferenceManager
         .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
@@ -143,9 +141,7 @@ class CommonUtilsSettingsActivityTest {
             .also { it.isAccessible = true }
             .invoke(this, newValue) as Boolean
 
-    // Mirrors HorizontalRadioPreference's real onClickListener (only calls `.value = mValue` once
-    // the change listener accepts it), so - unlike a bare triggerChange() - this actually exercises
-    // the widget's real persistString() write, letting tests assert on fakeSettings.darkMode.
+    // Mirrors HorizontalRadioPreference's real onClickListener.
     private fun HorizontalRadioPreference.triggerRadioClick(newValue: String) {
         if (triggerChange(newValue)) value = newValue
     }

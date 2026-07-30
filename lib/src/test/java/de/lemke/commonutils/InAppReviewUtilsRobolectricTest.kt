@@ -38,8 +38,6 @@ import org.robolectric.annotation.Config
 class InAppReviewUtilsRobolectricTest {
     @Before
     fun setUp() {
-        // InAppReviewUtils persists into the shared default SharedPreferences file, so a value
-        // written by one test method would otherwise leak into whichever test runs next.
         PreferenceManager
             .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
             .edit()

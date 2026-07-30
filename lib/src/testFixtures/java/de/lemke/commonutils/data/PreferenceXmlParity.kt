@@ -91,10 +91,8 @@ class PreferenceXmlParityFragment : PreferenceFragmentCompat() {
 }
 
 /**
- * Hosts [fragment] inside a freshly created, headless [AppCompatActivity], advancing only to CREATED -
- * enough for `FragmentManager.commitNow()` to run the fragment's `onCreate` synchronously, since the
- * fragment is never rendered into a container and no caller here needs it resumed or visible. Caller
- * must `destroy()` the returned controller when done.
+ * Hosts [fragment] inside a freshly created, headless [AppCompatActivity] at the CREATED lifecycle
+ * state. Caller must `destroy()` the returned controller when done.
  */
 private fun hostFragmentAtCreated(fragment: Fragment): ActivityController<AppCompatActivity> {
     val controller = Robolectric.buildActivity(AppCompatActivity::class.java).create()
@@ -169,14 +167,11 @@ private fun findGetter(
  * to an `Int` delegate with no `.mapped()` bridge) surfaces as a [ClassCastException] out of [factory] - that
  * failure is deliberately left uncaught here, so the test output points straight at the mismatched delegate.
  *
- * Known gap - live today, not just hypothetical: [HorizontalRadioPreference][dev.oneuiproject.oneui.preference.HorizontalRadioPreference]'s
- * in-memory starting field is `"0"`, which is exactly `darkMode`'s current declared default, so check (4) is
- * currently vacuous for that one pairing - both `empty` and `withDefaults` compute the same delegate-default
- * fallback and read equal regardless of whether the XML default is actually right. More generally: if a declared
- * default happens to equal a widget's own in-memory starting field *and* disagrees with the delegate's default,
- * (3) sees a declared default (correctly) and (4) sees no persisted key to compare (the widget never wrote), so
- * the two can't cross-check each other for that one combination. Narrower than the bug class this helper exists
- * for (an *omitted* default), but real for `darkMode` specifically today.
+ * Known gap: if a declared default happens to equal a widget's own in-memory starting field *and* disagrees
+ * with the delegate's default, (3) sees a declared default (correctly) and (4) sees no persisted key to compare
+ * (the widget never wrote), so the two can't cross-check each other for that one combination.
+ * [HorizontalRadioPreference][dev.oneuiproject.oneui.preference.HorizontalRadioPreference]'s starting field is
+ * `"0"`, matching `darkMode`'s current declared default, so check (4) is currently vacuous for that pairing.
  */
 fun <T : Any> assertPreferenceXmlBoundToSettings(
     @XmlRes xmlRes: Int,
