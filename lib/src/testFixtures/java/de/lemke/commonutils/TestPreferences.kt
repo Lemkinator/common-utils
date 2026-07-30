@@ -20,10 +20,13 @@ import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import java.util.UUID
 
+/** Returns a UUID-named SharedPreferences file name, fresh by construction: no collision risk on a reused device. */
+fun freshTestPreferencesName(): String = "test_${UUID.randomUUID()}"
+
 /**
  * Returns a [SharedPreferences] instance backed by a UUID-named file, fresh by construction:
  * no manual `.edit().clear()`, no caller-supplied names, no collision risk on a reused device.
  * The only canonical way to get a settings-backed store in a test.
  */
 fun freshTestPreferences(context: Context = ApplicationProvider.getApplicationContext()): SharedPreferences =
-    context.getSharedPreferences("test_${UUID.randomUUID()}", Context.MODE_PRIVATE)
+    context.getSharedPreferences(freshTestPreferencesName(), Context.MODE_PRIVATE)

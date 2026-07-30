@@ -26,7 +26,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceGroup
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.freshTestPreferences
-import java.util.UUID
+import de.lemke.commonutils.freshTestPreferencesName
 import org.robolectric.Robolectric
 import org.xmlpull.v1.XmlPullParser
 
@@ -164,7 +164,7 @@ fun <T : Any> assertPreferenceXmlBoundToSettings(
     factory: (SharedPreferences) -> T,
 ) {
     val context = ApplicationProvider.getApplicationContext<Context>()
-    val defaultsName = "preferenceXmlParityDefaults_${xmlRes}_${UUID.randomUUID()}"
+    val defaultsName = freshTestPreferencesName()
 
     val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup()
     val activity = controller.get()
