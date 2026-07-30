@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import android.content.Context.MODE_PRIVATE
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
@@ -99,5 +100,13 @@ class InAppReviewUtilsRobolectricTest {
         val activity = setupActivity()
         // First call records currentTimeMillis() as install timestamp → 0 days elapsed → false
         activity.canShowInAppReview().shouldBeFalse()
+    }
+
+    @Test
+    fun `getLastInAppReview migrates a timestamp from the legacy dedicated prefs file`() {
+        val activity = setupActivity()
+        val fifteenDaysAgo = System.currentTimeMillis() - DAYS.toMillis(15)
+        activity.getSharedPreferences("InAppReviewUtils", MODE_PRIVATE).edit { putLong("lastInAppReview", fifteenDaysAgo) }
+        activity.getLastInAppReview() shouldBe fifteenDaysAgo
     }
 }

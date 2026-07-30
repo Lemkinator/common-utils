@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils.ui.utils
 
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
@@ -32,12 +33,23 @@ private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
 
 /**
  * Returns the timestamp of the last in-app review request in milliseconds.
- * On the first call (no stored timestamp), records the current time so the 14-day cooldown
- * starts from first launch — avoids surfacing a review request immediately on first launch.
+ * On the first call (no stored timestamp), falls back to the legacy dedicated "InAppReviewUtils"
+ * SharedPreferences file (used before this moved onto the default file) so existing installs keep
+ * their cooldown instead of it silently resetting; if that's empty too, records the current time so
+ * the 14-day cooldown starts from first launch — avoids surfacing a review request immediately then.
  */
 fun AppCompatActivity.getLastInAppReview(): Long {
     val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-    if (!prefs.contains("lastInAppReview")) prefs.edit { putLong("lastInAppReview", currentTimeMillis()) }
+    if (!prefs.contains("lastInAppReview")) {
+        val legacyPrefs = getSharedPreferences(TAG, MODE_PRIVATE)
+        val migrated =
+            if (legacyPrefs.contains("lastInAppReview")) {
+                legacyPrefs.getLong("lastInAppReview", currentTimeMillis())
+            } else {
+                currentTimeMillis()
+            }
+        prefs.edit { putLong("lastInAppReview", migrated) }
+    }
     return prefs.getLong("lastInAppReview", currentTimeMillis())
 }
 
