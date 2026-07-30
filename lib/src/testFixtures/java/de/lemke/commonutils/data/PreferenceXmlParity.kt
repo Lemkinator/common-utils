@@ -150,74 +150,80 @@ private fun findGetter(
  * bug class this helper exists for (an *omitted* default), and not hit by any widget/delegate pairing in this
  * codebase today.
  */
-fun <T> assertPreferenceXmlBoundToSettings(
+fun <T : Any> assertPreferenceXmlBoundToSettings(
     @XmlRes xmlRes: Int,
     factory: (SharedPreferences) -> T,
 ) {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val defaultsName = "preferenceXmlParityDefaults_${xmlRes}_${UUID.randomUUID()}"
 
-    val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
-    val fragment =
-        PreferenceXmlParityFragment().apply {
-            this.xmlRes = xmlRes
-            this.sharedPreferencesName = defaultsName
-        }
-    activity.supportFragmentManager
-        .beginTransaction()
-        .add(fragment, "preferenceXmlParity")
-        .commitNow()
+    val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup()
+    val activity = controller.get()
+    try {
+        val fragment =
+            PreferenceXmlParityFragment().apply {
+                this.xmlRes = xmlRes
+                this.sharedPreferencesName = defaultsName
+            }
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(fragment, "preferenceXmlParity")
+            .commitNow()
 
-    val valueBearing = mutableListOf<Preference>()
-    val containers = mutableListOf<Preference>()
-    walk(fragment.preferenceScreen, valueBearing, containers)
+        val valueBearing = mutableListOf<Preference>()
+        val containers = mutableListOf<Preference>()
+        walk(fragment.preferenceScreen, valueBearing, containers)
 
-    val empty = factory(freshTestPreferences(context))
-    val settingsClass = empty!!::class.java
+        val empty = factory(freshTestPreferences(context))
+        val settingsClass = empty::class.java
 
-    for (pref in containers) {
-        val key = pref.key ?: continue
-        if (findGetter(settingsClass, key) != null) {
-            error(
-                "Non-persisting preference \"$key\" (${pref.javaClass.simpleName}, xml $xmlRes) collides with a " +
-                    "${settingsClass.simpleName} property name - rename the XML key or the property.",
-            )
-        }
-    }
-
-    val keyToGetter =
-        valueBearing.associate { pref ->
-            val key = pref.key ?: error("Persisting preference of type ${pref.javaClass.simpleName} (xml $xmlRes) has no android:key.")
-            val getter =
-                findGetter(settingsClass, key)
-                    ?: error(
-                        "Preference key \"$key\" (${pref.javaClass.simpleName}, xml $xmlRes) has no matching " +
-                            "${settingsClass.simpleName} property - typo'd key, or the property was renamed without " +
-                            "updating the XML.",
-                    )
-            key to getter
+        for (pref in containers) {
+            val key = pref.key ?: continue
+            if (findGetter(settingsClass, key) != null) {
+                error(
+                    "Non-persisting preference \"$key\" (${pref.javaClass.simpleName}, xml $xmlRes) collides with a " +
+                        "${settingsClass.simpleName} property name - rename the XML key or the property.",
+                )
+            }
         }
 
-    val declaredDefaultKeys = collectDeclaredDefaultValueKeys(context, xmlRes)
-    for (key in keyToGetter.keys) {
-        if (key !in declaredDefaultKeys) {
-            error(
-                "Preference \"$key\" (xml $xmlRes) has no android:defaultValue - it must be declared and equal " +
-                    "${settingsClass.simpleName}.$key's delegate default.",
-            )
-        }
-    }
+        val keyToGetter =
+            valueBearing.associate { pref ->
+                val key =
+                    pref.key ?: error("Persisting preference of type ${pref.javaClass.simpleName} (xml $xmlRes) has no android:key.")
+                val getter =
+                    findGetter(settingsClass, key)
+                        ?: error(
+                            "Preference key \"$key\" (${pref.javaClass.simpleName}, xml $xmlRes) has no matching " +
+                                "${settingsClass.simpleName} property - typo'd key, or the property was renamed without " +
+                                "updating the XML.",
+                        )
+                key to getter
+            }
 
-    val defaultsPrefs = context.getSharedPreferences(defaultsName, Context.MODE_PRIVATE)
-    val withDefaults = factory(defaultsPrefs)
-    for ((key, getter) in keyToGetter) {
-        val expected = getter.invoke(empty)
-        val actual = getter.invoke(withDefaults)
-        if (expected != actual) {
-            error(
-                "Preference \"$key\" (xml $xmlRes): android:defaultValue resolves to \"$actual\" but " +
-                    "${settingsClass.simpleName}.$key's delegate default is \"$expected\" - keep them in sync.",
-            )
+        val declaredDefaultKeys = collectDeclaredDefaultValueKeys(context, xmlRes)
+        for (key in keyToGetter.keys) {
+            if (key !in declaredDefaultKeys) {
+                error(
+                    "Preference \"$key\" (xml $xmlRes) has no android:defaultValue - it must be declared and equal " +
+                        "${settingsClass.simpleName}.$key's delegate default.",
+                )
+            }
         }
+
+        val defaultsPrefs = context.getSharedPreferences(defaultsName, Context.MODE_PRIVATE)
+        val withDefaults = factory(defaultsPrefs)
+        for ((key, getter) in keyToGetter) {
+            val expected = getter.invoke(empty)
+            val actual = getter.invoke(withDefaults)
+            if (expected != actual) {
+                error(
+                    "Preference \"$key\" (xml $xmlRes): android:defaultValue resolves to \"$actual\" but " +
+                        "${settingsClass.simpleName}.$key's delegate default is \"$expected\" - keep them in sync.",
+                )
+            }
+        }
+    } finally {
+        controller.destroy()
     }
 }

@@ -308,6 +308,9 @@ class CommonUtilsSettingsActivitySdk29Test {
     @After
     fun tearDown() {
         unmockkAll()
+        // See CommonUtilsSettingsActivityTest's tearDown doc — this class's test also exercises
+        // initDarkMode via preferences_design.xml, so the same static-singleton reset applies here.
+        setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     }
 
     @Test
