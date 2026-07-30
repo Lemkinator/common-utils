@@ -49,6 +49,21 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+// SettingsFragment's own PreferenceManager is not Hilt-aware and always persists to
+// PreferenceManager.getDefaultSharedPreferences() regardless of what's @BindValue'd, so fakeSettings must
+// read/write that exact same file - not freshTestPreferences(). Shared by both classes below.
+private fun defaultSharedPreferencesFakeSettings(): SettingsRepository =
+    SettingsRepository(PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext()))
+
+/** Cleared before each test method for isolation, since fakeSettings above persists into this shared file. */
+private fun clearDefaultSharedPreferences() {
+    PreferenceManager
+        .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
+        .edit()
+        .clear()
+        .apply()
+}
+
 /**
  * JUnit4 (not JUnit5/Kotest like the rest of this module): `HiltAndroidRule`/`@HiltAndroidTest`
  * require a JUnit4 `@RunWith(RobolectricTestRunner::class)` runner, so this class runs under the
@@ -64,21 +79,13 @@ class CommonUtilsSettingsActivityTest {
     @get:Rule
     val drainMainLooper = DrainMainLooperRule()
 
-    // Not freshTestPreferences(): SettingsFragment's own PreferenceManager is not Hilt-aware and always persists
-    // to PreferenceManager.getDefaultSharedPreferences() regardless of what's @BindValue'd here, so fakeSettings
-    // must read/write that exact same file. Cleared in setUp() for isolation between test methods.
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository =
-        SettingsRepository(PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext()))
+    val fakeSettings: SettingsRepository = defaultSharedPreferencesFakeSettings()
 
     @Before
     fun setUp() {
-        PreferenceManager
-            .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
-            .edit()
-            .clear()
-            .apply()
+        clearDefaultSharedPreferences()
         hiltRule.inject()
         // addRelativeLinksCard requires a ListView not available under Robolectric.
         // mockkStatic intercepts the Kt-file static; any<> matches any receiver.
@@ -296,20 +303,13 @@ class CommonUtilsSettingsActivitySdk29Test {
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
 
-    // See CommonUtilsSettingsActivityTest's fakeSettings field doc for why this is the default file, not
-    // freshTestPreferences().
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository =
-        SettingsRepository(PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext()))
+    val fakeSettings: SettingsRepository = defaultSharedPreferencesFakeSettings()
 
     @Before
     fun setUp() {
-        PreferenceManager
-            .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
-            .edit()
-            .clear()
-            .apply()
+        clearDefaultSharedPreferences()
         hiltRule.inject()
         mockkStatic("de.lemke.commonutils.ui.utils.PreferenceUtilsKt")
         every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
