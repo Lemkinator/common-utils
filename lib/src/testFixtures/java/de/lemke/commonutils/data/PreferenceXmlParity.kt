@@ -114,13 +114,19 @@ private fun walk(
     }
 }
 
-/** Finds `UserSettings`' generated Kotlin-property getter for [key] (`darkMode` -> `getDarkMode()`), or null. */
+/**
+ * Finds `UserSettings`' generated Kotlin-property getter for [key] (`darkMode` -> `getDarkMode()`), or null.
+ * A Kotlin `var isFoo: Boolean` compiles its getter to `isFoo()`, not `getIsFoo()` - so an `is`-prefixed
+ * [key] also tries the bare method name before giving up.
+ */
 private fun findGetter(
     settingsClass: Class<*>,
     key: String,
 ): java.lang.reflect.Method? {
     val getterName = "get" + key.replaceFirstChar(Char::uppercaseChar)
-    return settingsClass.methods.firstOrNull { it.name == getterName && it.parameterCount == 0 }
+    settingsClass.methods.firstOrNull { it.name == getterName && it.parameterCount == 0 }?.let { return it }
+    if (!key.startsWith("is")) return null
+    return settingsClass.methods.firstOrNull { it.name == key && it.parameterCount == 0 }
 }
 
 /**
