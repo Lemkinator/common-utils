@@ -18,6 +18,7 @@ package de.lemke.commonutils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.canShowInAppReview
 import de.lemke.commonutils.ui.utils.getLastInAppReview
 import de.lemke.commonutils.ui.utils.setInAppReview
@@ -25,6 +26,7 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import java.util.concurrent.TimeUnit.DAYS
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -34,6 +36,17 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class InAppReviewUtilsRobolectricTest {
+    @Before
+    fun setUp() {
+        // InAppReviewUtils persists into the shared default SharedPreferences file, so a value
+        // written by one test method would otherwise leak into whichever test runs next.
+        PreferenceManager
+            .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
+            .edit()
+            .clear()
+            .apply()
+    }
+
     private fun setupActivity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
 
     @Test
