@@ -150,11 +150,14 @@ private fun findGetter(
  * to an `Int` delegate with no `.mapped()` bridge) surfaces as a [ClassCastException] out of [factory] - that
  * failure is deliberately left uncaught here, so the test output points straight at the mismatched delegate.
  *
- * Known gap: if a declared default happens to equal a widget's own in-memory starting field *and* disagrees
- * with the delegate's default, (3) sees a declared default (correctly) and (4) sees no persisted key to compare
- * (the widget never wrote), so the two can't cross-check each other for that one combination. Narrower than the
- * bug class this helper exists for (an *omitted* default), and not hit by any widget/delegate pairing in this
- * codebase today.
+ * Known gap - live today, not just hypothetical: [HorizontalRadioPreference][dev.oneuiproject.oneui.preference.HorizontalRadioPreference]'s
+ * in-memory starting field is `"0"`, which is exactly `darkMode`'s current declared default, so check (4) is
+ * currently vacuous for that one pairing - both `empty` and `withDefaults` compute the same delegate-default
+ * fallback and read equal regardless of whether the XML default is actually right. More generally: if a declared
+ * default happens to equal a widget's own in-memory starting field *and* disagrees with the delegate's default,
+ * (3) sees a declared default (correctly) and (4) sees no persisted key to compare (the widget never wrote), so
+ * the two can't cross-check each other for that one combination. Narrower than the bug class this helper exists
+ * for (an *omitted* default), but real for `darkMode` specifically today.
  */
 fun <T : Any> assertPreferenceXmlBoundToSettings(
     @XmlRes xmlRes: Int,
