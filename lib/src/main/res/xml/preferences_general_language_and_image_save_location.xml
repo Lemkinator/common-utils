@@ -27,6 +27,7 @@
 
         <DropDownPreference
             android:key="@string/commonutils_preference_key_image_save_location"
+            android:defaultValue="CUSTOM"
             android:title="@string/commonutils_image_save_location"
             app:useSimpleSummaryProvider="true" />
 

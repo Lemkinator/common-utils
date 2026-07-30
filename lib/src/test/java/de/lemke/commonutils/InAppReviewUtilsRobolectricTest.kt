@@ -15,9 +15,10 @@
  */
 package de.lemke.commonutils
 
-import android.content.Context.MODE_PRIVATE
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.preference.PreferenceManager
+import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.canShowInAppReview
 import de.lemke.commonutils.ui.utils.getLastInAppReview
 import de.lemke.commonutils.ui.utils.setInAppReview
@@ -25,6 +26,7 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import java.util.concurrent.TimeUnit.DAYS
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -34,6 +36,15 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class InAppReviewUtilsRobolectricTest {
+    @Before
+    fun setUp() {
+        PreferenceManager
+            .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
+            .edit()
+            .clear()
+            .apply()
+    }
+
     private fun setupActivity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
 
     @Test
@@ -69,7 +80,7 @@ class InAppReviewUtilsRobolectricTest {
     fun `canShowInAppReview returns false when last review was 13 days ago`() {
         val activity = setupActivity()
         val thirteenDaysAgo = System.currentTimeMillis() - DAYS.toMillis(13)
-        activity.getSharedPreferences("InAppReviewUtils", MODE_PRIVATE).edit { putLong("lastInAppReview", thirteenDaysAgo) }
+        PreferenceManager.getDefaultSharedPreferences(activity).edit { putLong("lastInAppReview", thirteenDaysAgo) }
         activity.canShowInAppReview().shouldBeFalse()
     }
 
@@ -77,7 +88,7 @@ class InAppReviewUtilsRobolectricTest {
     fun `canShowInAppReview returns true when last review was 15 days ago`() {
         val activity = setupActivity()
         val fifteenDaysAgo = System.currentTimeMillis() - DAYS.toMillis(15)
-        activity.getSharedPreferences("InAppReviewUtils", MODE_PRIVATE).edit { putLong("lastInAppReview", fifteenDaysAgo) }
+        PreferenceManager.getDefaultSharedPreferences(activity).edit { putLong("lastInAppReview", fifteenDaysAgo) }
         activity.canShowInAppReview().shouldBeTrue()
     }
 

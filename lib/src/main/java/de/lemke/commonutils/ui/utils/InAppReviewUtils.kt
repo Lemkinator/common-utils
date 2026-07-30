@@ -15,10 +15,10 @@
  */
 package de.lemke.commonutils.ui.utils
 
-import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.preference.PreferenceManager
 import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
@@ -36,13 +36,14 @@ private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
  * starts from first launch — avoids surfacing a review request immediately on first launch.
  */
 fun AppCompatActivity.getLastInAppReview(): Long {
-    val prefs = getSharedPreferences(TAG, MODE_PRIVATE)
+    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
     if (!prefs.contains("lastInAppReview")) prefs.edit { putLong("lastInAppReview", currentTimeMillis()) }
     return prefs.getLong("lastInAppReview", currentTimeMillis())
 }
 
 /** Persists the current time as the last in-app review timestamp. */
-fun AppCompatActivity.setInAppReview() = getSharedPreferences(TAG, MODE_PRIVATE).edit { putLong("lastInAppReview", currentTimeMillis()) }
+fun AppCompatActivity.setInAppReview() =
+    PreferenceManager.getDefaultSharedPreferences(this).edit { putLong("lastInAppReview", currentTimeMillis()) }
 
 /** Returns `true` if at least 14 days have passed since the last in-app review was shown. */
 fun AppCompatActivity.canShowInAppReview(): Boolean {

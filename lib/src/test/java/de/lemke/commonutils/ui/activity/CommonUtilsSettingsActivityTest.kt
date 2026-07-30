@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.preference.DropDownPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.testing.BindValue
@@ -30,9 +31,9 @@ import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.DrainMainLooperRule
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
+import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
@@ -47,6 +48,19 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+
+// SettingsFragment's own PreferenceManager is not Hilt-aware and always persists to
+// PreferenceManager.getDefaultSharedPreferences() regardless of what's @BindValue'd - not freshTestPreferences().
+private fun defaultSharedPreferencesFakeSettings(): SettingsRepository =
+    SettingsRepository(PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext()))
+
+private fun clearDefaultSharedPreferences() {
+    PreferenceManager
+        .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
+        .edit()
+        .clear()
+        .apply()
+}
 
 /**
  * JUnit4 (not JUnit5/Kotest like the rest of this module): `HiltAndroidRule`/`@HiltAndroidTest`
@@ -65,10 +79,11 @@ class CommonUtilsSettingsActivityTest {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
+    val fakeSettings: SettingsRepository = defaultSharedPreferencesFakeSettings()
 
     @Before
     fun setUp() {
+        clearDefaultSharedPreferences()
         hiltRule.inject()
         // addRelativeLinksCard requires a ListView not available under Robolectric.
         // mockkStatic intercepts the Kt-file static; any<> matches any receiver.
@@ -120,11 +135,15 @@ class CommonUtilsSettingsActivityTest {
             .invoke(this)
     }
 
-    private fun Preference.triggerChange(newValue: Any) {
+    private fun Preference.triggerChange(newValue: Any): Boolean =
         Preference::class.java
             .getDeclaredMethod("callChangeListener", Any::class.java)
             .also { it.isAccessible = true }
-            .invoke(this, newValue)
+            .invoke(this, newValue) as Boolean
+
+    // Mirrors HorizontalRadioPreference's real onClickListener.
+    private fun HorizontalRadioPreference.triggerRadioClick(newValue: String) {
+        if (triggerChange(newValue)) value = newValue
     }
 
     @Test
@@ -199,7 +218,7 @@ class CommonUtilsSettingsActivityTest {
     }
 
     @Test
-    fun `darkMode radio change to 1 triggers MODE_NIGHT_YES branch`() {
+    fun `darkMode radio change to 1 triggers MODE_NIGHT_YES branch and persists darkMode`() {
         fakeSettings.autoDarkMode = false
         launchWithDefaultPrefs { activity ->
             val fragment = getSettingsFragment(activity)
@@ -207,23 +226,26 @@ class CommonUtilsSettingsActivityTest {
                 ApplicationProvider
                     .getApplicationContext<Context>()
                     .getString(R.string.commonutils_preference_key_dark_mode)
-            val pref = fragment.findPreference<Preference>(key)
-            pref?.triggerChange("1")
+            val pref = fragment.findPreference<HorizontalRadioPreference>(key)
+            pref?.triggerRadioClick("1")
         }
+        fakeSettings.darkMode shouldBe true
     }
 
     @Test
-    fun `darkMode radio change to 0 triggers MODE_NIGHT_NO branch`() {
+    fun `darkMode radio change to 0 triggers MODE_NIGHT_NO branch and persists darkMode`() {
         fakeSettings.autoDarkMode = false
+        fakeSettings.darkMode = true
         launchWithDefaultPrefs { activity ->
             val fragment = getSettingsFragment(activity)
             val key =
                 ApplicationProvider
                     .getApplicationContext<Context>()
                     .getString(R.string.commonutils_preference_key_dark_mode)
-            val pref = fragment.findPreference<Preference>(key)
-            pref?.triggerChange("0")
+            val pref = fragment.findPreference<HorizontalRadioPreference>(key)
+            pref?.triggerRadioClick("0")
         }
+        fakeSettings.darkMode shouldBe false
     }
 
     @Test
@@ -279,10 +301,11 @@ class CommonUtilsSettingsActivitySdk29Test {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
+    val fakeSettings: SettingsRepository = defaultSharedPreferencesFakeSettings()
 
     @Before
     fun setUp() {
+        clearDefaultSharedPreferences()
         hiltRule.inject()
         mockkStatic("de.lemke.commonutils.ui.utils.PreferenceUtilsKt")
         every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
@@ -291,6 +314,9 @@ class CommonUtilsSettingsActivitySdk29Test {
     @After
     fun tearDown() {
         unmockkAll()
+        // See CommonUtilsSettingsActivityTest's tearDown doc — this class's test also exercises
+        // initDarkMode via preferences_design.xml, so the same static-singleton reset applies here.
+        setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     }
 
     @Test
