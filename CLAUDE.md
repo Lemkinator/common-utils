@@ -77,28 +77,6 @@ Enable local static-analysis checks before every commit:
 git config core.hooksPath .githooks
 ```
 
-## Publishing
-
-Publishing triggers automatically via CI when `gradle/libs.versions.toml`
-version changes on `main`. To publish manually:
-
-```bash
-./gradlew publishAllPublicationsToGitHubPackagesRepository
-```
-
-Requires `GH_USERNAME` and `GH_ACCESS_TOKEN` in `github.properties`,
-gradle properties, or environment variables.
-
-**testFixtures capability gotcha (fixed 1.2.1):** AGP derives a testFixtures configuration's
-published capability from the Gradle project name (`:lib`), not from the `artifactId` override
-in the root `build.gradle.kts`'s hand-rolled `MavenPublication`. 1.2.0 shipped with the
-testFixtures variant under the wrong capability (`lib-test-fixtures` instead of
-`common-utils-test-fixtures`), silently breaking `testFixtures(libs.common.utils)` for every
-consumer — never caught locally because composite-build substitution matches by project identity,
-not capability. Fixed in `lib/build.gradle.kts` by additively declaring the correct capability
-on the relevant configurations (see the comment there) rather than renaming the project, which
-would've also silently renamed every `:lib:*` task to `:common-utils:*`.
-
 ## Architecture
 
 **Single-module utility library** — no DI framework, no ViewModel layer.
