@@ -196,10 +196,26 @@ fun <T : Any> assertPreferenceXmlBoundToSettings(
             }
         }
 
+        val valueBearingKeys =
+            valueBearing.map { pref ->
+                pref.key ?: error("Persisting preference of type ${pref.javaClass.simpleName} (xml $xmlRes) has no android:key.")
+            }
+        val duplicateKeys =
+            valueBearingKeys
+                .groupingBy { it }
+                .eachCount()
+                .filterValues { it > 1 }
+                .keys
+        if (duplicateKeys.isNotEmpty()) {
+            error(
+                "Multiple value-bearing preferences in xml $xmlRes share key(s) $duplicateKeys - " +
+                    "each android:key must be unique, or the collision hides a mis-bound widget.",
+            )
+        }
+
         val keyToGetter =
             valueBearing.associate { pref ->
-                val key =
-                    pref.key ?: error("Persisting preference of type ${pref.javaClass.simpleName} (xml $xmlRes) has no android:key.")
+                val key = pref.key!!
                 val getter =
                     findGetter(settingsClass, key)
                         ?: error(
