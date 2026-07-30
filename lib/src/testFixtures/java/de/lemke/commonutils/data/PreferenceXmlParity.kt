@@ -21,6 +21,7 @@ import android.content.res.XmlResourceParser
 import android.os.Bundle
 import androidx.annotation.XmlRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceGroup
@@ -28,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.freshTestPreferencesName
 import org.robolectric.Robolectric
+import org.robolectric.android.controller.ActivityController
 import org.xmlpull.v1.XmlPullParser
 
 private const val ANDROID_NS = "http://schemas.android.com/apk/res/android"
@@ -86,6 +88,23 @@ class PreferenceXmlParityFragment : PreferenceFragmentCompat() {
         preferenceManager.sharedPreferencesName = sharedPreferencesName
         setPreferencesFromResource(xmlRes, rootKey)
     }
+}
+
+/**
+ * Hosts [fragment] inside a freshly created, headless [AppCompatActivity], advancing only to CREATED -
+ * enough for `FragmentManager.commitNow()` to run the fragment's `onCreate` synchronously, since the
+ * fragment is never rendered into a container and no caller here needs it resumed or visible. Caller
+ * must `destroy()` the returned controller when done.
+ */
+private fun hostFragmentAtCreated(fragment: Fragment): ActivityController<AppCompatActivity> {
+    val controller = Robolectric.buildActivity(AppCompatActivity::class.java).create()
+    controller
+        .get()
+        .supportFragmentManager
+        .beginTransaction()
+        .add(fragment, "preferenceXmlParity")
+        .commitNow()
+    return controller
 }
 
 /** Recursively partitions an inflated preference tree into value-bearing widgets and pure navigation/container nodes. */
@@ -166,19 +185,13 @@ fun <T : Any> assertPreferenceXmlBoundToSettings(
     val context = ApplicationProvider.getApplicationContext<Context>()
     val defaultsName = freshTestPreferencesName()
 
-    val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup()
-    val activity = controller.get()
+    val fragment =
+        PreferenceXmlParityFragment().apply {
+            this.xmlRes = xmlRes
+            this.sharedPreferencesName = defaultsName
+        }
+    val controller = hostFragmentAtCreated(fragment)
     try {
-        val fragment =
-            PreferenceXmlParityFragment().apply {
-                this.xmlRes = xmlRes
-                this.sharedPreferencesName = defaultsName
-            }
-        activity.supportFragmentManager
-            .beginTransaction()
-            .add(fragment, "preferenceXmlParity")
-            .commitNow()
-
         val valueBearing = mutableListOf<Preference>()
         val containers = mutableListOf<Preference>()
         walk(fragment.preferenceScreen, valueBearing, containers)
