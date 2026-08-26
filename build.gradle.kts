@@ -90,6 +90,7 @@ subprojects {
                 sourceCompatibility = JavaVersion.toVersion(libs.versions.jvmTarget.get())
                 targetCompatibility = JavaVersion.toVersion(libs.versions.jvmTarget.get())
             }
+
             configurations.matching { !it.name.contains("test", ignoreCase = true) }.configureEach {
                 exclude(group = "androidx.core", module = "core")
                 exclude(group = "androidx.core", module = "core-ktx")
