@@ -13,7 +13,7 @@ aboutlibraries = "15.0.4"
 # version bundled by oneui-design. Upgrading is blocked until oneui-design ships a compatible core.
 #noinspection GradleDependency
 activity-compose = "1.12.4"
-androidx-navigation = "2.9.8"
+androidx-navigation = "2.10.0"
 androidx-test = "1.7.0"
 app-update = "2.1.0"
 core-splashscreen = "1.2.0"
