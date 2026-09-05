@@ -6,6 +6,8 @@ common-utils = "1.2.3"
 #noinspection UnusedVersionCatalogEntry
 compileSdk = "37"
 #noinspection UnusedVersionCatalogEntry
+compileSdkMinor = "1"
+#noinspection UnusedVersionCatalogEntry
 jvmTarget = "21"
 
 aboutlibraries = "15.2.0"
