@@ -57,6 +57,8 @@ android {
     }
     lint {
         warningsAsErrors = true
+        // checkDependencies = false: private AAR deps surface
+        // hundreds of unactionable warnings; flip to true once in-project surface is clean
         checkDependencies = false
         baseline = file("lint-baseline.xml")
         disable += "IconMissingDensityFolder"
