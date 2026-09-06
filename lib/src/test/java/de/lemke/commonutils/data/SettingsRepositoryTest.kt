@@ -191,6 +191,24 @@ class SettingsRepositoryTest {
         repo.imageSaveLocation = SaveLocation.DOWNLOADS
         prefs.getString("imageSaveLocation", SaveLocation.default.name) shouldBe SaveLocation.DOWNLOADS.name
     }
+
+    @Test
+    fun `delegated keys are pinned`() {
+        assertDelegatedKeys(
+            SettingsRepository::class.java,
+            setOf(
+                "darkMode",
+                "autoDarkMode",
+                "lastVersionCode",
+                "lastVersionName",
+                "acceptedTosVersion",
+                "devModeEnabled",
+                "search",
+                "imageSaveLocation",
+                "lastInAppReview",
+            ),
+        )
+    }
 }
 
 @RunWith(RobolectricTestRunner::class)
