@@ -21,7 +21,6 @@ import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.preference.DropDownPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceManager
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import dagger.hilt.android.testing.BindValue
@@ -31,6 +30,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.DrainMainLooperRule
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
 import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
@@ -49,19 +49,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-// SettingsFragment's own PreferenceManager is not Hilt-aware and always persists to
-// PreferenceManager.getDefaultSharedPreferences() regardless of what's @BindValue'd - not freshTestPreferences().
-private fun defaultSharedPreferencesFakeSettings(): SettingsRepository =
-    SettingsRepository(PreferenceManager.getDefaultSharedPreferences(ApplicationProvider.getApplicationContext()))
-
-private fun clearDefaultSharedPreferences() {
-    PreferenceManager
-        .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
-        .edit()
-        .clear()
-        .apply()
-}
-
 /**
  * JUnit4 (not JUnit5/Kotest like the rest of this module): `HiltAndroidRule`/`@HiltAndroidTest`
  * require a JUnit4 `@RunWith(RobolectricTestRunner::class)` runner, so this class runs under the
@@ -79,11 +66,10 @@ class CommonUtilsSettingsActivityTest {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository = defaultSharedPreferencesFakeSettings()
+    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
 
     @Before
     fun setUp() {
-        clearDefaultSharedPreferences()
         hiltRule.inject()
         // addRelativeLinksCard requires a ListView not available under Robolectric.
         // mockkStatic intercepts the Kt-file static; any<> matches any receiver.
@@ -301,11 +287,10 @@ class CommonUtilsSettingsActivitySdk29Test {
 
     @BindValue
     @JvmField
-    val fakeSettings: SettingsRepository = defaultSharedPreferencesFakeSettings()
+    val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
 
     @Before
     fun setUp() {
-        clearDefaultSharedPreferences()
         hiltRule.inject()
         mockkStatic("de.lemke.commonutils.ui.utils.PreferenceUtilsKt")
         every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
