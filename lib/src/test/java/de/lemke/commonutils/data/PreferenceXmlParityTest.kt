@@ -23,34 +23,21 @@ import org.robolectric.annotation.Config
 
 /**
  * Pins every common-utils preference XML against [SettingsRepository]: every persisting widget's `android:key`
- * matches a property, every such key declares an `android:defaultValue`, and that default agrees with the
- * property's own delegate default on an empty store. See [assertPreferenceXmlBoundToSettings].
+ * matches a property, every such key declares an `android:defaultValue`, and every persisting widget's displayed
+ * default matches the delegate's stored default. See [assertPreferenceXmlBoundToSettings].
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class PreferenceXmlParityTest {
     @Test
-    fun `preferences_design is bound to SettingsRepository`() {
-        assertPreferenceXmlBoundToSettings(R.xml.preferences_design, ::SettingsRepository)
-    }
-
-    @Test
-    fun `preferences_general_language is bound to SettingsRepository`() {
-        assertPreferenceXmlBoundToSettings(R.xml.preferences_general_language, ::SettingsRepository)
-    }
-
-    @Test
-    fun `preferences_general_language_and_image_save_location is bound to SettingsRepository`() {
-        assertPreferenceXmlBoundToSettings(R.xml.preferences_general_language_and_image_save_location, ::SettingsRepository)
-    }
-
-    @Test
-    fun `preferences_dev_options_delete_app_data is bound to SettingsRepository`() {
-        assertPreferenceXmlBoundToSettings(R.xml.preferences_dev_options_delete_app_data, ::SettingsRepository)
-    }
-
-    @Test
-    fun `preferences_more_info is bound to SettingsRepository`() {
-        assertPreferenceXmlBoundToSettings(R.xml.preferences_more_info, ::SettingsRepository)
+    fun `every preference XML is bound to SettingsRepository`() {
+        assertPreferenceXmlBoundToSettings(
+            R.xml.preferences_design,
+            R.xml.preferences_general_language,
+            R.xml.preferences_general_language_and_image_save_location,
+            R.xml.preferences_dev_options_delete_app_data,
+            R.xml.preferences_more_info,
+            factory = ::SettingsRepository,
+        )
     }
 }
