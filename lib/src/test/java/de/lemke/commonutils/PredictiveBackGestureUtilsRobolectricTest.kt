@@ -25,6 +25,7 @@ import de.lemke.commonutils.ui.utils.setWindowTransparent
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import java.util.concurrent.TimeUnit.DAYS
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Test
@@ -128,14 +129,23 @@ class PredictiveBackGestureUtilsRobolectricTest {
     fun `setCustomBackAnimation with inAppReview settings covers review branches`() {
         val view = View(activity)
         view.layout(0, 0, 1000, 2000)
-        activity.setCustomBackAnimation(view, inAppReview = SettingsRepository(freshTestPreferences()))
+        val settings =
+            SettingsRepository(freshTestPreferences()).apply {
+                lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
+            }
+        val lastInAppReviewBeforeBackPress = settings.lastInAppReview
+        activity.setCustomBackAnimation(view, inAppReview = settings)
         val dispatcher = activity.onBackPressedDispatcher
         val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
-        // handleOnBackProgressed: reviewSettings != null → early return branch covered
         dispatcher.dispatchOnBackStarted(event)
         dispatcher.dispatchOnBackProgressed(event)
-        // handleOnBackPressed: reviewSettings != null → showInAppReviewOrFinish() branch covered
+        // handleOnBackProgressed: reviewSettings != null → early return, so the scale/shift animation never runs
+        view.translationX shouldBe 0f
+        view.scaleX shouldBe 1f
         dispatcher.onBackPressed()
+        // handleOnBackPressed: reviewSettings != null → showInAppReviewOrFinish(reviewSettings) restarts the cooldown,
+        // which finishAfterTransition() alone would never touch
+        settings.lastInAppReview shouldNotBe lastInAppReviewBeforeBackPress
     }
 }
 
