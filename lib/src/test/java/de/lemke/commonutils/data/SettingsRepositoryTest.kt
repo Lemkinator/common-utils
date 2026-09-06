@@ -87,6 +87,11 @@ class SettingsRepositoryTest {
     }
 
     @Test
+    fun `lastInAppReview defaults to 0`() {
+        repo.lastInAppReview shouldBe 0L
+    }
+
+    @Test
     fun `lastVersionCode round-trips written value`() {
         repo.lastVersionCode = 42
         reload().lastVersionCode shouldBe 42

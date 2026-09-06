@@ -15,87 +15,58 @@
  */
 package de.lemke.commonutils
 
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
-import androidx.preference.PreferenceManager
-import androidx.test.core.app.ApplicationProvider
-import de.lemke.commonutils.ui.utils.canShowInAppReview
-import de.lemke.commonutils.ui.utils.getLastInAppReview
-import de.lemke.commonutils.ui.utils.setInAppReview
+import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.data.canShowInAppReview
+import de.lemke.commonutils.data.markInAppReviewRequested
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import java.util.concurrent.TimeUnit.DAYS
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class InAppReviewUtilsRobolectricTest {
+    private lateinit var settings: SettingsRepository
+
     @Before
     fun setUp() {
-        PreferenceManager
-            .getDefaultSharedPreferences(ApplicationProvider.getApplicationContext())
-            .edit()
-            .clear()
-            .apply()
+        settings = SettingsRepository(freshTestPreferences())
     }
 
-    private fun setupActivity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+    @Test
+    fun `lastInAppReview defaults to 0`() {
+        settings.lastInAppReview shouldBe 0L
+    }
 
     @Test
-    fun `getLastInAppReview records and returns current time on first call when no timestamp is stored`() {
-        val activity = setupActivity()
+    fun `canShowInAppReview seeds the timestamp on first call and returns false`() {
         val before = System.currentTimeMillis()
-        val first = activity.getLastInAppReview()
-        val after = System.currentTimeMillis()
-        (first in before..after).shouldBeTrue()
-        // Second call returns the stored value, not a fresh currentTimeMillis()
-        val second = activity.getLastInAppReview()
-        second shouldBe first
-    }
-
-    @Test
-    fun `setInAppReview stores current time and getLastInAppReview reflects it`() {
-        val activity = setupActivity()
-        val before = System.currentTimeMillis()
-        activity.setInAppReview()
-        val result = activity.getLastInAppReview()
-        val after = System.currentTimeMillis()
-        (result in before..after).shouldBeTrue()
-    }
-
-    @Test
-    fun `canShowInAppReview returns false immediately after setInAppReview`() {
-        val activity = setupActivity()
-        activity.setInAppReview()
-        activity.canShowInAppReview().shouldBeFalse()
+        settings.canShowInAppReview().shouldBeFalse()
+        settings.lastInAppReview shouldBeGreaterThan before - 1
     }
 
     @Test
     fun `canShowInAppReview returns false when last review was 13 days ago`() {
-        val activity = setupActivity()
-        val thirteenDaysAgo = System.currentTimeMillis() - DAYS.toMillis(13)
-        PreferenceManager.getDefaultSharedPreferences(activity).edit { putLong("lastInAppReview", thirteenDaysAgo) }
-        activity.canShowInAppReview().shouldBeFalse()
+        settings.lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(13)
+        settings.canShowInAppReview().shouldBeFalse()
     }
 
     @Test
     fun `canShowInAppReview returns true when last review was 15 days ago`() {
-        val activity = setupActivity()
-        val fifteenDaysAgo = System.currentTimeMillis() - DAYS.toMillis(15)
-        PreferenceManager.getDefaultSharedPreferences(activity).edit { putLong("lastInAppReview", fifteenDaysAgo) }
-        activity.canShowInAppReview().shouldBeTrue()
+        settings.lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
+        settings.canShowInAppReview().shouldBeTrue()
     }
 
     @Test
-    fun `canShowInAppReview returns false on fresh activity with no stored timestamp`() {
-        val activity = setupActivity()
-        // First call records currentTimeMillis() as install timestamp → 0 days elapsed → false
-        activity.canShowInAppReview().shouldBeFalse()
+    fun `markInAppReviewRequested restarts the cooldown`() {
+        settings.lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
+        settings.markInAppReviewRequested()
+        settings.canShowInAppReview().shouldBeFalse()
     }
 }

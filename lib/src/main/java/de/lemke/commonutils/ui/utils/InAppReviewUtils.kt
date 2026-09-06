@@ -17,68 +17,46 @@ package de.lemke.commonutils.ui.utils
 
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
-import androidx.preference.PreferenceManager
 import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
 import de.lemke.commonutils.NoCoverage
-import java.lang.System.currentTimeMillis
-import java.util.concurrent.TimeUnit.MILLISECONDS
+import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.data.canShowInAppReview
+import de.lemke.commonutils.data.markInAppReviewRequested
 
 private const val TAG = "InAppReviewUtils"
-private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
-
-/**
- * Returns the timestamp of the last in-app review request in milliseconds.
- * On the first call (no stored timestamp), records the current time so the 14-day cooldown
- * starts from first launch — avoids surfacing a review request immediately on first launch.
- */
-fun AppCompatActivity.getLastInAppReview(): Long {
-    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-    if (!prefs.contains("lastInAppReview")) prefs.edit { putLong("lastInAppReview", currentTimeMillis()) }
-    return prefs.getLong("lastInAppReview", currentTimeMillis())
-}
-
-/** Persists the current time as the last in-app review timestamp. */
-fun AppCompatActivity.setInAppReview() =
-    PreferenceManager.getDefaultSharedPreferences(this).edit { putLong("lastInAppReview", currentTimeMillis()) }
-
-/** Returns `true` if at least 14 days have passed since the last in-app review was shown. */
-fun AppCompatActivity.canShowInAppReview(): Boolean {
-    val daysSinceLastReview = MILLISECONDS.toDays(currentTimeMillis() - getLastInAppReview())
-    Log.d(TAG, "Days since last review: $daysSinceLastReview")
-    return daysSinceLastReview >= MIN_DAYS_BETWEEN_REVIEWS
-}
 
 /** Attempts to show the in-app review flow; finishes the activity whether the review is shown or skipped. */
 @NoCoverage
-fun AppCompatActivity.showInAppReviewOrFinish() =
+fun AppCompatActivity.showInAppReviewOrFinish(settings: SettingsRepository) =
     showInAppReview(
+        settings,
         onNotAllowed = { finishAfterTransition() },
         onCompleted = { finishAfterTransition() },
     )
 
 /** Requests the in-app review flow if the cooldown period has elapsed; silently skips otherwise. */
 @NoCoverage
-fun AppCompatActivity.showInAppReviewIfPossible() = showInAppReview()
+fun AppCompatActivity.showInAppReviewIfPossible(settings: SettingsRepository) = showInAppReview(settings)
 
 @NoCoverage
 @Suppress("TooGenericExceptionCaught")
 private fun AppCompatActivity.showInAppReview(
+    settings: SettingsRepository,
     onNotAllowed: () -> Unit = {},
     onCompleted: () -> Unit = {},
 ) {
-    if (!canShowInAppReview()) {
-        Log.d(TAG, "In app review requested less than $MIN_DAYS_BETWEEN_REVIEWS days ago, skipping")
+    if (!settings.canShowInAppReview()) {
+        Log.d(TAG, "In app review requested recently, skipping")
         onNotAllowed()
         return
     }
     Log.d(TAG, "trying to show in app review")
     // Stamp the cooldown before launching the flow so repeated rapid calls or process restarts
     // during the request do not hammer Play Core. The 14-day window is intentionally pessimistic.
-    setInAppReview()
+    settings.markInAppReviewRequested()
     try {
         val manager = ReviewManagerFactory.create(this)
         manager.requestReviewFlow().addOnCompleteListener { task ->

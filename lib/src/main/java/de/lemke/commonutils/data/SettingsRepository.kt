@@ -57,6 +57,9 @@ open class SettingsRepository(
     /** The preferred location for exported images. */
     var imageSaveLocation: SaveLocation by preferences.delegates.saveLocation(SaveLocation.default)
 
+    /** Epoch millis of the last in-app review request; `0` until [canShowInAppReview] seeds it on first launch. */
+    var lastInAppReview: Long by preferences.delegates.long(0L)
+
     /**
      * Binds a `PreferenceFragmentCompat` to this repository's store — assign it to
      * `preferenceManager.preferenceDataStore` before inflating any preference XML, so widgets persist where the
