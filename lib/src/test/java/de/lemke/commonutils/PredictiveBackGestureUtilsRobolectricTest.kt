@@ -126,6 +126,17 @@ class PredictiveBackGestureUtilsRobolectricTest {
     }
 
     @Test
+    fun `setCustomBackAnimation with inAppReview settings still in cooldown covers takeIf false branch`() {
+        // fresh SettingsRepository: canShowInAppReview() seeds lastInAppReview and returns false, so takeIf
+        // yields null through a different bytecode path than passing inAppReview = null outright
+        val view = View(activity)
+        val settings = SettingsRepository(freshTestPreferences())
+        activity.setCustomBackAnimation(view, inAppReview = settings)
+        activity.onBackPressedDispatcher.onBackPressed()
+        activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
     fun `setCustomBackAnimation with inAppReview settings covers review branches`() {
         val view = View(activity)
         view.layout(0, 0, 1000, 2000)

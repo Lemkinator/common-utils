@@ -116,10 +116,16 @@ For every preference widget that persists a value:
    until the user first touches the widget.
 3. Widget wire type matches delegate storage type (`TwoStatePreference` → `Boolean`,
    `ListPreference`/`DropDownPreference`/`EditTextPreference`/`HorizontalRadioPreference` →
-   `String`, `SeekBarPreference` → `Int`). Bridge mismatches with `.mapped()` on a delegate of the
-   wire type — see `darkMode()` in `DelegatesAdvanced.kt`.
+   `String`, `SeekBarPreference`/`ColorPickerPreference` → `Int`, `MultiSelectListPreference` →
+   `Set<String>`). Bridge mismatches with `.mapped()` on a delegate of the wire type — `darkMode()`
+   in `DelegatesAdvanced.kt` is the reference.
 4. No manual `isChecked = settings.x` / `onNewValue { settings.x = it }` sync — native `Preference`
-   persistence already does both.
+   persistence already does both. Handlers that need a sibling widget's value read the widget
+   (`darkModePref.value`, `autoDarkModePref.isChecked`), not settings.
+5. The settings fragment binds `preferenceManager.preferenceDataStore = settings.preferenceDataStore()`
+   in `onCreatePreferences` **before** inflating any XML — widgets then persist into the injected
+   store (production: the default file; tests: `freshTestPreferences()`). `CommonUtilsSettingsActivity`
+   does this; an app with its own `PreferenceFragmentCompat` must too.
 
 Non-persisting entries (categories, click-target `Preference`/`PreferenceScreen`) are plain UI ids:
 camelCase, must not collide with a property name.
@@ -131,9 +137,20 @@ handler (e.g. a permission-gated toggle) keeps its side effect, just not the val
 **Gotcha:** `HorizontalRadioPreference` persists `String`, not the delegate's exposed type — e.g.
 `darkMode` needs `android:defaultValue="0"`, not `"false"`.
 
-**Enforcement:** `assertPreferenceXmlBoundToSettings(xmlRes, factory)` in `PreferenceXmlParity.kt`
-(testFixtures) — call once per preference XML, per app, from a Robolectric test. See its KDoc for
-what it checks and why.
+**Enforcement** (`testFixtures`, one Robolectric test each, per app):
+
+- `assertPreferenceXmlBoundToSettings(vararg xmlRes, factory = ::UserSettings)` in
+  `PreferenceXmlParity.kt` — every XML the app composes, including this library's, so the
+  collision check runs against the app's subclass. Compares each widget's displayed default with
+  the delegate's stored default in the widget's wire type; a new widget type needs a branch in
+  `Preference.displayedValue()`.
+- `assertDelegatedKeys(UserSettings::class.java, setOf(...))` in `SettingsKeys.kt` — pins the
+  exact key set declared on that class (a superclass pins its own); any add/remove/rename fails
+  until the literal set is updated. Per-field raw-key assertions are then only needed for
+  `sanitized`/`mapped` fields, where they verify the wire format.
+
+No settings-shaped key is written outside a settings class — `InAppReviewUtils` reads/writes
+`SettingsRepository.lastInAppReview` through the injected repository, never the default file.
 
 ## Lifecycle Collection Convention
 
