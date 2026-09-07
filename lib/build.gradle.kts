@@ -140,11 +140,15 @@ dependencies {
     testFixturesImplementation(libs.androidx.material3)
     // PreferenceXmlParity.kt hosts a real PreferenceFragmentCompat (SESL/OneUI's androidx.preference
     // fork, via oneui.design) through Robolectric.buildActivity to inflate preference XML and read
-    // defaults - `implementation` deps of :lib's main source set don't leak to testFixtures, so this
-    // must be declared again here, at the same coordinates main uses, to avoid a duplicate-class
-    // AndroidX preference/appcompat fork on the testFixtures classpath.
-    testFixturesImplementation(libs.oneui.design)
-    testFixturesImplementation(libs.robolectric)
+    // defaults. compileOnly, not implementation: a `testFixturesImplementation` runtime dependency here
+    // is published on the testFixtures variant's runtime classpath, which androidTestImplementation
+    // consumers pull in too - Robolectric merely being present there (never actually the active runner)
+    // makes androidx.test's ActivityScenario misdetect a Robolectric sandbox and NPE. Every consumer
+    // that calls into this file does so from a JVM Robolectric test, which already puts both on its own
+    // runtime classpath (its own testImplementation(robolectric) and its app module's main-source
+    // implementation(oneui.design), inherited by src/test).
+    testFixturesCompileOnly(libs.oneui.design)
+    testFixturesCompileOnly(libs.robolectric)
 
     // JUnit4 island: Robolectric has no native JUnit5 support, and HiltAndroidRule/@HiltAndroidTest
     // are JUnit4-only. junit-vintage-engine lets the JUnit Platform (useJUnitPlatform() above)
