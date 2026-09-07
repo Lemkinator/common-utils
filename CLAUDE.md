@@ -26,11 +26,8 @@ Tests live under `lib/src/test/java/de/lemke/commonutils/`.
 (`@RunWith(RobolectricTestRunner::class)`) for every Android/Robolectric test. Konsist
 for architecture rules.
 
-**Robolectric + JUnit 5**: Robolectric has no native JUnit 5 support, so every Robolectric
-test in this module runs on plain JUnit 4 via `org.junit.vintage:junit-vintage-engine` on
-`testRuntimeOnly`, which lets the JUnit Platform (`useJUnitPlatform()`) discover and run
-them alongside the rest of the module's Kotest/JUnit 5 suite.
-This repo previously bridged Robolectric onto JUnit 5 via the
+**Robolectric + JUnit 5**: See the shared Robolectric/JUnit 5 policy in
+`A:\repo\android\CLAUDE.md`. This repo previously bridged Robolectric onto JUnit 5 via the
 experimental `tech.apter.junit5.jupiter:robolectric-extension`; it was reverted because
 that bridge only isolates state **per test class**, not per test method, which let shared
 Robolectric/Android state leak between a class's own test methods (worked around at the
@@ -52,14 +49,6 @@ is not a shadow and keeps whatever state a previous test left it in. Drain/reset
 singleton after each test, not just defensively before it — for pending main-Looper tasks,
 add `@get:Rule val drainMainLooper = DrainMainLooperRule()` rather than hand-rolling an
 `@After` method per test class.
-
-**Test order independence**: `io.kotest.provided.ProjectConfig` sets
-`specExecutionOrder = SpecExecutionOrder.Random`, so Kotest spec execution order varies
-run to run — this is Kotest's own engine (`kotest-runner-junit5`), separate from Jupiter,
-so it does not affect the JUnit 4/Robolectric classes below. Those run via
-`junit-vintage-engine`, which has no native class-order-randomization hook exposed
-through Gradle; order-independence there is enforced by test hygiene (no shared mutable
-state left behind) rather than by a randomizer — verified by repeated full-suite runs.
 
 **`@NoCoverage` on `inline fun`**: Kover maps inline call-site coverage back to the original
 definition via JaCoCo SMAP data. This requires `@NoCoverage` on all `inline fun` that are
@@ -106,83 +95,18 @@ bundled dependencies — be careful when adding new dependencies.
 
 ## Preference XML ↔ Settings Binding Convention
 
-Fleet-wide (every app's `UserSettings : SettingsRepository`), not just this library's own screens.
-For every preference widget that persists a value:
-
-1. `android:key` equals the property name (camelCase, no `_pref` suffix) — delegates default
-   their storage key to `property.name` via reflection.
-2. `android:defaultValue` is declared and equals the delegate's default — nothing else ever writes
-   a default into `SharedPreferences`, so a mismatch renders the opposite of how the app behaves
-   until the user first touches the widget.
-3. Widget wire type matches delegate storage type (`TwoStatePreference` → `Boolean`,
-   `ListPreference`/`DropDownPreference`/`EditTextPreference`/`HorizontalRadioPreference` →
-   `String`, `SeekBarPreference`/`ColorPickerPreference` → `Int`, `MultiSelectListPreference` →
-   `Set<String>`). Bridge mismatches with `.mapped()` on a delegate of the wire type — `darkMode()`
-   in `DelegatesAdvanced.kt` is the reference.
-4. No manual `isChecked = settings.x` / `onNewValue { settings.x = it }` sync — native `Preference`
-   persistence already does both. Handlers that need a sibling widget's value read the widget
-   (`darkModePref.value`, `autoDarkModePref.isChecked`), not settings.
-5. The settings fragment binds `preferenceManager.preferenceDataStore = settings.preferenceDataStore()`
-   in `onCreatePreferences` **before** inflating any XML — widgets then persist into the injected
-   store (production: the default file; tests: `freshTestPreferences()`). `CommonUtilsSettingsActivity`
-   does this; an app with its own `PreferenceFragmentCompat` must too.
-
-Non-persisting entries (categories, click-target `Preference`/`PreferenceScreen`) are plain UI ids:
-camelCase, must not collide with a property name.
-
-**Exceptions:** a field mutated from another screen while this one stays alive keeps a single
-`onNewValue`/`collectLatest` observer for just that field (not a full sync); a side-effect/veto
-handler (e.g. a permission-gated toggle) keeps its side effect, just not the value write.
-
-**Gotcha:** `HorizontalRadioPreference` persists `String`, not the delegate's exposed type — e.g.
-`darkMode` needs `android:defaultValue="0"`, not `"false"`.
-
-**Enforcement** (`testFixtures`, one Robolectric test each, per app):
-
-- `assertPreferenceXmlBoundToSettings(vararg xmlRes, factory = ::UserSettings)` in
-  `PreferenceXmlParity.kt` — every XML the app composes, including this library's, so the
-  collision check runs against the app's subclass. Compares each widget's displayed default with
-  the delegate's stored default in the widget's wire type; a new widget type needs a branch in
-  `Preference.displayedValue()`.
-- `assertDelegatedKeys(UserSettings::class.java, setOf(...))` in `SettingsKeys.kt` — pins the
-  exact key set declared on that class (a superclass pins its own); any add/remove/rename fails
-  until the literal set is updated. Per-field raw-key assertions are then only needed for
-  `sanitized`/`mapped` fields, where they verify the wire format.
-
-No settings-shaped key is written outside a settings class — `InAppReviewUtils` reads/writes
-`SettingsRepository.lastInAppReview` through the injected repository, never the default file.
-
-## Lifecycle Collection Convention
-
-- `StateFlow<UiState>` → `collectState` (current value, re-emits on
-  config change)
-- `Channel<Event>` → `collectEvents` (one-shot, consumed once)
-- ViewModels expose events as `Channel<Event>(BUFFERED)`; state as
-  `StateFlow<UiState>`
+See the shared convention in `A:\repo\android\CLAUDE.md` — applies to this library's own screens
+(`CommonUtilsSettingsActivity`) exactly as it does to every consumer app.
 
 ## Version Policy
 
-**Default: use the latest stable version of every dependency.**
-Renovate keeps minor/patch updates current; bump majors manually
-with release-note review.
+See the shared version policy in `A:\repo\android\CLAUDE.md`. Two additional exceptions specific to
+this library:
 
-Document any pin or downgrade with a `# Why pinned:` comment in
-`libs.versions.toml`. Known exception classes:
-
-1. **Kotlin + KSP lockstep** — KSP minor must match Kotlin minor
-   (e.g. Kotlin `2.3.21` requires KSP `2.3.x`). Renovate's `kotlin`
-   group enforces this.
-2. **Static-analysis on fresh Kotlin majors** — Detekt typically
-   lags new Kotlin releases by 1–3 months. Stay on the latest
-   pre-release/alpha that supports your Kotlin version until a stable
-   one lands. The `static-analysis` Renovate group bumps them together.
-3. **Plugin AGP compatibility windows** — check plugin docs before
-   bumping AGP.
-4. **`oneui-design`** — versioned against OneUI major releases
-   (e.g. `0.9.10+oneui8`); review manually per bump.
-5. **Hilt version** — must match consumer apps to avoid
-   duplicate-class errors. Renovate's `hilt` group bumps both repos
-   together.
+1. **`oneui-design`** — versioned against OneUI major releases (e.g. `0.9.10+oneui8`); review
+   manually per bump.
+2. **Hilt version** — must match consumer apps to avoid duplicate-class errors. Renovate's `hilt`
+   group bumps both repos together.
 
 ## Hilt
 
