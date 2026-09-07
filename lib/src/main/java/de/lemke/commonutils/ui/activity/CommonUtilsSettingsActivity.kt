@@ -64,6 +64,7 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
             bundle: Bundle?,
             str: String?,
         ) {
+            preferenceManager.preferenceDataStore = settings.preferenceDataStore()
             preferences.forEach { addPreferencesFromResource(it) }
         }
 

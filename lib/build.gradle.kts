@@ -30,10 +30,19 @@ plugins {
 
 android {
     namespace = "de.lemke.commonutils"
-    compileSdk =
-        libs.versions.compileSdk
-            .get()
-            .toInt()
+    compileSdk {
+        version =
+            release(
+                libs.versions.compileSdk
+                    .get()
+                    .toInt(),
+            ) {
+                minorApiLevel =
+                    libs.versions.compileSdkMinor
+                        .get()
+                        .toInt()
+            }
+    }
     defaultConfig {
         minSdk = 26
     }
@@ -48,6 +57,8 @@ android {
     }
     lint {
         warningsAsErrors = true
+        // checkDependencies = false: private AAR deps surface
+        // hundreds of unactionable warnings; flip to true once in-project surface is clean
         checkDependencies = false
         baseline = file("lint-baseline.xml")
         disable += "IconMissingDensityFolder"
@@ -127,6 +138,13 @@ dependencies {
     // testFixtures — it fails outright if no Compose runtime is on that classpath, even though
     // none of these test helpers use Compose.
     testFixturesImplementation(libs.androidx.material3)
+    // PreferenceXmlParity.kt hosts a real PreferenceFragmentCompat (SESL/OneUI's androidx.preference
+    // fork, via oneui.design) through Robolectric.buildActivity to inflate preference XML and read
+    // defaults - `implementation` deps of :lib's main source set don't leak to testFixtures, so this
+    // must be declared again here, at the same coordinates main uses, to avoid a duplicate-class
+    // AndroidX preference/appcompat fork on the testFixtures classpath.
+    testFixturesImplementation(libs.oneui.design)
+    testFixturesImplementation(libs.robolectric)
 
     // JUnit4 island: Robolectric has no native JUnit5 support, and HiltAndroidRule/@HiltAndroidTest
     // are JUnit4-only. junit-vintage-engine lets the JUnit Platform (useJUnitPlatform() above)

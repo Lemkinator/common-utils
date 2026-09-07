@@ -77,28 +77,6 @@ Enable local static-analysis checks before every commit:
 git config core.hooksPath .githooks
 ```
 
-## Publishing
-
-Publishing triggers automatically via CI when `gradle/libs.versions.toml`
-version changes on `main`. To publish manually:
-
-```bash
-./gradlew publishAllPublicationsToGitHubPackagesRepository
-```
-
-Requires `GH_USERNAME` and `GH_ACCESS_TOKEN` in `github.properties`,
-gradle properties, or environment variables.
-
-**testFixtures capability gotcha (fixed 1.2.1):** AGP derives a testFixtures configuration's
-published capability from the Gradle project name (`:lib`), not from the `artifactId` override
-in the root `build.gradle.kts`'s hand-rolled `MavenPublication`. 1.2.0 shipped with the
-testFixtures variant under the wrong capability (`lib-test-fixtures` instead of
-`common-utils-test-fixtures`), silently breaking `testFixtures(libs.common.utils)` for every
-consumer — never caught locally because composite-build substitution matches by project identity,
-not capability. Fixed in `lib/build.gradle.kts` by additively declaring the correct capability
-on the relevant configurations (see the comment there) rather than renaming the project, which
-would've also silently renamed every `:lib:*` task to `:common-utils:*`.
-
 ## Architecture
 
 **Single-module utility library** — no DI framework, no ViewModel layer.
@@ -125,6 +103,54 @@ screen), Play Core (in-app updates + reviews), Splashscreen.
 **Dependency exclusions**: Many AndroidX libraries are excluded in the
 root `build.gradle.kts` to avoid version conflicts with OneUI Design's
 bundled dependencies — be careful when adding new dependencies.
+
+## Preference XML ↔ Settings Binding Convention
+
+Fleet-wide (every app's `UserSettings : SettingsRepository`), not just this library's own screens.
+For every preference widget that persists a value:
+
+1. `android:key` equals the property name (camelCase, no `_pref` suffix) — delegates default
+   their storage key to `property.name` via reflection.
+2. `android:defaultValue` is declared and equals the delegate's default — nothing else ever writes
+   a default into `SharedPreferences`, so a mismatch renders the opposite of how the app behaves
+   until the user first touches the widget.
+3. Widget wire type matches delegate storage type (`TwoStatePreference` → `Boolean`,
+   `ListPreference`/`DropDownPreference`/`EditTextPreference`/`HorizontalRadioPreference` →
+   `String`, `SeekBarPreference`/`ColorPickerPreference` → `Int`, `MultiSelectListPreference` →
+   `Set<String>`). Bridge mismatches with `.mapped()` on a delegate of the wire type — `darkMode()`
+   in `DelegatesAdvanced.kt` is the reference.
+4. No manual `isChecked = settings.x` / `onNewValue { settings.x = it }` sync — native `Preference`
+   persistence already does both. Handlers that need a sibling widget's value read the widget
+   (`darkModePref.value`, `autoDarkModePref.isChecked`), not settings.
+5. The settings fragment binds `preferenceManager.preferenceDataStore = settings.preferenceDataStore()`
+   in `onCreatePreferences` **before** inflating any XML — widgets then persist into the injected
+   store (production: the default file; tests: `freshTestPreferences()`). `CommonUtilsSettingsActivity`
+   does this; an app with its own `PreferenceFragmentCompat` must too.
+
+Non-persisting entries (categories, click-target `Preference`/`PreferenceScreen`) are plain UI ids:
+camelCase, must not collide with a property name.
+
+**Exceptions:** a field mutated from another screen while this one stays alive keeps a single
+`onNewValue`/`collectLatest` observer for just that field (not a full sync); a side-effect/veto
+handler (e.g. a permission-gated toggle) keeps its side effect, just not the value write.
+
+**Gotcha:** `HorizontalRadioPreference` persists `String`, not the delegate's exposed type — e.g.
+`darkMode` needs `android:defaultValue="0"`, not `"false"`.
+
+**Enforcement** (`testFixtures`, one Robolectric test each, per app):
+
+- `assertPreferenceXmlBoundToSettings(vararg xmlRes, factory = ::UserSettings)` in
+  `PreferenceXmlParity.kt` — every XML the app composes, including this library's, so the
+  collision check runs against the app's subclass. Compares each widget's displayed default with
+  the delegate's stored default in the widget's wire type; a new widget type needs a branch in
+  `Preference.displayedValue()`.
+- `assertDelegatedKeys(UserSettings::class.java, setOf(...))` in `SettingsKeys.kt` — pins the
+  exact key set declared on that class (a superclass pins its own); any add/remove/rename fails
+  until the literal set is updated. Per-field raw-key assertions are then only needed for
+  `sanitized`/`mapped` fields, where they verify the wire format.
+
+No settings-shaped key is written outside a settings class — `InAppReviewUtils` reads/writes
+`SettingsRepository.lastInAppReview` through the injected repository, never the default file.
 
 ## Lifecycle Collection Convention
 

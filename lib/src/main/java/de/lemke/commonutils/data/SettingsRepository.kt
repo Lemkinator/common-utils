@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.preference.PreferenceDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
@@ -55,6 +56,16 @@ open class SettingsRepository(
 
     /** The preferred location for exported images. */
     var imageSaveLocation: SaveLocation by preferences.delegates.saveLocation(SaveLocation.default)
+
+    /** Epoch millis of the last in-app review request; `0` until [canShowInAppReview] seeds it on first launch. */
+    var lastInAppReview: Long by preferences.delegates.long(0L)
+
+    /**
+     * Binds a `PreferenceFragmentCompat` to this repository's store — assign it to
+     * `preferenceManager.preferenceDataStore` before inflating any preference XML, so widgets persist where the
+     * delegates read.
+     */
+    fun preferenceDataStore(): PreferenceDataStore = SharedPreferencesDataStore(preferences)
 
     /**
      * Builds a StateFlow snapshot, backed by one OnSharedPreferenceChangeListener scoped to [scope] — use an

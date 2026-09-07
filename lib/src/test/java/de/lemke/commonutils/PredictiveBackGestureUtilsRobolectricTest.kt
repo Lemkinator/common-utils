@@ -18,19 +18,14 @@ package de.lemke.commonutils
 import android.view.View
 import androidx.activity.BackEventCompat
 import androidx.appcompat.app.AppCompatActivity
-import de.lemke.commonutils.ui.utils.canShowInAppReview
+import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.ui.utils.defaultWindowBackground
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import de.lemke.commonutils.ui.utils.setWindowTransparent
-import de.lemke.commonutils.ui.utils.showInAppReviewOrFinish
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
+import java.util.concurrent.TimeUnit.DAYS
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Test
@@ -131,25 +126,37 @@ class PredictiveBackGestureUtilsRobolectricTest {
     }
 
     @Test
-    fun `setCustomBackAnimation showInAppReviewIfPossible true covers review branches`() {
-        // Mock canShowInAppReview() = true → showInAppReview = true → hits showInAppReview=true branches
-        mockkStatic("de.lemke.commonutils.ui.utils.InAppReviewUtilsKt")
-        every { any<AppCompatActivity>().canShowInAppReview() } returns true
-        every { any<AppCompatActivity>().showInAppReviewOrFinish() } just Runs
-        try {
-            val view = View(activity)
-            view.layout(0, 0, 1000, 2000)
-            activity.setCustomBackAnimation(view, showInAppReviewIfPossible = true)
-            val dispatcher = activity.onBackPressedDispatcher
-            val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
-            // handleOnBackProgressed: showInAppReview=true → early return branch covered
-            dispatcher.dispatchOnBackStarted(event)
-            dispatcher.dispatchOnBackProgressed(event)
-            // handleOnBackPressed: showInAppReview=true → showInAppReviewOrFinish() branch covered
-            dispatcher.onBackPressed()
-        } finally {
-            unmockkStatic("de.lemke.commonutils.ui.utils.InAppReviewUtilsKt")
-        }
+    fun `setCustomBackAnimation with inAppReview settings still in cooldown covers takeIf false branch`() {
+        // fresh SettingsRepository: canShowInAppReview() seeds lastInAppReview and returns false, so takeIf
+        // yields null through a different bytecode path than passing inAppReview = null outright
+        val view = View(activity)
+        val settings = SettingsRepository(freshTestPreferences())
+        activity.setCustomBackAnimation(view, inAppReview = settings)
+        activity.onBackPressedDispatcher.onBackPressed()
+        activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
+    fun `setCustomBackAnimation with inAppReview settings covers review branches`() {
+        val view = View(activity)
+        view.layout(0, 0, 1000, 2000)
+        val settings =
+            SettingsRepository(freshTestPreferences()).apply {
+                lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
+            }
+        val lastInAppReviewBeforeBackPress = settings.lastInAppReview
+        activity.setCustomBackAnimation(view, inAppReview = settings)
+        val dispatcher = activity.onBackPressedDispatcher
+        val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
+        dispatcher.dispatchOnBackStarted(event)
+        dispatcher.dispatchOnBackProgressed(event)
+        // handleOnBackProgressed: reviewSettings != null → early return, so the scale/shift animation never runs
+        view.translationX shouldBe 0f
+        view.scaleX shouldBe 1f
+        dispatcher.onBackPressed()
+        // handleOnBackPressed: reviewSettings != null → showInAppReviewOrFinish(reviewSettings) restarts the cooldown,
+        // which finishAfterTransition() alone would never touch
+        settings.lastInAppReview shouldNotBe lastInAppReviewBeforeBackPress
     }
 }
 

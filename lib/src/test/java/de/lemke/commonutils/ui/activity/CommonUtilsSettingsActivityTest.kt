@@ -33,6 +33,7 @@ import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
+import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
@@ -120,11 +121,15 @@ class CommonUtilsSettingsActivityTest {
             .invoke(this)
     }
 
-    private fun Preference.triggerChange(newValue: Any) {
+    private fun Preference.triggerChange(newValue: Any): Boolean =
         Preference::class.java
             .getDeclaredMethod("callChangeListener", Any::class.java)
             .also { it.isAccessible = true }
-            .invoke(this, newValue)
+            .invoke(this, newValue) as Boolean
+
+    // Mirrors HorizontalRadioPreference's real onClickListener.
+    private fun HorizontalRadioPreference.triggerRadioClick(newValue: String) {
+        if (triggerChange(newValue)) value = newValue
     }
 
     @Test
@@ -199,7 +204,7 @@ class CommonUtilsSettingsActivityTest {
     }
 
     @Test
-    fun `darkMode radio change to 1 triggers MODE_NIGHT_YES branch`() {
+    fun `darkMode radio change to 1 triggers MODE_NIGHT_YES branch and persists darkMode`() {
         fakeSettings.autoDarkMode = false
         launchWithDefaultPrefs { activity ->
             val fragment = getSettingsFragment(activity)
@@ -207,23 +212,26 @@ class CommonUtilsSettingsActivityTest {
                 ApplicationProvider
                     .getApplicationContext<Context>()
                     .getString(R.string.commonutils_preference_key_dark_mode)
-            val pref = fragment.findPreference<Preference>(key)
-            pref?.triggerChange("1")
+            val pref = fragment.findPreference<HorizontalRadioPreference>(key)
+            pref?.triggerRadioClick("1")
         }
+        fakeSettings.darkMode shouldBe true
     }
 
     @Test
-    fun `darkMode radio change to 0 triggers MODE_NIGHT_NO branch`() {
+    fun `darkMode radio change to 0 triggers MODE_NIGHT_NO branch and persists darkMode`() {
         fakeSettings.autoDarkMode = false
+        fakeSettings.darkMode = true
         launchWithDefaultPrefs { activity ->
             val fragment = getSettingsFragment(activity)
             val key =
                 ApplicationProvider
                     .getApplicationContext<Context>()
                     .getString(R.string.commonutils_preference_key_dark_mode)
-            val pref = fragment.findPreference<Preference>(key)
-            pref?.triggerChange("0")
+            val pref = fragment.findPreference<HorizontalRadioPreference>(key)
+            pref?.triggerRadioClick("0")
         }
+        fakeSettings.darkMode shouldBe false
     }
 
     @Test
@@ -291,6 +299,9 @@ class CommonUtilsSettingsActivitySdk29Test {
     @After
     fun tearDown() {
         unmockkAll()
+        // See CommonUtilsSettingsActivityTest's tearDown doc — this class's test also exercises
+        // initDarkMode via preferences_design.xml, so the same static-singleton reset applies here.
+        setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     }
 
     @Test

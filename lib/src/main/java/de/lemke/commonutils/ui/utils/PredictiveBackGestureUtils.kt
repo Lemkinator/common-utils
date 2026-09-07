@@ -38,6 +38,8 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
+import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.data.canShowInAppReview
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -105,11 +107,14 @@ class BackAnimationOutlineProvider : ViewOutlineProvider() {
     }
 }
 
-/** Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back, with optional in-app review. */
+/**
+ * Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back. Pass the app's
+ * [SettingsRepository] as [inAppReview] to show the in-app review flow on back instead, when its cooldown has elapsed.
+ */
 fun AppCompatActivity.setCustomBackAnimation(
     animatedView: View,
     backEnabled: StateFlow<Boolean>? = null,
-    showInAppReviewIfPossible: Boolean = false,
+    inAppReview: SettingsRepository? = null,
 ) {
     setWindowTransparent(true)
     val predictiveBackMargin = resources.getDimension(R.dimen.predictive_back_margin)
@@ -117,19 +122,19 @@ fun AppCompatActivity.setCustomBackAnimation(
     val outlineProvider = BackAnimationOutlineProvider()
     animatedView.clipToOutline = true
     animatedView.outlineProvider = outlineProvider
-    val showInAppReview = showInAppReviewIfPossible && canShowInAppReview()
+    val reviewSettings = inAppReview?.takeIf { it.canShowInAppReview() }
     val callback =
         object : OnBackPressedCallback(backEnabled?.value != false) {
             override fun handleOnBackPressed() {
-                if (showInAppReview) {
-                    showInAppReviewOrFinish()
+                if (reviewSettings != null) {
+                    showInAppReviewOrFinish(reviewSettings)
                 } else {
                     finishAfterTransition()
                 }
             }
 
             override fun handleOnBackProgressed(backEvent: BackEventCompat) {
-                if (showInAppReview) return
+                if (reviewSettings != null) return
                 val progress = GestureInterpolator.getInterpolation(backEvent.progress)
                 if (initialTouchY < 0f) initialTouchY = backEvent.touchY
                 val progressY = GestureInterpolator.getInterpolation((backEvent.touchY - initialTouchY) / animatedView.height)

@@ -134,13 +134,7 @@ class SharedPreferenceDelegates(
     fun darkMode(
         default: Boolean = false,
         key: String? = null,
-    ): ReadWriteProperty<Any, Boolean> =
-        create(
-            default,
-            key,
-            { k, d -> prefs.getString(k, if (d) "1" else "0") == "1" },
-            { k, v -> prefs.edit { putString(k, if (v) "1" else "0") } },
-        )
+    ): ReadWriteProperty<Any, Boolean> = string(if (default) "1" else "0", key).mapped(to = { it == "1" }, from = { if (it) "1" else "0" })
 
     /** Delegate that reads/writes a [SaveLocation] preference, forcing [SaveLocation.CUSTOM] on API ≤29. */
     fun saveLocation(

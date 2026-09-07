@@ -62,7 +62,7 @@ fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
 
 /** Initializes the standard common-utils preferences (dark mode, save location, language, dev options, more info). */
 fun PreferenceFragmentCompat.initCommonUtilsPreferences(settings: SettingsRepository) {
-    initDarkMode(settings)
+    initDarkMode()
     initImageSaveLocation()
     initMoreInfo()
     findPreference<PreferenceCategory>(getString(R.string.commonutils_preference_key_dev_options))?.apply {
@@ -147,32 +147,25 @@ private suspend fun Fragment.deleteAppData() {
 }
 
 @NoCoverage
-private fun PreferenceFragmentCompat.initDarkMode(settings: SettingsRepository) {
+private fun PreferenceFragmentCompat.initDarkMode() {
     val darkModePref = findPreference<HorizontalRadioPreference>(getString(R.string.commonutils_preference_key_dark_mode))
     val autoDarkModePref = findPreference<SwitchPreferenceCompat>(getString(R.string.commonutils_preference_key_auto_dark_mode))
     if (autoDarkModePref == null || darkModePref == null) {
         Log.e(TAG, "autoDarkModePref or darkModePref is null, skipping initialization")
     } else {
-        darkModePref.isEnabled = !settings.autoDarkMode
-        darkModePref.value = if (settings.darkMode) "1" else "0"
+        darkModePref.isEnabled = !autoDarkModePref.isChecked
         darkModePref.setDividerEnabled(false)
         darkModePref.setTouchEffectEnabled(false)
-        autoDarkModePref.isChecked = settings.autoDarkMode
         autoDarkModePref.onNewValue {
             darkModePref.isEnabled = !it
-            if (it) {
-                setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
-            } else {
-                if (settings.darkMode) {
-                    setDefaultNightMode(MODE_NIGHT_YES)
-                } else {
-                    setDefaultNightMode(MODE_NIGHT_NO)
-                }
-            }
+            setDefaultNightMode(
+                when {
+                    it -> MODE_NIGHT_FOLLOW_SYSTEM
+                    darkModePref.value == "1" -> MODE_NIGHT_YES
+                    else -> MODE_NIGHT_NO
+                },
+            )
         }
-        darkModePref.onNewValue {
-            settings.darkMode = it == "1"
-            setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
-        }
+        darkModePref.onNewValue { setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO) }
     }
 }

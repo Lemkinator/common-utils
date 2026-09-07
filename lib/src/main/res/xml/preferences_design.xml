@@ -21,6 +21,7 @@
 
         <dev.oneuiproject.oneui.preference.HorizontalRadioPreference
             android:key="@string/commonutils_preference_key_dark_mode"
+            android:defaultValue="0"
             app:entries="@array/preferences_darkmode_entries"
             app:entriesImage="@array/preferences_darkmode_entries_image"
             app:entryValues="@array/preferences_darkmode_values"
@@ -28,6 +29,7 @@
 
         <SwitchPreferenceCompat
             android:key="@string/commonutils_preference_key_auto_dark_mode"
+            android:defaultValue="true"
             android:title="@string/commonutils_system_default" />
 
     </PreferenceCategory>

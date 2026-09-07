@@ -87,6 +87,11 @@ class SettingsRepositoryTest {
     }
 
     @Test
+    fun `lastInAppReview defaults to 0`() {
+        repo.lastInAppReview shouldBe 0L
+    }
+
+    @Test
     fun `lastVersionCode round-trips written value`() {
         repo.lastVersionCode = 42
         reload().lastVersionCode shouldBe 42
@@ -185,6 +190,24 @@ class SettingsRepositoryTest {
     fun `imageSaveLocation persists under its literal SharedPreferences key`() {
         repo.imageSaveLocation = SaveLocation.DOWNLOADS
         prefs.getString("imageSaveLocation", SaveLocation.default.name) shouldBe SaveLocation.DOWNLOADS.name
+    }
+
+    @Test
+    fun `delegated keys are pinned`() {
+        assertDelegatedKeys(
+            SettingsRepository::class.java,
+            setOf(
+                "darkMode",
+                "autoDarkMode",
+                "lastVersionCode",
+                "lastVersionName",
+                "acceptedTosVersion",
+                "devModeEnabled",
+                "search",
+                "imageSaveLocation",
+                "lastInAppReview",
+            ),
+        )
     }
 }
 
