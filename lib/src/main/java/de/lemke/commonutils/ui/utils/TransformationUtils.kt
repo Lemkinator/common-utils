@@ -41,6 +41,7 @@ import com.google.android.material.transition.platform.MaterialContainerTransfor
 import com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_CROSS
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import de.lemke.commonutils.NoCoverage
+import dev.oneuiproject.oneui.ktx.activity
 
 private const val TAG = "TransformationUtils"
 private const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"
@@ -190,7 +191,7 @@ fun View.transformToActivity(
     fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
     val activity =
-        context as? Activity ?: run {
+        context.activity ?: run {
             context.startActivity(intent)
             return
         }
