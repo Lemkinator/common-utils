@@ -44,9 +44,9 @@ This lib consists of common utils that I use in my Android Apps.
 
 <a href="https://www.star-history.com/?repos=Lemkinator%2Fcommon-utils&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Lemkinator/common-utils&type=date&theme=dark&legend=top-left&sealed_token=p6huLTSSze7La3WlrHUKiqISG7tU1AMd3dnKhUsXGFP2bIl0qThKofgPcm_uFXpbmCFDAv_uNdgEgb9YusFtc-Hx2TkYKCik2O64zeiRdzXvuaCW4PAiQhXRi4MuTd0R8H4Ir8nGHaoPwRnDME8DQppiAqANVLu_mtkq3iOpmk58vbwU7IGCSMeRS1bS" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Lemkinator/common-utils&type=date&legend=top-left&sealed_token=p6huLTSSze7La3WlrHUKiqISG7tU1AMd3dnKhUsXGFP2bIl0qThKofgPcm_uFXpbmCFDAv_uNdgEgb9YusFtc-Hx2TkYKCik2O64zeiRdzXvuaCW4PAiQhXRi4MuTd0R8H4Ir8nGHaoPwRnDME8DQppiAqANVLu_mtkq3iOpmk58vbwU7IGCSMeRS1bS" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Lemkinator/common-utils&type=date&legend=top-left&sealed_token=p6huLTSSze7La3WlrHUKiqISG7tU1AMd3dnKhUsXGFP2bIl0qThKofgPcm_uFXpbmCFDAv_uNdgEgb9YusFtc-Hx2TkYKCik2O64zeiRdzXvuaCW4PAiQhXRi4MuTd0R8H4Ir8nGHaoPwRnDME8DQppiAqANVLu_mtkq3iOpmk58vbwU7IGCSMeRS1bS" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Lemkinator/common-utils&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Lemkinator/common-utils&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Lemkinator/common-utils&type=date&legend=top-left" />
  </picture>
 </a>
 
