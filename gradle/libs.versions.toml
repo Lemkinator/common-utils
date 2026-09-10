@@ -12,7 +12,7 @@ jvmTarget = "21"
 
 aboutlibraries = "15.2.0"
 activity-compose = "1.13.0"
-androidx-navigation = "2.10.0"
+androidx-navigation = "2.10.1"
 androidx-test = "1.7.0"
 app-update = "2.1.0"
 core-splashscreen = "1.2.0"
