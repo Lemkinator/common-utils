@@ -37,7 +37,7 @@ mockk = "1.14.11"
 oneui-design = "0.9.19+oneui8"
 oneui-icons = "1.1.0"
 review = "2.0.2"
-robolectric = "4.16.1"
+robolectric = "4.17"
 spotless = "8.10.2"
 turbine = "1.2.1"
 
