@@ -73,7 +73,17 @@ android {
             all { test ->
                 test.useJUnitPlatform()
                 test.maxHeapSize = "4096m"
-                test.jvmArgs("-XX:+EnableDynamicAgentLoading")
+                test.jvmArgs(
+                    "-XX:+EnableDynamicAgentLoading",
+                    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens=java.base/java.util=ALL-UNNAMED",
+                    "--add-opens=java.base/java.io=ALL-UNNAMED",
+                    "--add-opens=java.base/java.net=ALL-UNNAMED",
+                    "--add-opens=java.base/java.security=ALL-UNNAMED",
+                    "--add-opens=java.base/java.text=ALL-UNNAMED",
+                    "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+                    "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
+                )
                 test.systemProperty("robolectric.graphicsMode", "NATIVE")
             }
         }
