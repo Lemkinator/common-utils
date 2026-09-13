@@ -18,7 +18,6 @@ package de.lemke.commonutils.ui.utils
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.ui.widget.DimmingView
 import de.lemke.commonutils.ui.widget.TouchBlockingView
@@ -27,7 +26,6 @@ import dev.oneuiproject.oneui.widget.TipPopup
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Shows a tip popup anchored to this view with a full-screen touch-blocking overlay. */
-@NoCoverage
 fun View.showTouchBlockingTipPopup(
     @StringRes messageResId: Int,
     @StringRes actionTextResId: Int? = null,
@@ -35,7 +33,6 @@ fun View.showTouchBlockingTipPopup(
 ) = showTouchBlockingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
 /** Shows a tip popup anchored to this view with a full-screen touch-blocking overlay. */
-@NoCoverage
 fun View.showTouchBlockingTipPopup(
     message: String,
     actionText: String? = null,
@@ -45,7 +42,6 @@ fun View.showTouchBlockingTipPopup(
 }
 
 /** Shows a tip popup anchored to this view with a semi-transparent dimming overlay. */
-@NoCoverage
 fun View.showDimmingTipPopup(
     @StringRes messageResId: Int,
     @StringRes actionTextResId: Int? = null,
@@ -53,7 +49,6 @@ fun View.showDimmingTipPopup(
 ) = showDimmingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
 /** Shows a tip popup anchored to this view with a semi-transparent dimming overlay. */
-@NoCoverage
 fun View.showDimmingTipPopup(
     message: String,
     actionText: String? = null,
@@ -62,7 +57,6 @@ fun View.showDimmingTipPopup(
     showTipPopupWithOverlay(DimmingView(context), message, actionText, action)
 }
 
-@NoCoverage
 private fun View.showTipPopupWithOverlay(
     overlay: View,
     message: String,
@@ -79,7 +73,6 @@ private fun View.showTipPopupWithOverlay(
     return showTipPopup(rootView, overlay, message, actionText, action)
 }
 
-@NoCoverage
 private fun View.showTipPopup(
     rootView: ViewGroup,
     backgroundView: View,
