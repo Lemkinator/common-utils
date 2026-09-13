@@ -63,8 +63,7 @@
         "org.junit:junit-bom",
         "org.junit.jupiter:**",
         "org.junit.platform:**",
-        "org.junit.vintage:**",
-        "tech.apter.junit5.jupiter:**"
+        "org.junit.vintage:**"
       ]
     },
     {
