@@ -230,8 +230,6 @@ kover {
                     "*SplashUtilsKt*",
                     // TipPopupUtils: requires OneUI TipPopup widget + real decorView root, can't instantiate under Robolectric.
                     "*TipPopupUtilsKt*",
-                    // URLUtilsKt: order-dependent JIT branch-misattribution flakiness, not a real gap (see SettingsRepositoryKt).
-                    "*URLUtilsKt*",
                     // PreferenceUtilsKt: OneUI listView extension lambda, can't exercise under Robolectric.
                     $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
                     // DrawerUtilsKt: requires OneUI NavDrawerLayout, untestable in JVM tests.
@@ -242,8 +240,6 @@ kover {
                     "*CommonUtilsLibsActivity*",
                     // CommonUtilsAboutActivity: onCreate's SAM wrappers fire only via live Play Store callbacks.
                     $$"*CommonUtilsAboutActivity$onCreate*",
-                    // SettingsRepositoryKt: same order-dependent branch-misattribution flakiness as URLUtilsKt, not a real gap.
-                    "*SettingsRepositoryKt*",
                     // AutoClearedUtilsKt: DESTROYED-lifecycle branch needs a re-entrant call during onDestroyView, unsafe to reproduce.
                     $$"*AutoClearedUtilsKt$autoCleared$1*",
                     // AboutAppBarListener: else branches unreachable under Robolectric since totalScrollRange is always 0.
@@ -252,8 +248,8 @@ kover {
                     $$"*CommonUtilsOOBEActivity$initFooterButton*",
                     // LottieUtilsKt: null branch is tested, but JaCoCo loads this continuation class too late to attribute it.
                     $$"*LottieUtilsKt$launchDelayedPlay*",
-                    // OnboardingContext: @Parcelize-generated null-checks are synthetic; excluded so Codecov doesn't see the miss.
-                    "*OnboardingContext*",
+                    // OnboardingContext$Creator: @Parcelize-generated null-checks are synthetic, never reached directly.
+                    $$"*OnboardingContext$Creator*",
                 )
                 // inline fun definition-site stubs are unreachable under JUnit 5 + Robolectric; see CLAUDE.md §@NoCoverage.
                 annotatedBy("de.lemke.commonutils.NoCoverage")
