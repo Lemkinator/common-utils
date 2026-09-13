@@ -28,15 +28,9 @@ complexity:
     allowedConstructorParameters: 7
   TooManyFunctions:
     active: true
-    # Why: ignoreOverridden — Activity lifecycle callbacks (onCreate, onConfigurationChanged, ...)
-    # are framework-mandated, not class-owned complexity. allowedFunctionsPerClass raised from the
-    # default 11 — the pre-built About/AboutMe/OOBE/Settings screens own lifecycle + view setup +
-    # click handlers + predictive-back gesture state in one class by design; CommonUtilsAboutMeActivity
-    # currently needs 16. allowedFunctionsPerFile raised — this is an extension-function library, so
-    # several files group many small, related top-level extensions on purpose.
+    # ignoreOverridden: framework-mandated lifecycle callbacks (onCreate, onNewIntent, ...) are
+    # not class-owned complexity.
     ignoreOverridden: true
-    allowedFunctionsPerClass: 16
-    allowedFunctionsPerFile: 25
   ComplexCondition:
     allowedConditions: 4
 

@@ -56,11 +56,11 @@ import dev.oneuiproject.oneui.design.R as designR
 class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutMeBinding
     private val appBarListener: AboutAppBarListener = AboutAppBarListener()
-    private val progressInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
     private val callbackIsActive = MutableStateFlow(false)
     private val crossActivityCallbackIsActive = MutableStateFlow(true)
-    private var isBackProgressing = false
-    private var isExpanding = false
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val backGesture = PredictiveBackGestureController()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         prepareActivityTransformationTo()
@@ -75,7 +75,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         initContent()
         refreshAppBar(resources.configuration)
         setupOnClickListeners()
-        initOnBackPressed()
+        backGesture.start()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -103,52 +103,6 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowTitleEnabled(false)
         }
-    }
-
-    private fun initOnBackPressed() {
-        invokeOnBack(
-            triggerStateFlow = callbackIsActive,
-            onBackPressed = ::onBackPressedHandler,
-            onBackStarted = { onBackStartedHandler() },
-            onBackProgressed = ::onBackProgressedHandler,
-            onBackCancelled = ::onBackCancelledHandler,
-        )
-        updateCallbackState()
-    }
-
-    /** Expands the app bar and resets back-gesture state when the back press is confirmed. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onBackPressedHandler() {
-        binding.aboutAppBar.setExpanded(true)
-        isBackProgressing = false
-        isExpanding = false
-    }
-
-    /** Records that a predictive back gesture has started. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onBackStartedHandler() {
-        isBackProgressing = true
-    }
-
-    /** Expands or collapses the app bar in response to predictive back gesture progress. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onBackProgressedHandler(event: BackEventCompat) {
-        val interpolatedProgress = progressInterpolator.getInterpolation(event.progress)
-        if (interpolatedProgress > BACK_EXPAND_THRESHOLD && !isExpanding) {
-            isExpanding = true
-            binding.aboutAppBar.setExpanded(true, true)
-        } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
-            isExpanding = false
-            binding.aboutAppBar.setExpanded(false, true)
-        }
-    }
-
-    /** Collapses the app bar and resets back-gesture state when the gesture is canceled. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onBackCancelledHandler() {
-        binding.aboutAppBar.setExpanded(false)
-        isBackProgressing = false
-        isExpanding = false
     }
 
     @NoCoverage
@@ -267,7 +221,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
 
     @NoCoverage
     private fun updateCallbackState(enable: Boolean? = null) {
-        if (isBackProgressing) return
+        if (backGesture.isBackProgressing) return
         callbackIsActive.value =
             enable ?: (binding.aboutAppBar.seslIsCollapsed() && isPortrait(resources.configuration) && !isInMultiWindowModeCompat)
         crossActivityCallbackIsActive.value = !callbackIsActive.value
@@ -280,5 +234,61 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
 
         /** Optional callback invoked when the user taps the share button; defaults to a no-op. */
         var onShareApp: (activity: Activity) -> Unit = {}
+    }
+
+    /** Encapsulates predictive-back gesture state so the app bar expand/collapse logic stays out of the activity's own function count. */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal inner class PredictiveBackGestureController {
+        private val progressInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
+
+        var isBackProgressing = false
+            private set
+        private var isExpanding = false
+
+        fun start() {
+            invokeOnBack(
+                triggerStateFlow = callbackIsActive,
+                onBackPressed = ::onBackPressedHandler,
+                onBackStarted = { onBackStartedHandler() },
+                onBackProgressed = ::onBackProgressedHandler,
+                onBackCancelled = ::onBackCancelledHandler,
+            )
+            updateCallbackState()
+        }
+
+        /** Expands the app bar and resets back-gesture state when the back press is confirmed. */
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal fun onBackPressedHandler() {
+            binding.aboutAppBar.setExpanded(true)
+            isBackProgressing = false
+            isExpanding = false
+        }
+
+        /** Records that a predictive back gesture has started. */
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal fun onBackStartedHandler() {
+            isBackProgressing = true
+        }
+
+        /** Expands or collapses the app bar in response to predictive back gesture progress. */
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal fun onBackProgressedHandler(event: BackEventCompat) {
+            val interpolatedProgress = progressInterpolator.getInterpolation(event.progress)
+            if (interpolatedProgress > BACK_EXPAND_THRESHOLD && !isExpanding) {
+                isExpanding = true
+                binding.aboutAppBar.setExpanded(true, true)
+            } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
+                isExpanding = false
+                binding.aboutAppBar.setExpanded(false, true)
+            }
+        }
+
+        /** Collapses the app bar and resets back-gesture state when the gesture is canceled. */
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal fun onBackCancelledHandler() {
+            binding.aboutAppBar.setExpanded(false)
+            isBackProgressing = false
+            isExpanding = false
+        }
     }
 }

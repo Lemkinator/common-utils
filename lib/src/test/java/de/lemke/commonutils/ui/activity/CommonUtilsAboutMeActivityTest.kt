@@ -264,52 +264,52 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackPressedHandler resets back-progress state`() {
         val activity = launchActivity()
-        activity.onBackPressedHandler()
+        activity.backGesture.onBackPressedHandler()
     }
 
     @Test
     fun `onBackStartedHandler sets isBackProgressing`() {
         val activity = launchActivity()
-        activity.onBackStartedHandler()
+        activity.backGesture.onBackStartedHandler()
     }
 
     @Test
     fun `onBackProgressedHandler high progress triggers expand branch`() {
         val activity = launchActivity()
         // interpolatedProgress > 0.5 and !isExpanding → isExpanding = true branch
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
     }
 
     @Test
     fun `onBackProgressedHandler low progress while expanding triggers collapse branch`() {
         val activity = launchActivity()
         // First call: iprog(0.9f)≈0.97 > 0.5 and isExpanding=false → if-body → isExpanding=true
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
         // Second call: iprog(0.01f)≈0.12 < 0.3 and isExpanding=true → else-if-body → lines 132-133 covered
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
     }
 
     @Test
     fun `onBackProgressedHandler low progress while not expanding hits fallthrough`() {
         val activity = launchActivity()
         // isExpanding=false (initial): iprog(0.1f)≈0.447 in [0.3, 0.5] → A=false, C=false → fallthrough (branch 5)
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.1f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.1f, BackEventCompat.EDGE_LEFT))
     }
 
     @Test
     fun `onBackProgressedHandler two consecutive high-progress events cover A=true B=false branch`() {
         val activity = launchActivity()
         // First: iprog(0.9f)≈0.97 > 0.5, isExpanding=false → B=true → if-body → isExpanding=true
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
         // Second: iprog≈0.97 > 0.5, isExpanding=true → B=!isExpanding=false (branch 3) → else-if: C=false (branch 5)
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
     }
 
     @Test
     fun `onBackProgressedHandler very low progress while not expanding covers C=true D=false branch`() {
         val activity = launchActivity()
         // isExpanding=false (initial): iprog(0.01f)≈0.12 < 0.3 → C=true (branch 6), D=false (branch 7) → skip body
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -358,7 +358,7 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackCancelledHandler resets back-progress state`() {
         val activity = launchActivity()
-        activity.onBackCancelledHandler()
+        activity.backGesture.onBackCancelledHandler()
     }
 }
 
