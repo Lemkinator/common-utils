@@ -58,7 +58,6 @@ abstract class TransitionFragment(
  * @param layoutResId Layout resource to inflate, forwarded to [Fragment].
  * @param axis The [MaterialSharedAxis] axis along which the shared-axis transition runs.
  */
-@Suppress("IncorrectFormatting")
 abstract class TransitionFragmentSharedAxis(
     @LayoutRes layoutResId: Int = 0,
     @Axis axis: Int,
