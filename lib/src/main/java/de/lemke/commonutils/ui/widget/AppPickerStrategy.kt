@@ -15,21 +15,18 @@
  */
 package de.lemke.commonutils.ui.widget
 
-import android.content.Context
 import androidx.annotation.Keep
 import androidx.picker.controller.strategy.AppItemStrategy
 import androidx.picker.di.AppPickerContext
-import androidx.picker.helper.SeslAppInfoDataHelper
 import androidx.picker.model.AppData
-import androidx.picker.model.AppData.GridAppDataBuilder
-import androidx.picker.model.AppInfoData
 import androidx.picker.model.viewdata.AppInfoViewData
 import androidx.picker.model.viewdata.ViewData
 
 /**
  * [AppItemStrategy] for `SeslAppPickerGridView` (`app:strategy="de.lemke.commonutils.ui.widget.AppPickerStrategy"`
  * in layout XML) that makes every app entry searchable by both its label and package name, so users can
- * find an app whether they remember its display name or its package identifier.
+ * find an app whether they remember its display name or its package identifier, and shows the package
+ * name as each entry's sub-label.
  */
 @Keep
 class AppPickerStrategy(
@@ -39,10 +36,9 @@ class AppPickerStrategy(
         dataList: List<AppData>,
         comparator: Comparator<ViewData>?,
     ) = super.convert(dataList, comparator).also { results ->
-        results.filterIsInstance<AppInfoViewData>().forEach { it.searchable = listOfNotNull(it.label, it.packageName) }
+        results.filterIsInstance<AppInfoViewData>().forEach {
+            it.searchable = listOfNotNull(it.label, it.packageName)
+            it.subLabel = it.packageName
+        }
     }
 }
-
-/** Returns installed apps for a `SeslAppPickerGridView`, with [AppInfoData.subLabel] set to the package name. */
-fun Context.getInstalledAppsForPicker(): List<AppInfoData> =
-    SeslAppInfoDataHelper(this, GridAppDataBuilder::class.java).getPackages().onEach { it.subLabel = it.packageName }

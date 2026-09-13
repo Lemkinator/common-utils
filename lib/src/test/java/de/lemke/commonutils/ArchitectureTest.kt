@@ -15,9 +15,11 @@
  */
 package de.lemke.commonutils
 
+import com.lemonappdev.konsist.api.KoModifier
 import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.ext.list.withPackage
 import com.lemonappdev.konsist.api.verify.assertFalse
+import com.lemonappdev.konsist.api.verify.assertTrue
 import io.kotest.core.spec.style.ShouldSpec
 
 class ArchitectureTest : ShouldSpec() {
@@ -36,6 +38,23 @@ class ArchitectureTest : ShouldSpec() {
                 .withPackage("de.lemke.commonutils.data..")
                 .assertFalse(testName = this.testCase.name.toString()) {
                     it.hasImport { import -> import.name.startsWith("de.lemke.commonutils.ui.") }
+                }
+        }
+        should("domain layer does not depend on ui") {
+            codeScope.files
+                .withPackage("de.lemke.commonutils.domain..")
+                .assertFalse(testName = this.testCase.name.toString()) {
+                    it.hasImport { import -> import.name.startsWith("de.lemke.commonutils.ui.") }
+                }
+        }
+        should("use case classes declare operator fun invoke") {
+            codeScope
+                .classes()
+                .filter { it.name.endsWith("UseCase") }
+                .assertTrue(testName = this.testCase.name.toString()) { koClass ->
+                    koClass
+                        .functions(includeNested = false, includeLocal = false)
+                        .any { it.name == "invoke" && it.hasModifier(KoModifier.OPERATOR) }
                 }
         }
     }

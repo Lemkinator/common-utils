@@ -22,11 +22,8 @@ import androidx.picker.model.AppInfoDataImpl
 import androidx.picker.model.viewdata.AppInfoViewData
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.widget.AppPickerStrategy
-import de.lemke.commonutils.ui.widget.getInstalledAppsForPicker
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -36,9 +33,6 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class AppPickerUtilsTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
-
-    @Before
-    fun registerFakeLauncherApp() = registerFakeLauncherApp(context)
 
     @Test
     fun `convert sets searchable to label and packageName`() {
@@ -59,10 +53,11 @@ class AppPickerUtilsTest {
     }
 
     @Test
-    fun `getInstalledAppsForPicker sets subLabel to packageName for every entry`() {
-        val apps = context.getInstalledAppsForPicker()
-        apps.shouldNotBeEmpty()
-        val fakeApp = apps.first { it.packageName == "de.lemke.commonutils.fakeapp" }
-        fakeApp.subLabel shouldBe "de.lemke.commonutils.fakeapp"
+    fun `convert sets subLabel to packageName`() {
+        val strategy = AppPickerStrategy(AppPickerContext(context))
+        val appInfo = AppInfo(packageName = "de.lemke.commonutils", activityName = "")
+        val data = AppInfoDataImpl(appInfo, label = "CommonUtils")
+        val results = strategy.convert(listOf(data), null).filterIsInstance<AppInfoViewData>()
+        results.first().subLabel shouldBe "de.lemke.commonutils"
     }
 }
