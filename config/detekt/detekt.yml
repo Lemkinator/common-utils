@@ -9,14 +9,34 @@ processors:
 console-reports:
   active: true
 
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    active: true
+  RedundantSuspendModifier:
+    active: true
+  SleepInsteadOfDelay:
+    active: true
+  SuspendFunWithFlowReturnType:
+    active: true
+
 complexity:
   active: true
   LongParameterList:
     active: true
-    allowedFunctionParameters: 10
-    allowedConstructorParameters: 10
+    allowedFunctionParameters: 6
+    allowedConstructorParameters: 7
   TooManyFunctions:
-    active: false
+    active: true
+    # Why: ignoreOverridden — Activity lifecycle callbacks (onCreate, onConfigurationChanged, ...)
+    # are framework-mandated, not class-owned complexity. allowedFunctionsPerClass raised from the
+    # default 11 — the pre-built About/AboutMe/OOBE/Settings screens own lifecycle + view setup +
+    # click handlers + predictive-back gesture state in one class by design; CommonUtilsAboutMeActivity
+    # currently needs 16. allowedFunctionsPerFile raised — this is an extension-function library, so
+    # several files group many small, related top-level extensions on purpose.
+    ignoreOverridden: true
+    allowedFunctionsPerClass: 16
+    allowedFunctionsPerFile: 25
   ComplexCondition:
     allowedConditions: 4
 
@@ -24,8 +44,8 @@ style:
   active: true
   MagicNumber:
     active: true
-    ignoreNumbers: [ '-1', '0', '1', '2', '6', '16', '512', '1024', '0.5' ]
-    ignorePropertyDeclaration: true
+    ignoreNumbers: [ '-1', '0', '1', '2' ]
+    ignorePropertyDeclaration: false
     ignoreCompanionObjectPropertyDeclaration: true
   MaxLineLength:
     maxLineLength: 140
@@ -46,7 +66,24 @@ naming:
 empty-blocks:
   EmptyFunctionBlock:
     active: true
-    ignoreOverridden: true
+    ignoreOverridden: false
+
+exceptions:
+  active: true
+  TooGenericExceptionThrown:
+    active: true
+    exceptionNames:
+      - Error
+      - Exception
+      - RuntimeException
+      - Throwable
+  SwallowedException:
+    active: true
+    ignoredExceptionTypes:
+      - InterruptedException
+      - MalformedURLException
+      - NumberFormatException
+      - ParseException
 
 potential-bugs:
   active: true

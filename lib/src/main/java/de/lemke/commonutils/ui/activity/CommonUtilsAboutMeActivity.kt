@@ -135,7 +135,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onBackProgressedHandler(event: BackEventCompat) {
         val interpolatedProgress = progressInterpolator.getInterpolation(event.progress)
-        if (interpolatedProgress > .5 && !isExpanding) {
+        if (interpolatedProgress > BACK_EXPAND_THRESHOLD && !isExpanding) {
             isExpanding = true
             binding.aboutAppBar.setExpanded(true, true)
         } else if (interpolatedProgress < BACK_COLLAPSE_THRESHOLD && isExpanding) {
@@ -157,7 +157,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private fun refreshAppBar(config: Configuration) {
         if (config.orientation != ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
             binding.aboutAppBar.apply {
-                seslSetCustomHeightProportion(true, 0.5f) // expanded
+                seslSetCustomHeightProportion(true, EXPANDED_HEIGHT_PROPORTION)
                 addOnOffsetChangedListener(appBarListener)
                 setExpanded(true, false)
             }
@@ -276,6 +276,8 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
 
     companion object {
         private const val BACK_COLLAPSE_THRESHOLD = 0.3f
+        private const val BACK_EXPAND_THRESHOLD = 0.5f
+        private const val EXPANDED_HEIGHT_PROPORTION = 0.5f
 
         /** Optional callback invoked when the user taps the share button; defaults to a no-op. */
         var onShareApp: (activity: Activity) -> Unit = {}
