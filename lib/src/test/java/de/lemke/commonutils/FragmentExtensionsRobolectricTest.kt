@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Looper
@@ -128,7 +129,12 @@ class FragmentExtensionsRobolectricTest {
 
     @Test
     fun `Fragment copyToClipboard delegates to Context copyToClipboard`() {
-        fragment.copyToClipboard("clip text", "label").shouldBeTrue()
+        fragment.copyToClipboard("clip text", "label")
+        val clipboard = fragment.requireContext().getSystemService(ClipboardManager::class.java)
+        clipboard.primaryClip
+            ?.getItemAt(0)
+            ?.text
+            .toString() shouldBe "clip text"
     }
 
     // ── ExportUtils Fragment overload ─────────────────────────────────────────

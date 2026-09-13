@@ -22,12 +22,12 @@ import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.view.WindowInsets.Type.systemBars
 import androidx.activity.BackEventCompat
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.animation.PathInterpolatorCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
@@ -88,7 +88,6 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private fun applyInsetIfNeeded() {
         if (SDK_INT >= Build.VERSION_CODES.R && !window.decorView.fitsSystemWindows) {
             binding.root.setOnApplyWindowInsetsListener { _, insets ->
-                @Suppress("WrongConstant")
                 val systemBarsInsets = insets.getInsets(systemBars())
                 binding.root.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom)
                 insets

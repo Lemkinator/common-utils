@@ -81,17 +81,15 @@ fun Context.shareText(
 fun Fragment.copyToClipboard(
     text: String,
     label: String,
-): Boolean = requireContext().copyToClipboard(text, label)
+) = requireContext().copyToClipboard(text, label)
 
 /** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
-@Suppress("SameReturnValue")
 fun Context.copyToClipboard(
     text: String,
     label: String,
-): Boolean {
+) {
     setClip(ClipData.newPlainText(label, text))
     toast(R.string.commonutils_copied_to_clipboard)
-    return true
 }
 
 /** Copies [bitmap] to the clipboard via a cached file URI under [label]. */

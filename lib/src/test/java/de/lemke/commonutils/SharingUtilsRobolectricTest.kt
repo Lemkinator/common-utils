@@ -82,11 +82,6 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `copyToClipboard text returns true`() {
-        ctx.copyToClipboard("any text", "label").shouldBeTrue()
-    }
-
-    @Test
     fun `shareText from activity returns true`() {
         activity().shareText("some text", "title").shouldBeTrue()
     }
