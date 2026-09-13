@@ -58,6 +58,7 @@ junit-vintage-engine = { group = "org.junit.vintage", name = "junit-vintage-engi
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
@@ -67,6 +68,9 @@ oneui-icons = { module = "io.github.oneuiproject:icons", version.ref = "oneui-ic
 review = { module = "com.google.android.play:review", version.ref = "review" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+
+[bundles]
+unit-test = ["kotest-runner-junit5", "kotest-assertions-core", "kotest-property", "mockk", "turbine", "kotlinx-coroutines-test"]
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }

@@ -21,6 +21,10 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.int
+import io.kotest.property.checkAll
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -328,6 +332,64 @@ class DelegatesAdvancedTest {
         h.size = 256
         Holder().size shouldBe 256
     }
+
+    @Test
+    fun `sanitized round-trips any value within range`() =
+        runTest {
+            class Holder {
+                var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+            }
+            val h = Holder()
+
+            checkAll(Arb.int(16..1024)) { value ->
+                h.size = value
+                Holder().size shouldBe value
+            }
+        }
+
+    @Test
+    fun `sanitized clamps any value below range to the lower bound`() =
+        runTest {
+            class Holder {
+                var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+            }
+            val h = Holder()
+
+            checkAll(Arb.int(Int.MIN_VALUE until 16)) { value ->
+                h.size = value
+                Holder().size shouldBe 16
+            }
+        }
+
+    @Test
+    fun `sanitized clamps any value above range to the upper bound`() =
+        runTest {
+            class Holder {
+                var size: Int by prefs.delegates.int(default = 512).sanitized { it.coerceIn(16, 1024) }
+            }
+            val h = Holder()
+
+            checkAll(Arb.int(1025..Int.MAX_VALUE)) { value ->
+                h.size = value
+                Holder().size shouldBe 1024
+            }
+        }
+
+    @Test
+    fun `mapped round-trips any int value through its String storage`() =
+        runTest {
+            class Holder {
+                var n: Int by prefs.delegates
+                    .string(default = "0")
+                    .mapped(to = { it.toInt() }, from = { it.toString() })
+            }
+            val h = Holder()
+
+            checkAll(Arb.int()) { value ->
+                h.n = value
+                Holder().n shouldBe value
+            }
+        }
 
     @Test
     fun `sanitized composes with intList to cap a stored list on read`() {
