@@ -50,6 +50,7 @@ android {
     }
     defaultConfig {
         minSdk = 26
+        testInstrumentationRunner = "de.lemke.commonutils.HiltTestRunner"
     }
     publishing {
         singleVariant("release") {
@@ -96,6 +97,7 @@ android {
                 test.systemProperty("roborazzi.test.verify", project.findProperty("roborazzi.verify") ?: "true")
             }
         }
+        animationsDisabled = true
     }
     packaging {
         resources {
@@ -181,6 +183,12 @@ dependencies {
     testImplementation(libs.hilt.android.testing)
     testRuntimeOnly(libs.junit.vintage.engine)
     kspTest(libs.hilt.compiler)
+
+    androidTestImplementation(testFixtures(project(":lib")))
+    androidTestImplementation(libs.bundles.android.test)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.kotest.assertions.core)
+    kspAndroidTest(libs.hilt.compiler)
 }
 
 spotless {
