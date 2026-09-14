@@ -26,6 +26,12 @@ Tests live under `lib/src/test/java/de/lemke/commonutils/`.
 (`@RunWith(RobolectricTestRunner::class)`) for every Android/Robolectric test. Konsist
 for architecture rules.
 
+**`ShadowFileProvider`** (published testFixtures) — Robolectric shadow for both
+`FileProvider.getUriForFile` overloads that normalizes paths to `/` before matching; apply
+`@Config(shadows = [ShadowFileProvider::class])` instead of `mockkStatic(FileProvider::class)`
+whenever a test needs a real (not stubbed) URI, since the stock implementation compares raw
+`getCanonicalPath()` strings and throws on Windows.
+
 **Robolectric + JUnit 5**: See the shared Robolectric/JUnit 5 policy in
 `A:\repo\android\CLAUDE.md`. This repo previously bridged Robolectric onto JUnit 5 via the
 experimental `tech.apter.junit5.jupiter:robolectric-extension`; it was reverted because

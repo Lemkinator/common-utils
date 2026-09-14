@@ -1,0 +1,113 @@
+/*
+ * Copyright 2024-2026 Leonard Lemke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.lemke.commonutils
+
+import android.content.Context
+import androidx.core.content.FileProvider
+import androidx.test.core.app.ApplicationProvider
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
+import java.io.File
+import org.junit.After
+import org.junit.Assume.assumeTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+private const val TEST_AUTHORITY = "de.lemke.commonutils.test.fileprovider"
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36], shadows = [ShadowFileProvider::class])
+class ShadowFileProviderRobolectricTest {
+    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+
+    // FileProvider caches PathStrategy per authority in a real (non-shadowed) static HashMap that
+    // Robolectric does not reset between test methods sharing this class's @Config/sandbox.
+    @After
+    fun clearFileProviderCache() {
+        val sCache = FileProvider::class.java.getDeclaredField("sCache")
+        sCache.isAccessible = true
+        (sCache.get(null) as MutableMap<*, *>).clear()
+    }
+
+    @Test
+    fun `cache-path root maps a cache file to its uri`() {
+        val file = File(ctx.cacheDir, "photo.png")
+        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        uri.toString() shouldBe "content://$TEST_AUTHORITY/cache_root/photo.png"
+    }
+
+    @Test
+    fun `files-path root with nested path attribute maps a nested file`() {
+        val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
+        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        uri.toString() shouldBe "content://$TEST_AUTHORITY/nested_files/doc.txt"
+    }
+
+    @Test
+    fun `longest matching root wins when roots overlap`() {
+        val nested = File(File(ctx.filesDir, "nested/dir"), "inner.txt")
+        val outer = File(ctx.filesDir, "outer.txt")
+
+        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, nested).encodedPath!! shouldStartWith "/nested_files/"
+        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outer).encodedPath!! shouldStartWith "/files_root/"
+    }
+
+    @Test
+    fun `file outside every configured root throws IllegalArgumentException`() {
+        val outside = File(System.getProperty("java.io.tmpdir"), "shadow-file-provider-outside.bin")
+        shouldThrow<IllegalArgumentException> {
+            FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outside)
+        }
+    }
+
+    @Test
+    fun `displayName overload appends the query parameter without changing the path`() {
+        val file = File(ctx.cacheDir, "photo.png")
+        val plain = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        val withDisplayName = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file, "shared.png")
+
+        withDisplayName.encodedPath shouldBe plain.encodedPath
+        withDisplayName.getQueryParameter("displayName") shouldBe "shared.png"
+    }
+}
+
+/** No [ShadowFileProvider] here: exercises the real, unshadowed [FileProvider] for comparison. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36])
+class ShadowFileProviderParityRobolectricTest {
+    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+
+    @After
+    fun clearFileProviderCache() {
+        val sCache = FileProvider::class.java.getDeclaredField("sCache")
+        sCache.isAccessible = true
+        (sCache.get(null) as MutableMap<*, *>).clear()
+    }
+
+    @Test
+    fun `shadow produces the same uri as the real FileProvider on posix separators`() {
+        assumeTrue(File.separatorChar == '/')
+
+        val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
+        val real = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        val shadowed = ShadowFileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+
+        shadowed shouldBe real
+    }
+}

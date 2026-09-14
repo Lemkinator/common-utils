@@ -35,5 +35,14 @@
         <activity
             android:name="de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="de.lemke.commonutils.test.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/test_file_provider_paths" />
+        </provider>
     </application>
 </manifest>
