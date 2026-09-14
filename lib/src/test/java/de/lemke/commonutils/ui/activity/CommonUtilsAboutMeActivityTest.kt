@@ -23,6 +23,7 @@ import androidx.activity.BackEventCompat
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.R
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,14 @@ class CommonUtilsAboutMeActivityTest {
         shadowOf(Looper.getMainLooper()).idle()
         return controller.get()
     }
+
+    /** Reads the private `isExpanding` field via reflection - the controller exposes no public getter for it. */
+    private val CommonUtilsAboutMeActivity.PredictiveBackGestureController.isExpanding: Boolean
+        get() {
+            val field = javaClass.getDeclaredField("isExpanding")
+            field.isAccessible = true
+            return field.getBoolean(this)
+        }
 
     /** Invokes [OnOffsetChangedListener.onOffsetChanged] directly via the private field. */
     private fun CommonUtilsAboutMeActivity.dispatchAppBarOffset(offset: Int) {
@@ -264,13 +273,20 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackPressedHandler resets back-progress state`() {
         val activity = launchActivity()
+        activity.backGesture.onBackStartedHandler()
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+
         activity.backGesture.onBackPressedHandler()
+
+        activity.backGesture.isBackProgressing.shouldBeFalse()
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 
     @Test
     fun `onBackStartedHandler sets isBackProgressing`() {
         val activity = launchActivity()
         activity.backGesture.onBackStartedHandler()
+        activity.backGesture.isBackProgressing.shouldBeTrue()
     }
 
     @Test
@@ -278,6 +294,7 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         // interpolatedProgress > 0.5 and !isExpanding → isExpanding = true branch
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeTrue()
     }
 
     @Test
@@ -285,8 +302,10 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         // First call: iprog(0.9f)≈0.97 > 0.5 and isExpanding=false → if-body → isExpanding=true
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeTrue()
         // Second call: iprog(0.01f)≈0.12 < 0.3 and isExpanding=true → else-if-body → lines 132-133 covered
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 
     @Test
@@ -294,6 +313,7 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         // isExpanding=false (initial): iprog(0.1f)≈0.447 in [0.3, 0.5] → A=false, C=false → fallthrough (branch 5)
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.1f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 
     @Test
@@ -301,8 +321,10 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         // First: iprog(0.9f)≈0.97 > 0.5, isExpanding=false → B=true → if-body → isExpanding=true
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeTrue()
         // Second: iprog≈0.97 > 0.5, isExpanding=true → B=!isExpanding=false (branch 3) → else-if: C=false (branch 5)
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeTrue()
     }
 
     @Test
@@ -310,6 +332,7 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         // isExpanding=false (initial): iprog(0.01f)≈0.12 < 0.3 → C=true (branch 6), D=false (branch 7) → skip body
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -358,7 +381,13 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackCancelledHandler resets back-progress state`() {
         val activity = launchActivity()
+        activity.backGesture.onBackStartedHandler()
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+
         activity.backGesture.onBackCancelledHandler()
+
+        activity.backGesture.isBackProgressing.shouldBeFalse()
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 }
 

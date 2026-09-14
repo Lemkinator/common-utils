@@ -77,6 +77,7 @@ class CommonUtilsAboutActivityScreenshotTest {
     fun tearDown() {
         unmockkAll()
         setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        CommonUtilsAboutActivity.appVersion = ""
     }
 
     @Test

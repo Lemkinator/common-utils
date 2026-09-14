@@ -26,6 +26,7 @@ import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import io.kotest.matchers.shouldBe
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -50,6 +51,11 @@ class CommonUtilsAboutActivityTest {
     fun setUp() {
         hiltRule.inject()
         setupCommonUtilsAboutActivity("1.0.0")
+    }
+
+    @After
+    fun tearDown() {
+        CommonUtilsAboutActivity.appVersion = ""
     }
 
     @Test

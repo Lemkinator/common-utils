@@ -236,7 +236,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         var onShareApp: (activity: Activity) -> Unit = {}
     }
 
-    /** Encapsulates predictive-back gesture state so the app bar expand/collapse logic stays out of the activity's own function count. */
+    /** Drives the app bar's expand/collapse animation in response to predictive-back gesture progress. */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal inner class PredictiveBackGestureController {
         private val progressInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)

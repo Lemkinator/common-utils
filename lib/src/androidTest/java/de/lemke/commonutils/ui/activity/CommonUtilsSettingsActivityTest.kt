@@ -27,6 +27,7 @@ import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
 import io.kotest.matchers.shouldBe
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -57,6 +58,17 @@ class CommonUtilsSettingsActivityTest {
             R.xml.preferences_dev_options_delete_app_data,
             R.xml.preferences_more_info,
         )
+    }
+
+    @After
+    fun tearDown() {
+        CommonUtilsSettingsActivity.preferences =
+            listOf(
+                R.xml.preferences_design,
+                R.xml.preferences_general_language,
+                R.xml.preferences_dev_options_delete_app_data,
+                R.xml.preferences_more_info,
+            )
     }
 
     @Test

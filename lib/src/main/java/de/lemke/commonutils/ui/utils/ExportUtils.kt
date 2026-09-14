@@ -30,6 +30,7 @@ import android.os.Environment
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
 import java.io.File
@@ -53,6 +54,7 @@ fun Fragment.exportBitmap(
 // File.outputStream() is inline; its FileOutputStream constructor is inlined at every call site
 // and attributed as an uncoverable branch by JaCoCo on Linux/CI. Wrapping it here keeps the
 // inline expansion inside excluded code while the call site stays a plain Kotlin function call.
+@NoCoverage
 private fun File.openOutputStream(): java.io.FileOutputStream = outputStream()
 
 /** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */

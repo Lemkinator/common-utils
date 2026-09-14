@@ -79,12 +79,11 @@ oneui-icons = { module = "io.github.oneuiproject:icons", version.ref = "oneui-ic
 review = { module = "com.google.android.play:review", version.ref = "review" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
-roborazzi-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 [bundles]
 android-test = ["androidx-test-core", "androidx-test-core-ktx", "androidx-test-runner", "androidx-test-rules", "androidx-test-ext-junit", "androidx-test-espresso-core", "androidx-test-espresso-intents"]
-robolectric-test = ["robolectric", "roborazzi", "roborazzi-rule", "androidx-test-core", "androidx-test-core-ktx", "androidx-test-ext-junit"]
+robolectric-test = ["robolectric", "roborazzi", "androidx-test-core", "androidx-test-core-ktx", "androidx-test-ext-junit"]
 unit-test = ["kotest-runner-junit5", "kotest-assertions-core", "kotest-property", "mockk", "turbine", "kotlinx-coroutines-test"]
 
 [plugins]

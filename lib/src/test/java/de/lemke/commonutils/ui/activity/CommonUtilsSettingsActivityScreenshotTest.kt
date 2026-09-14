@@ -84,6 +84,13 @@ class CommonUtilsSettingsActivityScreenshotTest {
     fun tearDown() {
         unmockkAll()
         setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        CommonUtilsSettingsActivity.preferences =
+            listOf(
+                R.xml.preferences_design,
+                R.xml.preferences_general_language,
+                R.xml.preferences_dev_options_delete_app_data,
+                R.xml.preferences_more_info,
+            )
     }
 
     @Test
