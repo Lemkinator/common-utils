@@ -16,7 +16,10 @@
 package de.lemke.commonutils.ui.activity
 
 import android.os.Looper
+import de.lemke.commonutils.DestroyActivitiesRule
+import de.lemke.commonutils.track
 import io.kotest.matchers.shouldNotBe
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -27,11 +30,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class CommonUtilsLibsActivityTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Test
     fun `activity launches and sets Compose content without crashing`() {
-        val controller = Robolectric.buildActivity(CommonUtilsLibsActivity::class.java).setup()
+        val controller = Robolectric.buildActivity(CommonUtilsLibsActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
         controller.get() shouldNotBe null
-        controller.destroy()
     }
 }

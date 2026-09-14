@@ -19,6 +19,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
 
@@ -29,8 +30,12 @@ import org.robolectric.annotation.Implements
  * implementation throws `IllegalArgumentException` for every file there. Apply with
  * `@Config(shadows = [ShadowFileProvider::class])` on any Robolectric test that calls
  * `FileProvider.getUriForFile` for real (i.e. not `mockkStatic`'d).
+ *
+ * Only `getUriForFile` is shadowed — `query`/`openFile` (and anything else resolving a `content://`
+ * Uri back to a `File` via the stock `SimplePathStrategy.getFileForUri`) still use the real,
+ * unshadowed path-matching and still throw on Windows.
  */
-@Implements(FileProvider::class)
+@Implements(FileProvider::class, isInAndroidSdk = false)
 class ShadowFileProvider {
     companion object {
         @Implementation
@@ -78,20 +83,31 @@ class ShadowFileProvider {
         private fun pathStrategyRoots(
             context: Context,
             authority: String,
-        ): Map<String, File> {
-            val getPathStrategy =
-                FileProvider::class.java.getDeclaredMethod(
-                    "getPathStrategy",
-                    Context::class.java,
-                    String::class.java,
-                    Int::class.javaPrimitiveType,
+        ): Map<String, File> =
+            try {
+                val getPathStrategy =
+                    FileProvider::class.java.getDeclaredMethod(
+                        "getPathStrategy",
+                        Context::class.java,
+                        String::class.java,
+                        Int::class.javaPrimitiveType,
+                    )
+                getPathStrategy.isAccessible = true
+                val strategy = getPathStrategy.invoke(null, context, authority, 0)
+                val mRoots = strategy.javaClass.getDeclaredField("mRoots")
+                mRoots.isAccessible = true
+                @Suppress("UNCHECKED_CAST")
+                mRoots.get(strategy) as Map<String, File>
+            } catch (e: InvocationTargetException) {
+                // getPathStrategy itself threw (e.g. no manifest <provider> for this authority) -
+                // that's a real usage error, not a sign the reflected internals moved.
+                throw e.cause ?: e
+            } catch (e: ReflectiveOperationException) {
+                throw IllegalStateException(
+                    "FileProvider internals changed: expected private static " +
+                        "getPathStrategy(Context,String,int) and SimplePathStrategy.mRoots",
+                    e,
                 )
-            getPathStrategy.isAccessible = true
-            val strategy = getPathStrategy.invoke(null, context, authority, 0)
-            val mRoots = strategy.javaClass.getDeclaredField("mRoots")
-            mRoots.isAccessible = true
-            @Suppress("UNCHECKED_CAST")
-            return mRoots.get(strategy) as Map<String, File>
-        }
+            }
     }
 }

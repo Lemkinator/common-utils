@@ -303,44 +303,40 @@ class TransformationUtilsRobolectricTest {
     @Test
     fun `prepareActivityTransformationFrom onDestroy while finishing clears exit callback`() {
         // Must call before create() - requestFeature() must precede window content setup
-        val controller = Robolectric.buildActivity(AppCompatActivity::class.java)
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java).track(destroyActivities)
         val a = controller.get()
         a.prepareActivityTransformationFrom()
         controller.setup() // create/start/resume after feature is requested
         a.finish()
-        controller.destroy()
     }
 
     @Test
     fun `prepareActivityTransformationFrom onDestroy when not finishing skips exit callback clearing`() {
-        val controller = Robolectric.buildActivity(AppCompatActivity::class.java)
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java).track(destroyActivities)
         val a = controller.get()
         a.prepareActivityTransformationFrom()
         controller.setup()
         // No finish() → isFinishing = false in onDestroy → if body skipped
-        controller.destroy()
     }
 
     @Test
     fun `prepareActivityTransformationTo onDestroy while finishing clears enter callback`() {
         val intent = Intent().apply { putExtra("commonUtilsTransitionNameKey", "testTransition") }
-        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent)
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent).track(destroyActivities)
         val a = controller.get()
         a.prepareActivityTransformationTo()
         controller.setup()
         a.finish()
-        controller.destroy()
     }
 
     @Test
     fun `prepareActivityTransformationTo onDestroy when not finishing skips enter callback clearing`() {
         val intent = Intent().apply { putExtra("commonUtilsTransitionNameKey", "testTransition") }
-        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent)
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent).track(destroyActivities)
         val a = controller.get()
         a.prepareActivityTransformationTo()
         controller.setup()
         // No finish() → isFinishing = false in onDestroy → if body skipped
-        controller.destroy()
     }
 }
 

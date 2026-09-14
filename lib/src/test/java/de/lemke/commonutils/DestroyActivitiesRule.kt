@@ -37,8 +37,12 @@ class DestroyActivitiesRule : ExternalResource() {
     }
 
     override fun after() {
-        controllers.forEach { it.pause().stop().destroy() }
+        val firstFailure =
+            controllers
+                .mapNotNull { runCatching { it.pause().stop().destroy() }.exceptionOrNull() }
+                .firstOrNull()
         controllers.clear()
+        if (firstFailure != null) throw firstFailure
     }
 }
 
