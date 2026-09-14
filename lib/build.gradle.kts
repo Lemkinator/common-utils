@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalRoborazziApi::class)
+
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.hilt.android)
@@ -25,6 +29,7 @@ plugins {
     alias(libs.plugins.spotless)
     alias(libs.plugins.kover)
     alias(libs.plugins.dependency.analysis)
+    alias(libs.plugins.roborazzi)
     id("kotlin-parcelize")
 }
 
@@ -87,6 +92,8 @@ android {
                     "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
                 )
                 test.systemProperty("robolectric.graphicsMode", "NATIVE")
+                test.systemProperty("roborazzi.test.record", project.findProperty("roborazzi.record") ?: "false")
+                test.systemProperty("roborazzi.test.verify", project.findProperty("roborazzi.verify") ?: "true")
             }
         }
     }
@@ -122,6 +129,13 @@ configurations
         outgoing.capability("io.github.lemkinator:common-utils-test-fixtures:${libs.versions.common.utils.get()}")
     }
 
+roborazzi {
+    outputDir.set(layout.projectDirectory.dir("src/test/screenshots"))
+    compare {
+        outputDir.set(layout.buildDirectory.dir("reports/roborazzi"))
+    }
+}
+
 dependencies {
     implementation(libs.oneui.design)
     implementation(libs.oneui.icons)
@@ -140,8 +154,7 @@ dependencies {
     testImplementation(libs.bundles.unit.test)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.bundles.robolectric.test)
     testImplementation(testFixtures(project(":lib")))
 
     testFixturesImplementation(libs.androidx.test.core)

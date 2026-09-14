@@ -22,6 +22,7 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.spotless)
     alias(libs.plugins.dependency.analysis)
+    alias(libs.plugins.roborazzi) apply false
 }
 
 spotless {
