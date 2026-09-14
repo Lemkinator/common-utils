@@ -72,8 +72,8 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `copyToClipboard text sets primary clip text`() {
-        ctx.copyToClipboard("hello clipboard", "myLabel")
+    fun `copyToClipboard text sets primary clip text and returns true`() {
+        ctx.copyToClipboard("hello clipboard", "myLabel").shouldBeTrue()
         val clipboard = ctx.getSystemService(ClipboardManager::class.java)
         clipboard.primaryClip
             ?.getItemAt(0)

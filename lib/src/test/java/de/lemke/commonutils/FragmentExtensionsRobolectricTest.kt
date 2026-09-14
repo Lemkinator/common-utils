@@ -129,7 +129,7 @@ class FragmentExtensionsRobolectricTest {
 
     @Test
     fun `Fragment copyToClipboard delegates to Context copyToClipboard`() {
-        fragment.copyToClipboard("clip text", "label")
+        fragment.copyToClipboard("clip text", "label").shouldBeTrue()
         val clipboard = fragment.requireContext().getSystemService(ClipboardManager::class.java)
         clipboard.primaryClip
             ?.getItemAt(0)
