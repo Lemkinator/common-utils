@@ -20,12 +20,16 @@ import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.registerFakeLauncherApp
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class GetInstalledAppsUseCaseTest {
@@ -35,9 +39,10 @@ class GetInstalledAppsUseCaseTest {
     fun registerFakeLauncherApp() = registerFakeLauncherApp(context)
 
     @Test
-    fun `invoke returns installed apps including the registered fake launcher app`() {
-        val result = GetInstalledAppsUseCase(context)()
-        result.shouldNotBeEmpty()
-        result.map { it.packageName } shouldContain "de.lemke.commonutils.fakeapp"
-    }
+    fun `invoke returns installed apps including the registered fake launcher app`() =
+        runTest {
+            val result = GetInstalledAppsUseCase(context, UnconfinedTestDispatcher())()
+            result.shouldNotBeEmpty()
+            result.map { it.packageName } shouldContain "de.lemke.commonutils.fakeapp"
+        }
 }
