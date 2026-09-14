@@ -21,7 +21,9 @@ import android.os.Looper
 import android.view.View
 import androidx.activity.BackEventCompat
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
+import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
+import de.lemke.commonutils.track
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -31,6 +33,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -42,13 +45,16 @@ import org.robolectric.shadows.ShadowDialog
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class CommonUtilsAboutMeActivityTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Before
     fun setUp() {
         setupCommonUtilsAboutMeActivity()
     }
 
     private fun launchActivity(): CommonUtilsAboutMeActivity {
-        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup()
+        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
         return controller.get()
     }
@@ -342,7 +348,7 @@ class CommonUtilsAboutMeActivityTest {
         Dispatchers.setMain(testDispatcher)
         try {
             setupCommonUtilsAboutMeActivity()
-            val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup()
+            val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
             shadowOf(Looper.getMainLooper()).idle()
             val activity = controller.get()
             // dispatchAppBarOffset(0) → callbackIsActive=true → UnconfinedTestDispatcher runs coroutine
@@ -369,7 +375,7 @@ class CommonUtilsAboutMeActivityTest {
     fun `applyInsetIfNeeded with fitsSystemWindows=true skips listener setup`() {
         setupCommonUtilsAboutMeActivity()
         // Set fitsSystemWindows=true before onCreate → !fitsSystemWindows=false → body skipped (B false branch)
-        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java)
+        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).track(destroyActivities)
         controller
             .get()
             .window.decorView.fitsSystemWindows = true
@@ -394,6 +400,9 @@ class CommonUtilsAboutMeActivityTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
 class CommonUtilsAboutMeActivitySdk29Test {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Before
     fun setUp() {
         setupCommonUtilsAboutMeActivity()
@@ -402,7 +411,7 @@ class CommonUtilsAboutMeActivitySdk29Test {
     @Test
     fun `applyInsetIfNeeded SDK_INT less than R skips listener setup`() {
         // SDK 29 < R (30) → first condition false → body skipped → SDK<R branch covered
-        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup()
+        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
         controller.get() shouldNotBe null
     }

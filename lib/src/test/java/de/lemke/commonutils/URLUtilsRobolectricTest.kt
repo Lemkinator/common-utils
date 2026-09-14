@@ -25,6 +25,7 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.every
 import io.mockk.spyk
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -34,6 +35,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class URLUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
@@ -56,6 +60,7 @@ class URLUtilsRobolectricTest {
         Robolectric
             .buildActivity(Activity::class.java)
             .setup()
+            .track(destroyActivities)
             .get()
             .openURL("https://example.com")
             .shouldBeTrue()
@@ -68,14 +73,28 @@ class URLUtilsRobolectricTest {
 
     @Test
     fun `openURL returns false when startActivity throws ActivityNotFoundException`() {
-        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no browser")
         a.openURL("https://example.com").shouldBeFalse()
     }
 
     @Test
     fun `openURL returns false when startActivity throws generic Exception`() {
-        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
         every { a.startActivity(any<Intent>()) } throws RuntimeException("crash")
         a.openURL("https://example.com").shouldBeFalse()
     }

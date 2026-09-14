@@ -23,6 +23,7 @@ import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
 import io.kotest.matchers.shouldBe
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -32,6 +33,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class ActivityUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Test
     fun `setupCommonUtilsSettingsActivity vararg sets preferences list`() {
         setupCommonUtilsSettingsActivity(1, 2, 3)
@@ -55,7 +59,12 @@ class ActivityUtilsRobolectricTest {
     fun `setupCommonUtilsAboutMeActivity sets onShareApp callback`() {
         var called = false
         setupCommonUtilsAboutMeActivity(onShareApp = { called = true })
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         CommonUtilsAboutMeActivity.onShareApp.invoke(activity)
         called shouldBe true
     }

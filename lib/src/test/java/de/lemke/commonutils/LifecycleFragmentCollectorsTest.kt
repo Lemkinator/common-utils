@@ -28,6 +28,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -43,13 +44,14 @@ class ViewFragment : Fragment() {
     ): View = FrameLayout(requireContext())
 }
 
-private fun attachedFragment(): Fragment {
+private fun attachedFragment(destroyActivities: DestroyActivitiesRule): Fragment {
     val activity =
         Robolectric
             .buildActivity(AppCompatActivity::class.java)
             .create()
             .start()
             .resume()
+            .track(destroyActivities)
             .get()
     val fragment = ViewFragment()
     activity.supportFragmentManager
@@ -62,9 +64,12 @@ private fun attachedFragment(): Fragment {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class FragmentCollectStateInitialTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Test
     fun `Fragment collectState delivers initial value`() {
-        val fragment = attachedFragment()
+        val fragment = attachedFragment(destroyActivities)
         val flow = MutableStateFlow(10)
         val collected = mutableListOf<Int>()
         fragment.collectState(flow) { collected.add(it) }
@@ -76,9 +81,12 @@ class FragmentCollectStateInitialTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class FragmentCollectStateUpdateTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Test
     fun `Fragment collectState delivers updated value`() {
-        val fragment = attachedFragment()
+        val fragment = attachedFragment(destroyActivities)
         val flow = MutableStateFlow(1)
         val collected = mutableListOf<Int>()
         fragment.collectState(flow) { collected.add(it) }
@@ -92,9 +100,12 @@ class FragmentCollectStateUpdateTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class FragmentCollectEventsTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Test
     fun `Fragment collectEvents delivers buffered event`() {
-        val fragment = attachedFragment()
+        val fragment = attachedFragment(destroyActivities)
         val channel = Channel<String>(Channel.BUFFERED)
         val collected = mutableListOf<String>()
         channel.trySend("event-one")

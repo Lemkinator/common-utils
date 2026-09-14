@@ -29,6 +29,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.spyk
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -40,6 +41,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class EmailUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
@@ -85,14 +89,26 @@ class EmailUtilsRobolectricTest {
 
     @Test
     fun `sendEmail from Activity context does not add FLAG_ACTIVITY_NEW_TASK`() {
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         activity.sendEmail("a@b.com", "Sub", "Body").shouldBeTrue()
         (shadowOf(activity).nextStartedActivity.flags and Intent.FLAG_ACTIVITY_NEW_TASK) shouldBe 0
     }
 
     @Test
     fun `sendEmail returns false on ActivityNotFoundException`() {
-        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no email")
         a.sendEmail("a@b.com", "Sub", "Body").shouldBeFalse()
     }

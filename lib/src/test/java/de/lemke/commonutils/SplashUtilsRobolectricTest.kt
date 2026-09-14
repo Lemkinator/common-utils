@@ -22,6 +22,7 @@ import androidx.core.splashscreen.SplashScreen
 import de.lemke.commonutils.ui.utils.configureCommonUtilsSplashScreen
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -31,7 +32,15 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SplashUtilsRobolectricTest {
-    private fun setupActivity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
+    private fun setupActivity(): AppCompatActivity =
+        Robolectric
+            .buildActivity(AppCompatActivity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     @Test
     fun `configureCommonUtilsSplashScreen with null condition skips setKeepOnScreenCondition`() {

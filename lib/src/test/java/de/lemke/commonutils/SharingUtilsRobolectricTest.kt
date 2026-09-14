@@ -47,6 +47,7 @@ import java.io.File
 import java.io.OutputStream
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -57,9 +58,17 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SharingUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
-    private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+    private fun activity(): Activity =
+        Robolectric
+            .buildActivity(Activity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     @Test
     fun `isSamsungQuickShareAvailable returns false when Quick Share not installed`() {
@@ -93,7 +102,14 @@ class SharingUtilsRobolectricTest {
 
     @Test
     fun `Context shareText ActivityNotFoundException fallback shows toast`() {
-        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
         every { a.startActivity(any<android.content.Intent>()) } throws ActivityNotFoundException("no share")
         a.shareText("hello", "Test title").shouldBeFalse()
     }
@@ -105,7 +121,14 @@ class SharingUtilsRobolectricTest {
 
     @Test
     fun `shareApp ActivityNotFoundException covers safeStartActivity catch branch`() {
-        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
         every { a.startActivity(any<android.content.Intent>()) } throws ActivityNotFoundException("no handler")
         a.shareApp().shouldBeFalse()
     }
@@ -121,9 +144,17 @@ class SharingUtilsRobolectricTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class SharingUtilsBitmapRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
-    private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+    private fun activity(): Activity =
+        Robolectric
+            .buildActivity(Activity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     private val fakeUri: Uri = Uri.parse("content://de.lemke.test.fileprovider/share/test.png")
 
@@ -250,7 +281,12 @@ class SharingUtilsBitmapRobolectricTest {
     // ── Fragment overloads ───────────────────────────────────────────────────────
 
     private fun attachedFragment(): Fragment {
-        val a = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val frag = Fragment()
         a.supportFragmentManager
             .beginTransaction()
@@ -289,7 +325,14 @@ class SharingUtilsBitmapRobolectricTest {
     @Test
     fun `quickShare ActivityNotFoundException in start falls back to safeStartActivity`() {
         // Both startActivity calls throw → start catch nulls package → safeStartActivity catch returns false
-        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
         every { a.startActivity(any<android.content.Intent>()) } throws ActivityNotFoundException("no handler")
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.quickShare(a, "test.png").shouldBeFalse()

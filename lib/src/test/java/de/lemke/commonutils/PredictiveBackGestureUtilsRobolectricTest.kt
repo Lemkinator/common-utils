@@ -28,6 +28,7 @@ import io.kotest.matchers.shouldNotBe
 import java.util.concurrent.TimeUnit.DAYS
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -37,11 +38,19 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class PredictiveBackGestureUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private lateinit var activity: AppCompatActivity
 
     @Before
     fun setUp() {
-        activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
     }
 
     @Test
@@ -163,11 +172,19 @@ class PredictiveBackGestureUtilsRobolectricTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
 class PredictiveBackGestureUtilsSdk29RobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private lateinit var activity: AppCompatActivity
 
     @Before
     fun setUp() {
-        activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
     }
 
     @Test

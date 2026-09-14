@@ -23,6 +23,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -33,12 +34,16 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class LifecycleCollectorsTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private fun launchActivity(): AppCompatActivity =
         Robolectric
             .buildActivity(AppCompatActivity::class.java)
             .create()
             .start()
             .resume()
+            .track(destroyActivities)
             .get()
 
     private fun idle() = Shadows.shadowOf(Looper.getMainLooper()).idle()

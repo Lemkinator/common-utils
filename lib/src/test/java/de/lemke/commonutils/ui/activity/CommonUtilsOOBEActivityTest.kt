@@ -20,11 +20,14 @@ import android.os.Looper
 import android.text.Spanned
 import android.text.style.ClickableSpan
 import android.widget.TextView
+import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
 import de.lemke.commonutils.domain.AppStartResult
+import de.lemke.commonutils.track
 import de.lemke.commonutils.ui.utils.OnboardingContext
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -36,8 +39,11 @@ import org.robolectric.shadows.ShadowDialog
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class CommonUtilsOOBEActivityTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private fun launchActivity(): CommonUtilsOOBEActivity {
-        val controller = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java).setup()
+        val controller = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
         return controller.get()
     }
@@ -81,7 +87,12 @@ class CommonUtilsOOBEActivityTest {
                 tosChanged = true,
             )
         val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
-        val activity = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java, intent).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(CommonUtilsOOBEActivity::class.java, intent)
+                .setup()
+                .track(destroyActivities)
+                .get()
         shadowOf(Looper.getMainLooper()).idle()
         val tosText = activity.findViewById<TextView>(R.id.oobeIntroFooterTosText)
         tosText.text.isNotEmpty() shouldBe true
@@ -90,7 +101,7 @@ class CommonUtilsOOBEActivityTest {
     @Test
     fun `initFooterButton narrow screen sets MATCH_PARENT width`() {
         // Override configuration so screenWidthDp < MIN_FULL_BUTTON_WIDTH_DP (360)
-        val controller = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java)
+        val controller = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java).track(destroyActivities)
         controller
             .get()
             .resources.configuration.screenWidthDp = 300
@@ -103,7 +114,7 @@ class CommonUtilsOOBEActivityTest {
     @Test
     fun `initFooterButton wide screen does not set MATCH_PARENT width`() {
         // screenWidthDp >= MIN_FULL_BUTTON_WIDTH_DP (360) → false branch of the width check
-        val controller = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java)
+        val controller = Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java).track(destroyActivities)
         controller
             .get()
             .resources.configuration.screenWidthDp = 400

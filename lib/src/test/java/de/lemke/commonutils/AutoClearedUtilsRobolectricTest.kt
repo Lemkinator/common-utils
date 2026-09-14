@@ -25,6 +25,7 @@ import androidx.fragment.app.Fragment
 import de.lemke.commonutils.ui.utils.autoCleared
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -46,8 +47,16 @@ internal class AutoClearedViewFragment : Fragment() {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class AutoClearedUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private fun launchFragment(): AutoClearedViewFragment {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val fragment = AutoClearedViewFragment()
         activity.supportFragmentManager
             .beginTransaction()
@@ -70,7 +79,12 @@ class AutoClearedUtilsRobolectricTest {
 
     @Test
     fun `onDestroy clears cached value and accessing after view destroy throws`() {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val fragment = AutoClearedViewFragment()
         activity.supportFragmentManager
             .beginTransaction()
