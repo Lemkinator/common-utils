@@ -16,25 +16,16 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <application android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        <activity
-            android:name="androidx.appcompat.app.AppCompatActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-        <activity
-            android:name="de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-        <activity
-            android:name="de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-        <activity
-            android:name="de.lemke.commonutils.ui.activity.CommonUtilsLibsActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-        <activity
-            android:name="de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-        <activity
-            android:name="de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+    <!--
+    The library's own manifest declares no application theme - every consuming app supplies its
+    own (e.g. GetIcon's CommonUtils.AppTheme at the <application> level). Standalone unit tests
+    have no consuming app, so without this, activities using dev.oneuiproject.oneui.layout.AppInfoLayout
+    inflate against AppCompat's default ActionBar theme and crash: AppInfoLayout's constructor calls
+    setSupportActionBar(), which requires a NoActionBar theme. CommonUtils.AppTheme (parent
+    OneUITheme) is also DayNight-capable, unlike a hardcoded Theme.AppCompat.Light - see
+    lib/src/androidTest/AndroidManifest.xml for the same reasoning on the instrumented side.
+    -->
+    <application android:theme="@style/CommonUtils.AppTheme">
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="de.lemke.commonutils.test.fileprovider"

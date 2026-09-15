@@ -34,8 +34,9 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class CommonUtilsOOBEActivityScreenshotTest {
     // AppCompatDelegate.setDefaultNightMode() is a real static singleton, not a Robolectric
-    // shadow - reset before each test so an earlier test's leftover mode can't change how the
-    // "+night" qualifier renders here.
+    // shadow - reset before each test so an earlier test's leftover mode can't override how the
+    // "+night" qualifier renders here (a non-FOLLOW_SYSTEM mode pins day/night regardless of the
+    // resource qualifier).
     @Before
     fun setUp() = setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
 
