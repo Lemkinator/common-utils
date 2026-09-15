@@ -15,14 +15,21 @@
  */
 package de.lemke.commonutils.ui.activity
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
+import android.net.NetworkInfo
+import android.os.Looper
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import com.github.takahirom.roborazzi.captureRoboImage
-import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.testing.FakeAppUpdateManager
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -40,8 +47,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowNetworkInfo
 
 /**
  * JUnit4 (not JUnit5/Kotest like the rest of this module): `HiltAndroidRule`/`@HiltAndroidTest`
@@ -68,9 +77,30 @@ class CommonUtilsAboutActivityScreenshotTest {
         // of the resource qualifier).
         setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         hiltRule.inject()
-        val mockAppUpdateManager = mockk<AppUpdateManager>(relaxed = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        // Robolectric reports no active network by default, which the activity reads as
+        // NoConnection - mark the active network validated so checkUpdate() proceeds to the
+        // (faked) update check instead of short-circuiting into the offline state.
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+        shadowOf(connectivityManager).apply {
+            setActiveNetworkInfo(
+                ShadowNetworkInfo.newInstance(
+                    NetworkInfo.DetailedState.CONNECTED,
+                    ConnectivityManager.TYPE_WIFI,
+                    0,
+                    true,
+                    NetworkInfo.State.CONNECTED,
+                ),
+            )
+            // NetworkCapabilities has no public builder in the compile-time SDK stub (its Builder
+            // is a system/test API) - a relaxed mock stands in for the "validated" capability the
+            // activity actually reads.
+            val networkCapabilities =
+                mockk<NetworkCapabilities>(relaxed = true) { every { hasCapability(NET_CAPABILITY_VALIDATED) } returns true }
+            setNetworkCapabilities(connectivityManager.activeNetwork, networkCapabilities)
+        }
         mockkStatic(AppUpdateManagerFactory::class)
-        every { AppUpdateManagerFactory.create(any()) } returns mockAppUpdateManager
+        every { AppUpdateManagerFactory.create(any()) } returns FakeAppUpdateManager(context).apply { setUpdateNotAvailable() }
         setupCommonUtilsAboutActivity("1.0.0")
     }
 
@@ -84,6 +114,7 @@ class CommonUtilsAboutActivityScreenshotTest {
     @Test
     fun aboutActivity_default() {
         ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use {
+            shadowOf(Looper.getMainLooper()).idle()
             onView(isRoot()).captureRoboImage("src/test/screenshots/about_default.png")
         }
     }
@@ -92,6 +123,7 @@ class CommonUtilsAboutActivityScreenshotTest {
     @Config(qualifiers = "+night")
     fun aboutActivity_default_dark() {
         ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use {
+            shadowOf(Looper.getMainLooper()).idle()
             onView(isRoot()).captureRoboImage("src/test/screenshots/about_default_dark.png")
         }
     }
