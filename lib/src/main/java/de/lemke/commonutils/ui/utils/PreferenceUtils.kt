@@ -158,10 +158,12 @@ private fun PreferenceFragmentCompat.initDarkMode() {
         darkModePref.isEnabled = !autoDarkModePref.isChecked
         darkModePref.setDividerEnabled(false)
         darkModePref.setTouchEffectEnabled(false)
-        if (autoDarkModePref.isChecked) darkModePref.persistCurrentNightMode()
+        if (autoDarkModePref.isChecked) {
+            darkModePref.value = if (resources.configuration.uiMode and UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES) "1" else "0"
+        }
         autoDarkModePref.onNewValue {
             darkModePref.isEnabled = !it
-            if (it) darkModePref.persistCurrentNightMode()
+            if (it) darkModePref.value = if (resources.configuration.uiMode and UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES) "1" else "0"
             setDefaultNightMode(
                 when {
                     it -> MODE_NIGHT_FOLLOW_SYSTEM
@@ -171,15 +173,8 @@ private fun PreferenceFragmentCompat.initDarkMode() {
             )
         }
         darkModePref.onNewValue {
-            // Only a real user pick (radio enabled, i.e. default toggle off) should change the mode -
-            // persistCurrentNightMode() above never fires this listener, but this guards against ever
-            // re-applying a mode from here while the default toggle is on.
+            // HorizontalRadioPreference.value's setter never invokes onPreferenceChangeListener.
             if (!autoDarkModePref.isChecked) setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
         }
     }
-}
-
-/** Writes the current system/app night mode into the persisted darkMode setting. */
-private fun HorizontalRadioPreference.persistCurrentNightMode() {
-    value = if (context.resources.configuration.uiMode and UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES) "1" else "0"
 }
