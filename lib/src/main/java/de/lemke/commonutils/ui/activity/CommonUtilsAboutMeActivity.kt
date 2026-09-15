@@ -80,7 +80,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         initContent()
         refreshAppBar(resources.configuration)
         setupOnClickListeners()
-        backGesture.start()
+        backGesture.register()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -253,11 +253,12 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         /** The registered dispatcher callback; exposed so tests can drive its handle* overrides directly. */
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         internal lateinit var callback: OnBackPressedCallback
-            @NoCoverage // lateinit getter's uninitialized-check branch is never taken once start() has run.
+            @NoCoverage // lateinit getter's uninitialized-check branch is never taken once register() has run.
             get
             private set
 
-        fun start() {
+        /** Registers the predictive-back callback with the dispatcher and syncs its initial enabled state. */
+        fun register() {
             callback =
                 object : OnBackPressedCallback(callbackIsActive.value) {
                     override fun handleOnBackPressed() {
