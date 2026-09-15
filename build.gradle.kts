@@ -23,6 +23,7 @@ plugins {
     alias(libs.plugins.spotless)
     alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.roborazzi) apply false
+    alias(libs.plugins.aboutlibraries) apply false
 }
 
 spotless {

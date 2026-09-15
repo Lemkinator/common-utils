@@ -30,6 +30,7 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.roborazzi)
+    alias(libs.plugins.aboutlibraries)
     id("kotlin-parcelize")
 }
 
