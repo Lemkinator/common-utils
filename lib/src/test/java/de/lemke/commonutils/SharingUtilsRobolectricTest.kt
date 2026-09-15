@@ -19,6 +19,7 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
 import android.net.Uri
@@ -31,16 +32,21 @@ import de.lemke.commonutils.ui.utils.getFileUri
 import de.lemke.commonutils.ui.utils.isSamsungQuickShareAvailable
 import de.lemke.commonutils.ui.utils.quickShare
 import de.lemke.commonutils.ui.utils.quickShareBitmap
+import de.lemke.commonutils.ui.utils.resolveShareCacheFile
 import de.lemke.commonutils.ui.utils.share
 import de.lemke.commonutils.ui.utils.shareApp
 import de.lemke.commonutils.ui.utils.shareBitmap
 import de.lemke.commonutils.ui.utils.shareText
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import java.io.File
@@ -138,6 +144,23 @@ class SharingUtilsRobolectricTest {
         shadowOf(ctx.packageManager).installPackage(PackageInfo().also { it.packageName = "com.samsung.android.app.sharelive" })
         ctx.isSamsungQuickShareAvailable().shouldBeTrue()
     }
+
+    @Test
+    fun `resolveShareCacheFile resolves a plain filename inside cacheDir`() {
+        val file = ctx.resolveShareCacheFile("test.png")
+        file.parentFile?.canonicalPath shouldBe ctx.cacheDir.canonicalPath
+    }
+
+    @Test
+    fun `resolveShareCacheFile resolves an empty name to cacheDir itself`() {
+        val file = ctx.resolveShareCacheFile("")
+        file.canonicalPath shouldBe ctx.cacheDir.canonicalPath
+    }
+
+    @Test
+    fun `resolveShareCacheFile rejects a name that escapes cacheDir`() {
+        shouldThrow<IllegalArgumentException> { ctx.resolveShareCacheFile("../evil.png") }
+    }
 }
 
 /** Tests for bitmap and file sharing paths that require mocking [FileProvider]. */
@@ -194,6 +217,19 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
+    fun `copyToClipboard bitmap FileProvider throws - exception caught, returns false`() {
+        every { FileProvider.getUriForFile(any(), any(), any()) } throws RuntimeException("test")
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
+    }
+
+    @Test
+    fun `copyToClipboard bitmap rejects shareFileName that escapes cacheDir`() {
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        ctx.copyToClipboard(bitmap, "label", "../evil.png").shouldBeFalse()
+    }
+
+    @Test
     fun `Bitmap copyToClipboard extension delegates to Context copyToClipboard`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.copyToClipboard(ctx, "label", "test.png").shouldBeTrue()
@@ -228,6 +264,12 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
+    fun `Bitmap share rejects shareFileName that escapes cacheDir`() {
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.share(ctx, "../evil.png").shouldBeFalse()
+    }
+
+    @Test
     fun `Context shareBitmap delegates to Bitmap share`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         activity().shareBitmap(bitmap, "test.png").shouldBeTrue()
@@ -246,6 +288,19 @@ class SharingUtilsBitmapRobolectricTest {
         val bitmap = mockk<Bitmap>()
         every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
         bitmap.quickShare(ctx, "test.png").shouldBeFalse()
+    }
+
+    @Test
+    fun `quickShare FileProvider throws - exception caught, returns false`() {
+        every { FileProvider.getUriForFile(any(), any(), any()) } throws RuntimeException("test")
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.quickShare(ctx, "test.png").shouldBeFalse()
+    }
+
+    @Test
+    fun `quickShare rejects shareFileName that escapes cacheDir`() {
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.quickShare(ctx, "../evil.png").shouldBeFalse()
     }
 
     @Test
@@ -276,6 +331,46 @@ class SharingUtilsBitmapRobolectricTest {
         val f1 = File(act.cacheDir, "img1.png").also { it.createNewFile() }
         val f2 = File(act.cacheDir, "img2.png").also { it.createNewFile() }
         listOf(f1, f2).share(act).shouldBeTrue()
+    }
+
+    @Test
+    fun `List share FileProvider throws - exception caught, returns false`() {
+        every { FileProvider.getUriForFile(any(), any(), any()) } throws IllegalArgumentException("no configured root")
+        val file = File(ctx.cacheDir, "img.png").also { it.createNewFile() }
+        file.share(ctx).shouldBeFalse()
+    }
+
+    @Test
+    fun `File share ActivityNotFoundException returns false`() {
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
+        every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no handler")
+        val file = File(a.cacheDir, "img.png").also { it.createNewFile() }
+        file.share(a).shouldBeFalse()
+    }
+
+    @Test
+    fun `List share wraps the intent in a chooser even when Quick Share is installed`() {
+        shadowOf(ctx.packageManager).installPackage(PackageInfo().also { it.packageName = "com.samsung.android.app.sharelive" })
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
+        val intentSlot = slot<Intent>()
+        every { a.startActivity(capture(intentSlot)) } just Runs
+        val file = File(a.cacheDir, "img.png").also { it.createNewFile() }
+        file.share(a).shouldBeTrue()
+        intentSlot.captured.action shouldBe Intent.ACTION_CHOOSER
     }
 
     // ── Fragment overloads ───────────────────────────────────────────────────────

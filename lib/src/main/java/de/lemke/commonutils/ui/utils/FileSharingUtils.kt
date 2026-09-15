@@ -16,12 +16,15 @@
 package de.lemke.commonutils.ui.utils
 
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.ACTION_SEND
 import android.content.Intent.ACTION_SEND_MULTIPLE
 import android.content.Intent.EXTRA_STREAM
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
+import de.lemke.commonutils.R
 import java.io.File
 
 private const val MIME_TYPE_PNG = "image/png"
@@ -31,24 +34,31 @@ private const val TAG = "SharingUtils"
 fun File.share(context: Context): Boolean = listOf(this).share(context)
 
 /** Shares all image files in this list via the system share sheet (multi-file if more than one). */
+@Suppress("TooGenericExceptionCaught")
 fun List<File>.share(context: Context): Boolean {
-    val contentUris = map { f -> f.getFileUri(context) }
-
-    if (contentUris.isEmpty()) {
+    if (isEmpty()) {
         Log.e(TAG, "No file to share.")
         return false
     }
-
-    context.createBaseIntent().apply {
-        type = MIME_TYPE_PNG
-        if (contentUris.size == 1) {
-            putExtra(EXTRA_STREAM, contentUris[0])
-        } else {
-            action = ACTION_SEND_MULTIPLE
-            putExtra(EXTRA_STREAM, ArrayList(contentUris))
-        }
-        addFlags(FLAG_GRANT_READ_URI_PERMISSION)
-        return start(context)
+    return try {
+        val contentUris = map { f -> f.getFileUri(context) }
+        val intent =
+            Intent().apply {
+                type = MIME_TYPE_PNG
+                addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+                if (contentUris.size == 1) {
+                    action = ACTION_SEND
+                    putExtra(EXTRA_STREAM, contentUris[0])
+                } else {
+                    action = ACTION_SEND_MULTIPLE
+                    putExtra(EXTRA_STREAM, ArrayList(contentUris))
+                }
+            }
+        context.safeStartActivity(Intent.createChooser(intent, null))
+    } catch (e: RuntimeException) {
+        Log.e(TAG, "Error sharing files", e)
+        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        false
     }
 }
 

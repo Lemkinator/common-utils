@@ -24,6 +24,7 @@ import android.content.Intent.EXTRA_TITLE
 import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
+import java.io.File
 
 private const val MIME_TYPE_TEXT = "text/plain"
 private const val TAG = "SharingUtils"
@@ -73,4 +74,14 @@ internal fun Context.safeStartActivity(intent: Intent): Boolean {
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
         return false
     }
+}
+
+/** Resolves [shareFileName] to a file under [Context.getCacheDir], rejecting names that would escape it (e.g. `..` traversal). */
+internal fun Context.resolveShareCacheFile(shareFileName: String): File {
+    val cacheRoot = cacheDir.canonicalPath.trimEnd(File.separatorChar)
+    val resolved = File(cacheDir, shareFileName).canonicalPath
+    require(resolved == cacheRoot || resolved.startsWith(cacheRoot + File.separatorChar)) {
+        "shareFileName must resolve inside cacheDir: $shareFileName"
+    }
+    return File(resolved)
 }

@@ -19,11 +19,12 @@ import android.content.ClipData
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat.PNG
+import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
-import java.io.File
 
 private const val COMPRESS_QUALITY_MAX = 100
+private const val TAG = "ClipboardUtils"
 
 /** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
 fun Fragment.copyToClipboard(
@@ -47,17 +48,23 @@ fun Context.copyToClipboard(
     bitmap: Bitmap,
     label: String,
     shareFileName: String,
-): Boolean {
-    val cacheFile = File(cacheDir, shareFileName)
-    if (!cacheFile.outputStream().use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
-        cacheFile.delete()
+): Boolean =
+    @Suppress("TooGenericExceptionCaught")
+    try {
+        val cacheFile = resolveShareCacheFile(shareFileName)
+        if (!cacheFile.outputStream().use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
+            cacheFile.delete()
+            toast(R.string.commonutils_error_share_content_not_supported_on_device)
+            return false
+        }
+        setClip(ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this)))
+        toast(R.string.commonutils_copied_to_clipboard)
+        true
+    } catch (e: Exception) {
+        Log.e(TAG, "Error copying bitmap to clipboard", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        return false
+        false
     }
-    setClip(ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this)))
-    toast(R.string.commonutils_copied_to_clipboard)
-    return true
-}
 
 /** Copies this bitmap to the clipboard via a cached file URI under [label]. */
 fun Bitmap.copyToClipboard(

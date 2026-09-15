@@ -58,7 +58,7 @@ fun Bitmap.share(
 ): Boolean =
     @Suppress("TooGenericExceptionCaught")
     try {
-        val cacheFile = File(context.cacheDir, shareFileName)
+        val cacheFile = context.resolveShareCacheFile(shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
             cacheFile.delete()
             context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
@@ -95,19 +95,26 @@ fun Context.quickShareBitmap(
 fun Bitmap.quickShare(
     context: Context,
     shareFileName: String,
-): Boolean {
-    val cacheFile = File(context.cacheDir, shareFileName)
-    if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
-        cacheFile.delete()
+): Boolean =
+    @Suppress("TooGenericExceptionCaught")
+    try {
+        val cacheFile = context.resolveShareCacheFile(shareFileName)
+        if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
+            cacheFile.delete()
+            context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+            return false
+        }
+        context
+            .createBaseIntent()
+            .apply {
+                type = MIME_TYPE_PNG
+                putExtra(EXTRA_STREAM, cacheFile.getFileUri(context))
+            }.start(context)
+    } catch (e: Exception) {
+        Log.e(TAG, "Error sharing bitmap via Quick Share", e)
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        return false
+        false
     }
-    context.createBaseIntent().apply {
-        type = MIME_TYPE_PNG
-        putExtra(EXTRA_STREAM, cacheFile.getFileUri(context))
-        return start(context)
-    }
-}
 
 internal fun Context.createBaseIntent() =
     Intent().apply {
