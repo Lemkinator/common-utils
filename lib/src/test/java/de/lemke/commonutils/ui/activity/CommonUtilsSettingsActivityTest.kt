@@ -155,7 +155,84 @@ class CommonUtilsSettingsActivityTest {
     }
 
     @Test
+    fun `autoDarkMode true persists light mode when system is not in night mode`() {
+        fakeSettings.autoDarkMode = true
+        launchWithDefaultPrefs { activity ->
+            val fragment = getSettingsFragment(activity)
+            val key =
+                ApplicationProvider
+                    .getApplicationContext<Context>()
+                    .getString(R.string.commonutils_preference_key_dark_mode)
+            fragment.findPreference<HorizontalRadioPreference>(key)?.value shouldBe "0"
+        }
+        fakeSettings.darkMode shouldBe false
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun `autoDarkMode true persists dark mode when system is in night mode`() {
+        fakeSettings.autoDarkMode = true
+        launchWithDefaultPrefs { activity ->
+            val fragment = getSettingsFragment(activity)
+            val key =
+                ApplicationProvider
+                    .getApplicationContext<Context>()
+                    .getString(R.string.commonutils_preference_key_dark_mode)
+            fragment.findPreference<HorizontalRadioPreference>(key)?.value shouldBe "1"
+        }
+        fakeSettings.darkMode shouldBe true
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun `autoDarkMode switched on persists dark mode to darkMode`() {
+        fakeSettings.autoDarkMode = false
+        fakeSettings.darkMode = false
+        launchWithDefaultPrefs { activity ->
+            val fragment = getSettingsFragment(activity)
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val autoPref = fragment.findPreference<Preference>(context.getString(R.string.commonutils_preference_key_auto_dark_mode))
+            autoPref?.triggerChange(true)
+            val darkKey = context.getString(R.string.commonutils_preference_key_dark_mode)
+            fragment.findPreference<HorizontalRadioPreference>(darkKey)?.value shouldBe "1"
+        }
+        fakeSettings.darkMode shouldBe true
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun `autoDarkMode switched off leaves the persisted dark mode unchanged`() {
+        fakeSettings.autoDarkMode = true
+        launchWithDefaultPrefs { activity ->
+            val fragment = getSettingsFragment(activity)
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            // Creation-time sync already persisted "1" (night) - toggling off must not change it.
+            val autoPref = fragment.findPreference<Preference>(context.getString(R.string.commonutils_preference_key_auto_dark_mode))
+            autoPref?.triggerChange(false)
+            val darkKey = context.getString(R.string.commonutils_preference_key_dark_mode)
+            fragment.findPreference<HorizontalRadioPreference>(darkKey)?.value shouldBe "1"
+        }
+        fakeSettings.darkMode shouldBe true
+    }
+
+    @Test
+    fun `darkMode radio programmatic change while autoDarkMode is on does not re-apply the mode`() {
+        fakeSettings.autoDarkMode = true
+        launchWithDefaultPrefs { activity ->
+            val fragment = getSettingsFragment(activity)
+            val key =
+                ApplicationProvider
+                    .getApplicationContext<Context>()
+                    .getString(R.string.commonutils_preference_key_dark_mode)
+            val pref = fragment.findPreference<HorizontalRadioPreference>(key)
+            pref?.triggerRadioClick("1")
+        }
+    }
+
+    @Test
     fun `activity launches with darkMode true - dark branch in initDarkMode`() {
+        // autoDarkMode off, otherwise creation-time sync would overwrite this stored value.
+        fakeSettings.autoDarkMode = false
         fakeSettings.darkMode = true
         launchWithDefaultPrefs { activity -> activity shouldNotBe null }
     }
@@ -163,21 +240,6 @@ class CommonUtilsSettingsActivityTest {
     @Test
     fun `autoDarkMode switch change to false triggers onNewValue dark mode branch`() {
         fakeSettings.autoDarkMode = true
-        launchWithDefaultPrefs { activity ->
-            val fragment = getSettingsFragment(activity)
-            val key =
-                ApplicationProvider
-                    .getApplicationContext<Context>()
-                    .getString(R.string.commonutils_preference_key_auto_dark_mode)
-            val pref = fragment.findPreference<Preference>(key)
-            pref?.triggerChange(false)
-        }
-    }
-
-    @Test
-    fun `autoDarkMode false with darkMode true triggers MODE_NIGHT_YES in onNewValue`() {
-        fakeSettings.autoDarkMode = true
-        fakeSettings.darkMode = true
         launchWithDefaultPrefs { activity ->
             val fragment = getSettingsFragment(activity)
             val key =

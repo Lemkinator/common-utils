@@ -20,16 +20,17 @@ import android.content.res.Configuration
 import android.os.Looper
 import android.view.View
 import androidx.activity.BackEventCompat
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
+import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
+import de.lemke.commonutils.track
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldNotBe
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -41,16 +42,27 @@ import org.robolectric.shadows.ShadowDialog
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class CommonUtilsAboutMeActivityTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Before
     fun setUp() {
         setupCommonUtilsAboutMeActivity()
     }
 
     private fun launchActivity(): CommonUtilsAboutMeActivity {
-        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup()
+        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
         return controller.get()
     }
+
+    /** Reads the private `isExpanding` field via reflection - the controller exposes no public getter for it. */
+    private val CommonUtilsAboutMeActivity.PredictiveBackGestureController.isExpanding: Boolean
+        get() {
+            val field = javaClass.getDeclaredField("isExpanding")
+            field.isAccessible = true
+            return field.getBoolean(this)
+        }
 
     /** Invokes [OnOffsetChangedListener.onOffsetChanged] directly via the private field. */
     private fun CommonUtilsAboutMeActivity.dispatchAppBarOffset(offset: Int) {
@@ -241,6 +253,24 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
+    fun `predictive back callback isEnabled follows the collapsed-portrait condition`() {
+        val activity = launchActivity()
+        val totalScrollRange = activity.findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange
+
+        // Fully collapsed: totalScrollRange + verticalOffset == 0.
+        activity.dispatchAppBarOffset(-totalScrollRange)
+        shadowOf(Looper.getMainLooper()).idle()
+        activity.backGesture.callback.isEnabled
+            .shouldBeTrue()
+
+        // Not fully collapsed.
+        activity.dispatchAppBarOffset(-totalScrollRange + 1)
+        shadowOf(Looper.getMainLooper()).idle()
+        activity.backGesture.callback.isEnabled
+            .shouldBeFalse()
+    }
+
+    @Test
     fun `handleShareApp direct call covers share path`() {
         val activity = launchActivity()
         activity.handleShareApp()
@@ -264,89 +294,95 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackPressedHandler resets back-progress state`() {
         val activity = launchActivity()
-        activity.onBackPressedHandler()
+        activity.backGesture.onBackStartedHandler()
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+
+        activity.backGesture.onBackPressedHandler()
+
+        activity.backGesture.isBackProgressing.shouldBeFalse()
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 
     @Test
     fun `onBackStartedHandler sets isBackProgressing`() {
         val activity = launchActivity()
-        activity.onBackStartedHandler()
+        activity.backGesture.onBackStartedHandler()
+        activity.backGesture.isBackProgressing.shouldBeTrue()
     }
 
     @Test
     fun `onBackProgressedHandler high progress triggers expand branch`() {
         val activity = launchActivity()
         // interpolatedProgress > 0.5 and !isExpanding → isExpanding = true branch
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeTrue()
     }
 
     @Test
     fun `onBackProgressedHandler low progress while expanding triggers collapse branch`() {
         val activity = launchActivity()
         // First call: iprog(0.9f)≈0.97 > 0.5 and isExpanding=false → if-body → isExpanding=true
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeTrue()
         // Second call: iprog(0.01f)≈0.12 < 0.3 and isExpanding=true → else-if-body → lines 132-133 covered
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 
     @Test
     fun `onBackProgressedHandler low progress while not expanding hits fallthrough`() {
         val activity = launchActivity()
         // isExpanding=false (initial): iprog(0.1f)≈0.447 in [0.3, 0.5] → A=false, C=false → fallthrough (branch 5)
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.1f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.1f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 
     @Test
     fun `onBackProgressedHandler two consecutive high-progress events cover A=true B=false branch`() {
         val activity = launchActivity()
         // First: iprog(0.9f)≈0.97 > 0.5, isExpanding=false → B=true → if-body → isExpanding=true
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeTrue()
         // Second: iprog≈0.97 > 0.5, isExpanding=true → B=!isExpanding=false (branch 3) → else-if: C=false (branch 5)
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeTrue()
     }
 
     @Test
     fun `onBackProgressedHandler very low progress while not expanding covers C=true D=false branch`() {
         val activity = launchActivity()
         // isExpanding=false (initial): iprog(0.01f)≈0.12 < 0.3 → C=true (branch 6), D=false (branch 7) → skip body
-        activity.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
-    fun `handle back methods via dispatcher when invokeOnBack callback enabled`() {
-        val testDispatcher = UnconfinedTestDispatcher()
-        Dispatchers.setMain(testDispatcher)
-        try {
-            setupCommonUtilsAboutMeActivity()
-            val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup()
-            shadowOf(Looper.getMainLooper()).idle()
-            val activity = controller.get()
-            // dispatchAppBarOffset(0) → callbackIsActive=true → UnconfinedTestDispatcher runs coroutine
-            // immediately → invokeOnBack callback.isEnabled=true; crossActivityCallback.isEnabled=false
-            activity.dispatchAppBarOffset(0)
-            shadowOf(Looper.getMainLooper()).idle()
+    fun `back gesture callback overrides delegate to the handler methods`() {
+        val activity = launchActivity()
+        val callback = activity.backGesture.callback
+        val startedEvent = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
+        val expandingEvent = BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT)
 
-            val dispatcher = activity.onBackPressedDispatcher
-            val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
-            // handleOnBackStarted, handleOnBackProgressed, handleOnBackCancelled called on invokeOnBack callback
-            dispatcher.dispatchOnBackStarted(event)
-            dispatcher.dispatchOnBackProgressed(event)
-            dispatcher.dispatchOnBackCancelled()
-            // Start a new gesture then press back → handleOnBackPressed called
-            dispatcher.dispatchOnBackStarted(event)
-            dispatcher.onBackPressed()
-            shadowOf(Looper.getMainLooper()).idle()
-        } finally {
-            Dispatchers.resetMain()
-        }
+        callback.handleOnBackStarted(startedEvent)
+        activity.backGesture.isBackProgressing.shouldBeTrue()
+
+        callback.handleOnBackProgressed(expandingEvent)
+        activity.backGesture.isExpanding.shouldBeTrue()
+
+        callback.handleOnBackCancelled()
+        activity.backGesture.isBackProgressing.shouldBeFalse()
+        activity.backGesture.isExpanding.shouldBeFalse()
+
+        callback.handleOnBackStarted(startedEvent)
+        callback.handleOnBackPressed()
+        activity.backGesture.isBackProgressing.shouldBeFalse()
     }
 
     @Test
     fun `applyInsetIfNeeded with fitsSystemWindows=true skips listener setup`() {
         setupCommonUtilsAboutMeActivity()
         // Set fitsSystemWindows=true before onCreate → !fitsSystemWindows=false → body skipped (B false branch)
-        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java)
+        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).track(destroyActivities)
         controller
             .get()
             .window.decorView.fitsSystemWindows = true
@@ -358,13 +394,22 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackCancelledHandler resets back-progress state`() {
         val activity = launchActivity()
-        activity.onBackCancelledHandler()
+        activity.backGesture.onBackStartedHandler()
+        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+
+        activity.backGesture.onBackCancelledHandler()
+
+        activity.backGesture.isBackProgressing.shouldBeFalse()
+        activity.backGesture.isExpanding.shouldBeFalse()
     }
 }
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
 class CommonUtilsAboutMeActivitySdk29Test {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Before
     fun setUp() {
         setupCommonUtilsAboutMeActivity()
@@ -373,7 +418,7 @@ class CommonUtilsAboutMeActivitySdk29Test {
     @Test
     fun `applyInsetIfNeeded SDK_INT less than R skips listener setup`() {
         // SDK 29 < R (30) → first condition false → body skipped → SDK<R branch covered
-        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup()
+        val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
         controller.get() shouldNotBe null
     }

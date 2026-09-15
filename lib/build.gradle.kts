@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalRoborazziApi::class)
+
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.hilt.android)
@@ -25,6 +29,8 @@ plugins {
     alias(libs.plugins.spotless)
     alias(libs.plugins.kover)
     alias(libs.plugins.dependency.analysis)
+    alias(libs.plugins.roborazzi)
+    alias(libs.plugins.aboutlibraries)
     id("kotlin-parcelize")
 }
 
@@ -45,6 +51,7 @@ android {
     }
     defaultConfig {
         minSdk = 26
+        testInstrumentationRunner = "de.lemke.commonutils.HiltTestRunner"
     }
     publishing {
         singleVariant("release") {
@@ -64,6 +71,8 @@ android {
         checkReleaseBuilds = true
         abortOnError = true
         baseline = file("lint-baseline.xml")
+        // Why: the two display_help_* illustrations ship at a single fixed density
+        // (drawable-xxhdpi) on purpose — static help-screen art, not a scaled icon.
         disable += "IconMissingDensityFolder"
     }
     testOptions {
@@ -85,8 +94,11 @@ android {
                     "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
                 )
                 test.systemProperty("robolectric.graphicsMode", "NATIVE")
+                test.systemProperty("roborazzi.test.record", project.findProperty("roborazzi.record") ?: "false")
+                test.systemProperty("roborazzi.test.verify", project.findProperty("roborazzi.verify") ?: "true")
             }
         }
+        animationsDisabled = true
     }
     packaging {
         resources {
@@ -120,6 +132,22 @@ configurations
         outgoing.capability("io.github.lemkinator:common-utils-test-fixtures:${libs.versions.common.utils.get()}")
     }
 
+roborazzi {
+    outputDir.set(layout.projectDirectory.dir("src/test/screenshots"))
+    compare {
+        outputDir.set(layout.buildDirectory.dir("reports/roborazzi"))
+    }
+}
+
+// AboutLibrariesPlugin.apply() unconditionally wires a generated aboutlibraries.json into every
+// variant's resources (no supported config scopes this to specific variants - `filterVariants`
+// only controls which variant's dependency graph feeds the merged library list, not which variant
+// gets the generated resource). Only the debug variant needs it - Robolectric unit tests and
+// androidTest both read R.raw.aboutlibraries via the debug variant's merged resources - so disable
+// the release-variant generation task to keep the published release AAR byte-equivalent to before
+// this plugin was applied.
+tasks.matching { it.name == "prepareLibraryDefinitionsRelease" }.configureEach { enabled = false }
+
 dependencies {
     implementation(libs.oneui.design)
     implementation(libs.oneui.icons)
@@ -135,15 +163,10 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.konsist)
-    testImplementation(libs.kotest.runner.junit5)
-    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.bundles.unit.test)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
-    testImplementation(libs.mockk)
-    testImplementation(libs.turbine)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.bundles.robolectric.test)
     testImplementation(testFixtures(project(":lib")))
 
     testFixturesImplementation(libs.androidx.test.core)
@@ -170,6 +193,12 @@ dependencies {
     testImplementation(libs.hilt.android.testing)
     testRuntimeOnly(libs.junit.vintage.engine)
     kspTest(libs.hilt.compiler)
+
+    androidTestImplementation(testFixtures(project(":lib")))
+    androidTestImplementation(libs.bundles.android.test)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.kotest.assertions.core)
+    kspAndroidTest(libs.hilt.compiler)
 }
 
 spotless {
@@ -228,8 +257,6 @@ kover {
                     "*SplashUtilsKt*",
                     // TipPopupUtils: requires OneUI TipPopup widget + real decorView root, can't instantiate under Robolectric.
                     "*TipPopupUtilsKt*",
-                    // URLUtilsKt: order-dependent JIT branch-misattribution flakiness, not a real gap (see SettingsRepositoryKt).
-                    "*URLUtilsKt*",
                     // PreferenceUtilsKt: OneUI listView extension lambda, can't exercise under Robolectric.
                     $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
                     // DrawerUtilsKt: requires OneUI NavDrawerLayout, untestable in JVM tests.
@@ -240,8 +267,6 @@ kover {
                     "*CommonUtilsLibsActivity*",
                     // CommonUtilsAboutActivity: onCreate's SAM wrappers fire only via live Play Store callbacks.
                     $$"*CommonUtilsAboutActivity$onCreate*",
-                    // SettingsRepositoryKt: same order-dependent branch-misattribution flakiness as URLUtilsKt, not a real gap.
-                    "*SettingsRepositoryKt*",
                     // AutoClearedUtilsKt: DESTROYED-lifecycle branch needs a re-entrant call during onDestroyView, unsafe to reproduce.
                     $$"*AutoClearedUtilsKt$autoCleared$1*",
                     // AboutAppBarListener: else branches unreachable under Robolectric since totalScrollRange is always 0.
@@ -250,8 +275,8 @@ kover {
                     $$"*CommonUtilsOOBEActivity$initFooterButton*",
                     // LottieUtilsKt: null branch is tested, but JaCoCo loads this continuation class too late to attribute it.
                     $$"*LottieUtilsKt$launchDelayedPlay*",
-                    // OnboardingContext: @Parcelize-generated null-checks are synthetic; excluded so Codecov doesn't see the miss.
-                    "*OnboardingContext*",
+                    // OnboardingContext$Creator: @Parcelize-generated null-checks are synthetic, never reached directly.
+                    $$"*OnboardingContext$Creator*",
                 )
                 // inline fun definition-site stubs are unreachable under JUnit 5 + Robolectric; see CLAUDE.md §@NoCoverage.
                 annotatedBy("de.lemke.commonutils.NoCoverage")

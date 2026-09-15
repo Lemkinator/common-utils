@@ -22,6 +22,8 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.spotless)
     alias(libs.plugins.dependency.analysis)
+    alias(libs.plugins.roborazzi) apply false
+    alias(libs.plugins.aboutlibraries) apply false
 }
 
 spotless {
@@ -92,6 +94,16 @@ subprojects {
             }
 
             lint.informational += setOf("GradleDependency", "NewerVersionAvailable")
+
+            @Suppress("UnstableApiUsage")
+            testOptions.managedDevices.localDevices {
+                register("pixel9Api35") {
+                    device = "Pixel 9"
+                    apiLevel = 35
+                    systemImageSource = "aosp"
+                    testedAbi = "x86_64"
+                }
+            }
 
             // oneui-design replaces these AOSP AndroidX modules with Samsung's SESL forks, which
             // keep the original package names — exclude the AOSP originals everywhere to prevent

@@ -24,6 +24,7 @@ import de.lemke.commonutils.ui.utils.launchDelayedPlay
 import de.lemke.commonutils.ui.utils.play
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -34,6 +35,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class LottieUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     // Application context → findViewTreeLifecycleOwner() == null → delayed launch branch skipped
     private val view get() = LottieAnimationView(ApplicationProvider.getApplicationContext())
 
@@ -59,7 +63,12 @@ class LottieUtilsRobolectricTest {
 
     @Test
     fun `play with delay and lifecycle owner runs animation after delay`() {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val lottieView = LottieAnimationView(activity)
         activity.setContentView(lottieView)
         lottieView.play(delay = DEFAULT_LOTTIE_DELAY)
@@ -68,7 +77,12 @@ class LottieUtilsRobolectricTest {
 
     @Test
     fun `launchDelayedPlay with GCed view skips playAnimation`() {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val lottieView = LottieAnimationView(activity)
         activity.setContentView(lottieView)
         val nullRef: WeakReference<LottieAnimationView> = WeakReference(null)
@@ -78,7 +92,12 @@ class LottieUtilsRobolectricTest {
 
     @Test
     fun `second play cancels pending delayed job`() {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val lottieView = LottieAnimationView(activity)
         activity.setContentView(lottieView)
         lottieView.play(delay = DEFAULT_LOTTIE_DELAY)

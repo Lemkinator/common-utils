@@ -41,7 +41,15 @@ class SnackBarUtilsActivityRobolectricTest {
     @get:Rule
     val drainMainLooper = DrainMainLooperRule()
 
-    private fun setupActivity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
+    private fun setupActivity(): AppCompatActivity =
+        Robolectric
+            .buildActivity(AppCompatActivity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     @Test
     fun `Activity suggestiveSnackBar String shows snackbar`() {
@@ -114,8 +122,16 @@ class SnackBarUtilsFragmentRobolectricTest {
     @get:Rule
     val drainMainLooper = DrainMainLooperRule()
 
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private fun setupFragment(): ViewFragment {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val fragment = ViewFragment()
         activity.supportFragmentManager
             .beginTransaction()

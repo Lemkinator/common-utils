@@ -23,6 +23,7 @@ import androidx.fragment.app.Fragment
 import de.lemke.commonutils.ui.utils.deleteAppDataAndExit
 import io.kotest.matchers.booleans.shouldBeTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -34,11 +35,19 @@ import org.robolectric.shadows.ShadowDialog
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class PreferenceUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private lateinit var fragment: Fragment
 
     @Before
     fun setUp() {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         fragment = Fragment()
         activity.supportFragmentManager
             .beginTransaction()

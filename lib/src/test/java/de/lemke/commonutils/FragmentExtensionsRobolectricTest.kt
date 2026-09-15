@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Looper
@@ -36,6 +37,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -49,11 +51,19 @@ import org.robolectric.shadows.ShadowToast
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class FragmentExtensionsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private lateinit var fragment: Fragment
 
     @Before
     fun setUp() {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         fragment = Fragment()
         activity.supportFragmentManager
             .beginTransaction()
@@ -129,6 +139,11 @@ class FragmentExtensionsRobolectricTest {
     @Test
     fun `Fragment copyToClipboard delegates to Context copyToClipboard`() {
         fragment.copyToClipboard("clip text", "label").shouldBeTrue()
+        val clipboard = fragment.requireContext().getSystemService(ClipboardManager::class.java)
+        clipboard.primaryClip
+            ?.getItemAt(0)
+            ?.text
+            .toString() shouldBe "clip text"
     }
 
     // ── ExportUtils Fragment overload ─────────────────────────────────────────
@@ -151,9 +166,17 @@ class FragmentExtensionsRobolectricTest {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class OpenAppLocaleSettingsApi33Test {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Test
     fun `Fragment openAppLocaleSettings on API 33+ starts locale settings intent`() {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val fragment = Fragment()
         activity.supportFragmentManager
             .beginTransaction()
@@ -168,9 +191,17 @@ class OpenAppLocaleSettingsApi33Test {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [32])
 class OpenAppLocaleSettingsApi32Test {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Test
     fun `Fragment openAppLocaleSettings below API 33 returns false`() {
-        val activity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val fragment = Fragment()
         activity.supportFragmentManager
             .beginTransaction()

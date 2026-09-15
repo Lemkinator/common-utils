@@ -18,6 +18,8 @@ package de.lemke.commonutils.ui.utils
 import android.app.ActivityManager
 import android.content.Context.ACTIVITY_SERVICE
 import android.content.DialogInterface.BUTTON_POSITIVE
+import android.content.res.Configuration.UI_MODE_NIGHT_MASK
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import android.util.Log
@@ -156,8 +158,12 @@ private fun PreferenceFragmentCompat.initDarkMode() {
         darkModePref.isEnabled = !autoDarkModePref.isChecked
         darkModePref.setDividerEnabled(false)
         darkModePref.setTouchEffectEnabled(false)
+        if (autoDarkModePref.isChecked) {
+            darkModePref.value = if (resources.configuration.uiMode and UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES) "1" else "0"
+        }
         autoDarkModePref.onNewValue {
             darkModePref.isEnabled = !it
+            if (it) darkModePref.value = if (resources.configuration.uiMode and UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES) "1" else "0"
             setDefaultNightMode(
                 when {
                     it -> MODE_NIGHT_FOLLOW_SYSTEM
@@ -166,6 +172,9 @@ private fun PreferenceFragmentCompat.initDarkMode() {
                 },
             )
         }
-        darkModePref.onNewValue { setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO) }
+        darkModePref.onNewValue {
+            // HorizontalRadioPreference.value's setter never invokes onPreferenceChangeListener.
+            if (!autoDarkModePref.isChecked) setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
+        }
     }
 }

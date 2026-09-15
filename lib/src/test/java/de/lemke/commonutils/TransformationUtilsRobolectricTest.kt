@@ -39,6 +39,7 @@ import de.lemke.commonutils.ui.utils.transformToActivity
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -49,7 +50,15 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class TransformationUtilsRobolectricTest {
-    private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
+    private fun activity(): Activity =
+        Robolectric
+            .buildActivity(Activity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     @Test
     fun `prepareActivityTransformationFrom with plain Activity logs warning and returns early`() {
@@ -110,7 +119,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `View transformToActivity with AppCompatActivity context covers Activity path`() {
-        val a = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val view = View(a)
         val intent = Intent(a, AppCompatActivity::class.java)
         view.transformToActivity(intent)
@@ -119,7 +133,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `transformToActivity with non-null view covers view-based branch`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val view = View(a)
         view.id = android.R.id.text1
         a.setContentView(view)
@@ -130,7 +149,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `performTransform without duration and fadeMode covers default-param synthetic`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val container = FrameLayout(a)
         val v1 = View(a)
         val v2 = View(a)
@@ -142,7 +166,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `getContainerTransform without duration and fadeMode covers default-param synthetic`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val v1 = View(a)
         val v2 = View(a)
         v1.getContainerTransform(v2)
@@ -150,7 +179,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `View transformTo animates between views in a container`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         // Attach container to window so View.post() actually posts to the Looper
         val container = FrameLayout(a)
         val v1 = View(a)
@@ -165,7 +199,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `performTransform directly covers getContainerTransform and transition logic`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val container = FrameLayout(a)
         val v1 = View(a)
         val v2 = View(a)
@@ -177,7 +216,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `getContainerTransform returns MaterialContainerTransform with correct settings`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val v1 = View(a)
         val v2 = View(a)
         val transform = v1.getContainerTransform(v2, 500L, DEFAULT_FADE_MODE)
@@ -186,7 +230,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `Activity transformToActivity with found viewId triggers view transition`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val view = View(a)
         view.id = android.R.id.text1
         a.setContentView(view)
@@ -197,7 +246,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `Activity transformToActivity class overload delegates to intent overload`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         // Int.MAX_VALUE view not found → plain startActivity fallback
         a.transformToActivity(Int.MAX_VALUE, Activity::class.java)
         shadowOf(a).nextStartedActivity shouldNotBe null
@@ -205,7 +259,12 @@ class TransformationUtilsRobolectricTest {
 
     @Test
     fun `View transformToActivity cls overload starts activity via Activity context`() {
-        val a = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val view = View(a)
         view.transformToActivity(Activity::class.java)
         shadowOf(a).nextStartedActivity shouldNotBe null
@@ -236,6 +295,7 @@ class TransformationUtilsRobolectricTest {
         Robolectric
             .buildActivity(Activity::class.java, intent)
             .setup()
+            .track(destroyActivities)
             .get()
             .prepareActivityTransformationTo()
     }
@@ -243,51 +303,55 @@ class TransformationUtilsRobolectricTest {
     @Test
     fun `prepareActivityTransformationFrom onDestroy while finishing clears exit callback`() {
         // Must call before create() - requestFeature() must precede window content setup
-        val controller = Robolectric.buildActivity(AppCompatActivity::class.java)
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java).track(destroyActivities)
         val a = controller.get()
         a.prepareActivityTransformationFrom()
         controller.setup() // create/start/resume after feature is requested
         a.finish()
-        controller.destroy()
     }
 
     @Test
     fun `prepareActivityTransformationFrom onDestroy when not finishing skips exit callback clearing`() {
-        val controller = Robolectric.buildActivity(AppCompatActivity::class.java)
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java).track(destroyActivities)
         val a = controller.get()
         a.prepareActivityTransformationFrom()
         controller.setup()
         // No finish() → isFinishing = false in onDestroy → if body skipped
-        controller.destroy()
     }
 
     @Test
     fun `prepareActivityTransformationTo onDestroy while finishing clears enter callback`() {
         val intent = Intent().apply { putExtra("commonUtilsTransitionNameKey", "testTransition") }
-        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent)
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent).track(destroyActivities)
         val a = controller.get()
         a.prepareActivityTransformationTo()
         controller.setup()
         a.finish()
-        controller.destroy()
     }
 
     @Test
     fun `prepareActivityTransformationTo onDestroy when not finishing skips enter callback clearing`() {
         val intent = Intent().apply { putExtra("commonUtilsTransitionNameKey", "testTransition") }
-        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent)
+        val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent).track(destroyActivities)
         val a = controller.get()
         a.prepareActivityTransformationTo()
         controller.setup()
         // No finish() → isFinishing = false in onDestroy → if body skipped
-        controller.destroy()
     }
 }
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class TransformationUtilsSdk33RobolectricTest {
-    private fun activity(): Activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
+    private fun activity(): Activity =
+        Robolectric
+            .buildActivity(Activity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     @Test
     fun `overrideFadeOpenTransition on pre-34 uses overridePendingTransition`() {

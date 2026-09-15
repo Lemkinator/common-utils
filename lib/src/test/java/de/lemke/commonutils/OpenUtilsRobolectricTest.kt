@@ -33,6 +33,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.spyk
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -49,6 +50,9 @@ class ThrowingStartActivityFragment : Fragment() {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class OpenUtilsApi36Test {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
@@ -78,14 +82,28 @@ class OpenUtilsApi36Test {
 
     @Test
     fun `openAppWithPackageNameOnStore all URIs fail returns false`() {
-        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no store")
         a.openApp("com.example.pkg", tryLocalFirst = false).shouldBeFalse()
     }
 
     @Test
     fun `openApplicationSettings ActivityNotFoundException returns false`() {
-        val a = spyk(Robolectric.buildActivity(Activity::class.java).setup().get())
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no settings")
         a.openApplicationSettings().shouldBeFalse()
     }
@@ -114,7 +132,12 @@ class OpenUtilsApi36Test {
 
     @Test
     fun `openAppLocaleSettings ActivityNotFoundException returns false`() {
-        val a = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+        val a =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val frag = ThrowingStartActivityFragment()
         a.supportFragmentManager
             .beginTransaction()

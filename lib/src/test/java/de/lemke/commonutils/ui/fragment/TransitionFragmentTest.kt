@@ -18,7 +18,10 @@ package de.lemke.commonutils.ui.fragment
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.transition.MaterialSharedAxis
+import de.lemke.commonutils.DestroyActivitiesRule
+import de.lemke.commonutils.track
 import io.kotest.matchers.shouldNotBe
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -33,7 +36,15 @@ internal class ConcreteSharedAxisFragment : TransitionFragmentSharedAxis(0, Mate
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class TransitionFragmentTest {
-    private fun activity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
+    private fun activity(): AppCompatActivity =
+        Robolectric
+            .buildActivity(AppCompatActivity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     @Test
     fun `TransitionFragment onCreate wires transitions`() {

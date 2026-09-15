@@ -22,12 +22,10 @@ import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_T
 import com.google.android.play.core.install.model.UpdateAvailability.UNKNOWN
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
-import de.lemke.commonutils.NoCoverage
 
 private const val TAG = "AppUpdateManagerUtils"
 
 /** Checks Play Store for an available update and invokes [action] if one exists. */
-@NoCoverage
 fun Context.onAppUpdateAvailable(action: () -> Unit) {
     AppUpdateManagerFactory
         .create(this)

@@ -95,7 +95,7 @@ class BackAnimationOutlineProvider : ViewOutlineProvider() {
     var progress: Float = 0f
         set(value) {
             field = value
-            radius = value * 100f
+            radius = value * MAX_CORNER_RADIUS_PX
         }
 
     /** Applies a rounded-rectangle outline scaled to the current [radius]. */
@@ -104,6 +104,10 @@ class BackAnimationOutlineProvider : ViewOutlineProvider() {
         outline: Outline,
     ) {
         outline.setRoundRect(0, 0, view.width, view.height, radius)
+    }
+
+    private companion object {
+        const val MAX_CORNER_RADIUS_PX = 100f
     }
 }
 

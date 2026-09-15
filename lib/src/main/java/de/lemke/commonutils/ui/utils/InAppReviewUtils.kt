@@ -21,7 +21,6 @@ import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.data.canShowInAppReview
 import de.lemke.commonutils.data.markInAppReviewRequested
@@ -29,7 +28,6 @@ import de.lemke.commonutils.data.markInAppReviewRequested
 private const val TAG = "InAppReviewUtils"
 
 /** Attempts to show the in-app review flow; finishes the activity whether the review is shown or skipped. */
-@NoCoverage
 fun AppCompatActivity.showInAppReviewOrFinish(settings: SettingsRepository) =
     showInAppReview(
         settings,
@@ -38,10 +36,8 @@ fun AppCompatActivity.showInAppReviewOrFinish(settings: SettingsRepository) =
     )
 
 /** Requests the in-app review flow if the cooldown period has elapsed; silently skips otherwise. */
-@NoCoverage
 fun AppCompatActivity.showInAppReviewIfPossible(settings: SettingsRepository) = showInAppReview(settings)
 
-@NoCoverage
 @Suppress("TooGenericExceptionCaught")
 private fun AppCompatActivity.showInAppReview(
     settings: SettingsRepository,
@@ -68,7 +64,6 @@ private fun AppCompatActivity.showInAppReview(
     }
 }
 
-@NoCoverage
 private fun AppCompatActivity.onReviewFlowRequested(
     manager: ReviewManager,
     task: Task<ReviewInfo>,

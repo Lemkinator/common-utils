@@ -20,10 +20,13 @@ import android.view.Gravity.CENTER
 import android.view.Gravity.START
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
+import de.lemke.commonutils.track
 import de.lemke.commonutils.ui.widget.InfoBottomSheet.Companion.showInfoBottomSheet
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -34,6 +37,9 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class InfoBottomSheetTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     // newInstance is private on the companion object; access via reflection so tests
     // cover argument-packing without needing a themed Activity to show the dialog.
     private fun newInstance(
@@ -52,7 +58,12 @@ class InfoBottomSheetTest {
         return method.invoke(InfoBottomSheet.Companion, title, message, gravity) as InfoBottomSheet
     }
 
-    private fun activity(): AppCompatActivity = Robolectric.buildActivity(AppCompatActivity::class.java).setup().get()
+    private fun activity(): AppCompatActivity =
+        Robolectric
+            .buildActivity(AppCompatActivity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     // ── newInstance / argument packing ─────────────────────────────────────────
 
