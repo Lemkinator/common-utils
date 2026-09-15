@@ -139,6 +139,15 @@ roborazzi {
     }
 }
 
+// AboutLibrariesPlugin.apply() unconditionally wires a generated aboutlibraries.json into every
+// variant's resources (no supported config scopes this to specific variants - `filterVariants`
+// only controls which variant's dependency graph feeds the merged library list, not which variant
+// gets the generated resource). Only the debug variant needs it - Robolectric unit tests and
+// androidTest both read R.raw.aboutlibraries via the debug variant's merged resources - so disable
+// the release-variant generation task to keep the published release AAR byte-equivalent to before
+// this plugin was applied.
+tasks.matching { it.name == "prepareLibraryDefinitionsRelease" }.configureEach { enabled = false }
+
 dependencies {
     implementation(libs.oneui.design)
     implementation(libs.oneui.icons)
