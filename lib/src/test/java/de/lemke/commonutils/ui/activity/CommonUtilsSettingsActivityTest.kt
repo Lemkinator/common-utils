@@ -155,6 +155,51 @@ class CommonUtilsSettingsActivityTest {
     }
 
     @Test
+    fun `autoDarkMode true shows light radio value when system is not in night mode`() {
+        fakeSettings.autoDarkMode = true
+        launchWithDefaultPrefs { activity ->
+            val fragment = getSettingsFragment(activity)
+            val key =
+                ApplicationProvider
+                    .getApplicationContext<Context>()
+                    .getString(R.string.commonutils_preference_key_dark_mode)
+            fragment.findPreference<HorizontalRadioPreference>(key)?.value shouldBe "0"
+        }
+        fakeSettings.darkMode shouldBe false
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun `autoDarkMode true shows dark radio value when system is in night mode`() {
+        fakeSettings.autoDarkMode = true
+        launchWithDefaultPrefs { activity ->
+            val fragment = getSettingsFragment(activity)
+            val key =
+                ApplicationProvider
+                    .getApplicationContext<Context>()
+                    .getString(R.string.commonutils_preference_key_dark_mode)
+            fragment.findPreference<HorizontalRadioPreference>(key)?.value shouldBe "1"
+        }
+        fakeSettings.darkMode shouldBe false
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun `autoDarkMode switched on updates radio to dark without persisting darkMode`() {
+        fakeSettings.autoDarkMode = false
+        fakeSettings.darkMode = false
+        launchWithDefaultPrefs { activity ->
+            val fragment = getSettingsFragment(activity)
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val autoPref = fragment.findPreference<Preference>(context.getString(R.string.commonutils_preference_key_auto_dark_mode))
+            autoPref?.triggerChange(true)
+            val darkKey = context.getString(R.string.commonutils_preference_key_dark_mode)
+            fragment.findPreference<HorizontalRadioPreference>(darkKey)?.value shouldBe "1"
+        }
+        fakeSettings.darkMode shouldBe false
+    }
+
+    @Test
     fun `activity launches with darkMode true - dark branch in initDarkMode`() {
         fakeSettings.darkMode = true
         launchWithDefaultPrefs { activity -> activity shouldNotBe null }

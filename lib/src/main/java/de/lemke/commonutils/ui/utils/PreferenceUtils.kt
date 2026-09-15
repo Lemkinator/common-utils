@@ -18,6 +18,8 @@ package de.lemke.commonutils.ui.utils
 import android.app.ActivityManager
 import android.content.Context.ACTIVITY_SERVICE
 import android.content.DialogInterface.BUTTON_POSITIVE
+import android.content.res.Configuration.UI_MODE_NIGHT_MASK
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import android.util.Log
@@ -156,8 +158,13 @@ private fun PreferenceFragmentCompat.initDarkMode() {
         darkModePref.isEnabled = !autoDarkModePref.isChecked
         darkModePref.setDividerEnabled(false)
         darkModePref.setTouchEffectEnabled(false)
+        // The radio's own value gets overwritten (not persisted) below to display the current effective mode
+        // while the default toggle is on - this tracks the real stored value so toggling off can restore it.
+        var storedDarkMode = darkModePref.value
+        if (autoDarkModePref.isChecked) darkModePref.showCurrentNightMode()
         autoDarkModePref.onNewValue {
             darkModePref.isEnabled = !it
+            if (it) darkModePref.showCurrentNightMode() else darkModePref.value = storedDarkMode
             setDefaultNightMode(
                 when {
                     it -> MODE_NIGHT_FOLLOW_SYSTEM
@@ -166,6 +173,17 @@ private fun PreferenceFragmentCompat.initDarkMode() {
                 },
             )
         }
-        darkModePref.onNewValue { setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO) }
+        darkModePref.onNewValue {
+            storedDarkMode = it
+            setDefaultNightMode(if (it == "1") MODE_NIGHT_YES else MODE_NIGHT_NO)
+        }
     }
+}
+
+/** Reflects the current system/app night mode into the radio's displayed value without persisting it. */
+private fun HorizontalRadioPreference.showCurrentNightMode() {
+    val isNight = context.resources.configuration.uiMode and UI_MODE_NIGHT_MASK == UI_MODE_NIGHT_YES
+    isPersistent = false
+    value = if (isNight) "1" else "0"
+    isPersistent = true
 }
