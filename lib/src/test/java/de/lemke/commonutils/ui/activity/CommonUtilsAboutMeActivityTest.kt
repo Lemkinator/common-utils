@@ -20,6 +20,7 @@ import android.content.res.Configuration
 import android.os.Looper
 import android.view.View
 import androidx.activity.BackEventCompat
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
@@ -249,6 +250,24 @@ class CommonUtilsAboutMeActivityTest {
 
         activity.onBackPressedDispatcher.onBackPressed()
         activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
+    fun `predictive back callback isEnabled follows the collapsed-portrait condition`() {
+        val activity = launchActivity()
+        val totalScrollRange = activity.findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange
+
+        // Fully collapsed: totalScrollRange + verticalOffset == 0.
+        activity.dispatchAppBarOffset(-totalScrollRange)
+        shadowOf(Looper.getMainLooper()).idle()
+        activity.backGesture.callback.isEnabled
+            .shouldBeTrue()
+
+        // Not fully collapsed.
+        activity.dispatchAppBarOffset(-totalScrollRange + 1)
+        shadowOf(Looper.getMainLooper()).idle()
+        activity.backGesture.callback.isEnabled
+            .shouldBeFalse()
     }
 
     @Test

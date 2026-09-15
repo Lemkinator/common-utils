@@ -29,7 +29,6 @@ import android.graphics.Bitmap.CompressFormat.PNG
 import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
-import java.io.File
 
 private const val SAMSUNG_QUICK_SHARE_PACKAGE = "com.samsung.android.app.sharelive"
 private const val MIME_TYPE_PNG = "image/png"
