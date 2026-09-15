@@ -23,6 +23,8 @@
     inflate against AppCompat's default ActionBar theme and crash: AppInfoLayout's constructor calls
     setSupportActionBar(), which requires a NoActionBar theme.
     -->
-    <application android:theme="@style/CommonUtils.AppTheme" />
+    <application
+        android:label="@string/app_name"
+        android:theme="@style/CommonUtils.AppTheme" />
 
 </manifest>

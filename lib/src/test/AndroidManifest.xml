@@ -25,7 +25,9 @@
     OneUITheme) is also DayNight-capable, unlike a hardcoded Theme.AppCompat.Light - see
     lib/src/androidTest/AndroidManifest.xml for the same reasoning on the instrumented side.
     -->
-    <application android:theme="@style/CommonUtils.AppTheme">
+    <application
+        android:label="@string/app_name"
+        android:theme="@style/CommonUtils.AppTheme">
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="de.lemke.commonutils.test.fileprovider"
