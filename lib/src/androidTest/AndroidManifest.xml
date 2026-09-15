@@ -16,13 +16,7 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--
-    The library's own manifest declares no application theme - every consuming app supplies its
-    own (e.g. GetIcon's CommonUtils.AppTheme at the <application> level). Standalone androidTest
-    has no consuming app, so without this, activities using dev.oneuiproject.oneui.layout.AppInfoLayout
-    inflate against AppCompat's default ActionBar theme and crash: AppInfoLayout's constructor calls
-    setSupportActionBar(), which requires a NoActionBar theme.
-    -->
+    <!-- AppInfoLayout's setSupportActionBar() requires a NoActionBar, DayNight-capable theme, or it crashes / ignores night qualifiers. -->
     <application
         android:label="@string/app_name"
         android:theme="@style/CommonUtils.AppTheme" />
