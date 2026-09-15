@@ -28,10 +28,6 @@ import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldNotBe
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -341,34 +337,26 @@ class CommonUtilsAboutMeActivityTest {
         activity.backGesture.isExpanding.shouldBeFalse()
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
-    fun `handle back methods via dispatcher when invokeOnBack callback enabled`() {
-        val testDispatcher = UnconfinedTestDispatcher()
-        Dispatchers.setMain(testDispatcher)
-        try {
-            setupCommonUtilsAboutMeActivity()
-            val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
-            shadowOf(Looper.getMainLooper()).idle()
-            val activity = controller.get()
-            // dispatchAppBarOffset(0) → callbackIsActive=true → UnconfinedTestDispatcher runs coroutine
-            // immediately → invokeOnBack callback.isEnabled=true; crossActivityCallback.isEnabled=false
-            activity.dispatchAppBarOffset(0)
-            shadowOf(Looper.getMainLooper()).idle()
+    fun `back gesture callback overrides delegate to the handler methods`() {
+        val activity = launchActivity()
+        val callback = activity.backGesture.callback
+        val startedEvent = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
+        val expandingEvent = BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT)
 
-            val dispatcher = activity.onBackPressedDispatcher
-            val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
-            // handleOnBackStarted, handleOnBackProgressed, handleOnBackCancelled called on invokeOnBack callback
-            dispatcher.dispatchOnBackStarted(event)
-            dispatcher.dispatchOnBackProgressed(event)
-            dispatcher.dispatchOnBackCancelled()
-            // Start a new gesture then press back → handleOnBackPressed called
-            dispatcher.dispatchOnBackStarted(event)
-            dispatcher.onBackPressed()
-            shadowOf(Looper.getMainLooper()).idle()
-        } finally {
-            Dispatchers.resetMain()
-        }
+        callback.handleOnBackStarted(startedEvent)
+        activity.backGesture.isBackProgressing.shouldBeTrue()
+
+        callback.handleOnBackProgressed(expandingEvent)
+        activity.backGesture.isExpanding.shouldBeTrue()
+
+        callback.handleOnBackCancelled()
+        activity.backGesture.isBackProgressing.shouldBeFalse()
+        activity.backGesture.isExpanding.shouldBeFalse()
+
+        callback.handleOnBackStarted(startedEvent)
+        callback.handleOnBackPressed()
+        activity.backGesture.isBackProgressing.shouldBeFalse()
     }
 
     @Test

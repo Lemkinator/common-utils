@@ -24,6 +24,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.view.WindowInsets.Type.systemBars
 import androidx.activity.BackEventCompat
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -31,6 +32,9 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.animation.PathInterpolatorCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.NoCoverage
@@ -42,7 +46,6 @@ import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
 import de.lemke.commonutils.ui.utils.sendEmailAboutMe
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import de.lemke.commonutils.ui.utils.shareApp
-import dev.oneuiproject.oneui.ktx.invokeOnBack
 import dev.oneuiproject.oneui.ktx.isInMultiWindowModeCompat
 import dev.oneuiproject.oneui.ktx.semSetToolTipText
 import dev.oneuiproject.oneui.ktx.setEnableRecursive
@@ -50,6 +53,8 @@ import dev.oneuiproject.oneui.utils.DeviceLayoutUtil.isPortrait
 import dev.oneuiproject.oneui.widget.AdaptiveCoordinatorLayout.Companion.MARGIN_PROVIDER_ADP_DEFAULT
 import kotlin.math.abs
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Pre-built About Me screen that presents developer info and an optional share-app action. */
@@ -245,14 +250,38 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             private set
         private var isExpanding = false
 
+        /** The registered dispatcher callback; exposed so tests can drive its handle* overrides directly. */
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal lateinit var callback: OnBackPressedCallback
+            @NoCoverage // lateinit getter's uninitialized-check branch is never taken once start() has run.
+            get
+            private set
+
         fun start() {
-            invokeOnBack(
-                triggerStateFlow = callbackIsActive,
-                onBackPressed = ::onBackPressedHandler,
-                onBackStarted = { onBackStartedHandler() },
-                onBackProgressed = ::onBackProgressedHandler,
-                onBackCancelled = ::onBackCancelledHandler,
-            )
+            callback =
+                object : OnBackPressedCallback(callbackIsActive.value) {
+                    override fun handleOnBackPressed() {
+                        onBackPressedHandler()
+                    }
+
+                    override fun handleOnBackStarted(backEvent: BackEventCompat) {
+                        onBackStartedHandler()
+                    }
+
+                    override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+                        onBackProgressedHandler(backEvent)
+                    }
+
+                    override fun handleOnBackCancelled() {
+                        onBackCancelledHandler()
+                    }
+                }
+            onBackPressedDispatcher.addCallback(this@CommonUtilsAboutMeActivity, callback)
+            lifecycleScope.launch {
+                callbackIsActive
+                    .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+                    .collectLatest { enable -> callback.isEnabled = enable }
+            }
             updateCallbackState()
         }
 
