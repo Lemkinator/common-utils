@@ -115,6 +115,17 @@ jobs:
         with:
           name: roborazzi-diff
           path: lib/build/reports/roborazzi/
+      # Gradle's console summary prints only "<exceptionClass> at <frame>" for a failed test -
+      # the actual message and stack trace live in these reports, so without them a red
+      # local-tests job can't be diagnosed from the logs alone.
+      - name: Upload unit test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-report
+          path: |
+            lib/build/reports/tests/testDebugUnitTest/
+            lib/build/test-results/testDebugUnitTest/
 
   instrumented-tests:
     runs-on: ubuntu-latest
@@ -139,6 +150,47 @@ jobs:
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      # AGP's managed-device setup task (:lib:pixel9Api35Setup) otherwise downloads the ~1GB
+      # system image mid-build with no retry, so a single truncated response from dl.google.com
+      # fails the whole job ("Archive is not a ZIP archive"). Installing the same packages up
+      # front, with retries, makes that task a no-op. Keep the package name in sync with the
+      # pixel9Api35 device in the root build.gradle.kts (systemImageSource "aosp" -> "default",
+      # apiLevel 35, testedAbi "x86_64").
+      - name: Install Android system image
+        run: |
+          set -euo pipefail
+          # Resolve the SDK the same way AGP does (ANDROID_HOME first), so this installs into
+          # the very SDK the Gradle run will read - otherwise the pre-install silently no-ops.
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -z "$SDK" ]; then
+            echo "::error::Neither ANDROID_HOME nor ANDROID_SDK_ROOT is set"
+            exit 1
+          fi
+          SDKMANAGER="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(command -v sdkmanager || true)"
+          fi
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found under $SDK or on PATH"
+            exit 1
+          fi
+          PKG="system-images;android-35;default;x86_64"
+          IMG_DIR="$SDK/system-images/android-35/default/x86_64"
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          for attempt in 1 2 3; do
+            # package.xml is written only once an install completes, so it catches the
+            # truncated-download case that sdkmanager itself only reports as a warning.
+            if "$SDKMANAGER" --install "$PKG" "emulator" "platforms;android-35" \
+                 && [ -f "$IMG_DIR/package.xml" ]; then
+              echo "Installed $PKG on attempt $attempt"
+              exit 0
+            fi
+            echo "::warning::sdkmanager attempt $attempt failed; clearing partial download"
+            rm -rf "$IMG_DIR" "$SDK/.temp" "$SDK/.downloadIntermediates"
+            sleep $((attempt * 15))
+          done
+          echo "::error::Failed to install $PKG after 3 attempts"
+          exit 1
       - name: Run instrumented tests (GMD)
         run: chmod +x ./gradlew && ./gradlew pixel9Api35DebugAndroidTest --stacktrace
         env:
