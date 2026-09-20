@@ -148,22 +148,6 @@ jobs:
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      # AGP downloads the ~1GB system image mid-build with no retry, so one truncated
-      # response from dl.google.com fails the job. Install it up front instead, with retries.
-      - name: Install Android system image
-        run: |
-          set -euo pipefail
-          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
-          PKG="system-images;android-35;default;x86_64"
-          IMG="$SDK/system-images/android-35/default/x86_64"
-          for attempt in 1 2 3; do
-            # sdkmanager exits 0 on a truncated download; package.xml exists only if it finished.
-            "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "$PKG" emulator "platforms;android-35" \
-              && [ -f "$IMG/package.xml" ] && exit 0
-            rm -rf "$IMG" "$SDK/.temp" "$SDK/.downloadIntermediates"
-            sleep $((attempt * 15))
-          done
-          exit 1
       - name: Run instrumented tests (GMD)
         run: chmod +x ./gradlew && ./gradlew pixel9Api35DebugAndroidTest --stacktrace
         env:
