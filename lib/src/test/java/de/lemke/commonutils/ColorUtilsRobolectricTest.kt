@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import android.content.Context
 import android.graphics.Color
+import android.view.ContextThemeWrapper
 import android.widget.Button
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.bindColorSwatch
@@ -72,6 +73,12 @@ class ColorUtilsRobolectricTest {
     }
 
     @Test
+    fun `contrastingTextColor for fully transparent background returns BLACK`() {
+        // alpha 0 -> composited color is just the default white backdrop -> BLACK
+        contrastingTextColor(Color.TRANSPARENT) shouldBe Color.BLACK
+    }
+
+    @Test
     fun `bindColorSwatch enabled tints background and sets contrasting text color`() {
         val button = Button(ctx)
         button.bindColorSwatch(Color.RED)
@@ -81,13 +88,28 @@ class ColorUtilsRobolectricTest {
     }
 
     @Test
+    fun `bindColorSwatch with translucent color under a light theme measures contrast against the light window background`() {
+        val button = Button(ContextThemeWrapper(ctx, android.R.style.Theme_Light))
+        button.bindColorSwatch(Color.argb(128, 0, 0, 0))
+        button.currentTextColor shouldBe Color.BLACK
+    }
+
+    @Test
+    fun `bindColorSwatch with translucent color under a dark theme measures contrast against the dark window background`() {
+        val button = Button(ContextThemeWrapper(ctx, android.R.style.Theme))
+        button.bindColorSwatch(Color.argb(128, 0, 0, 0))
+        button.currentTextColor shouldBe Color.WHITE
+    }
+
+    @Test
+    @Config(qualifiers = "notnight")
     fun `bindColorSwatch disabled uses the OneUI disabled button-shape presentation`() {
         val button = Button(ctx)
         button.bindColorSwatch(Color.RED, enabled = false)
         button.isEnabled.shouldBeFalse()
         // sesl_show_button_shapes_color_disabled
         button.backgroundTintList?.defaultColor shouldBe 0x66FFFFFF.toInt()
-        // commonutils_secondary_text_icon_color
+        // commonutils_secondary_text_icon_color (light theme value; values-night overrides it)
         button.currentTextColor shouldBe 0xFF8C8C8C.toInt()
     }
 }

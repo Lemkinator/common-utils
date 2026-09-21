@@ -16,6 +16,7 @@
 package de.lemke.commonutils.ui.utils
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.widget.Button
@@ -51,8 +52,9 @@ private fun Int.compositeOver(
 /**
  * Returns [Color.BLACK] or [Color.WHITE], whichever contrasts more with [background].
  *
- * [background] may be translucent: it is composited over the opaque [over] backdrop (source-over, straight
- * alpha, default [Color.WHITE]) before measuring luminance, since [android.graphics.Color.luminance] ignores alpha.
+ * [background] may be translucent: it is composited over the [over] backdrop (source-over, straight alpha,
+ * default [Color.WHITE]) before measuring luminance, since [android.graphics.Color.luminance] ignores alpha.
+ * [over]'s own alpha is ignored - it is always treated as opaque.
  */
 @ColorInt
 fun contrastingTextColor(
@@ -63,11 +65,19 @@ fun contrastingTextColor(
     return if (luminance >= CONTRASTING_TEXT_LUMINANCE_THRESHOLD) Color.BLACK else Color.WHITE
 }
 
+/** The theme's `android:colorBackground`, or [Color.WHITE] if the attribute doesn't resolve. */
+private fun Context.resolveWindowBackground(): Int {
+    val attributes = obtainStyledAttributes(intArrayOf(android.R.attr.colorBackground))
+    val background = attributes.getColor(0, Color.WHITE)
+    attributes.recycle()
+    return background
+}
+
 /**
- * Fills this button with [color] as a swatch preview: tints the background and sets a readable text color.
- * When [enabled] is `false`, both are replaced by the OneUI disabled button-shape presentation instead of [color].
+ * Fills this button with [color] as a swatch preview: sets [isEnabled], tints the background, and sets a
+ * readable text color. When [enabled] is `false`, the tint and text color are replaced by the OneUI disabled
+ * button-shape presentation instead of [color].
  */
-@SuppressLint("PrivateResource")
 fun Button.bindColorSwatch(
     @ColorInt color: Int,
     enabled: Boolean = true,
@@ -75,9 +85,11 @@ fun Button.bindColorSwatch(
     isEnabled = enabled
     if (enabled) {
         backgroundTintList = ColorStateList.valueOf(color)
-        setTextColor(contrastingTextColor(color))
+        setTextColor(contrastingTextColor(color, context.resolveWindowBackground()))
     } else {
-        backgroundTintList = ColorStateList.valueOf(context.getColor(sesl_show_button_shapes_color_disabled))
+        @SuppressLint("PrivateResource")
+        val disabledTint = ColorStateList.valueOf(context.getColor(sesl_show_button_shapes_color_disabled))
+        backgroundTintList = disabledTint
         setTextColor(context.getColor(R.color.commonutils_secondary_text_icon_color))
     }
 }
