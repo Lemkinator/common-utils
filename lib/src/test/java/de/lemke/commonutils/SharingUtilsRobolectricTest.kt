@@ -18,13 +18,10 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ClipboardManager
-import android.content.ContentProvider
-import android.content.ContentValues
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageInfo
-import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -167,42 +164,6 @@ class SharingUtilsRobolectricTest {
 private const val FILE_PROVIDER_AUTHORITY = "de.lemke.commonutils.test.fileprovider"
 private const val CACHE_ROOT_URI = "content://$FILE_PROVIDER_AUTHORITY/cache_root"
 
-/**
- * Answers the MIME type query that `ClipData.newUri` sends to the URI's provider. The manifest's stock FileProvider
- * maps the URI back to a file with `/`-only path matching, which throws on Windows.
- */
-internal class PngTypeProvider : ContentProvider() {
-    override fun onCreate() = true
-
-    override fun getType(uri: Uri) = "image/png"
-
-    override fun query(
-        uri: Uri,
-        projection: Array<out String>?,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-        sortOrder: String?,
-    ): Cursor? = null
-
-    override fun insert(
-        uri: Uri,
-        values: ContentValues?,
-    ): Uri? = null
-
-    override fun delete(
-        uri: Uri,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-    ) = 0
-
-    override fun update(
-        uri: Uri,
-        values: ContentValues?,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-    ) = 0
-}
-
 /** Bitmap and file sharing through the test manifest's FileProvider, resolved by [ShadowFileProvider]. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], shadows = [ShadowFileProvider::class])
@@ -223,10 +184,6 @@ class SharingUtilsBitmapRobolectricTest {
         object : ContextWrapper(ctx) {
             override fun getPackageName() = "de.lemke.commonutils.noprovider"
         }
-
-    private fun registerPngTypeProvider() {
-        Robolectric.buildContentProvider(PngTypeProvider::class.java).create(FILE_PROVIDER_AUTHORITY)
-    }
 
     private fun Activity.startedChooserTarget(): Intent {
         val chooser = shadowOf(this).nextStartedActivity.shouldNotBeNull()
@@ -255,11 +212,11 @@ class SharingUtilsBitmapRobolectricTest {
 
     @Test
     fun `copyToClipboard bitmap success - clips the bitmap's content uri and returns true`() {
-        registerPngTypeProvider()
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeTrue()
         val clip = ctx.getSystemService(ClipboardManager::class.java).primaryClip.shouldNotBeNull()
         clip.getItemAt(0).uri.toString() shouldBe "$CACHE_ROOT_URI/test.png"
+        clip.description.getMimeType(0) shouldBe "image/png"
     }
 
     @Test
@@ -284,7 +241,6 @@ class SharingUtilsBitmapRobolectricTest {
 
     @Test
     fun `Bitmap copyToClipboard extension delegates to Context copyToClipboard`() {
-        registerPngTypeProvider()
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.copyToClipboard(ctx, "label", "test.png").shouldBeTrue()
     }
