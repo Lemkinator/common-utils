@@ -58,6 +58,13 @@ class ShadowFileProviderRobolectricTest {
     }
 
     @Test
+    fun `file name is percent-encoded in the uri path`() {
+        val file = File(ctx.cacheDir, "my photo.png")
+        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        uri.toString() shouldBe "content://$TEST_AUTHORITY/cache_root/my%20photo.png"
+    }
+
+    @Test
     fun `files-path root with nested path attribute maps a nested file`() {
         val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
         val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)

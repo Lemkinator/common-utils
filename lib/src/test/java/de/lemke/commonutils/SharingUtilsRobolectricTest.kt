@@ -246,11 +246,6 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
-    fun `getFileUri percent-encodes the file name`() {
-        File(ctx.cacheDir, "my photo.png").getFileUri(ctx).toString() shouldBe "$CACHE_ROOT_URI/my%20photo.png"
-    }
-
-    @Test
     fun `getFileUri throws IllegalArgumentException for a file outside every configured root`() {
         val outside = File(ctx.dataDir, "outside.png").also { it.createNewFile() }
         shouldThrow<IllegalArgumentException> { outside.getFileUri(ctx) }
