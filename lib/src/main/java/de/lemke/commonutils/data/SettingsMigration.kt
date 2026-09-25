@@ -71,7 +71,11 @@ fun SharedPreferences.migrateSettings(
         source.mappings.forEach { key -> migrateValue(key, values[key.from], editor, written) }
         source.stage(editor)
     }
-    if (editor.commit()) found.forEach { (source, _) -> source.cleanUp(context) }
+    if (editor.commit()) {
+        found.forEach { (source, _) -> source.cleanUp(context) }
+    } else {
+        Log.w(TAG, "Keeping every source: the target commit failed")
+    }
     return this
 }
 

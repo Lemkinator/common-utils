@@ -289,6 +289,9 @@ class SettingsMigrationTest {
 
         target.all.shouldBeEmpty()
         file.exists().shouldBeTrue()
+        val log = ShadowLog.getLogsForTag("SettingsMigration").single()
+        log.type shouldBe Log.WARN
+        log.msg shouldBe "Keeping every source: the target commit failed"
     }
 
     @Test
