@@ -156,6 +156,7 @@ dependencies {
     implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
+    implementation(libs.datastore.preferences.core)
     api(libs.androidx.navigation.fragment.ktx)
     api(libs.core.splashscreen)
     api(libs.lottie)
