@@ -149,6 +149,19 @@ class SettingsMigrationTest {
     }
 
     @Test
+    fun `drops a set whose elements are not all Strings`() {
+        val file = writeDataStore("userSettings", stringSetPreferencesKey("favorites") to setOf("12", "34"))
+
+        target.migrateSettings(context) { dataStore("userSettings") { key("favorites") { setOf(12, 34) } } }
+
+        target.all.shouldBeEmpty()
+        file.exists().shouldBeFalse()
+        val log = ShadowLog.getLogsForTag("SettingsMigration").single()
+        log.type shouldBe Log.WARN
+        log.msg shouldBe "Dropping favorites: SharedPreferences cannot store LinkedHashSet"
+    }
+
+    @Test
     fun `never overwrites a key that already exists in the target`() {
         target.edit(commit = true) { putInt("iconSize", 64) }
         writeDataStore("userSettings", intPreferencesKey("iconSize") to 128)

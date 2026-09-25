@@ -234,13 +234,13 @@ private fun SharedPreferences.Editor.putSetting(
     key: String,
     value: Any,
 ): Boolean {
-    when (value) {
-        is Boolean -> putBoolean(key, value)
-        is Int -> putInt(key, value)
-        is Long -> putLong(key, value)
-        is Float -> putFloat(key, value)
-        is String -> putString(key, value)
-        is Set<*> -> putStringSet(key, value.mapTo(mutableSetOf()) { it.toString() })
+    when {
+        value is Boolean -> putBoolean(key, value)
+        value is Int -> putInt(key, value)
+        value is Long -> putLong(key, value)
+        value is Float -> putFloat(key, value)
+        value is String -> putString(key, value)
+        value is Set<*> && value.all { it is String } -> putStringSet(key, value.filterIsInstance<String>().toSet())
         else -> {
             Log.w(TAG, "Dropping $key: SharedPreferences cannot store ${value.javaClass.simpleName}")
             return false
