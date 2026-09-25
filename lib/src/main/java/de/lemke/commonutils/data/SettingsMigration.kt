@@ -264,7 +264,8 @@ private fun SharedPreferences.Editor.putSetting(
         value is String -> putString(key, value)
         value is Set<*> && value.all { it is String } -> putStringSet(key, value.filterIsInstance<String>().toSet())
         else -> {
-            Log.w(TAG, "Dropping $key: SharedPreferences cannot store ${value.javaClass.simpleName}")
+            val type = if (value is Set<*>) "a set with non-String elements" else value.javaClass.simpleName
+            Log.w(TAG, "Dropping $key: SharedPreferences cannot store $type")
             return false
         }
     }

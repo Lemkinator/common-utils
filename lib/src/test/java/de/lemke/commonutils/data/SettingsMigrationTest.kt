@@ -181,7 +181,7 @@ class SettingsMigrationTest {
         file.exists().shouldBeFalse()
         val log = ShadowLog.getLogsForTag("SettingsMigration").single()
         log.type shouldBe Log.WARN
-        log.msg shouldBe "Dropping favorites: SharedPreferences cannot store LinkedHashSet"
+        log.msg shouldBe "Dropping favorites: SharedPreferences cannot store a set with non-String elements"
     }
 
     @Test
