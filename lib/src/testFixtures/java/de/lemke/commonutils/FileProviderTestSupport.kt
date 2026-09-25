@@ -23,7 +23,14 @@ import androidx.core.content.FileProvider
  * need it.
  */
 fun resetFileProviderCache() {
-    val sCache = FileProvider::class.java.getDeclaredField("sCache")
-    sCache.isAccessible = true
-    (sCache.get(null) as MutableMap<*, *>).clear()
+    val cache =
+        try {
+            val sCache = FileProvider::class.java.getDeclaredField("sCache")
+            sCache.isAccessible = true
+            sCache.get(null) as MutableMap<*, *>
+        } catch (e: ReflectiveOperationException) {
+            throw IllegalStateException("FileProvider internals changed: expected private static sCache map", e)
+        }
+    // FileProvider guards sCache with synchronized (sCache).
+    synchronized(cache) { cache.clear() }
 }
