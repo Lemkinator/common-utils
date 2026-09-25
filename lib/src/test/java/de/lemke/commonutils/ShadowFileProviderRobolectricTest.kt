@@ -36,6 +36,7 @@ import java.io.File
 import java.io.IOException
 import org.junit.After
 import org.junit.Assume.assumeTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -155,6 +156,7 @@ class ShadowFileProviderRobolectricTest {
 class ShadowFileProviderParityRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
+    @Before
     @After
     fun clearFileProviderCache() = resetFileProviderCache()
 
@@ -181,6 +183,9 @@ class ResetFileProviderCacheRobolectricTest {
         sCache.isAccessible = true
         return (sCache.get(null) as Map<*, *>).keys
     }
+
+    @After
+    fun tearDown() = resetFileProviderCache()
 
     @Test
     fun `resetFileProviderCache drops the strategy cached for an authority`() {
