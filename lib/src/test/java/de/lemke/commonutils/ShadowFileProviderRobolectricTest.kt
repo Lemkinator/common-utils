@@ -19,7 +19,10 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import java.io.File
@@ -100,11 +103,7 @@ class ShadowFileProviderParityRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
     @After
-    fun clearFileProviderCache() {
-        val sCache = FileProvider::class.java.getDeclaredField("sCache")
-        sCache.isAccessible = true
-        (sCache.get(null) as MutableMap<*, *>).clear()
-    }
+    fun clearFileProviderCache() = resetFileProviderCache()
 
     @Test
     fun `shadow produces the same uri as the real FileProvider on posix separators`() {
@@ -115,5 +114,37 @@ class ShadowFileProviderParityRobolectricTest {
         val shadowed = ShadowFileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
 
         shadowed shouldBe real
+    }
+}
+
+/** No [ShadowFileProvider] here: the stock [FileProvider.getUriForFile] fills FileProvider's static strategy cache. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36])
+class ResetFileProviderCacheRobolectricTest {
+    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+
+    private fun cachedAuthorities(): Set<Any?> {
+        val sCache = FileProvider::class.java.getDeclaredField("sCache")
+        sCache.isAccessible = true
+        return (sCache.get(null) as Map<*, *>).keys
+    }
+
+    @Test
+    fun `resetFileProviderCache drops the strategy cached for an authority`() {
+        // The stock call throws on Windows, after it has cached the strategy.
+        runCatching { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "photo.png")) }
+        cachedAuthorities() shouldContain TEST_AUTHORITY
+
+        resetFileProviderCache()
+
+        cachedAuthorities().shouldBeEmpty()
+    }
+
+    @Test
+    fun `resetFileProviderCache on an empty cache leaves it empty`() {
+        resetFileProviderCache()
+
+        shouldNotThrowAny { resetFileProviderCache() }
+        cachedAuthorities().shouldBeEmpty()
     }
 }
