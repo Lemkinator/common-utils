@@ -172,7 +172,7 @@ class SettingsMigrationTest {
     }
 
     @Test
-    fun `the first declared source wins`() {
+    fun `a DataStore declared first wins over a later rename`() {
         target.edit(commit = true) { putBoolean("auto_copy_on_create_pref", false) }
         writeDataStore("userSettings", booleanPreferencesKey("autoCopyOnCreate") to true)
 
@@ -182,6 +182,54 @@ class SettingsMigrationTest {
         }
 
         target.all shouldBe mapOf("autoCopyOnCreate" to true)
+    }
+
+    @Test
+    fun `a rename declared first wins over a later DataStore`() {
+        target.edit(commit = true) { putBoolean("auto_copy_on_create_pref", false) }
+        val file = writeDataStore("userSettings", booleanPreferencesKey("autoCopyOnCreate") to true)
+
+        target.migrateSettings(context) {
+            renames { key("auto_copy_on_create_pref", to = "autoCopyOnCreate") }
+            dataStore("userSettings") { keys("autoCopyOnCreate") }
+        }
+
+        target.all shouldBe mapOf("autoCopyOnCreate" to false)
+        file.exists().shouldBeFalse()
+    }
+
+    @Test
+    fun `a later source fills a key the first source lacks`() {
+        writeDataStore("userSettings", intPreferencesKey("iconSize") to 128)
+        target.edit(commit = true) { putBoolean("auto_copy_on_create_pref", true) }
+
+        target.migrateSettings(context) {
+            dataStore("userSettings") { keys("iconSize", "autoCopyOnCreate") }
+            renames { key("auto_copy_on_create_pref", to = "autoCopyOnCreate") }
+        }
+
+        target.all shouldBe mapOf("iconSize" to 128, "autoCopyOnCreate" to true)
+    }
+
+    @Test
+    fun `a rename and a SharedPreferences source drop their old key when the target already holds the new key`() {
+        target.edit(commit = true) {
+            putBoolean("pdfPageSnap", false)
+            putBoolean("pdf_page_snap_pref", true)
+            putLong("lastSync", 1_600_000_000_000L)
+        }
+        context.getSharedPreferences("legacy", MODE_PRIVATE).edit(commit = true) {
+            putLong("lastSync", 1_700_000_000_000L)
+            putInt("unrelated", 2)
+        }
+
+        target.migrateSettings(context) {
+            sharedPreferences("legacy") { keys("lastSync") }
+            renames { key("pdf_page_snap_pref", to = "pdfPageSnap") }
+        }
+
+        target.all shouldBe mapOf("pdfPageSnap" to false, "lastSync" to 1_600_000_000_000L)
+        context.getSharedPreferences("legacy", MODE_PRIVATE).all shouldBe mapOf("unrelated" to 2)
     }
 
     @Test
@@ -292,6 +340,21 @@ class SettingsMigrationTest {
         val log = ShadowLog.getLogsForTag("SettingsMigration").single()
         log.type shouldBe Log.WARN
         log.msg shouldBe "Keeping every source: the target commit failed"
+    }
+
+    @Test
+    fun `keeps a rename's old key and a SharedPreferences source when the target commit fails`() {
+        target.edit(commit = true) { putBoolean("pdf_page_snap_pref", true) }
+        context.getSharedPreferences("legacy", MODE_PRIVATE).edit(commit = true) { putLong("lastSync", 1_700_000_000_000L) }
+
+        FailingCommitPreferences(target).migrateSettings(context) {
+            sharedPreferences("legacy") { keys("lastSync") }
+            renames { key("pdf_page_snap_pref", to = "pdfPageSnap") }
+        }
+
+        target.all shouldBe mapOf("pdf_page_snap_pref" to true)
+        context.getSharedPreferences("legacy", MODE_PRIVATE).all shouldBe mapOf("lastSync" to 1_700_000_000_000L)
+        File(context.dataDir, "shared_prefs/legacy.xml").exists().shouldBeTrue()
     }
 
     @Test
