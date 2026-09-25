@@ -27,10 +27,12 @@ Tests live under `lib/src/test/java/de/lemke/commonutils/`.
 for architecture rules.
 
 **`ShadowFileProvider`** (published testFixtures) — Robolectric shadow for both
-`FileProvider.getUriForFile` overloads that normalizes paths to `/` before matching; apply
+`FileProvider.getUriForFile` overloads and the provider's `query`, `getType`, `openFile` and
+`delete`, which normalizes paths to `/` before matching; apply
 `@Config(shadows = [ShadowFileProvider::class])` instead of `mockkStatic(FileProvider::class)`
-whenever a test needs a real (not stubbed) URI, since the stock implementation compares raw
-`getCanonicalPath()` strings and throws on Windows. The shadow resolves roots per call. An unshadowed
+whenever a test needs a real (not stubbed) URI or reads one back through a `ContentResolver`, since
+the stock implementation compares raw `getCanonicalPath()` strings and throws on Windows. The shadow
+resolves roots per call. An unshadowed
 test that calls the stock `getUriForFile` calls the published `resetFileProviderCache()` in `@Before`
 and `@After`.
 

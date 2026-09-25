@@ -20,13 +20,18 @@ import android.content.ContextWrapper
 import android.content.pm.PackageManager
 import android.content.pm.ProviderInfo
 import android.content.res.XmlResourceParser
+import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeSameInstanceAs
@@ -154,6 +159,116 @@ class ShadowFileProviderRobolectricTest {
 
         withDisplayName.encodedPath shouldBe plain.encodedPath
         withDisplayName.getQueryParameter("displayName") shouldBe "shared.png"
+    }
+
+    // ── content uri back to file ────────────────────────────────────────────────
+
+    private fun cacheUri(name: String): Uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, name))
+
+    @Test
+    fun `openOutputStream then openInputStream round-trips the bytes through the file`() {
+        val uri = cacheUri("roundtrip.bin")
+
+        ctx.contentResolver
+            .openOutputStream(uri)
+            .shouldNotBeNull()
+            .use { it.write(byteArrayOf(1, 2, 3)) }
+
+        File(ctx.cacheDir, "roundtrip.bin").readBytes() shouldBe byteArrayOf(1, 2, 3)
+        ctx.contentResolver
+            .openInputStream(uri)
+            .shouldNotBeNull()
+            .use { it.readBytes() } shouldBe byteArrayOf(1, 2, 3)
+    }
+
+    @Test
+    fun `openInputStream reads a file under a nested root`() {
+        val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
+        file.parentFile.shouldNotBeNull().mkdirs()
+        file.writeText("nested")
+        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+
+        ctx.contentResolver
+            .openInputStream(uri)
+            .shouldNotBeNull()
+            .use { it.readBytes().decodeToString() } shouldBe "nested"
+    }
+
+    @Test
+    fun `openFileDescriptor with an unknown mode throws IllegalArgumentException like stock`() {
+        val e = shouldThrow<IllegalArgumentException> { ctx.contentResolver.openFileDescriptor(cacheUri("photo.png"), "x") }
+        e.message shouldBe "Invalid mode: x"
+    }
+
+    @Test
+    fun `getType derives the mime type from the file extension`() {
+        ctx.contentResolver.getType(cacheUri("photo.png")) shouldBe "image/png"
+    }
+
+    @Test
+    fun `getType falls back to application octet-stream without an extension`() {
+        ctx.contentResolver.getType(cacheUri("README")) shouldBe "application/octet-stream"
+    }
+
+    @Test
+    fun `query reports the display name and size of the file`() {
+        File(ctx.cacheDir, "photo.png").writeBytes(ByteArray(5))
+
+        ctx.contentResolver.query(cacheUri("photo.png"), null, null, null, null).shouldNotBeNull().use { cursor ->
+            cursor.columnNames.toList() shouldBe listOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
+            cursor.moveToFirst().shouldBeTrue()
+            cursor.getString(0) shouldBe "photo.png"
+            cursor.getLong(1) shouldBe 5L
+        }
+    }
+
+    @Test
+    fun `query reports the displayName parameter and drops unknown projection columns`() {
+        val file = File(ctx.cacheDir, "photo.png")
+        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file, "shared.png")
+
+        ctx.contentResolver.query(uri, arrayOf("_data", OpenableColumns.DISPLAY_NAME), null, null, null).shouldNotBeNull().use { cursor ->
+            cursor.columnNames.toList() shouldBe listOf(OpenableColumns.DISPLAY_NAME)
+            cursor.moveToFirst().shouldBeTrue()
+            cursor.getString(0) shouldBe "shared.png"
+        }
+    }
+
+    @Test
+    fun `delete removes the file and reports one deleted row`() {
+        val file = File(ctx.cacheDir, "photo.png").apply { writeBytes(ByteArray(1)) }
+
+        ctx.contentResolver.delete(cacheUri("photo.png"), null, null) shouldBe 1
+        file.exists().shouldBeFalse()
+    }
+
+    @Test
+    fun `delete of a missing file reports zero deleted rows`() {
+        ctx.contentResolver.delete(cacheUri("missing.png"), null, null) shouldBe 0
+    }
+
+    @Test
+    fun `uri that escapes its root throws SecurityException like stock`() {
+        val escaping = Uri.parse("content://$TEST_AUTHORITY/cache_root/..%2F..%2Foutside.bin")
+
+        val e = shouldThrow<SecurityException> { ctx.contentResolver.delete(escaping, null, null) }
+        e.message shouldBe "Resolved path jumped beyond configured root"
+    }
+
+    @Test
+    fun `uri with an unconfigured root name throws IllegalArgumentException like stock`() {
+        val unknownRoot = Uri.parse("content://$TEST_AUTHORITY/unknown_root/photo.png")
+
+        val e = shouldThrow<IllegalArgumentException> { ctx.contentResolver.delete(unknownRoot, null, null) }
+        e.message shouldBe "Unable to find configured root for $unknownRoot"
+    }
+
+    @Test
+    fun `uri naming only a root throws IllegalArgumentException like stock`() {
+        val rootOnly = Uri.parse("content://$TEST_AUTHORITY/cache_root")
+
+        val e = shouldThrow<IllegalArgumentException> { ctx.contentResolver.delete(rootOnly, null, null) }
+        e.message shouldBe "Unable to find path from root: $rootOnly"
     }
 }
 

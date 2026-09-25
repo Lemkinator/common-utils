@@ -16,35 +16,114 @@
 package de.lemke.commonutils
 
 import android.content.Context
+import android.database.Cursor
+import android.database.MatrixCursor
 import android.net.Uri
+import android.os.ParcelFileDescriptor
+import android.os.ParcelFileDescriptor.MODE_APPEND
+import android.os.ParcelFileDescriptor.MODE_CREATE
+import android.os.ParcelFileDescriptor.MODE_READ_ONLY
+import android.os.ParcelFileDescriptor.MODE_READ_WRITE
+import android.os.ParcelFileDescriptor.MODE_TRUNCATE
+import android.os.ParcelFileDescriptor.MODE_WRITE_ONLY
+import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.IOException
 import java.lang.reflect.InvocationTargetException
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
+import org.robolectric.annotation.RealObject
 import org.xmlpull.v1.XmlPullParserException
 
 /**
- * Robolectric shadow re-implementing [FileProvider.getUriForFile] with every path normalized to
- * `/` separators before matching/stripping. Stock `SimplePathStrategy.belongsToRoot` compares raw
+ * Robolectric shadow re-implementing [FileProvider]'s file-to-URI and URI-to-file mapping with every
+ * path normalized to `/` separators before matching/stripping. Stock `SimplePathStrategy` compares raw
  * `File.getCanonicalPath()` strings, which are backslash-separated on Windows, so the real
- * implementation throws `IllegalArgumentException` for every file there. Apply with
- * `@Config(shadows = [ShadowFileProvider::class])` on any Robolectric test that calls
- * `FileProvider.getUriForFile` for real (i.e. not `mockkStatic`'d). An unshadowed test that calls the
+ * implementation throws for every file there. Apply with
+ * `@Config(shadows = [ShadowFileProvider::class])` on any Robolectric test that reaches
+ * `FileProvider` for real (i.e. not `mockkStatic`'d). An unshadowed test that calls the
  * stock `getUriForFile` must call [resetFileProviderCache] in `@Before` and `@After` instead.
+ *
+ * Shadowed entry points: both static `getUriForFile` overloads, and the provider's `query`, `getType`,
+ * `openFile` and `delete`. `ClipData.newUri` reaches `getType`, and `ContentResolver.openInputStream`
+ * and `openOutputStream` reach `openFile`. Each call resolves the roots anew, so no path strategy
+ * survives from an earlier test.
  *
  * The shadow always reads the authority's `android.support.FILE_PROVIDER_PATHS` `<meta-data>`. It does
  * not support a FileProvider subclass that supplies its paths through the `FileProvider(@XmlRes int)`
  * constructor without that `<meta-data>`.
- *
- * Only `getUriForFile` is shadowed — `query`/`openFile` (and anything else resolving a `content://`
- * Uri back to a `File` via the stock `SimplePathStrategy.getFileForUri`) still use the real,
- * unshadowed path-matching and still throw on Windows.
  */
 @Implements(FileProvider::class, isInAndroidSdk = false)
 class ShadowFileProvider {
+    @RealObject
+    private lateinit var realProvider: FileProvider
+
+    @Implementation
+    protected fun query(
+        uri: Uri,
+        projection: Array<String>?,
+        selection: String?,
+        selectionArgs: Array<String>?,
+        sortOrder: String?,
+    ): Cursor {
+        val file = fileForUri(uri)
+        val columns =
+            (projection ?: arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE))
+                .filter { it == OpenableColumns.DISPLAY_NAME || it == OpenableColumns.SIZE }
+        val values =
+            columns.map { column ->
+                if (column == OpenableColumns.DISPLAY_NAME) uri.getQueryParameter(DISPLAY_NAME_PARAMETER) ?: file.name else file.length()
+            }
+        return MatrixCursor(columns.toTypedArray(), 1).apply { addRow(values) }
+    }
+
+    @Implementation
+    protected fun getType(uri: Uri): String {
+        val name = fileForUri(uri).name
+        val lastDot = name.lastIndexOf('.')
+        val mimeType = if (lastDot >= 0) MimeTypeMap.getSingleton().getMimeTypeFromExtension(name.substring(lastDot + 1)) else null
+        return mimeType ?: "application/octet-stream"
+    }
+
+    @Implementation
+    protected fun delete(
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<String>?,
+    ): Int = if (fileForUri(uri).delete()) 1 else 0
+
+    @Implementation
+    protected fun openFile(
+        uri: Uri,
+        mode: String,
+    ): ParcelFileDescriptor = ParcelFileDescriptor.open(fileForUri(uri), modeBits(mode))
+
+    private fun fileForUri(uri: Uri): File {
+        val path = uri.encodedPath.orEmpty()
+        val splitIndex = path.indexOf('/', 1)
+        require(splitIndex != -1) { "Unable to find path from root: $uri" }
+        val roots = pathStrategyRoots(checkNotNull(realProvider.context), checkNotNull(uri.authority))
+        val root =
+            roots[Uri.decode(path.substring(1, splitIndex))]
+                ?: throw IllegalArgumentException("Unable to find configured root for $uri")
+        val unresolved = File(root, Uri.decode(path.substring(splitIndex + 1)))
+        val file =
+            try {
+                unresolved.canonicalFile
+            } catch (e: IOException) {
+                throw IllegalArgumentException("Failed to resolve canonical path for $unresolved", e)
+            }
+        if (!belongsToRoot(file.path.toUnixPath(), root.path.toUnixPath())) {
+            throw SecurityException("Resolved path jumped beyond configured root")
+        }
+        return file
+    }
+
     companion object {
+        private const val DISPLAY_NAME_PARAMETER = "displayName"
+
         @Implementation
         @JvmStatic
         fun getUriForFile(
@@ -76,7 +155,7 @@ class ShadowFileProvider {
             authority: String,
             file: File,
             displayName: String,
-        ): Uri = getUriForFile(context, authority, file).buildUpon().appendQueryParameter("displayName", displayName).build()
+        ): Uri = getUriForFile(context, authority, file).buildUpon().appendQueryParameter(DISPLAY_NAME_PARAMETER, displayName).build()
 
         private fun belongsToRoot(
             filePath: String,
@@ -84,6 +163,16 @@ class ShadowFileProvider {
         ): Boolean = filePath.trimEnd('/').startsWith("${rootPath.trimEnd('/')}/")
 
         private fun String.toUnixPath(): String = replace(File.separatorChar, '/')
+
+        private fun modeBits(mode: String): Int =
+            when (mode) {
+                "r" -> MODE_READ_ONLY
+                "w", "wt" -> MODE_WRITE_ONLY or MODE_CREATE or MODE_TRUNCATE
+                "wa" -> MODE_WRITE_ONLY or MODE_CREATE or MODE_APPEND
+                "rw" -> MODE_READ_WRITE or MODE_CREATE
+                "rwt" -> MODE_READ_WRITE or MODE_CREATE or MODE_TRUNCATE
+                else -> throw IllegalArgumentException("Invalid mode: $mode")
+            }
 
         // FileProvider.parsePathStrategy is private; reflecting into it reuses its <…-path> meta-data
         // parsing and root-directory resolution instead of duplicating both. getPathStrategy would
