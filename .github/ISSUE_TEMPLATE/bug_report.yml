@@ -1,0 +1,63 @@
+name: Bug report
+description: Something in the library doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill in every required field.
+        Steps to reproduce decide whether a bug can be fixed.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you report
+      options:
+        - label: I use the latest version of common-utils.
+          required: true
+        - label: I searched the existing issues, including closed ones.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: common-utils version
+      placeholder: e.g. 1.2.7
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      placeholder: e.g. Samsung Galaxy S25 or emulator
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Android and One UI version
+      description: One UI only applies to Samsung devices.
+      placeholder: e.g. Android 16, One UI 8.0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the exact error message or stack trace.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps or code snippet to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+  - type: upload
+    id: files
+    attributes:
+      label: Screenshots, recordings or logs
+    validations:
+      accept: ".png,.jpg,.jpeg,.gif,.webp,.mp4,.mov,.webm,.txt,.log,.zip"
