@@ -27,10 +27,14 @@ Tests live under `lib/src/test/java/de/lemke/commonutils/`.
 for architecture rules.
 
 **`ShadowFileProvider`** (published testFixtures) — Robolectric shadow for both
-`FileProvider.getUriForFile` overloads that normalizes paths to `/` before matching; apply
+`FileProvider.getUriForFile` overloads and the provider's `query`, `getType`, `openFile` and
+`delete`, which normalizes paths to `/` before matching; apply
 `@Config(shadows = [ShadowFileProvider::class])` instead of `mockkStatic(FileProvider::class)`
-whenever a test needs a real (not stubbed) URI, since the stock implementation compares raw
-`getCanonicalPath()` strings and throws on Windows.
+whenever a test needs a real (not stubbed) URI or reads one back through a `ContentResolver`, since
+the stock implementation compares raw `getCanonicalPath()` strings and throws on Windows. The shadow
+resolves roots per call. An unshadowed
+test that calls the stock `getUriForFile` calls the published `resetFileProviderCache()` in `@Before`
+and `@After`.
 
 **Robolectric + JUnit 5**: See the shared Robolectric/JUnit 5 policy in
 `A:\repo\android\CLAUDE.md`. This repo previously bridged Robolectric onto JUnit 5 via the
@@ -129,6 +133,12 @@ bindings into consumer DI graphs uninvited. Each consumer app declares its own
 - Maven artifact: `io.github.lemkinator:common-utils` at version defined
   in `libs.versions.toml`
 - Package namespace: `de.lemke.commonutils`
+
+## Releases
+
+Releases are a manual owner step. A push to main that changes the
+`common-utils` version in `gradle/libs.versions.toml` publishes.
+Agents never bump the version or release.
 
 ## First-Run Flow
 

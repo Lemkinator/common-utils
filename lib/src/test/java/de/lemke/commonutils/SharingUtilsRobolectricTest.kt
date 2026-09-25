@@ -19,12 +19,13 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.FileProvider
+import androidx.core.content.IntentCompat
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.copyToClipboard
@@ -40,19 +41,16 @@ import de.lemke.commonutils.ui.utils.shareText
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.unmockkAll
 import java.io.File
 import java.io.OutputStream
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -163,9 +161,11 @@ class SharingUtilsRobolectricTest {
     }
 }
 
-/** Tests for bitmap and file sharing paths that require mocking [FileProvider]. */
+private const val FILE_PROVIDER_AUTHORITY = "de.lemke.commonutils.test.fileprovider"
+private const val CACHE_ROOT_URI = "content://$FILE_PROVIDER_AUTHORITY/cache_root"
+
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [36], shadows = [ShadowFileProvider::class])
 class SharingUtilsBitmapRobolectricTest {
     @get:Rule
     val destroyActivities = DestroyActivitiesRule()
@@ -179,34 +179,43 @@ class SharingUtilsBitmapRobolectricTest {
             .track(destroyActivities)
             .get()
 
-    private val fakeUri: Uri = Uri.parse("content://de.lemke.test.fileprovider/share/test.png")
+    private fun contextWithoutFileProvider(): Context =
+        object : ContextWrapper(ctx) {
+            override fun getPackageName() = "de.lemke.commonutils.noprovider"
+        }
 
-    @Before
-    fun setUp() {
-        mockkStatic(FileProvider::class)
-        every { FileProvider.getUriForFile(any(), any(), any()) } returns fakeUri
+    private fun Activity.startedChooserTarget(): Intent {
+        val chooser = shadowOf(this).nextStartedActivity.shouldNotBeNull()
+        chooser.action shouldBe Intent.ACTION_CHOOSER
+        return IntentCompat.getParcelableExtra(chooser, Intent.EXTRA_INTENT, Intent::class.java).shouldNotBeNull()
     }
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-    }
+    private fun Intent.streamUri(): String = IntentCompat.getParcelableExtra(this, Intent.EXTRA_STREAM, Uri::class.java).toString()
+
+    private fun Intent.readGrantFlag(): Int = flags and Intent.FLAG_GRANT_READ_URI_PERMISSION
 
     // ── getFileUri ──────────────────────────────────────────────────────────────
 
     @Test
-    fun `getFileUri returns URI from FileProvider`() {
-        val file = File(ctx.cacheDir, "test.png")
-        val uri = file.getFileUri(ctx)
-        uri shouldBe fakeUri
+    fun `getFileUri maps a cache file to its cache_root content uri`() {
+        File(ctx.cacheDir, "test.png").getFileUri(ctx).toString() shouldBe "$CACHE_ROOT_URI/test.png"
+    }
+
+    @Test
+    fun `getFileUri throws IllegalArgumentException for a file outside every configured root`() {
+        val outside = File(ctx.dataDir, "outside.png").also { it.createNewFile() }
+        shouldThrow<IllegalArgumentException> { outside.getFileUri(ctx) }
     }
 
     // ── copyToClipboard(Bitmap) ─────────────────────────────────────────────────
 
     @Test
-    fun `copyToClipboard bitmap success - clips bitmap URI and returns true`() {
+    fun `copyToClipboard bitmap success - clips the bitmap's content uri and returns true`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeTrue()
+        val clip = ctx.getSystemService(ClipboardManager::class.java).primaryClip.shouldNotBeNull()
+        clip.getItemAt(0).uri.toString() shouldBe "$CACHE_ROOT_URI/test.png"
+        clip.description.getMimeType(0) shouldBe "image/png"
     }
 
     @Test
@@ -217,10 +226,10 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
-    fun `copyToClipboard bitmap FileProvider throws - exception caught, returns false`() {
-        every { FileProvider.getUriForFile(any(), any(), any()) } throws RuntimeException("test")
+    fun `copyToClipboard bitmap without a FileProvider for the package - exception caught, returns false`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
+        contextWithoutFileProvider().copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
+        ctx.getSystemService(ClipboardManager::class.java).hasPrimaryClip().shouldBeFalse()
     }
 
     @Test
@@ -238,15 +247,26 @@ class SharingUtilsBitmapRobolectricTest {
     // ── Bitmap.share ────────────────────────────────────────────────────────────
 
     @Test
-    fun `Bitmap share success - starts chooser intent and returns true`() {
+    fun `Bitmap share success - sends the bitmap's content uri with read permission through a chooser`() {
+        val act = activity()
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        bitmap.share(activity(), "test.png").shouldBeTrue()
+        bitmap.share(act, "test.png").shouldBeTrue()
+        val target = act.startedChooserTarget()
+        target.action shouldBe Intent.ACTION_SEND
+        target.streamUri() shouldBe "$CACHE_ROOT_URI/test.png"
+        target.clipData
+            ?.getItemAt(0)
+            ?.uri
+            .toString() shouldBe "$CACHE_ROOT_URI/test.png"
+        target.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
 
     @Test
     fun `Bitmap share with shareText - includes text extra`() {
+        val act = activity()
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        bitmap.share(activity(), "test.png", "optional text").shouldBeTrue()
+        bitmap.share(act, "test.png", "optional text").shouldBeTrue()
+        act.startedChooserTarget().getStringExtra(Intent.EXTRA_TEXT) shouldBe "optional text"
     }
 
     @Test
@@ -257,10 +277,9 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
-    fun `Bitmap share FileProvider throws - exception caught, returns false`() {
-        every { FileProvider.getUriForFile(any(), any(), any()) } throws RuntimeException("test")
+    fun `Bitmap share without a FileProvider for the package - exception caught, returns false`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        bitmap.share(ctx, "test.png").shouldBeFalse()
+        bitmap.share(contextWithoutFileProvider(), "test.png").shouldBeFalse()
     }
 
     @Test
@@ -278,9 +297,14 @@ class SharingUtilsBitmapRobolectricTest {
     // ── Bitmap.quickShare ───────────────────────────────────────────────────────
 
     @Test
-    fun `quickShare success - starts activity and returns true`() {
+    fun `quickShare success - sends the bitmap's content uri with read permission and returns true`() {
+        val act = activity()
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        bitmap.quickShare(activity(), "test.png").shouldBeTrue()
+        bitmap.quickShare(act, "test.png").shouldBeTrue()
+        val intent = shadowOf(act).nextStartedActivity.shouldNotBeNull()
+        intent.action shouldBe Intent.ACTION_SEND
+        intent.streamUri() shouldBe "$CACHE_ROOT_URI/test.png"
+        intent.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
 
     @Test
@@ -291,10 +315,9 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
-    fun `quickShare FileProvider throws - exception caught, returns false`() {
-        every { FileProvider.getUriForFile(any(), any(), any()) } throws RuntimeException("test")
+    fun `quickShare without a FileProvider for the package - exception caught, returns false`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        bitmap.quickShare(ctx, "test.png").shouldBeFalse()
+        bitmap.quickShare(contextWithoutFileProvider(), "test.png").shouldBeFalse()
     }
 
     @Test
@@ -312,10 +335,13 @@ class SharingUtilsBitmapRobolectricTest {
     // ── File / List<File>.share ──────────────────────────────────────────────────
 
     @Test
-    fun `single File share - starts activity and returns true`() {
+    fun `single File share - sends the file's content uri with read permission and returns true`() {
         val act = activity()
         val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
         file.share(act).shouldBeTrue()
+        val target = act.startedChooserTarget()
+        target.streamUri() shouldBe "$CACHE_ROOT_URI/img.png"
+        target.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
 
     @Test
@@ -323,21 +349,28 @@ class SharingUtilsBitmapRobolectricTest {
         val act = activity()
         val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
         listOf(file).share(act).shouldBeTrue()
+        act.startedChooserTarget().action shouldBe Intent.ACTION_SEND
     }
 
     @Test
-    fun `multi-element List share - uses ACTION_SEND_MULTIPLE and returns true`() {
+    fun `multi-element List share - sends every content uri with ACTION_SEND_MULTIPLE and returns true`() {
         val act = activity()
         val f1 = File(act.cacheDir, "img1.png").also { it.createNewFile() }
         val f2 = File(act.cacheDir, "img2.png").also { it.createNewFile() }
         listOf(f1, f2).share(act).shouldBeTrue()
+        val target = act.startedChooserTarget()
+        target.action shouldBe Intent.ACTION_SEND_MULTIPLE
+        IntentCompat.getParcelableArrayListExtra(target, Intent.EXTRA_STREAM, Uri::class.java)?.map(Uri::toString) shouldBe
+            listOf("$CACHE_ROOT_URI/img1.png", "$CACHE_ROOT_URI/img2.png")
+        target.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
 
     @Test
-    fun `List share FileProvider throws - exception caught, returns false`() {
-        every { FileProvider.getUriForFile(any(), any(), any()) } throws IllegalArgumentException("no configured root")
-        val file = File(ctx.cacheDir, "img.png").also { it.createNewFile() }
-        file.share(ctx).shouldBeFalse()
+    fun `List share of a file outside every configured root - exception caught, returns false`() {
+        val act = activity()
+        val outside = File(act.dataDir, "outside.png").also { it.createNewFile() }
+        outside.share(act).shouldBeFalse()
+        shadowOf(act).nextStartedActivity shouldBe null
     }
 
     @Test
