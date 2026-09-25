@@ -28,6 +28,42 @@ This lib consists of common utils that I use in my Android Apps.
 
 <br><br>
 
+## Settings migration
+
+`migrateSettings` moves settings that older app versions stored elsewhere into the app's settings store.
+Call it once at app start, before anything reads settings.
+The Hilt provider of the app's settings is the natural place:
+
+```kotlin
+@Provides
+@Singleton
+fun provideUserSettings(@ApplicationContext context: Context): UserSettings =
+    UserSettings(
+        PreferenceManager.getDefaultSharedPreferences(context).migrateSettings(context) {
+            dataStore("userSettings") {
+                keys("iconSize", "maskEnabled")
+                key("textsize", to = "textSize")
+                key("errorLimit") { it.toString() }
+            }
+            sharedPreferences("legacyPrefs") { keys("lastSync") }
+            renames { key("pdf_page_snap_pref", to = "pdfPageSnap") }
+        },
+    )
+```
+
+- `dataStore(name)` reads `files/datastore/<name>.preferences_pb` directly, without a DataStore instance.
+- `sharedPreferences(name)` reads another SharedPreferences file.
+- `renames` moves keys to new names inside the target store.
+- `key(from, to, convert)` maps one key. `convert` returns a Boolean, Int, Long, Float, String or `Set<String>`, or null to drop the value.
+- A key that already exists in the target stays untouched. Among the sources, the first declared one wins.
+- The call commits the target before it returns. Only then does it remove each source, so a second call finds nothing to move.
+- A missing source is a no-op. A corrupt DataStore file stays on disk, and startup continues.
+- Every call also moves the library's own `lastInAppReview` out of its former `InAppReviewUtils` file.
+  Call `migrateSettings(context)` even when the app has nothing else to move.
+- The app must stop opening a migrated DataStore file, since the call deletes it.
+
+<br><br>
+
 ## Apps using Common utils
 
 <div>

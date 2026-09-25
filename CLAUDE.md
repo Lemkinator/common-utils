@@ -85,8 +85,10 @@ Code is organized into:
 - **UI Widgets** (`ui/widget/`, `ui/fragment/`): Reusable components like
   `InfoBottomSheet`, `NoEntryView`, `DimmingView`.
 - **Data layer** (`data/`): `SettingsRepository.kt`
-  (SharedPreferences-backed app settings) and `DelegatesAdvanced.kt`
-  (type-safe `ReadWriteProperty` delegates for preferences).
+  (SharedPreferences-backed app settings), `DelegatesAdvanced.kt`
+  (type-safe `ReadWriteProperty` delegates for preferences) and
+  `SettingsMigration.kt` (`migrateSettings`: one-time startup copy from DataStore
+  files, other SharedPreferences files and old key names; see README).
 
 **UI stack**: Samsung OneUI Design system (`io.github.tribalfs:oneui-design`)
 is the primary UI framework. Jetpack Compose / Material3 is used
