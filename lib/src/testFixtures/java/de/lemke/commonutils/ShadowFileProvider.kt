@@ -19,9 +19,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import java.io.File
+import java.io.IOException
 import java.lang.reflect.InvocationTargetException
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
+import org.xmlpull.v1.XmlPullParserException
 
 /**
  * Robolectric shadow re-implementing [FileProvider.getUriForFile] with every path normalized to
@@ -103,8 +105,14 @@ class ShadowFileProvider {
                 mRoots.get(strategy) as Map<String, File>
             } catch (e: InvocationTargetException) {
                 // parsePathStrategy itself threw (e.g. no manifest <provider> for this authority) -
-                // that's a real usage error, not a sign the reflected internals moved.
-                throw e.cause ?: e
+                // that's a real usage error, not a sign the reflected internals moved. Stock
+                // getPathStrategy wraps the checked parse errors, and callers catch RuntimeException.
+                throw when (val cause = e.cause) {
+                    is IOException, is XmlPullParserException ->
+                        IllegalArgumentException("Failed to parse android.support.FILE_PROVIDER_PATHS meta-data", cause)
+                    null -> e
+                    else -> cause
+                }
             } catch (e: ReflectiveOperationException) {
                 throw IllegalStateException(
                     "FileProvider internals changed: expected private static " +

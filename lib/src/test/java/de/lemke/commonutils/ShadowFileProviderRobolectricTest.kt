@@ -17,6 +17,10 @@ package de.lemke.commonutils
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.PackageManager
+import android.content.pm.ProviderInfo
+import android.content.res.XmlResourceParser
+import android.os.Bundle
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.assertions.throwables.shouldNotThrowAny
@@ -25,13 +29,18 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.mockk.every
+import io.mockk.mockk
 import java.io.File
+import java.io.IOException
 import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.xmlpull.v1.XmlPullParserException
 
 private const val TEST_AUTHORITY = "de.lemke.commonutils.test.fileprovider"
 
@@ -83,6 +92,50 @@ class ShadowFileProviderRobolectricTest {
         shouldThrow<IllegalArgumentException> {
             FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outside)
         }
+    }
+
+    // FileProvider resolves its provider through the deprecated int-flags overload.
+    @Suppress("DEPRECATION")
+    private fun contextWithPathsParser(parser: XmlResourceParser): Context {
+        val packageManager = mockk<PackageManager>()
+        every { packageManager.resolveContentProvider(TEST_AUTHORITY, PackageManager.GET_META_DATA) } returns
+            ProviderInfo().apply {
+                packageName = ctx.packageName
+                applicationInfo = ctx.applicationInfo
+                metaData = Bundle().apply { putInt("android.support.FILE_PROVIDER_PATHS", 1) }
+            }
+        every { packageManager.getXml(ctx.packageName, 1, ctx.applicationInfo) } returns parser
+        return object : ContextWrapper(ctx) {
+            override fun getPackageManager() = packageManager
+        }
+    }
+
+    @Test
+    fun `malformed paths meta-data throws IllegalArgumentException wrapping the XmlPullParserException`() {
+        val parseError = XmlPullParserException("unexpected end of document")
+        val parser = mockk<XmlResourceParser> { every { next() } throws parseError }
+
+        val e =
+            shouldThrow<IllegalArgumentException> {
+                FileProvider.getUriForFile(contextWithPathsParser(parser), TEST_AUTHORITY, File(ctx.cacheDir, "photo.png"))
+            }
+
+        e.message shouldBe "Failed to parse android.support.FILE_PROVIDER_PATHS meta-data"
+        e.cause shouldBeSameInstanceAs parseError
+    }
+
+    @Test
+    fun `unreadable paths meta-data throws IllegalArgumentException wrapping the IOException`() {
+        val readError = IOException("resource stream closed")
+        val parser = mockk<XmlResourceParser> { every { next() } throws readError }
+
+        val e =
+            shouldThrow<IllegalArgumentException> {
+                FileProvider.getUriForFile(contextWithPathsParser(parser), TEST_AUTHORITY, File(ctx.cacheDir, "photo.png"))
+            }
+
+        e.message shouldBe "Failed to parse android.support.FILE_PROVIDER_PATHS meta-data"
+        e.cause shouldBeSameInstanceAs readError
     }
 
     @Test
