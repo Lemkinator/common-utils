@@ -139,6 +139,29 @@ class SettingsMigrationTest {
     }
 
     @Test
+    fun `an Error thrown by a conversion propagates and keeps the source`() {
+        val file =
+            writeDataStore(
+                "userSettings",
+                intPreferencesKey("iconSize") to 128,
+                booleanPreferencesKey("maskEnabled") to true,
+            )
+
+        shouldThrow<OutOfMemoryError> {
+            target.migrateSettings(context) {
+                dataStore("userSettings") {
+                    keys("iconSize")
+                    key("maskEnabled") { throw OutOfMemoryError("convert") }
+                }
+            }
+        }.message shouldBe "convert"
+
+        target.all.shouldBeEmpty()
+        file.exists().shouldBeTrue()
+        ShadowLog.getLogsForTag("SettingsMigration") shouldBe emptyList()
+    }
+
+    @Test
     fun `drops a value SharedPreferences cannot store`() {
         val file = writeDataStore("userSettings", doublePreferencesKey("ratio") to 0.75)
 

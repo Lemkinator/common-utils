@@ -56,7 +56,8 @@ fun provideUserSettings(@ApplicationContext context: Context): UserSettings =
 - `renames` moves keys to new names inside the target store.
   Its `key(from, to, convert)` requires a `to` that differs from `from`, and it offers no `keys()`.
 - `key(from, to, convert)` maps one key. `convert` returns a Boolean, Int, Long, Float, String or `Set<String>`, or null to drop the value.
-- If `convert` throws, the call logs the exception and drops the value. It still removes the source, so startup continues.
+- If `convert` throws an Exception, the call logs it and drops the value. It still removes the source, so startup continues.
+  An Error such as `OutOfMemoryError` propagates, and the call commits and removes nothing.
 - SharedPreferences cannot store a DataStore `Double` or `ByteArray` value. The call drops it unless a `convert` maps it.
 - A key that already exists in the target stays untouched. Among the sources, the first declared one wins.
 - The call commits the target before it returns. Only then does it remove each source, so a second call finds nothing to move.
