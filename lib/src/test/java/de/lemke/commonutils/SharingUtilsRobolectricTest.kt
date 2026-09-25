@@ -299,6 +299,10 @@ class SharingUtilsBitmapRobolectricTest {
         val target = act.startedChooserTarget()
         target.action shouldBe Intent.ACTION_SEND
         target.streamUri() shouldBe "$CACHE_ROOT_URI/test.png"
+        target.clipData
+            ?.getItemAt(0)
+            ?.uri
+            .toString() shouldBe "$CACHE_ROOT_URI/test.png"
         target.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
 
