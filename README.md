@@ -54,6 +54,7 @@ fun provideUserSettings(@ApplicationContext context: Context): UserSettings =
 - `dataStore(name)` reads `files/datastore/<name>.preferences_pb` directly, without a DataStore instance.
 - `sharedPreferences(name)` reads another SharedPreferences file.
 - `renames` moves keys to new names inside the target store.
+  Its `key(from, to, convert)` requires a `to` that differs from `from`, and it offers no `keys()`.
 - `key(from, to, convert)` maps one key. `convert` returns a Boolean, Int, Long, Float, String or `Set<String>`, or null to drop the value.
 - If `convert` throws, the call logs the exception and drops the value. It still removes the source, so startup continues.
 - A key that already exists in the target stays untouched. Among the sources, the first declared one wins.

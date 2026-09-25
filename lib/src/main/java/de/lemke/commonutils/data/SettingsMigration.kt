@@ -100,11 +100,9 @@ class SettingsMigration internal constructor() {
         sources += SharedPreferencesSource(name, KeyMigrations().apply(keys).list)
     }
 
-    /** Moves [keys] to new names inside the target store itself; each key needs a `to` that differs from its old name. */
-    fun renames(keys: KeyMigrations.() -> Unit) {
-        val renames = KeyMigrations().apply(keys).list
-        require(renames.none { it.from == it.to }) { "A rename needs a new key name" }
-        sources += RenameSource(renames)
+    /** Moves [keys] to new names inside the target store itself. */
+    fun renames(keys: KeyRenames.() -> Unit) {
+        sources += RenameSource(KeyRenames().apply(keys).list)
     }
 }
 
@@ -128,6 +126,24 @@ class KeyMigrations internal constructor() {
 
     /** Moves each of [names] unchanged under the same name. */
     fun keys(vararg names: String) = names.forEach { key(it) }
+}
+
+/** Lists the keys [SettingsMigration.renames] moves to new names inside the target store. */
+@SettingsMigrationDsl
+class KeyRenames internal constructor() {
+    internal val list = mutableListOf<KeyMigration>()
+
+    /**
+     * Moves the value stored under [from] to [to], which must differ from [from]. [convert] works as in [KeyMigrations.key].
+     */
+    fun key(
+        from: String,
+        to: String,
+        convert: (Any) -> Any? = { it },
+    ) {
+        require(to != from) { "A rename needs a new key name" }
+        list += KeyMigration(from, to, convert)
+    }
 }
 
 internal class KeyMigration(

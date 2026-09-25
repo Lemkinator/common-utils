@@ -267,7 +267,7 @@ class SettingsMigrationTest {
     @Test
     fun `a rename to the same key is rejected`() {
         shouldThrow<IllegalArgumentException> {
-            target.migrateSettings(context) { renames { key("textSize") } }
+            target.migrateSettings(context) { renames { key("textSize", to = "textSize") } }
         }.message shouldBe "A rename needs a new key name"
     }
 
