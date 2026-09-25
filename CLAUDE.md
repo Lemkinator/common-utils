@@ -130,6 +130,12 @@ bindings into consumer DI graphs uninvited. Each consumer app declares its own
   in `libs.versions.toml`
 - Package namespace: `de.lemke.commonutils`
 
+## Releases
+
+Releases are a manual owner step. A push to main that changes the
+`common-utils` version in `gradle/libs.versions.toml` publishes.
+Agents never bump the version or release.
+
 ## First-Run Flow
 
 OneUI is activity-oriented; this lib is **multi-activity** (no single-activity /
