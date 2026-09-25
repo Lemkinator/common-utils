@@ -22,6 +22,7 @@ import android.content.pm.ProviderInfo
 import android.content.res.XmlResourceParser
 import android.net.Uri
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
@@ -176,6 +177,14 @@ class ShadowFileProviderRobolectricTest {
 
     private fun cacheUri(name: String): Uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, name))
 
+    private fun writeThroughDescriptor(
+        uri: Uri,
+        mode: String,
+        bytes: ByteArray,
+    ) = ParcelFileDescriptor
+        .AutoCloseOutputStream(ctx.contentResolver.openFileDescriptor(uri, mode).shouldNotBeNull())
+        .use { it.write(bytes) }
+
     @Test
     fun `openOutputStream then openInputStream round-trips the bytes through the file`() {
         val uri = cacheUri("roundtrip.bin")
@@ -190,6 +199,70 @@ class ShadowFileProviderRobolectricTest {
             .openInputStream(uri)
             .shouldNotBeNull()
             .use { it.readBytes() } shouldBe byteArrayOf(1, 2, 3)
+    }
+
+    @Test
+    fun `openOutputStream truncates the existing file`() {
+        val file = File(ctx.cacheDir, "truncate.bin").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
+
+        ctx.contentResolver
+            .openOutputStream(cacheUri("truncate.bin"))
+            .shouldNotBeNull()
+            .use { it.write(byteArrayOf(9, 8)) }
+
+        file.readBytes() shouldBe byteArrayOf(9, 8)
+    }
+
+    @Test
+    fun `openOutputStream in wt mode truncates the existing file`() {
+        val file = File(ctx.cacheDir, "truncate.bin").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
+
+        ctx.contentResolver
+            .openOutputStream(cacheUri("truncate.bin"), "wt")
+            .shouldNotBeNull()
+            .use { it.write(byteArrayOf(9, 8)) }
+
+        file.readBytes() shouldBe byteArrayOf(9, 8)
+    }
+
+    @Test
+    fun `openFileDescriptor in rwt mode truncates the existing file`() {
+        val file = File(ctx.cacheDir, "truncate.bin").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
+
+        writeThroughDescriptor(cacheUri("truncate.bin"), "rwt", byteArrayOf(9, 8))
+
+        file.readBytes() shouldBe byteArrayOf(9, 8)
+    }
+
+    @Test
+    fun `openOutputStream in wa mode appends to the existing file`() {
+        val file = File(ctx.cacheDir, "append.bin").apply { writeBytes(byteArrayOf(1, 2, 3)) }
+
+        ctx.contentResolver
+            .openOutputStream(cacheUri("append.bin"), "wa")
+            .shouldNotBeNull()
+            .use { it.write(byteArrayOf(4, 5)) }
+
+        file.readBytes() shouldBe byteArrayOf(1, 2, 3, 4, 5)
+    }
+
+    @Test
+    fun `openFileDescriptor in rw mode overwrites in place without truncating`() {
+        val file = File(ctx.cacheDir, "overwrite.bin").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
+
+        writeThroughDescriptor(cacheUri("overwrite.bin"), "rw", byteArrayOf(9, 8))
+
+        file.readBytes() shouldBe byteArrayOf(9, 8, 3, 4, 5)
+    }
+
+    @Test
+    fun `openFileDescriptor in rw mode creates a missing file`() {
+        val file = File(ctx.cacheDir, "created.bin")
+        file.exists().shouldBeFalse()
+
+        writeThroughDescriptor(cacheUri("created.bin"), "rw", byteArrayOf(7))
+
+        file.readBytes() shouldBe byteArrayOf(7)
     }
 
     @Test
