@@ -18,9 +18,8 @@ package de.lemke.commonutils
 import androidx.core.content.FileProvider
 
 /**
- * Clears FileProvider's static per-authority path-strategy cache. An unshadowed Robolectric test otherwise inherits
- * a strategy bound to an earlier test's cache directory. [ShadowFileProvider] resolves roots per call and doesn't
- * need it.
+ * Clears FileProvider's static per-authority path-strategy cache. Call it before and after each unshadowed Robolectric
+ * test that uses FileProvider; [ShadowFileProvider] does not need it.
  */
 fun resetFileProviderCache() {
     val cache =

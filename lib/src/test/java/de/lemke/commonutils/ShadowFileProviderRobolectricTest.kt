@@ -164,8 +164,6 @@ class ShadowFileProviderRobolectricTest {
         withDisplayName.getQueryParameter("displayName") shouldBe "shared.png"
     }
 
-    // ── content uri back to file ────────────────────────────────────────────────
-
     private fun cacheUri(name: String): Uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, name))
 
     private fun writeThroughDescriptor(
@@ -369,7 +367,6 @@ class ShadowFileProviderParityRobolectricTest {
     }
 }
 
-/** No [ShadowFileProvider] here: the stock [FileProvider.getUriForFile] fills FileProvider's static strategy cache. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class ResetFileProviderCacheRobolectricTest {

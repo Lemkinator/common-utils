@@ -164,7 +164,6 @@ class SharingUtilsRobolectricTest {
 private const val FILE_PROVIDER_AUTHORITY = "de.lemke.commonutils.test.fileprovider"
 private const val CACHE_ROOT_URI = "content://$FILE_PROVIDER_AUTHORITY/cache_root"
 
-/** Bitmap and file sharing through the test manifest's FileProvider, resolved by [ShadowFileProvider]. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], shadows = [ShadowFileProvider::class])
 class SharingUtilsBitmapRobolectricTest {

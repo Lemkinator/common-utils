@@ -179,10 +179,7 @@ class ShadowFileProvider {
                 else -> throw IllegalArgumentException("Invalid mode: $mode")
             }
 
-        // FileProvider.parsePathStrategy is private; reflecting into it reuses its <…-path> meta-data
-        // parsing and root-directory resolution instead of duplicating both. getPathStrategy would
-        // return FileProvider's static per-authority cache entry, whose roots point into the data
-        // directory of whichever Robolectric test populated it first.
+        // getPathStrategy returns FileProvider's static per-authority cache, whose roots outlive the Robolectric test that filled it.
         private fun pathStrategyRoots(
             context: Context,
             authority: String,
@@ -202,10 +199,8 @@ class ShadowFileProvider {
                 @Suppress("UNCHECKED_CAST")
                 mRoots.get(strategy) as Map<String, File>
             } catch (e: InvocationTargetException) {
-                // parsePathStrategy itself threw (e.g. no manifest <provider> for this authority) -
-                // that's a real usage error, not a sign the reflected internals moved. Stock
-                // getPathStrategy wraps the checked parse errors, and callers catch RuntimeException.
                 throw when (val cause = e.cause) {
+                    // Stock getPathStrategy rethrows these parse errors as IllegalArgumentException.
                     is IOException, is XmlPullParserException ->
                         IllegalArgumentException("Failed to parse android.support.FILE_PROVIDER_PATHS meta-data", cause)
                     null -> e
