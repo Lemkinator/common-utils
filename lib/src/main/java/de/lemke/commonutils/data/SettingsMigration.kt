@@ -42,6 +42,9 @@ private const val TAG = "SettingsMigration"
  *     },
  * )
  * ```
+ * Every call first moves [SettingsRepository.lastInAppReview] out of the library's former `InAppReviewUtils` file, ahead of
+ * the sources declared in [migrations].
+ *
  * - A key that already exists in this store is never overwritten. Among the sources, the first declared one wins.
  * - The writes are committed before this returns. Only then is each source removed: a DataStore file is deleted, a
  *   SharedPreferences file loses the listed keys (and is deleted once empty), and a rename drops its old key in the same
@@ -52,7 +55,13 @@ fun SharedPreferences.migrateSettings(
     context: Context,
     migrations: SettingsMigration.() -> Unit = {},
 ): SharedPreferences {
-    val found = SettingsMigration().apply(migrations).sources.mapNotNull { source -> source.read(context, this)?.let { source to it } }
+    val sources =
+        SettingsMigration()
+            .apply {
+                sharedPreferences("InAppReviewUtils") { keys(SettingsRepository::lastInAppReview.name) }
+                migrations()
+            }.sources
+    val found = sources.mapNotNull { source -> source.read(context, this)?.let { source to it } }
     if (found.isEmpty()) return this
     val editor = edit()
     val written = mutableSetOf<String>()

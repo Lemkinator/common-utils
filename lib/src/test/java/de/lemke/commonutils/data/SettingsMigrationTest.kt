@@ -242,6 +242,19 @@ class SettingsMigrationTest {
         file.exists().shouldBeTrue()
     }
 
+    @Test
+    fun `moves lastInAppReview out of the legacy InAppReviewUtils file`() {
+        context.getSharedPreferences("InAppReviewUtils", MODE_PRIVATE).edit(commit = true) {
+            putLong("lastInAppReview", 1_700_000_000_000L)
+        }
+
+        val settings = SettingsRepository(target.migrateSettings(context))
+
+        settings.lastInAppReview shouldBe 1_700_000_000_000L
+        settings.canShowInAppReview().shouldBeTrue()
+        File(context.dataDir, "shared_prefs/InAppReviewUtils.xml").exists().shouldBeFalse()
+    }
+
     private fun writeDataStore(
         name: String,
         vararg values: Preferences.Pair<*>,
