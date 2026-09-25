@@ -78,34 +78,36 @@ class ShadowFileProvider {
 
         private fun String.toUnixPath(): String = replace(File.separatorChar, '/')
 
-        // FileProvider.getPathStrategy/parsePathStrategy are private; reflecting into them reuses
-        // its <…-path> meta-data parsing and root-directory resolution instead of duplicating both.
+        // FileProvider.parsePathStrategy is private; reflecting into it reuses its <…-path> meta-data
+        // parsing and root-directory resolution instead of duplicating both. getPathStrategy would
+        // return FileProvider's static per-authority cache entry, whose roots point into the data
+        // directory of whichever Robolectric test populated it first.
         private fun pathStrategyRoots(
             context: Context,
             authority: String,
         ): Map<String, File> =
             try {
-                val getPathStrategy =
+                val parsePathStrategy =
                     FileProvider::class.java.getDeclaredMethod(
-                        "getPathStrategy",
+                        "parsePathStrategy",
                         Context::class.java,
                         String::class.java,
                         Int::class.javaPrimitiveType,
                     )
-                getPathStrategy.isAccessible = true
-                val strategy = getPathStrategy.invoke(null, context, authority, 0)
+                parsePathStrategy.isAccessible = true
+                val strategy = parsePathStrategy.invoke(null, context, authority, 0)
                 val mRoots = strategy.javaClass.getDeclaredField("mRoots")
                 mRoots.isAccessible = true
                 @Suppress("UNCHECKED_CAST")
                 mRoots.get(strategy) as Map<String, File>
             } catch (e: InvocationTargetException) {
-                // getPathStrategy itself threw (e.g. no manifest <provider> for this authority) -
+                // parsePathStrategy itself threw (e.g. no manifest <provider> for this authority) -
                 // that's a real usage error, not a sign the reflected internals moved.
                 throw e.cause ?: e
             } catch (e: ReflectiveOperationException) {
                 throw IllegalStateException(
                     "FileProvider internals changed: expected private static " +
-                        "getPathStrategy(Context,String,int) and SimplePathStrategy.mRoots",
+                        "parsePathStrategy(Context,String,int) and SimplePathStrategy.mRoots",
                     e,
                 )
             }

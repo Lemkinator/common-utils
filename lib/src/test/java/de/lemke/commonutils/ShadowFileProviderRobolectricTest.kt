@@ -16,6 +16,7 @@
 package de.lemke.commonutils
 
 import android.content.Context
+import android.content.ContextWrapper
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.assertions.throwables.shouldThrow
@@ -35,15 +36,6 @@ private const val TEST_AUTHORITY = "de.lemke.commonutils.test.fileprovider"
 @Config(sdk = [36], shadows = [ShadowFileProvider::class])
 class ShadowFileProviderRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-
-    // FileProvider caches PathStrategy per authority in a real (non-shadowed) static HashMap that
-    // Robolectric does not reset between test methods sharing this class's @Config/sandbox.
-    @After
-    fun clearFileProviderCache() {
-        val sCache = FileProvider::class.java.getDeclaredField("sCache")
-        sCache.isAccessible = true
-        (sCache.get(null) as MutableMap<*, *>).clear()
-    }
 
     @Test
     fun `cache-path root maps a cache file to its uri`() {
@@ -66,6 +58,20 @@ class ShadowFileProviderRobolectricTest {
 
         FileProvider.getUriForFile(ctx, TEST_AUTHORITY, nested).encodedPath!! shouldStartWith "/nested_files/"
         FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outer).encodedPath!! shouldStartWith "/files_root/"
+    }
+
+    @Test
+    fun `roots come from each call's context, not from an earlier call for the same authority`() {
+        val otherCacheDir = File(ctx.dataDir, "other-cache")
+        val otherCtx =
+            object : ContextWrapper(ctx) {
+                override fun getCacheDir() = otherCacheDir
+            }
+
+        FileProvider.getUriForFile(otherCtx, TEST_AUTHORITY, File(otherCacheDir, "first.png")).toString() shouldBe
+            "content://$TEST_AUTHORITY/cache_root/first.png"
+        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "second.png")).toString() shouldBe
+            "content://$TEST_AUTHORITY/cache_root/second.png"
     }
 
     @Test
