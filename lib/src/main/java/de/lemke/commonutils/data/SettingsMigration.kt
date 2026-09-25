@@ -117,8 +117,8 @@ class KeyMigrations internal constructor() {
 
     /**
      * Moves the value stored under [from] to [to]. [convert] receives the stored value and returns what to store: a Boolean,
-     * Int, Long, Float, String or Set<String>. It returns null to drop the value; any other type is dropped as well. If it
-     * throws, the value is logged and dropped.
+     * Int, Long, Float, String or Set<String>. It returns null to drop the value; any other type is dropped as well, so a
+     * DataStore Double or ByteArray needs a [convert] to survive. If it throws, the value is logged and dropped.
      */
     fun key(
         from: String,
