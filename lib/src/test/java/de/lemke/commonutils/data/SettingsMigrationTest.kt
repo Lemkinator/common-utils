@@ -158,6 +158,15 @@ class SettingsMigrationTest {
     }
 
     @Test
+    fun `a listed key the source never stored stays absent`() {
+        writeDataStore("userSettings", intPreferencesKey("iconSize") to 128)
+
+        target.migrateSettings(context) { dataStore("userSettings") { keys("iconSize", "maskEnabled") } }
+
+        target.all shouldBe mapOf("iconSize" to 128)
+    }
+
+    @Test
     fun `a missing DataStore file is a no-op`() {
         val result = target.migrateSettings(context) { dataStore("userSettings") { keys("iconSize") } }
 
