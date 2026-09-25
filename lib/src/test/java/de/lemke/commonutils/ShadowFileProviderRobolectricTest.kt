@@ -51,120 +51,15 @@ import org.xmlpull.v1.XmlPullParserException
 
 private const val TEST_AUTHORITY = "de.lemke.commonutils.test.fileprovider"
 
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36], shadows = [ShadowFileProvider::class])
-class ShadowFileProviderRobolectricTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+abstract class FileProviderContentContract {
+    protected abstract val resolvesOnThisPlatform: Boolean
 
-    @Test
-    fun `cache-path root maps a cache file to its uri`() {
-        val file = File(ctx.cacheDir, "photo.png")
-        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
-        uri.toString() shouldBe "content://$TEST_AUTHORITY/cache_root/photo.png"
-    }
+    protected val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
-    @Test
-    fun `file name is percent-encoded in the uri path`() {
-        val file = File(ctx.cacheDir, "my photo.png")
-        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
-        uri.toString() shouldBe "content://$TEST_AUTHORITY/cache_root/my%20photo.png"
-    }
+    @Before
+    fun assumeResolvesOnThisPlatform() = assumeTrue(resolvesOnThisPlatform)
 
-    @Test
-    fun `files-path root with nested path attribute maps a nested file`() {
-        val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
-        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
-        uri.toString() shouldBe "content://$TEST_AUTHORITY/nested_files/doc.txt"
-    }
-
-    @Test
-    fun `longest matching root wins when roots overlap`() {
-        val nested = File(File(ctx.filesDir, "nested/dir"), "inner.txt")
-        val outer = File(ctx.filesDir, "outer.txt")
-
-        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, nested).encodedPath!! shouldStartWith "/nested_files/"
-        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outer).encodedPath!! shouldStartWith "/files_root/"
-    }
-
-    @Test
-    fun `roots come from each call's context, not from an earlier call for the same authority`() {
-        val otherCacheDir = File(ctx.dataDir, "other-cache")
-        val otherCtx =
-            object : ContextWrapper(ctx) {
-                override fun getCacheDir() = otherCacheDir
-            }
-
-        FileProvider.getUriForFile(otherCtx, TEST_AUTHORITY, File(otherCacheDir, "first.png")).toString() shouldBe
-            "content://$TEST_AUTHORITY/cache_root/first.png"
-        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "second.png")).toString() shouldBe
-            "content://$TEST_AUTHORITY/cache_root/second.png"
-    }
-
-    @Test
-    fun `file outside every configured root throws IllegalArgumentException`() {
-        val outside = File(System.getProperty("java.io.tmpdir"), "shadow-file-provider-outside.bin")
-        shouldThrow<IllegalArgumentException> {
-            FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outside)
-        }
-    }
-
-    @Test
-    fun `file without a canonical path throws IllegalArgumentException wrapping the IOException`() {
-        val invalid = File(ctx.cacheDir, "bad\u0000.png")
-
-        val e = shouldThrow<IllegalArgumentException> { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, invalid) }
-
-        e.message shouldBe "Failed to resolve canonical path for ${ctx.cacheDir}${File.separator}bad\u0000.png"
-        e.cause.shouldBeInstanceOf<IOException>().message shouldBe "Invalid file path"
-    }
-
-    private fun contextWithPathsParser(parser: XmlResourceParser): Context {
-        val packageManager = spyk(ctx.packageManager)
-        every { packageManager.getXml(ctx.packageName, R.xml.test_file_provider_paths, any()) } returns parser
-        return object : ContextWrapper(ctx) {
-            override fun getPackageManager() = packageManager
-        }
-    }
-
-    @Test
-    fun `malformed paths meta-data throws IllegalArgumentException wrapping the XmlPullParserException`() {
-        val parseError = XmlPullParserException("unexpected end of document")
-        val parser = mockk<XmlResourceParser> { every { next() } throws parseError }
-
-        val e =
-            shouldThrow<IllegalArgumentException> {
-                FileProvider.getUriForFile(contextWithPathsParser(parser), TEST_AUTHORITY, File(ctx.cacheDir, "photo.png"))
-            }
-
-        e.message shouldBe "Failed to parse android.support.FILE_PROVIDER_PATHS meta-data"
-        e.cause shouldBeSameInstanceAs parseError
-    }
-
-    @Test
-    fun `unreadable paths meta-data throws IllegalArgumentException wrapping the IOException`() {
-        val readError = IOException("resource stream closed")
-        val parser = mockk<XmlResourceParser> { every { next() } throws readError }
-
-        val e =
-            shouldThrow<IllegalArgumentException> {
-                FileProvider.getUriForFile(contextWithPathsParser(parser), TEST_AUTHORITY, File(ctx.cacheDir, "photo.png"))
-            }
-
-        e.message shouldBe "Failed to parse android.support.FILE_PROVIDER_PATHS meta-data"
-        e.cause shouldBeSameInstanceAs readError
-    }
-
-    @Test
-    fun `displayName overload appends the query parameter without changing the path`() {
-        val file = File(ctx.cacheDir, "photo.png")
-        val plain = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
-        val withDisplayName = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file, "shared.png")
-
-        withDisplayName.encodedPath shouldBe plain.encodedPath
-        withDisplayName.getQueryParameter("displayName") shouldBe "shared.png"
-    }
-
-    private fun cacheUri(name: String): Uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, name))
+    protected fun cacheUri(name: String): Uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, name))
 
     private fun writeThroughDescriptor(
         uri: Uri,
@@ -306,6 +201,120 @@ class ShadowFileProviderRobolectricTest {
             cursor.getString(0) shouldBe "shared.png"
         }
     }
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36], shadows = [ShadowFileProvider::class])
+class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
+    override val resolvesOnThisPlatform = true
+
+    @Test
+    fun `cache-path root maps a cache file to its uri`() {
+        val file = File(ctx.cacheDir, "photo.png")
+        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        uri.toString() shouldBe "content://$TEST_AUTHORITY/cache_root/photo.png"
+    }
+
+    @Test
+    fun `file name is percent-encoded in the uri path`() {
+        val file = File(ctx.cacheDir, "my photo.png")
+        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        uri.toString() shouldBe "content://$TEST_AUTHORITY/cache_root/my%20photo.png"
+    }
+
+    @Test
+    fun `files-path root with nested path attribute maps a nested file`() {
+        val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
+        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        uri.toString() shouldBe "content://$TEST_AUTHORITY/nested_files/doc.txt"
+    }
+
+    @Test
+    fun `longest matching root wins when roots overlap`() {
+        val nested = File(File(ctx.filesDir, "nested/dir"), "inner.txt")
+        val outer = File(ctx.filesDir, "outer.txt")
+
+        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, nested).encodedPath!! shouldStartWith "/nested_files/"
+        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outer).encodedPath!! shouldStartWith "/files_root/"
+    }
+
+    @Test
+    fun `roots come from each call's context, not from an earlier call for the same authority`() {
+        val otherCacheDir = File(ctx.dataDir, "other-cache")
+        val otherCtx =
+            object : ContextWrapper(ctx) {
+                override fun getCacheDir() = otherCacheDir
+            }
+
+        FileProvider.getUriForFile(otherCtx, TEST_AUTHORITY, File(otherCacheDir, "first.png")).toString() shouldBe
+            "content://$TEST_AUTHORITY/cache_root/first.png"
+        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "second.png")).toString() shouldBe
+            "content://$TEST_AUTHORITY/cache_root/second.png"
+    }
+
+    @Test
+    fun `file outside every configured root throws IllegalArgumentException`() {
+        val outside = File(System.getProperty("java.io.tmpdir"), "shadow-file-provider-outside.bin")
+        shouldThrow<IllegalArgumentException> {
+            FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outside)
+        }
+    }
+
+    @Test
+    fun `file without a canonical path throws IllegalArgumentException wrapping the IOException`() {
+        val invalid = File(ctx.cacheDir, "bad\u0000.png")
+
+        val e = shouldThrow<IllegalArgumentException> { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, invalid) }
+
+        e.message shouldBe "Failed to resolve canonical path for ${ctx.cacheDir}${File.separator}bad\u0000.png"
+        e.cause.shouldBeInstanceOf<IOException>().message shouldBe "Invalid file path"
+    }
+
+    private fun contextWithPathsParser(parser: XmlResourceParser): Context {
+        val packageManager = spyk(ctx.packageManager)
+        every { packageManager.getXml(ctx.packageName, R.xml.test_file_provider_paths, any()) } returns parser
+        return object : ContextWrapper(ctx) {
+            override fun getPackageManager() = packageManager
+        }
+    }
+
+    @Test
+    fun `malformed paths meta-data throws IllegalArgumentException wrapping the XmlPullParserException`() {
+        val parseError = XmlPullParserException("unexpected end of document")
+        val parser = mockk<XmlResourceParser> { every { next() } throws parseError }
+
+        val e =
+            shouldThrow<IllegalArgumentException> {
+                FileProvider.getUriForFile(contextWithPathsParser(parser), TEST_AUTHORITY, File(ctx.cacheDir, "photo.png"))
+            }
+
+        e.message shouldBe "Failed to parse android.support.FILE_PROVIDER_PATHS meta-data"
+        e.cause shouldBeSameInstanceAs parseError
+    }
+
+    @Test
+    fun `unreadable paths meta-data throws IllegalArgumentException wrapping the IOException`() {
+        val readError = IOException("resource stream closed")
+        val parser = mockk<XmlResourceParser> { every { next() } throws readError }
+
+        val e =
+            shouldThrow<IllegalArgumentException> {
+                FileProvider.getUriForFile(contextWithPathsParser(parser), TEST_AUTHORITY, File(ctx.cacheDir, "photo.png"))
+            }
+
+        e.message shouldBe "Failed to parse android.support.FILE_PROVIDER_PATHS meta-data"
+        e.cause shouldBeSameInstanceAs readError
+    }
+
+    @Test
+    fun `displayName overload appends the query parameter without changing the path`() {
+        val file = File(ctx.cacheDir, "photo.png")
+        val plain = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+        val withDisplayName = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file, "shared.png")
+
+        withDisplayName.encodedPath shouldBe plain.encodedPath
+        withDisplayName.getQueryParameter("displayName") shouldBe "shared.png"
+    }
 
     @Test
     fun `delete removes the file and reports one deleted row`() {
@@ -348,8 +357,8 @@ class ShadowFileProviderRobolectricTest {
 /** No [ShadowFileProvider] here: exercises the real, unshadowed [FileProvider] for comparison. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
-class ShadowFileProviderParityRobolectricTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
+    override val resolvesOnThisPlatform = File.separatorChar == '/'
 
     @Before
     @After
@@ -357,8 +366,6 @@ class ShadowFileProviderParityRobolectricTest {
 
     @Test
     fun `shadow produces the same uri as the real FileProvider on posix separators`() {
-        assumeTrue(File.separatorChar == '/')
-
         val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
         val real = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
         val shadowed = ShadowFileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
