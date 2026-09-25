@@ -30,7 +30,9 @@ for architecture rules.
 `FileProvider.getUriForFile` overloads that normalizes paths to `/` before matching; apply
 `@Config(shadows = [ShadowFileProvider::class])` instead of `mockkStatic(FileProvider::class)`
 whenever a test needs a real (not stubbed) URI, since the stock implementation compares raw
-`getCanonicalPath()` strings and throws on Windows.
+`getCanonicalPath()` strings and throws on Windows. The shadow resolves roots per call. An unshadowed
+test that calls the stock `getUriForFile` calls the published `resetFileProviderCache()` in `@Before`
+and `@After`.
 
 **Robolectric + JUnit 5**: See the shared Robolectric/JUnit 5 policy in
 `A:\repo\android\CLAUDE.md`. This repo previously bridged Robolectric onto JUnit 5 via the

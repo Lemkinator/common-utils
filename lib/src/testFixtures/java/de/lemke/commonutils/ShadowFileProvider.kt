@@ -32,7 +32,11 @@ import org.xmlpull.v1.XmlPullParserException
  * implementation throws `IllegalArgumentException` for every file there. Apply with
  * `@Config(shadows = [ShadowFileProvider::class])` on any Robolectric test that calls
  * `FileProvider.getUriForFile` for real (i.e. not `mockkStatic`'d). An unshadowed test that calls the
- * stock `getUriForFile` must call [resetFileProviderCache] before each test instead.
+ * stock `getUriForFile` must call [resetFileProviderCache] in `@Before` and `@After` instead.
+ *
+ * The shadow always reads the authority's `android.support.FILE_PROVIDER_PATHS` `<meta-data>`. It does
+ * not support a FileProvider subclass that supplies its paths through the `FileProvider(@XmlRes int)`
+ * constructor without that `<meta-data>`.
  *
  * Only `getUriForFile` is shadowed — `query`/`openFile` (and anything else resolving a `content://`
  * Uri back to a `File` via the stock `SimplePathStrategy.getFileForUri`) still use the real,
