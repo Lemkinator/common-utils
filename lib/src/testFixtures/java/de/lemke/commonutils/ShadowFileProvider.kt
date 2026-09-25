@@ -131,7 +131,12 @@ class ShadowFileProvider {
             authority: String,
             file: File,
         ): Uri {
-            val path = file.canonicalPath.toUnixPath()
+            val path =
+                try {
+                    file.canonicalPath.toUnixPath()
+                } catch (e: IOException) {
+                    throw IllegalArgumentException("Failed to resolve canonical path for $file", e)
+                }
             val (name, rootPath) =
                 pathStrategyRoots(context, authority)
                     .map { (name, root) -> name to root.path.toUnixPath() }

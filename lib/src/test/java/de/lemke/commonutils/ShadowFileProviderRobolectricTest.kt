@@ -34,6 +34,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
@@ -105,6 +106,16 @@ class ShadowFileProviderRobolectricTest {
         shouldThrow<IllegalArgumentException> {
             FileProvider.getUriForFile(ctx, TEST_AUTHORITY, outside)
         }
+    }
+
+    @Test
+    fun `file without a canonical path throws IllegalArgumentException wrapping the IOException`() {
+        val invalid = File(ctx.cacheDir, "bad\u0000.png")
+
+        val e = shouldThrow<IllegalArgumentException> { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, invalid) }
+
+        e.message shouldBe "Failed to resolve canonical path for ${ctx.cacheDir}${File.separator}bad\u0000.png"
+        e.cause.shouldBeInstanceOf<IOException>().message shouldBe "Invalid file path"
     }
 
     // FileProvider resolves its provider through the deprecated int-flags overload.
