@@ -17,15 +17,13 @@ package de.lemke.commonutils
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.pm.PackageManager
-import android.content.pm.ProviderInfo
 import android.content.res.XmlResourceParser
 import android.net.Uri
-import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.test.R
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -39,6 +37,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import java.io.File
 import java.io.IOException
 import org.junit.After
@@ -119,17 +118,9 @@ class ShadowFileProviderRobolectricTest {
         e.cause.shouldBeInstanceOf<IOException>().message shouldBe "Invalid file path"
     }
 
-    // FileProvider resolves its provider through the deprecated int-flags overload.
-    @Suppress("DEPRECATION")
     private fun contextWithPathsParser(parser: XmlResourceParser): Context {
-        val packageManager = mockk<PackageManager>()
-        every { packageManager.resolveContentProvider(TEST_AUTHORITY, PackageManager.GET_META_DATA) } returns
-            ProviderInfo().apply {
-                packageName = ctx.packageName
-                applicationInfo = ctx.applicationInfo
-                metaData = Bundle().apply { putInt("android.support.FILE_PROVIDER_PATHS", 1) }
-            }
-        every { packageManager.getXml(ctx.packageName, 1, ctx.applicationInfo) } returns parser
+        val packageManager = spyk(ctx.packageManager)
+        every { packageManager.getXml(ctx.packageName, R.xml.test_file_provider_paths, any()) } returns parser
         return object : ContextWrapper(ctx) {
             override fun getPackageManager() = packageManager
         }
