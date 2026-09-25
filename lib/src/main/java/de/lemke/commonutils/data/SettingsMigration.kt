@@ -50,6 +50,8 @@ private const val TAG = "SettingsMigration"
  *   SharedPreferences file loses the listed keys (and is deleted once empty), and a rename drops its old key in the same
  *   commit. A second call therefore finds nothing left to move.
  * - A missing source is skipped. A DataStore file that fails to read is logged, skipped and kept on disk.
+ * - A value whose `convert` throws is logged and dropped, like a value SharedPreferences cannot store. Its source is still
+ *   removed, so startup never fails on it.
  */
 fun SharedPreferences.migrateSettings(
     context: Context,
@@ -113,7 +115,8 @@ class KeyMigrations internal constructor() {
 
     /**
      * Moves the value stored under [from] to [to]. [convert] receives the stored value and returns what to store: a Boolean,
-     * Int, Long, Float, String or Set<String>. It returns null to drop the value; any other type is dropped as well.
+     * Int, Long, Float, String or Set<String>. It returns null to drop the value; any other type is dropped as well. If it
+     * throws, the value is logged and dropped.
      */
     fun key(
         from: String,
@@ -220,7 +223,10 @@ private fun SharedPreferences.migrateValue(
     written: MutableSet<String>,
 ) {
     if (value == null || key.to in written || contains(key.to)) return
-    val converted = key.convert(value) ?: return
+    val converted =
+        runCatching { key.convert(value) }
+            .onFailure { Log.w(TAG, "Dropping ${key.to}: its conversion failed", it) }
+            .getOrNull() ?: return
     if (editor.putSetting(key.to, converted)) written += key.to
 }
 

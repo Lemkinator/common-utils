@@ -18,6 +18,7 @@ package de.lemke.commonutils.data
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.core.content.edit
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferencesFileSerializer
@@ -37,6 +38,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import java.io.File
 import kotlinx.coroutines.runBlocking
@@ -45,6 +47,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -109,6 +112,30 @@ class SettingsMigrationTest {
 
         target.all.shouldBeEmpty()
         file.exists().shouldBeFalse()
+    }
+
+    @Test
+    fun `drops a value whose conversion throws and still migrates the rest`() {
+        val file =
+            writeDataStore(
+                "userSettings",
+                stringPreferencesKey("errorLimit") to "five",
+                intPreferencesKey("iconSize") to 128,
+            )
+
+        target.migrateSettings(context) {
+            dataStore("userSettings") {
+                key("errorLimit") { (it as String).toInt() }
+                keys("iconSize")
+            }
+        }
+
+        target.all shouldBe mapOf("iconSize" to 128)
+        file.exists().shouldBeFalse()
+        val log = ShadowLog.getLogsForTag("SettingsMigration").single()
+        log.type shouldBe Log.WARN
+        log.msg shouldBe "Dropping errorLimit: its conversion failed"
+        log.throwable.shouldBeInstanceOf<NumberFormatException>()
     }
 
     @Test
