@@ -47,9 +47,10 @@ import org.xmlpull.v1.XmlPullParserException
  * stock `getUriForFile` must call [resetFileProviderCache] in `@Before` and `@After` instead.
  *
  * Shadowed entry points: both static `getUriForFile` overloads, and the provider's `query`, `getType`,
- * `openFile` and `delete`. `ClipData.newUri` reaches `getType`, and `ContentResolver.openInputStream`
- * and `openOutputStream` reach `openFile`. Each call resolves the roots anew, so no path strategy
- * survives from an earlier test.
+ * `openFile` and `delete`. The provider entry points take the authority from the URI, not from the
+ * provider's `android:authorities`. `ClipData.newUri` reaches `getType`, and
+ * `ContentResolver.openInputStream` and `openOutputStream` reach `openFile`. Each call resolves the
+ * roots anew, so no path strategy survives from an earlier test.
  *
  * The shadow always reads the authority's `android.support.FILE_PROVIDER_PATHS` `<meta-data>`. It does
  * not support a FileProvider subclass that supplies its paths through the `FileProvider(@XmlRes int)`
