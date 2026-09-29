@@ -39,6 +39,7 @@ import java.io.OutputStream
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
@@ -131,6 +132,30 @@ class ExportUtilsRobolectricTest {
         every { spyCtx.contentResolver } returns deniedResolver
         spyCtx.saveBitmapToUri(Uri.parse("content://test/1"), bitmap).shouldBeFalse()
         ShadowToast.getTextOfLatestToast() shouldBe ctx.getString(R.string.commonutils_error_creating_file)
+    }
+
+    @Test
+    fun `saveBitmapToUri IllegalArgumentException from the resolver shows the error toast and returns false`() {
+        val uri = Uri.parse("content://de.lemke.provider/unknown/1")
+        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw IllegalArgumentException("Unknown URI") }
+        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
+    }
+
+    @Test
+    fun `saveBitmapToUri UnsupportedOperationException from the resolver shows the error toast and returns false`() {
+        val uri = Uri.parse("content://de.lemke.provider/readonly/1")
+        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw UnsupportedOperationException("Writing not supported") }
+        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
+    }
+
+    @Test
+    fun `exportBitmap of a recycled bitmap to DOWNLOADS shows the error toast and returns false`() {
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).mkdirs()
+        val recycled = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).apply { recycle() }
+        ctx.exportBitmap(SaveLocation.DOWNLOADS, recycled, "test", null).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
     }
 
     @Test

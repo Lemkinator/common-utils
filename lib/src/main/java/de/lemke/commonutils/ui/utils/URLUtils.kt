@@ -45,6 +45,8 @@ fun Fragment.openURL(url: String?): Boolean = requireContext().openURL(url)
 
 /** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
 fun Context.openURL(url: String?): Boolean =
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+    @Suppress("TooGenericExceptionCaught")
     try {
         if (url.isNullOrBlank()) {
             Log.e(TAG, "link is null or blank")
@@ -58,7 +60,7 @@ fun Context.openURL(url: String?): Boolean =
         Log.e(TAG, "No browser app installed", e)
         toast(getString(R.string.commonutils_no_browser_app_installed))
         false
-    } catch (e: SecurityException) {
+    } catch (e: Exception) {
         Log.e(TAG, "Failed to open URL", e)
         toast(getString(R.string.commonutils_error_cant_open_url))
         false

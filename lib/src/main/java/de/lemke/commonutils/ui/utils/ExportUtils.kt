@@ -34,7 +34,6 @@ import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
 import java.io.File
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -66,6 +65,8 @@ fun Context.exportBitmap(
     activityResultLauncher: ActivityResultLauncher<Intent>?,
 ): Boolean =
     if (saveLocation != SaveLocation.CUSTOM && SDK_INT > Build.VERSION_CODES.Q) {
+        // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+        @Suppress("TooGenericExceptionCaught")
         try {
             val dir: String =
                 when (saveLocation) {
@@ -83,7 +84,7 @@ fun Context.exportBitmap(
                 toast(R.string.commonutils_error_saving_image)
                 false
             }
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             Log.e(TAG, "Error saving bitmap to directory", e)
             toast(R.string.commonutils_error_creating_file)
             false
@@ -115,6 +116,8 @@ fun Context.saveBitmapToUri(
         toast(R.string.commonutils_error_creating_file)
         return false
     }
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+    @Suppress("TooGenericExceptionCaught")
     return try {
         contentResolver.openOutputStream(uri)?.use { outputStream ->
             if (bitmap.compress(PNG, COMPRESS_QUALITY_MAX, outputStream)) {
@@ -128,17 +131,11 @@ fun Context.saveBitmapToUri(
             toast(R.string.commonutils_error_creating_file)
             false
         }
-    } catch (e: IOException) {
-        onSaveBitmapToUriFailed(e)
-    } catch (e: SecurityException) {
-        onSaveBitmapToUriFailed(e)
+    } catch (e: Exception) {
+        Log.e(TAG, "Error saving bitmap to uri", e)
+        toast(R.string.commonutils_error_creating_file)
+        false
     }
-}
-
-private fun Context.onSaveBitmapToUriFailed(e: Exception): Boolean {
-    Log.e(TAG, "Error saving bitmap to uri", e)
-    toast(R.string.commonutils_error_creating_file)
-    return false
 }
 
 /** Converts this string to a filesystem-safe filename, appending a timestamp and [extension]. */

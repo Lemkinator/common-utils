@@ -76,16 +76,6 @@ internal fun Context.safeStartActivity(intent: Intent): Boolean {
     }
 }
 
-internal fun Context.onShareFailed(
-    tag: String,
-    message: String,
-    e: Exception,
-): Boolean {
-    Log.e(tag, message, e)
-    toast(R.string.commonutils_error_share_content_not_supported_on_device)
-    return false
-}
-
 /** Resolves [shareFileName] to a file under [Context.getCacheDir], rejecting names that would escape it (e.g. `..` traversal). */
 internal fun Context.resolveShareCacheFile(shareFileName: String): File {
     val cacheRoot = cacheDir.canonicalPath.trimEnd(File.separatorChar)

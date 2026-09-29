@@ -19,9 +19,9 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.os.FileUriExposedException
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.openURL
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -104,16 +104,20 @@ class URLUtilsRobolectricTest {
     }
 
     @Test
-    fun `openURL propagates an unexpected RuntimeException from startActivity`() {
-        val a =
-            spyk(
-                Robolectric
-                    .buildActivity(Activity::class.java)
-                    .setup()
-                    .track(destroyActivities)
-                    .get(),
-            )
-        every { a.startActivity(any<Intent>()) } throws IllegalStateException("crash")
-        shouldThrow<IllegalStateException> { a.openURL("https://example.com") }
+    fun `openURL of a file URL shows the cant-open toast when startActivity throws FileUriExposedException`() {
+        val failing = StartActivityFailingContext(ctx, FileUriExposedException("file:///sdcard/page.html exposed beyond app"))
+        failing.openURL("file:///sdcard/page.html").shouldBeFalse()
+        failing.startedIntents
+            .single()
+            .data
+            .toString() shouldBe "file:///sdcard/page.html"
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
+    }
+
+    @Test
+    fun `openURL shows the cant-open toast when startActivity throws IllegalStateException`() {
+        val failing = StartActivityFailingContext(ctx, IllegalStateException("activity manager unavailable"))
+        failing.openURL("https://example.com").shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 }
