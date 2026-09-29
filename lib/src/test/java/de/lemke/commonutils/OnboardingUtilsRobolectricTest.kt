@@ -18,6 +18,7 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.ParcelCompat
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.domain.AppStartResult
 import de.lemke.commonutils.ui.utils.Onboarding
@@ -254,14 +255,9 @@ class OnboardingUtilsRobolectricTest {
             )
         val parcel = android.os.Parcel.obtain()
         try {
-            original.writeToParcel(parcel, 0)
+            parcel.writeParcelable(original, 0)
             parcel.setDataPosition(0)
-            @Suppress("UNCHECKED_CAST")
-            val creator =
-                OnboardingContext::class.java
-                    .getDeclaredField("CREATOR")
-                    .get(null) as android.os.Parcelable.Creator<OnboardingContext>
-            val restored = creator.createFromParcel(parcel)
+            val restored = ParcelCompat.readParcelable(parcel, OnboardingContext::class.java.classLoader, OnboardingContext::class.java)
             restored shouldBe original
         } finally {
             parcel.recycle()
