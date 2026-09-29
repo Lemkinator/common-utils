@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:OptIn(ExperimentalCoroutinesApi::class)
-
 package de.lemke.commonutils
 
-import io.kotest.core.listeners.AfterTestListener
-import io.kotest.core.listeners.BeforeTestListener
+import io.kotest.core.extensions.TestCaseExtension
 import io.kotest.core.test.TestCase
+import io.kotest.core.test.isRootTest
 import io.kotest.engine.test.TestResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,17 +25,19 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 
-class MainDispatcherListener : BeforeTestListener, AfterTestListener {
-    private val testDispatcher = UnconfinedTestDispatcher()
-
-    override suspend fun beforeTest(testCase: TestCase) {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    override suspend fun afterTest(
+/** Spec bodies, beforeSpec and afterSpec run outside every TestCaseExtension, so Main is not set there. */
+@OptIn(ExperimentalCoroutinesApi::class)
+class MainDispatcherExtension : TestCaseExtension {
+    override suspend fun intercept(
         testCase: TestCase,
-        result: TestResult,
-    ) {
-        Dispatchers.resetMain()
+        execute: suspend (TestCase) -> TestResult,
+    ): TestResult {
+        if (!testCase.isRootTest()) return execute(testCase)
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        return try {
+            execute(testCase)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 }
