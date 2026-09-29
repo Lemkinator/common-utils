@@ -19,9 +19,9 @@ import android.content.ClipData
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Bitmap.CompressFormat.PNG
-import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
+import java.io.IOException
 
 private const val COMPRESS_QUALITY_MAX = 100
 private const val TAG = "ClipboardUtils"
@@ -49,7 +49,6 @@ fun Context.copyToClipboard(
     label: String,
     shareFileName: String,
 ): Boolean =
-    @Suppress("TooGenericExceptionCaught")
     try {
         val cacheFile = resolveShareCacheFile(shareFileName)
         if (!cacheFile.outputStream().use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
@@ -60,10 +59,10 @@ fun Context.copyToClipboard(
         setClip(ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this)))
         toast(R.string.commonutils_copied_to_clipboard)
         true
-    } catch (e: Exception) {
-        Log.e(TAG, "Error copying bitmap to clipboard", e)
-        toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        false
+    } catch (e: IOException) {
+        onShareFailed(TAG, "Error copying bitmap to clipboard", e)
+    } catch (e: IllegalArgumentException) {
+        onShareFailed(TAG, "Error copying bitmap to clipboard", e)
     }
 
 /** Copies this bitmap to the clipboard via a cached file URI under [label]. */

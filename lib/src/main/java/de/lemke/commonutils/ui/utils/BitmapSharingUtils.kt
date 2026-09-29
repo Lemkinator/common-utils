@@ -29,6 +29,7 @@ import android.graphics.Bitmap.CompressFormat.PNG
 import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
+import java.io.IOException
 
 private const val SAMSUNG_QUICK_SHARE_PACKAGE = "com.samsung.android.app.sharelive"
 private const val MIME_TYPE_PNG = "image/png"
@@ -55,7 +56,6 @@ fun Bitmap.share(
     shareFileName: String,
     shareText: String? = null,
 ): Boolean =
-    @Suppress("TooGenericExceptionCaught")
     try {
         val cacheFile = context.resolveShareCacheFile(shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
@@ -72,10 +72,10 @@ fun Bitmap.share(
             addFlags(FLAG_GRANT_READ_URI_PERMISSION)
             context.safeStartActivity(Intent.createChooser(this, null))
         }
-    } catch (e: Exception) {
-        Log.e(TAG, "Error sharing bitmap", e)
-        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        false
+    } catch (e: IOException) {
+        context.onShareFailed(TAG, "Error sharing bitmap", e)
+    } catch (e: IllegalArgumentException) {
+        context.onShareFailed(TAG, "Error sharing bitmap", e)
     }
 
 /** Shares [bitmap] directly via Samsung Quick Share if available, falling back to the system share sheet. */
@@ -95,7 +95,6 @@ fun Bitmap.quickShare(
     context: Context,
     shareFileName: String,
 ): Boolean =
-    @Suppress("TooGenericExceptionCaught")
     try {
         val cacheFile = context.resolveShareCacheFile(shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
@@ -109,10 +108,10 @@ fun Bitmap.quickShare(
                 type = MIME_TYPE_PNG
                 putExtra(EXTRA_STREAM, cacheFile.getFileUri(context))
             }.start(context)
-    } catch (e: Exception) {
-        Log.e(TAG, "Error sharing bitmap via Quick Share", e)
-        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        false
+    } catch (e: IOException) {
+        context.onShareFailed(TAG, "Error sharing bitmap via Quick Share", e)
+    } catch (e: IllegalArgumentException) {
+        context.onShareFailed(TAG, "Error sharing bitmap via Quick Share", e)
     }
 
 internal fun Context.createBaseIntent() =

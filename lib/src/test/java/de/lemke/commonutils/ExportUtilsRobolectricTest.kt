@@ -40,6 +40,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -120,6 +121,16 @@ class ExportUtilsRobolectricTest {
         // Pass a content URI with no registered provider → openOutputStream throws
         val uri = Uri.parse("content://de.lemke.nonexistent/data/1")
         ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+    }
+
+    @Test
+    fun `saveBitmapToUri SecurityException from openOutputStream returns false`() {
+        val deniedResolver = mockk<ContentResolver>()
+        every { deniedResolver.openOutputStream(any()) } throws SecurityException("permission revoked")
+        val spyCtx = spyk(ctx)
+        every { spyCtx.contentResolver } returns deniedResolver
+        spyCtx.saveBitmapToUri(Uri.parse("content://test/1"), bitmap).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe ctx.getString(R.string.commonutils_error_creating_file)
     }
 
     @Test

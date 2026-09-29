@@ -21,8 +21,10 @@ import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.openURL
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.spyk
 import org.junit.Rule
@@ -31,6 +33,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -86,7 +89,7 @@ class URLUtilsRobolectricTest {
     }
 
     @Test
-    fun `openURL returns false when startActivity throws generic Exception`() {
+    fun `openURL returns false when startActivity throws SecurityException`() {
         val a =
             spyk(
                 Robolectric
@@ -95,7 +98,22 @@ class URLUtilsRobolectricTest {
                     .track(destroyActivities)
                     .get(),
             )
-        every { a.startActivity(any<Intent>()) } throws RuntimeException("crash")
+        every { a.startActivity(any<Intent>()) } throws SecurityException("not exported")
         a.openURL("https://example.com").shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe a.getString(R.string.commonutils_error_cant_open_url)
+    }
+
+    @Test
+    fun `openURL propagates an unexpected RuntimeException from startActivity`() {
+        val a =
+            spyk(
+                Robolectric
+                    .buildActivity(Activity::class.java)
+                    .setup()
+                    .track(destroyActivities)
+                    .get(),
+            )
+        every { a.startActivity(any<Intent>()) } throws IllegalStateException("crash")
+        shouldThrow<IllegalStateException> { a.openURL("https://example.com") }
     }
 }

@@ -24,7 +24,6 @@ import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
-import de.lemke.commonutils.R
 import java.io.File
 
 private const val MIME_TYPE_PNG = "image/png"
@@ -34,7 +33,6 @@ private const val TAG = "SharingUtils"
 fun File.share(context: Context): Boolean = listOf(this).share(context)
 
 /** Shares all image files in this list via the system share sheet (multi-file if more than one). */
-@Suppress("TooGenericExceptionCaught")
 fun List<File>.share(context: Context): Boolean {
     if (isEmpty()) {
         Log.e(TAG, "No file to share.")
@@ -55,10 +53,8 @@ fun List<File>.share(context: Context): Boolean {
                 }
             }
         context.safeStartActivity(Intent.createChooser(intent, null))
-    } catch (e: RuntimeException) {
-        Log.e(TAG, "Error sharing files", e)
-        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        false
+    } catch (e: IllegalArgumentException) {
+        context.onShareFailed(TAG, "Error sharing files", e)
     }
 }
 

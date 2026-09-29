@@ -58,6 +58,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -194,6 +195,14 @@ class SharingUtilsBitmapRobolectricTest {
 
     private fun Intent.readGrantFlag(): Int = flags and Intent.FLAG_GRANT_READ_URI_PERMISSION
 
+    private fun unwritableShareFileName(): String {
+        File(ctx.cacheDir, "directory.png").mkdirs()
+        return "directory.png"
+    }
+
+    private fun latestToastIsShareNotSupported() =
+        ShadowToast.getTextOfLatestToast() shouldBe ctx.getString(R.string.commonutils_error_share_content_not_supported_on_device)
+
     // ── getFileUri ──────────────────────────────────────────────────────────────
 
     @Test
@@ -229,6 +238,14 @@ class SharingUtilsBitmapRobolectricTest {
     fun `copyToClipboard bitmap without a FileProvider for the package - exception caught, returns false`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         contextWithoutFileProvider().copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
+        ctx.getSystemService(ClipboardManager::class.java).hasPrimaryClip().shouldBeFalse()
+    }
+
+    @Test
+    fun `copyToClipboard bitmap into an unwritable cache file - IOException caught, returns false`() {
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        ctx.copyToClipboard(bitmap, "label", unwritableShareFileName()).shouldBeFalse()
+        latestToastIsShareNotSupported()
         ctx.getSystemService(ClipboardManager::class.java).hasPrimaryClip().shouldBeFalse()
     }
 
@@ -283,6 +300,15 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
+    fun `Bitmap share into an unwritable cache file - IOException caught, returns false`() {
+        val act = activity()
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.share(act, unwritableShareFileName()).shouldBeFalse()
+        latestToastIsShareNotSupported()
+        shadowOf(act).nextStartedActivity shouldBe null
+    }
+
+    @Test
     fun `Bitmap share rejects shareFileName that escapes cacheDir`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.share(ctx, "../evil.png").shouldBeFalse()
@@ -318,6 +344,15 @@ class SharingUtilsBitmapRobolectricTest {
     fun `quickShare without a FileProvider for the package - exception caught, returns false`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.quickShare(contextWithoutFileProvider(), "test.png").shouldBeFalse()
+    }
+
+    @Test
+    fun `quickShare into an unwritable cache file - IOException caught, returns false`() {
+        val act = activity()
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.quickShare(act, unwritableShareFileName()).shouldBeFalse()
+        latestToastIsShareNotSupported()
+        shadowOf(act).nextStartedActivity shouldBe null
     }
 
     @Test
