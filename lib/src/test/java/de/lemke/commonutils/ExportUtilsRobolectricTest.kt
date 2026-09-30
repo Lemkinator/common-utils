@@ -126,12 +126,10 @@ class ExportUtilsRobolectricTest {
 
     @Test
     fun `saveBitmapToUri SecurityException from openOutputStream returns false`() {
-        val deniedResolver = mockk<ContentResolver>()
-        every { deniedResolver.openOutputStream(any()) } throws SecurityException("permission revoked")
-        val spyCtx = spyk(ctx)
-        every { spyCtx.contentResolver } returns deniedResolver
-        spyCtx.saveBitmapToUri(Uri.parse("content://test/1"), bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe ctx.getString(R.string.commonutils_error_creating_file)
+        val uri = Uri.parse("content://de.lemke.provider/revoked/1")
+        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw SecurityException("permission revoked") }
+        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
     }
 
     @Test
@@ -151,10 +149,12 @@ class ExportUtilsRobolectricTest {
     }
 
     @Test
-    fun `exportBitmap of a recycled bitmap to DOWNLOADS shows the error toast and returns false`() {
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).mkdirs()
-        val recycled = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).apply { recycle() }
-        ctx.exportBitmap(SaveLocation.DOWNLOADS, recycled, "test", null).shouldBeFalse()
+    fun `exportBitmap to DOWNLOADS shows the error toast and returns false when the output stream cannot open`() {
+        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        downloads.deleteRecursively()
+        downloads.parentFile!!.mkdirs()
+        downloads.createNewFile().shouldBeTrue()
+        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null).shouldBeFalse()
         ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
     }
 

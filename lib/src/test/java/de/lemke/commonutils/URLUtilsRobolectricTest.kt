@@ -90,17 +90,9 @@ class URLUtilsRobolectricTest {
 
     @Test
     fun `openURL returns false when startActivity throws SecurityException`() {
-        val a =
-            spyk(
-                Robolectric
-                    .buildActivity(Activity::class.java)
-                    .setup()
-                    .track(destroyActivities)
-                    .get(),
-            )
-        every { a.startActivity(any<Intent>()) } throws SecurityException("not exported")
-        a.openURL("https://example.com").shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe a.getString(R.string.commonutils_error_cant_open_url)
+        val failing = StartActivityFailingContext(ctx, SecurityException("not exported"))
+        failing.openURL("https://example.com").shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 
     @Test
