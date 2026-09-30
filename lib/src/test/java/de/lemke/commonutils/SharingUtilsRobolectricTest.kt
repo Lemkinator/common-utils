@@ -555,7 +555,7 @@ class SharingUtilsBitmapRobolectricTest {
 }
 
 @Implements(ClipboardManager::class)
-class ShadowDeniedClipboardManager : ShadowClipboardManager() {
+private class ShadowDeniedClipboardManager : ShadowClipboardManager() {
     @Implementation
     override fun setPrimaryClip(clip: ClipData): Unit = throw SecurityException("clipboard access denied")
 }
