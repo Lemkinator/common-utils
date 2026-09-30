@@ -18,15 +18,12 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
 import android.os.FileUriExposedException
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.openURL
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.spyk
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,16 +73,9 @@ class URLUtilsRobolectricTest {
 
     @Test
     fun `openURL returns false when startActivity throws ActivityNotFoundException`() {
-        val a =
-            spyk(
-                Robolectric
-                    .buildActivity(Activity::class.java)
-                    .setup()
-                    .track(destroyActivities)
-                    .get(),
-            )
-        every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no browser")
-        a.openURL("https://example.com").shouldBeFalse()
+        val failing = StartActivityFailingContext(ctx, ActivityNotFoundException("no browser"))
+        failing.openURL("https://example.com").shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "No browser app installed…"
     }
 
     @Test
