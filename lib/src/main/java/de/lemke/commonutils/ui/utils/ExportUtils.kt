@@ -65,7 +65,7 @@ fun Context.exportBitmap(
     activityResultLauncher: ActivityResultLauncher<Intent>?,
 ): Boolean =
     if (saveLocation != SaveLocation.CUSTOM && SDK_INT > Build.VERSION_CODES.Q) {
-        // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+        // Scoped storage and the file system throw an open-ended exception set; every failure must toast, not crash.
         @Suppress("TooGenericExceptionCaught")
         try {
             val dir: String =

@@ -45,7 +45,7 @@ fun Fragment.openURL(url: String?): Boolean = requireContext().openURL(url)
 
 /** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
 fun Context.openURL(url: String?): Boolean =
-    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+    // startActivity and the target app throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
         if (url.isNullOrBlank()) {
