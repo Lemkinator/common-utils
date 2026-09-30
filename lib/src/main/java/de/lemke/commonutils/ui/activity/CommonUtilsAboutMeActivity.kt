@@ -89,7 +89,6 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         updateCallbackState()
     }
 
-    @Suppress("MagicNumber")
     private fun applyInsetIfNeeded() {
         if (SDK_INT >= Build.VERSION_CODES.R && !window.decorView.fitsSystemWindows) {
             binding.root.setOnApplyWindowInsetsListener { _, insets ->
@@ -196,7 +195,6 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
-    @Suppress("MagicNumber")
     private inner class AboutAppBarListener : OnOffsetChangedListener {
         override fun onOffsetChanged(
             appBarLayout: AppBarLayout,
@@ -213,13 +211,15 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
                 setBottomContentEnabled(false)
             } else {
                 val offsetAlpha = appBarLayout.y / totalScrollRange
-                binding.aboutSwipeUpContainer.alpha = (1 - offsetAlpha * -3).coerceIn(0f, 1f)
+                binding.aboutSwipeUpContainer.alpha = (1 + offsetAlpha * SWIPE_UP_FADE_FACTOR).coerceIn(0f, 1f)
             }
             // Handle the bottom part of the UI
-            val alphaRange = binding.aboutCTL.height * 0.143f
+            val alphaRange = binding.aboutCTL.height * BOTTOM_ALPHA_RANGE_RATIO
             val layoutPosition = abs(appBarLayout.top).toFloat()
-            val bottomAlpha = (150.0f / alphaRange * (layoutPosition - binding.aboutCTL.height * 0.35f)).coerceIn(0f, 255f)
-            binding.aboutBottomContainer.alpha = bottomAlpha / 255
+            val bottomAlpha =
+                (BOTTOM_ALPHA_SCALE / alphaRange * (layoutPosition - binding.aboutCTL.height * BOTTOM_FADE_START_RATIO))
+                    .coerceIn(0f, MAX_ALPHA)
+            binding.aboutBottomContainer.alpha = bottomAlpha / MAX_ALPHA
             updateCallbackState(appBarLayout.getTotalScrollRange() + verticalOffset == 0)
         }
     }
@@ -236,6 +236,11 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         private const val BACK_COLLAPSE_THRESHOLD = 0.3f
         private const val BACK_EXPAND_THRESHOLD = 0.5f
         private const val EXPANDED_HEIGHT_PROPORTION = 0.5f
+        private const val SWIPE_UP_FADE_FACTOR = 3f
+        private const val BOTTOM_ALPHA_RANGE_RATIO = 0.143f
+        private const val BOTTOM_FADE_START_RATIO = 0.35f
+        private const val BOTTOM_ALPHA_SCALE = 150f
+        private const val MAX_ALPHA = 255f
 
         /** Optional callback invoked when the user taps the share button; defaults to a no-op. */
         var onShareApp: (activity: Activity) -> Unit = {}

@@ -49,6 +49,7 @@ fun Context.copyToClipboard(
     label: String,
     shareFileName: String,
 ): Boolean =
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
         val cacheFile = resolveShareCacheFile(shareFileName)

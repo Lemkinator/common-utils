@@ -34,12 +34,13 @@ private const val TAG = "SharingUtils"
 fun File.share(context: Context): Boolean = listOf(this).share(context)
 
 /** Shares all image files in this list via the system share sheet (multi-file if more than one). */
-@Suppress("TooGenericExceptionCaught")
 fun List<File>.share(context: Context): Boolean {
     if (isEmpty()) {
         Log.e(TAG, "No file to share.")
         return false
     }
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+    @Suppress("TooGenericExceptionCaught")
     return try {
         val contentUris = map { f -> f.getFileUri(context) }
         val intent =
@@ -55,7 +56,7 @@ fun List<File>.share(context: Context): Boolean {
                 }
             }
         context.safeStartActivity(Intent.createChooser(intent, null))
-    } catch (e: RuntimeException) {
+    } catch (e: Exception) {
         Log.e(TAG, "Error sharing files", e)
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
         false

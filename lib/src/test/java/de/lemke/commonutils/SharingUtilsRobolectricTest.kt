@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.ContextWrapper
@@ -58,6 +59,10 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.Implementation
+import org.robolectric.annotation.Implements
+import org.robolectric.shadows.ShadowClipboardManager
+import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -194,6 +199,17 @@ class SharingUtilsBitmapRobolectricTest {
 
     private fun Intent.readGrantFlag(): Int = flags and Intent.FLAG_GRANT_READ_URI_PERMISSION
 
+    private fun unwritableShareFileName(): String {
+        File(ctx.cacheDir, "directory.png").mkdirs()
+        return "directory.png"
+    }
+
+    private fun latestToastIsShareNotSupported() =
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: Sharing content is not supported on your device."
+
+    private fun installQuickShare() =
+        shadowOf(ctx.packageManager).installPackage(PackageInfo().also { it.packageName = "com.samsung.android.app.sharelive" })
+
     // ── getFileUri ──────────────────────────────────────────────────────────────
 
     @Test
@@ -230,6 +246,22 @@ class SharingUtilsBitmapRobolectricTest {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         contextWithoutFileProvider().copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
         ctx.getSystemService(ClipboardManager::class.java).hasPrimaryClip().shouldBeFalse()
+    }
+
+    @Test
+    fun `copyToClipboard bitmap into an unwritable cache file - IOException caught, returns false`() {
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        ctx.copyToClipboard(bitmap, "label", unwritableShareFileName()).shouldBeFalse()
+        latestToastIsShareNotSupported()
+        ctx.getSystemService(ClipboardManager::class.java).hasPrimaryClip().shouldBeFalse()
+    }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class, ShadowDeniedClipboardManager::class])
+    fun `copyToClipboard bitmap SecurityException from setPrimaryClip shows the share toast and returns false`() {
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
+        latestToastIsShareNotSupported()
     }
 
     @Test
@@ -283,6 +315,24 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
+    fun `Bitmap share into an unwritable cache file - IOException caught, returns false`() {
+        val act = activity()
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.share(act, unwritableShareFileName()).shouldBeFalse()
+        latestToastIsShareNotSupported()
+        shadowOf(act).nextStartedActivity shouldBe null
+    }
+
+    @Test
+    fun `Bitmap share SecurityException from startActivity shows the share toast and returns false`() {
+        val failing = StartActivityFailingContext(ctx, SecurityException("chooser denied"))
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.share(failing, "test.png").shouldBeFalse()
+        failing.startedIntents.single().action shouldBe Intent.ACTION_CHOOSER
+        latestToastIsShareNotSupported()
+    }
+
+    @Test
     fun `Bitmap share rejects shareFileName that escapes cacheDir`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.share(ctx, "../evil.png").shouldBeFalse()
@@ -318,6 +368,25 @@ class SharingUtilsBitmapRobolectricTest {
     fun `quickShare without a FileProvider for the package - exception caught, returns false`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.quickShare(contextWithoutFileProvider(), "test.png").shouldBeFalse()
+    }
+
+    @Test
+    fun `quickShare into an unwritable cache file - IOException caught, returns false`() {
+        val act = activity()
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.quickShare(act, unwritableShareFileName()).shouldBeFalse()
+        latestToastIsShareNotSupported()
+        shadowOf(act).nextStartedActivity shouldBe null
+    }
+
+    @Test
+    fun `quickShare SecurityException from the explicit Quick Share start shows the share toast and returns false`() {
+        installQuickShare()
+        val failing = StartActivityFailingContext(ctx, SecurityException("Quick Share activity not exported"))
+        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        bitmap.quickShare(failing, "test.png").shouldBeFalse()
+        failing.startedIntents.single().`package` shouldBe "com.samsung.android.app.sharelive"
+        latestToastIsShareNotSupported()
     }
 
     @Test
@@ -371,6 +440,16 @@ class SharingUtilsBitmapRobolectricTest {
         val outside = File(act.dataDir, "outside.png").also { it.createNewFile() }
         outside.share(act).shouldBeFalse()
         shadowOf(act).nextStartedActivity shouldBe null
+        latestToastIsShareNotSupported()
+    }
+
+    @Test
+    fun `List share SecurityException from startActivity shows the share toast and returns false`() {
+        val failing = StartActivityFailingContext(ctx, SecurityException("chooser denied"))
+        val file = File(ctx.cacheDir, "img.png").also { it.createNewFile() }
+        listOf(file).share(failing).shouldBeFalse()
+        failing.startedIntents.single().action shouldBe Intent.ACTION_CHOOSER
+        latestToastIsShareNotSupported()
     }
 
     @Test
@@ -473,4 +552,10 @@ class SharingUtilsBitmapRobolectricTest {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.quickShare(activity(), "test.png").shouldBeTrue()
     }
+}
+
+@Implements(ClipboardManager::class)
+private class ShadowDeniedClipboardManager : ShadowClipboardManager() {
+    @Implementation
+    override fun setPrimaryClip(clip: ClipData): Unit = throw SecurityException("clipboard access denied")
 }

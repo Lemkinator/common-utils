@@ -15,17 +15,19 @@
  */
 package de.lemke.commonutils
 
-import android.content.ComponentName
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
-import android.content.IntentFilter
-import org.robolectric.Shadows.shadowOf
 
-/** Registers a single fake launcher app so `getInstalledAppsForPicker()` returns a non-empty result under Robolectric. */
-internal fun registerFakeLauncherApp(context: Context) {
-    val component = ComponentName("de.lemke.commonutils.fakeapp", "de.lemke.commonutils.fakeapp.MainActivity")
-    shadowOf(context.packageManager).apply {
-        addActivityIfNotPresent(component)
-        addIntentFilterForActivity(component, IntentFilter(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) })
+/** Records every intent passed to [startActivity], then throws [failure]. */
+internal class StartActivityFailingContext(
+    base: Context,
+    private val failure: RuntimeException,
+) : ContextWrapper(base) {
+    val startedIntents = mutableListOf<Intent>()
+
+    override fun startActivity(intent: Intent) {
+        startedIntents += intent
+        throw failure
     }
 }

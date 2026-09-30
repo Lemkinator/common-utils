@@ -16,12 +16,15 @@
 package de.lemke.commonutils
 
 import android.content.ActivityNotFoundException
-import android.content.ContentResolver
+import android.content.ContentProvider
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
+import android.os.ParcelFileDescriptor
 import androidx.activity.result.ActivityResultLauncher
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SaveLocation
@@ -33,13 +36,15 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import java.io.File
 import java.io.OutputStream
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -123,13 +128,44 @@ class ExportUtilsRobolectricTest {
     }
 
     @Test
-    fun `saveBitmapToUri null stream returns false`() {
-        // Mock contentResolver.openOutputStream to return null → ?: run branch
-        val mockResolver = mockk<ContentResolver>()
-        every { mockResolver.openOutputStream(any()) } returns null
-        val spyCtx = spyk(ctx)
-        every { spyCtx.contentResolver } returns mockResolver
-        spyCtx.saveBitmapToUri(Uri.parse("content://test/1"), bitmap).shouldBeFalse()
+    fun `saveBitmapToUri SecurityException from openOutputStream returns false`() {
+        val uri = Uri.parse("content://de.lemke.provider/revoked/1")
+        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw SecurityException("permission revoked") }
+        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
+    }
+
+    @Test
+    fun `saveBitmapToUri IllegalArgumentException from the resolver shows the error toast and returns false`() {
+        val uri = Uri.parse("content://de.lemke.provider/unknown/1")
+        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw IllegalArgumentException("Unknown URI") }
+        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
+    }
+
+    @Test
+    fun `saveBitmapToUri UnsupportedOperationException from the resolver shows the error toast and returns false`() {
+        val uri = Uri.parse("content://de.lemke.provider/readonly/1")
+        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw UnsupportedOperationException("Writing not supported") }
+        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
+    }
+
+    @Test
+    fun `exportBitmap to DOWNLOADS shows the error toast and returns false when the output stream cannot open`() {
+        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        downloads.deleteRecursively()
+        downloads.parentFile!!.mkdirs()
+        downloads.createNewFile().shouldBeTrue()
+        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
+    }
+
+    @Test
+    fun `saveBitmapToUri null stream shows the error toast and returns false`() {
+        Robolectric.buildContentProvider(NoFileContentProvider::class.java).create("de.lemke.nofile")
+        ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nofile/1"), bitmap).shouldBeFalse()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
     }
 
     @Test
@@ -185,6 +221,43 @@ class ExportUtilsRobolectricTest {
         every { throwingBitmap.compress(any(), any(), any<OutputStream>()) } throws java.io.IOException("simulated IO error")
         ctx.exportBitmap(SaveLocation.PICTURES, throwingBitmap, "test", null).shouldBeFalse()
     }
+}
+
+private class NoFileContentProvider : ContentProvider() {
+    override fun onCreate() = true
+
+    override fun openFile(
+        uri: Uri,
+        mode: String,
+    ): ParcelFileDescriptor? = null
+
+    override fun query(
+        uri: Uri,
+        projection: Array<out String>?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+        sortOrder: String?,
+    ): Cursor? = null
+
+    override fun getType(uri: Uri): String? = null
+
+    override fun insert(
+        uri: Uri,
+        values: ContentValues?,
+    ): Uri? = null
+
+    override fun delete(
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+    ) = 0
+
+    override fun update(
+        uri: Uri,
+        values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+    ) = 0
 }
 
 @RunWith(RobolectricTestRunner::class)

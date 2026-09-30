@@ -65,6 +65,7 @@ fun Context.exportBitmap(
     activityResultLauncher: ActivityResultLauncher<Intent>?,
 ): Boolean =
     if (saveLocation != SaveLocation.CUSTOM && SDK_INT > Build.VERSION_CODES.Q) {
+        // Scoped storage and the file system throw an open-ended exception set; every failure must toast, not crash.
         @Suppress("TooGenericExceptionCaught")
         try {
             val dir: String =
@@ -115,6 +116,7 @@ fun Context.saveBitmapToUri(
         toast(R.string.commonutils_error_creating_file)
         return false
     }
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     return try {
         contentResolver.openOutputStream(uri)?.use { outputStream ->

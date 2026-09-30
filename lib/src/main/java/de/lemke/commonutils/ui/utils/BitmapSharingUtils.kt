@@ -55,6 +55,7 @@ fun Bitmap.share(
     shareFileName: String,
     shareText: String? = null,
 ): Boolean =
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
         val cacheFile = context.resolveShareCacheFile(shareFileName)
@@ -95,6 +96,7 @@ fun Bitmap.quickShare(
     context: Context,
     shareFileName: String,
 ): Boolean =
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
         val cacheFile = context.resolveShareCacheFile(shareFileName)

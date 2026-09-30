@@ -44,8 +44,9 @@ fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
 fun Fragment.openURL(url: String?): Boolean = requireContext().openURL(url)
 
 /** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
-@Suppress("TooGenericExceptionCaught")
 fun Context.openURL(url: String?): Boolean =
+    // startActivity and the target app throw an open-ended exception set; every failure must toast, not crash.
+    @Suppress("TooGenericExceptionCaught")
     try {
         if (url.isNullOrBlank()) {
             Log.e(TAG, "link is null or blank")
