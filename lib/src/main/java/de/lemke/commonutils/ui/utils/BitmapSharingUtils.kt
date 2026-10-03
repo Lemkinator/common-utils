@@ -42,7 +42,8 @@ private const val TAG = "SharingUtils"
  * writing fails.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the URI to [shareBitmap] or
- * [quickShareBitmap] in its `then`.
+ * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns null without writing,
+ * unless it runs as that work, so a pending share keeps its file.
  */
 suspend fun Fragment.createBitmapShareUri(
     bitmap: Bitmap,
@@ -55,14 +56,16 @@ suspend fun Fragment.createBitmapShareUri(
  * writing fails.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the URI to [shareBitmap] or
- * [quickShareBitmap] in its `then`.
+ * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns null without writing,
+ * unless it runs as that work, so a pending share keeps its file.
  */
 suspend fun Context.createBitmapShareUri(
     bitmap: Bitmap,
     fileName: String,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-): Uri? =
-    withContext(ioDispatcher) {
+): Uri? {
+    if (!admitsLaunchPreparation()) return null
+    return withContext(ioDispatcher) {
         // Providers and the file system throw an open-ended exception set; a failure must yield no URI, not crash.
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -72,6 +75,7 @@ suspend fun Context.createBitmapShareUri(
             null
         }
     }
+}
 
 /**
  * Shares the PNG at [uri], from [createBitmapShareUri], via the system share sheet, optionally including [shareText];

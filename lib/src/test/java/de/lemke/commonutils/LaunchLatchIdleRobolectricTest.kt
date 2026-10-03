@@ -22,6 +22,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.graphics.Bitmap
 import android.os.Looper
 import android.view.ContextThemeWrapper
 import android.view.View
@@ -33,7 +34,9 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
+import de.lemke.commonutils.ui.utils.createBitmapShareUri
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
+import de.lemke.commonutils.ui.utils.shareBitmap
 import de.lemke.commonutils.ui.utils.singleLaunch
 import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import de.lemke.commonutils.ui.utils.singleLaunchMenuItem
@@ -47,8 +50,10 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.io.File
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.junit.Rule
@@ -120,6 +125,24 @@ class LaunchLatchIdleRobolectricTest : LaunchLatchRobolectricTest() {
 
         results shouldContainExactly listOf("generated")
         activity.singleLaunch {}.shouldBeTrue()
+    }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `idle bitmap share input writes its file and shares it`() {
+        val activity = resumed().get()
+
+        activity
+            .singleLaunchSuspending(
+                work = {
+                    activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
+                },
+                then = { activity.shareBitmap(it).shouldBeTrue() },
+            ).shouldBeTrue()
+        shadowLooper.idle()
+
+        shadowOf(activity).nextStartedActivity.shouldNotBeNull()
+        File(activity.cacheDir, "share/shared.png").exists().shouldBeTrue()
     }
 
     @Test

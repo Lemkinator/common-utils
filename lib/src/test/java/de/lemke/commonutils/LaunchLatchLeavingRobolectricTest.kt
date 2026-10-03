@@ -55,8 +55,10 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.File
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -277,6 +279,47 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
         shadowLooper.idle()
 
         pending.readText() shouldBe "pending"
+    }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `leaving bitmap share uri outside an input writes nothing and keeps the pending share's file`() =
+        runTest {
+            val activity = resumed().get()
+            val uri = activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png")
+            activity.shareBitmap(uri).shouldBeTrue()
+            val file = File(activity.cacheDir, "share/shared.png")
+            val pending = file.readBytes()
+
+            activity.createBitmapShareUri(Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888), "shared.png").shouldBeNull()
+
+            file.readBytes() shouldBe pending
+        }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `leaving bitmap share uri writes as the work of the held input but not outside it`() {
+        val activity = resumed().get()
+        val work = CompletableDeferred<Unit>()
+        val uris = mutableListOf<Uri?>()
+        activity.singleLaunchSuspending(
+            work = {
+                work.await()
+                activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
+            },
+            then = { uris += it },
+        )
+        activity.launchScreen().shouldBeTrue()
+
+        runTest {
+            activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "outside.png").shouldBeNull()
+        }
+        work.complete(Unit)
+        shadowLooper.idle()
+
+        uris.single().shouldNotBeNull()
+        File(activity.cacheDir, "share/shared.png").exists().shouldBeTrue()
+        File(activity.cacheDir, "share/outside.png").exists().shouldBeFalse()
     }
 
     @Test

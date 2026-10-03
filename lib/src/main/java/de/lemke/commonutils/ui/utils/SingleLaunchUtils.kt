@@ -46,8 +46,11 @@ import dev.oneuiproject.oneui.ktx.onClick
 import java.util.Collections
 import java.util.EnumSet
 import java.util.WeakHashMap
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 
 private val LEAVING_TIMEOUT = 1.seconds
@@ -77,10 +80,12 @@ private enum class LaunchSource {
     NEW_INTENT,
 }
 
-/** A [singleLaunchSuspending] input whose work or `then` still runs. */
-private class HeldInput {
+/** A [singleLaunchSuspending] input whose work or `then` still runs; its coroutine carries it as a context element. */
+private class HeldInput : AbstractCoroutineContextElement(HeldInput) {
     /** True once the activity stopped after this input was admitted, so views captured at the input may be stale. */
     var stopped = false
+
+    companion object Key : CoroutineContext.Key<HeldInput>
 }
 
 /**
@@ -146,6 +151,12 @@ private class LaunchLatch(
         launchLatches.remove(activity)
     }
 
+    /** True if a launch from a coroutine with [context] passes the latch: [admitsLaunch], or the work of the held input. */
+    fun admitsLaunchFrom(context: CoroutineContext): Boolean {
+        val input = heldInput ?: return admitsLaunch
+        return admitsLaunch || context[HeldInput] === input
+    }
+
     /**
      * Runs [work] in [scope] as a held input, then [then] once the activity is RESUMED; see [singleLaunchSuspending].
      * @return true if the input was admitted.
@@ -159,7 +170,7 @@ private class LaunchLatch(
         val input = HeldInput()
         heldInput = input
         scope
-            .launch {
+            .launch(input) {
                 val result = work()
                 activity.lifecycle.withResumed {
                     deliveringInput = input
@@ -281,6 +292,14 @@ private val ComponentActivity.liveLaunchLatch: LaunchLatch
  */
 @MainThread
 internal fun Context?.inputViewsCurrent(): Boolean = launchLatch?.inputViewsCurrent != false
+
+/**
+ * Returns false while this context's activity does not admit a launch, unless the caller runs as the work of its held
+ * [singleLaunchSuspending] input; true otherwise.
+ */
+@MainThread
+internal suspend fun Context.admitsLaunchPreparation(): Boolean =
+    (activity as? ComponentActivity)?.let(launchLatches::get)?.admitsLaunchFrom(currentCoroutineContext()) != false
 
 /** Runs [action] as an input and returns its result, or null if the latch dropped it; see [Context.singleLaunch]. */
 @MainThread
