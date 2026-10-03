@@ -45,15 +45,15 @@ fun Context.sendEmail(
     text: String,
 ): Boolean =
     try {
-        Intent(ACTION_SENDTO).apply {
-            data = "mailto:".toUri()
-            putExtra(EXTRA_EMAIL, emails)
-            putExtra(EXTRA_SUBJECT, subject)
-            putExtra(EXTRA_TEXT, text)
-            if (this@sendEmail !is Activity) addFlags(FLAG_ACTIVITY_NEW_TASK)
-            startActivity(this)
-        }
-        true
+        val intent =
+            Intent(ACTION_SENDTO).apply {
+                data = "mailto:".toUri()
+                putExtra(EXTRA_EMAIL, emails)
+                putExtra(EXTRA_SUBJECT, subject)
+                putExtra(EXTRA_TEXT, text)
+                if (this@sendEmail !is Activity) addFlags(FLAG_ACTIVITY_NEW_TASK)
+            }
+        launchGated { startActivity(intent) }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to send email", e)
         toast(getString(R.string.commonutils_no_email_app_installed))

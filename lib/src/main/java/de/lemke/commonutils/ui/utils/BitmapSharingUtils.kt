@@ -128,8 +128,7 @@ internal fun Context.createBaseIntent() =
 
 internal fun Intent.start(context: Context): Boolean {
     try {
-        context.startActivity(this)
-        return true
+        return context.launchGated { context.startActivity(this) }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to start activity with specific package: ${e.message}")
         `package` = null

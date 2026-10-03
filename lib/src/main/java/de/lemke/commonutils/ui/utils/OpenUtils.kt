@@ -55,8 +55,7 @@ private fun Context.openAppWithPackageName(packageName: String): Boolean =
     try {
         val intent = packageManager.getLaunchIntentForPackage(packageName)
         if (intent != null) {
-            startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK))
-            true
+            launchGated { startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK)) }
         } else {
             openAppWithPackageNameOnStore(packageName)
         }
@@ -75,8 +74,7 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean 
     val intent = Intent(ACTION_VIEW).addFlags(FLAG_ACTIVITY_NEW_TASK)
     for (uri in uris) {
         try {
-            startActivity(intent.apply { data = uri })
-            return true
+            return launchGated { startActivity(intent.apply { data = uri }) }
         } catch (e: ActivityNotFoundException) {
             Log.e(TAG, "Failed to open Play Store: $uri", e)
         }
@@ -97,8 +95,9 @@ fun Fragment.openAppLocaleSettings(): Boolean {
         return false
     }
     return try {
-        startActivity(Intent(ACTION_APP_LOCALE_SETTINGS, "package:${requireContext().packageName}".toUri()))
-        true
+        requireContext().launchGated {
+            startActivity(Intent(ACTION_APP_LOCALE_SETTINGS, "package:${requireContext().packageName}".toUri()))
+        }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "App locale settings not available", e)
         toast(getString(R.string.commonutils_change_language_not_supported_by_device))
@@ -109,11 +108,12 @@ fun Fragment.openAppLocaleSettings(): Boolean {
 /** Opens the system application settings screen for this app. */
 fun Context.openApplicationSettings(): Boolean =
     try {
-        startActivity(
-            Intent(ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
-                .setFlags(FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK),
-        )
-        true
+        launchGated {
+            startActivity(
+                Intent(ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
+                    .setFlags(FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK),
+            )
+        }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to open application settings", e)
         toast(R.string.commonutils_error_cant_open_app_settings)

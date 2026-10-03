@@ -53,8 +53,7 @@ fun Context.openURL(url: String?): Boolean =
             toast(getString(R.string.commonutils_error_cant_open_url))
             false
         } else {
-            startActivity(Intent(ACTION_VIEW, url.toUri()).addFlags(FLAG_ACTIVITY_NEW_TASK))
-            true
+            launchGated { startActivity(Intent(ACTION_VIEW, url.toUri()).addFlags(FLAG_ACTIVITY_NEW_TASK)) }
         }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "No browser app installed", e)

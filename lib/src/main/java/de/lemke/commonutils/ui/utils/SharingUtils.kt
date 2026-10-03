@@ -67,8 +67,7 @@ fun Context.shareText(
 
 internal fun Context.safeStartActivity(intent: Intent): Boolean {
     try {
-        startActivity(intent)
-        return true
+        return launchGated { startActivity(intent) }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to start activity", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)

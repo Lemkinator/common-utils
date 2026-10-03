@@ -33,13 +33,14 @@ private const val STATE_ANIMATOR_RESTORE_DELAY_MS = 1_000L
  * Transition names should be unique within the view hierarchy.
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 fun View.transformToActivity(
     cls: Class<*>,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-) = transformToActivity(Intent(context, cls), transitionName, duration, fadeMode)
+): Boolean = transformToActivity(Intent(context, cls), transitionName, duration, fadeMode)
 
 /**
  * Extension function to start an activity with a shared element transition from a view.
@@ -47,13 +48,14 @@ fun View.transformToActivity(
  * @param transitionName The name of the shared element transition.
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @NoCoverage
 inline fun <reified T : Activity> View.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-) = transformToActivity(Intent(context, T::class.java), transitionName, duration, fadeMode)
+): Boolean = transformToActivity(Intent(context, T::class.java), transitionName, duration, fadeMode)
 
 /**
  * Extension function to start an activity with a shared element transition from a view.
@@ -63,37 +65,37 @@ inline fun <reified T : Activity> View.transformToActivity(
  * Transition names should be unique within the view hierarchy.
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 fun View.transformToActivity(
     intent: Intent,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-) {
-    val activity =
-        context.activity ?: run {
-            context.startActivity(intent)
-            return
-        }
-    suspendStateListAnimator()
-    this.transitionName = transitionName
-    val bundle = ActivityOptions.makeSceneTransitionAnimation(activity, this, transitionName).toBundle()
-    intent
-        .putExtra(TRANSITION_NAME_KEY, transitionName)
-        .putExtra(DURATION_KEY, duration)
-        .putExtra(FADE_MODE_KEY, fadeMode)
-    context.startActivity(intent, bundle)
+): Boolean {
+    val activity = context.activity ?: return context.singleLaunchActivity(intent)
+    return activity.launchGated {
+        suspendStateListAnimator()
+        this.transitionName = transitionName
+        val bundle = ActivityOptions.makeSceneTransitionAnimation(activity, this, transitionName).toBundle()
+        intent
+            .putExtra(TRANSITION_NAME_KEY, transitionName)
+            .putExtra(DURATION_KEY, duration)
+            .putExtra(FADE_MODE_KEY, fadeMode)
+        context.startActivity(intent, bundle)
+    }
 }
 
 /**
  * Starts an activity with a shared element transition from the view identified by [viewId].
- * Falls back to a plain startActivity if the view is not found (e.g., recycled drawer item).
+ * Falls back to a launch without a transition if the view is not found (e.g., recycled drawer item).
  * @receiver The activity that owns the view hierarchy.
  * @param viewId The ID of the view to transition from.
  * @param cls The class of the activity to start.
  * @param transitionName The name of the shared element transition.
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 fun Activity.transformToActivity(
     @IdRes viewId: Int,
@@ -101,16 +103,17 @@ fun Activity.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-) = transformToActivity(viewId, Intent(this, cls), transitionName, duration, fadeMode)
+): Boolean = transformToActivity(viewId, Intent(this, cls), transitionName, duration, fadeMode)
 
 /**
  * Starts an activity with a shared element transition from the view identified by [viewId].
- * Falls back to a plain startActivity if the view is not found.
+ * Falls back to a launch without a transition if the view is not found.
  * @receiver The activity that owns the view hierarchy.
  * @param viewId The ID of the view to transition from.
  * @param transitionName The name of the shared element transition.
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @NoCoverage
 inline fun <reified T : Activity> Activity.transformToActivity(
@@ -118,17 +121,18 @@ inline fun <reified T : Activity> Activity.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-) = transformToActivity(viewId, Intent(this, T::class.java), transitionName, duration, fadeMode)
+): Boolean = transformToActivity(viewId, Intent(this, T::class.java), transitionName, duration, fadeMode)
 
 /**
  * Starts an activity with a shared element transition from the view identified by [viewId].
- * Falls back to a plain startActivity if the view is not found (e.g., recycled drawer item).
+ * Falls back to a launch without a transition if the view is not found (e.g., recycled drawer item).
  * @receiver The activity that owns the view hierarchy.
  * @param viewId The ID of the view to transition from.
  * @param intent The intent to start the new activity.
  * @param transitionName The name of the shared element transition.
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 fun Activity.transformToActivity(
     @IdRes viewId: Int,
@@ -136,24 +140,18 @@ fun Activity.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-) {
-    val view = findViewById<View>(viewId)
-    if (view != null) {
-        view.transformToActivity(intent, transitionName, duration, fadeMode)
-    } else {
-        startActivity(intent)
-    }
-}
+): Boolean = transformToActivity(findViewById<View>(viewId), intent, transitionName, duration, fadeMode)
 
 /**
  * Starts an activity with a shared element transition from [view].
- * Falls back to a plain startActivity if [view] is null.
+ * Falls back to a launch without a transition if [view] is null.
  * @receiver The activity to start from.
- * @param view The view to transition from, or null to fall back to a plain startActivity.
+ * @param view The view to transition from, or null to fall back to a launch without a transition.
  * @param intent The intent to start the new activity.
  * @param transitionName The name of the shared element transition.
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 fun Activity.transformToActivity(
     view: View?,
@@ -161,22 +159,22 @@ fun Activity.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-) {
+): Boolean =
     if (view != null) {
         view.transformToActivity(intent, transitionName, duration, fadeMode)
     } else {
-        startActivity(intent)
+        singleLaunchActivity(intent)
     }
-}
 
 /**
  * Starts an activity with a shared element transition from [view].
- * Falls back to a plain startActivity if [view] is null.
+ * Falls back to a launch without a transition if [view] is null.
  * @receiver The activity to start from.
- * @param view The view to transition from, or null to fall back to a plain startActivity.
+ * @param view The view to transition from, or null to fall back to a launch without a transition.
  * @param transitionName The name of the shared element transition.
  * @param duration The duration of the transition in milliseconds.
  * @param fadeMode The fade mode for the transition.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @NoCoverage
 inline fun <reified T : Activity> Activity.transformToActivity(
@@ -184,7 +182,7 @@ inline fun <reified T : Activity> Activity.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-) = transformToActivity(view, Intent(this, T::class.java), transitionName, duration, fadeMode)
+): Boolean = transformToActivity(view, Intent(this, T::class.java), transitionName, duration, fadeMode)
 
 /**
  * Workaround: Temporary disable item view's StateListAnimator
