@@ -158,9 +158,12 @@ private fun Context.writePngOrDeleteDocument(
 ): BitmapSaveResult {
     val result =
         try {
-            contentResolver.openOutputStream(uri)?.use {
-                if (bitmap.writePng(it)) BitmapSaveResult.Saved(SaveLocation.CUSTOM) else BitmapSaveResult.EncodingFailed
-            } ?: BitmapSaveResult.WriteFailed
+            val outputStream = contentResolver.openOutputStream(uri)
+            when {
+                outputStream == null -> BitmapSaveResult.WriteFailed
+                outputStream.use { bitmap.writePng(it) } -> BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+                else -> BitmapSaveResult.EncodingFailed
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error saving bitmap to uri", e)
             BitmapSaveResult.WriteFailed
