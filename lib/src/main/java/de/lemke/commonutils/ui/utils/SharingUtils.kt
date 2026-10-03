@@ -22,6 +22,7 @@ import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.EXTRA_TITLE
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.NoCoverage
@@ -126,11 +127,18 @@ internal fun File.deleteOrLog() {
 }
 
 /**
- * Writes [bitmap] as a PNG to [fileName] in [kind]'s cache directory.
- * @return the written file, or null if the bitmap cannot be encoded; I/O and path errors propagate.
+ * Writes [bitmap] as a PNG to [fileName] in [kind]'s cache directory and maps the file's content URI with [transform];
+ * deletes the file if the URI or [transform] throws.
+ * @return the mapped URI, or null if the bitmap cannot be encoded; I/O, path and provider errors propagate.
  */
-internal fun Context.writePngCacheFile(
+internal fun <R> Context.writePngCacheUri(
     bitmap: Bitmap,
     kind: CacheFileKind,
     fileName: String,
-): File? = resolveCacheFile(kind, fileName).takeIf { it.writePngOrDelete(bitmap) }
+    transform: (Uri) -> R,
+): R? =
+    resolveCacheFile(kind, fileName).takeIf { it.writePngOrDelete(bitmap) }?.let { file ->
+        runCatching { transform(file.getFileUri(this)) }
+            .onFailure { file.deleteOrLog() }
+            .getOrThrow()
+    }

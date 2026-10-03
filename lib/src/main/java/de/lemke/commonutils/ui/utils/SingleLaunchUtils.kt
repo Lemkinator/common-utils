@@ -286,10 +286,6 @@ internal fun Context?.inputViewsCurrent(): Boolean = launchLatch?.inputViewsCurr
 @MainThread
 internal fun <R : Any> Context?.singleLaunchOrNull(action: () -> R): R? = if (launchLatch?.admitsInput == false) null else action()
 
-/** Returns true if a gated launch of this context's activity would run now; see [launchGated]. */
-@MainThread
-internal fun Context?.admitsGatedLaunch(): Boolean = launchLatch?.admitsLaunch != false
-
 /**
  * Runs [start] as a gated launch of this context's activity; [owner] is the result launcher that launches, if any.
  * @return true if [start] ran, false if the latch dropped it.

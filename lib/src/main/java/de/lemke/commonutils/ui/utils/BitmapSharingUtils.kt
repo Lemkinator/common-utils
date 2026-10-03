@@ -25,95 +25,124 @@ import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val SAMSUNG_QUICK_SHARE_PACKAGE = "com.samsung.android.app.sharelive"
 private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
 
-/** Shares [bitmap] via the system share sheet, optionally including [shareText]. */
-fun Fragment.shareBitmap(
+/**
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns its content URI, or null if
+ * writing fails.
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the URI to [shareBitmap] or
+ * [quickShareBitmap] in its `then`.
+ */
+suspend fun Fragment.createBitmapShareUri(
     bitmap: Bitmap,
-    shareFileName: String,
-    shareText: String? = null,
-): Boolean = bitmap.share(requireContext(), shareFileName, shareText)
+    fileName: String,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): Uri? = requireContext().createBitmapShareUri(bitmap, fileName, ioDispatcher)
 
-/** Shares [bitmap] via the system share sheet, optionally including [shareText]. */
-fun Context.shareBitmap(
+/**
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns its content URI, or null if
+ * writing fails.
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the URI to [shareBitmap] or
+ * [quickShareBitmap] in its `then`.
+ */
+suspend fun Context.createBitmapShareUri(
     bitmap: Bitmap,
-    shareFileName: String,
-    shareText: String? = null,
-): Boolean = bitmap.share(this, shareFileName, shareText)
-
-/** Writes this bitmap to a cache file and shares it via the system share sheet, optionally including [shareText]. */
-fun Bitmap.share(
-    context: Context,
-    shareFileName: String,
-    shareText: String? = null,
-): Boolean =
-    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
-    @Suppress("TooGenericExceptionCaught")
-    try {
-        if (!context.admitsGatedLaunch()) return false
-        val cacheFile =
-            context.writePngCacheFile(this, CacheFileKind.SHARE, shareFileName) ?: run {
-                context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-                return false
-            }
-        val uri = cacheFile.getFileUri(context)
-        Intent(ACTION_SEND).run {
-            clipData = ClipData.newRawUri(shareFileName, uri)
-            putExtra(EXTRA_STREAM, uri)
-            shareText?.let { putExtra(EXTRA_TEXT, it) }
-            type = MIME_TYPE_PNG
-            addFlags(FLAG_GRANT_READ_URI_PERMISSION)
-            context.safeStartActivity(Intent.createChooser(this, null))
+    fileName: String,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): Uri? =
+    withContext(ioDispatcher) {
+        // Providers and the file system throw an open-ended exception set; a failure must yield no URI, not crash.
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            writePngCacheUri(bitmap, CacheFileKind.SHARE, fileName) { it }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing bitmap share file", e)
+            null
         }
-    } catch (e: Exception) {
-        Log.e(TAG, "Error sharing bitmap", e)
-        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        false
     }
 
-/** Shares [bitmap] directly via Samsung Quick Share if available, falling back to the system share sheet. */
-fun Fragment.quickShareBitmap(
-    bitmap: Bitmap,
-    shareFileName: String,
-): Boolean = bitmap.quickShare(requireContext(), shareFileName)
+/**
+ * Shares the PNG at [uri], from [createBitmapShareUri], via the system share sheet, optionally including [shareText];
+ * a null [uri] shows the error toast instead.
+ * @return true if the share sheet was started.
+ */
+fun Fragment.shareBitmap(
+    uri: Uri?,
+    shareText: String? = null,
+): Boolean = requireContext().shareBitmap(uri, shareText)
 
-/** Shares [bitmap] directly via Samsung Quick Share if available, falling back to the system share sheet. */
-fun Context.quickShareBitmap(
-    bitmap: Bitmap,
-    shareFileName: String,
-): Boolean = bitmap.quickShare(this, shareFileName)
-
-/** Shares this bitmap directly via Samsung Quick Share if available, falling back to the system share sheet. */
-fun Bitmap.quickShare(
-    context: Context,
-    shareFileName: String,
+/**
+ * Shares the PNG at [uri], from [createBitmapShareUri], via the system share sheet, optionally including [shareText];
+ * a null [uri] shows the error toast instead.
+ * @return true if the share sheet was started.
+ */
+fun Context.shareBitmap(
+    uri: Uri?,
+    shareText: String? = null,
 ): Boolean =
-    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
-    @Suppress("TooGenericExceptionCaught")
-    try {
-        if (!context.admitsGatedLaunch()) return false
-        val cacheFile =
-            context.writePngCacheFile(this, CacheFileKind.SHARE, shareFileName) ?: run {
-                context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-                return false
+    sharePng(uri) {
+        val intent =
+            Intent(ACTION_SEND).apply {
+                clipData = ClipData.newRawUri(null, it)
+                putExtra(EXTRA_STREAM, it)
+                shareText?.let { text -> putExtra(EXTRA_TEXT, text) }
+                type = MIME_TYPE_PNG
+                addFlags(FLAG_GRANT_READ_URI_PERMISSION)
             }
-        context
-            .createBaseIntent()
+        safeStartActivity(Intent.createChooser(intent, null))
+    }
+
+/**
+ * Shares the PNG at [uri], from [createBitmapShareUri], directly via Samsung Quick Share if available, falling back to
+ * the system share sheet; a null [uri] shows the error toast instead.
+ * @return true if a share target was started.
+ */
+fun Fragment.quickShareBitmap(uri: Uri?): Boolean = requireContext().quickShareBitmap(uri)
+
+/**
+ * Shares the PNG at [uri], from [createBitmapShareUri], directly via Samsung Quick Share if available, falling back to
+ * the system share sheet; a null [uri] shows the error toast instead.
+ * @return true if a share target was started.
+ */
+fun Context.quickShareBitmap(uri: Uri?): Boolean =
+    sharePng(uri) {
+        createBaseIntent()
             .apply {
                 type = MIME_TYPE_PNG
-                putExtra(EXTRA_STREAM, cacheFile.getFileUri(context))
-            }.start(context)
+                putExtra(EXTRA_STREAM, it)
+            }.start(this)
+    }
+
+private fun Context.sharePng(
+    uri: Uri?,
+    start: (Uri) -> Boolean,
+): Boolean {
+    if (uri == null) {
+        toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        return false
+    }
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+    @Suppress("TooGenericExceptionCaught")
+    return try {
+        start(uri)
     } catch (e: Exception) {
-        Log.e(TAG, "Error sharing bitmap via Quick Share", e)
-        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        Log.e(TAG, "Error sharing bitmap", e)
+        toast(R.string.commonutils_error_share_content_not_supported_on_device)
         false
     }
+}
 
 internal fun Context.createBaseIntent() =
     Intent().apply {

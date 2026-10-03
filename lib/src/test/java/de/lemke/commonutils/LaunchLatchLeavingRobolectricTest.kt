@@ -23,6 +23,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Looper
 import android.view.ContextThemeWrapper
 import android.view.View
@@ -34,9 +35,10 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
+import de.lemke.commonutils.ui.utils.createBitmapShareUri
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
-import de.lemke.commonutils.ui.utils.quickShare
-import de.lemke.commonutils.ui.utils.share
+import de.lemke.commonutils.ui.utils.quickShareBitmap
+import de.lemke.commonutils.ui.utils.shareBitmap
 import de.lemke.commonutils.ui.utils.singleLaunch
 import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import de.lemke.commonutils.ui.utils.singleLaunchMenuItem
@@ -258,7 +260,7 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
 
     @Test
     @Config(shadows = [ShadowFileProvider::class])
-    fun `leaving bitmap share drops and keeps the pending share's file`() {
+    fun `leaving bitmap share input drops before its write and keeps the pending share's file`() {
         val activity = resumed().get()
         activity.launchScreen()
         val pending =
@@ -267,24 +269,26 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
                 writeText("pending")
             }
 
-        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).share(activity, "shared.png").shouldBeFalse()
+        activity
+            .singleLaunchSuspending(
+                work = { activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png") },
+                then = { activity.shareBitmap(it) },
+            ).shouldBeFalse()
+        shadowLooper.idle()
 
         pending.readText() shouldBe "pending"
     }
 
     @Test
-    @Config(shadows = [ShadowFileProvider::class])
-    fun `leaving bitmap quick share drops and keeps the pending share's file`() {
+    fun `leaving bitmap share and quick share drop`() {
         val activity = resumed().get()
         activity.launchScreen()
-        val pending =
-            File(activity.cacheDir, "share/shared.png").apply {
-                parentFile?.mkdirs()
-                writeText("pending")
-            }
+        shadowOf(activity).clearNextStartedActivities()
+        val uri = Uri.parse("content://de.lemke.commonutils.test.fileprovider/cache_root/share/shared.png")
 
-        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).quickShare(activity, "shared.png").shouldBeFalse()
+        activity.shareBitmap(uri).shouldBeFalse()
+        activity.quickShareBitmap(uri).shouldBeFalse()
 
-        pending.readText() shouldBe "pending"
+        shadowOf(activity).nextStartedActivity.shouldBeNull()
     }
 }
