@@ -23,8 +23,10 @@ import android.content.Intent
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Bundle
 import android.os.Environment
 import android.os.ParcelFileDescriptor
+import androidx.core.os.BundleCompat
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.ui.utils.BitmapSaveResult
@@ -41,6 +43,7 @@ import io.kotest.matchers.string.shouldMatch
 import io.mockk.every
 import io.mockk.mockk
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.OutputStream
 import kotlinx.coroutines.async
@@ -55,6 +58,12 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
 private val bitmap: Bitmap get() = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+
+private const val DOCUMENTS_AUTHORITY = "de.lemke.documents"
+
+// The hidden DocumentsContract.METHOD_DELETE_DOCUMENT and EXTRA_URI that deleteDocument sends to the provider.
+private const val METHOD_DELETE_DOCUMENT = "android:deleteDocument"
+private const val EXTRA_DOCUMENT_URI = "uri"
 
 private val timestampedPng = Regex("""test_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}\.png""")
 
@@ -326,6 +335,114 @@ class ExportUtilsRobolectricTest {
 
             ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nofile/1"), bitmap) shouldBe BitmapSaveResult.WriteFailed
         }
+
+    @Test
+    fun `saveBitmapToUri deletes the document when the bitmap cannot be encoded`() =
+        runTest {
+            val provider = documentProvider()
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.saveBitmapToUri(provider.uri, failing) shouldBe BitmapSaveResult.EncodingFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    @Test
+    fun `saveBitmapToUri deletes the document when the write throws`() =
+        runTest {
+            val provider = documentProvider()
+            val throwing = mockk<Bitmap>()
+            every { throwing.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
+
+            ctx.saveBitmapToUri(provider.uri, throwing) shouldBe BitmapSaveResult.WriteFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    @Test
+    fun `saveBitmapToUri keeps the document it wrote`() =
+        runTest {
+            val provider = documentProvider()
+
+            ctx.saveBitmapToUri(provider.uri, bitmap) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+
+            provider.deleted.shouldBeEmpty()
+            (provider.file.length() > 0).shouldBeTrue()
+        }
+
+    @Test
+    fun `saveBitmapToUri reports the failure when deleting the document fails`() =
+        runTest {
+            val provider = documentProvider().apply { deleteFailure = FileNotFoundException("gone") }
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.saveBitmapToUri(provider.uri, failing) shouldBe BitmapSaveResult.EncodingFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    private fun documentProvider(): DocumentRecordingProvider =
+        Robolectric
+            .buildContentProvider(DocumentRecordingProvider::class.java)
+            .create(DOCUMENTS_AUTHORITY)
+            .get()
+            .apply { file = File(ctx.cacheDir, "document.png").also { it.createNewFile() } }
+}
+
+private class DocumentRecordingProvider : ContentProvider() {
+    lateinit var file: File
+    var deleteFailure: Exception? = null
+    val deleted = mutableListOf<Uri>()
+    val uri: Uri = Uri.parse("content://$DOCUMENTS_AUTHORITY/document/1")
+
+    override fun onCreate() = true
+
+    override fun call(
+        method: String,
+        arg: String?,
+        extras: Bundle?,
+    ): Bundle? {
+        if (method == METHOD_DELETE_DOCUMENT) {
+            deleted += BundleCompat.getParcelable(extras!!, EXTRA_DOCUMENT_URI, Uri::class.java)!!
+            deleteFailure?.let { throw it }
+        }
+        return null
+    }
+
+    override fun openFile(
+        uri: Uri,
+        mode: String,
+    ): ParcelFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.parseMode(mode))
+
+    override fun query(
+        uri: Uri,
+        projection: Array<out String>?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+        sortOrder: String?,
+    ): Cursor? = null
+
+    override fun getType(uri: Uri): String? = null
+
+    override fun insert(
+        uri: Uri,
+        values: ContentValues?,
+    ): Uri? = null
+
+    override fun delete(
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+    ) = 0
+
+    override fun update(
+        uri: Uri,
+        values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+    ) = 0
 }
 
 private class NoFileContentProvider : ContentProvider() {

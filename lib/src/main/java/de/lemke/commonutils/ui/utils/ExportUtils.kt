@@ -24,6 +24,7 @@ import android.content.Intent.EXTRA_TITLE
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
@@ -107,7 +108,7 @@ suspend fun saveBitmapToDirectory(
 ): BitmapSaveResult {
     val directoryType = saveLocation.publicDirectoryType?.takeUnless { saveLocation.needsPicker } ?: return BitmapSaveResult.NeedsPicker
     return withContext(ioDispatcher) {
-        // Scoped storage and the file system throw an open-ended exception set; every failure must toast, not crash.
+        // Scoped storage and the file system throw an open-ended exception set; every failure must return a result, not crash.
         @Suppress("TooGenericExceptionCaught")
         try {
             val file = File(Environment.getExternalStoragePublicDirectory(directoryType), filename.toSafeFileName(EXTENSION_PNG))
@@ -138,7 +139,7 @@ fun Context.toast(result: BitmapSaveResult) {
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [toast] in its `then`.
  * A written bitmap returns [BitmapSaveResult.Saved] with [SaveLocation.CUSTOM]; a null [uri] or [bitmap] writes nothing
- * and returns [BitmapSaveResult.WriteFailed].
+ * and returns [BitmapSaveResult.WriteFailed]. A failed write deletes the document.
  */
 suspend fun Context.saveBitmapToUri(
     uri: Uri?,
@@ -146,19 +147,32 @@ suspend fun Context.saveBitmapToUri(
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ): BitmapSaveResult {
     if (uri == null || bitmap == null) return BitmapSaveResult.WriteFailed
-    return withContext(ioDispatcher) {
-        // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
-        @Suppress("TooGenericExceptionCaught")
+    return withContext(ioDispatcher) { writePngOrDeleteDocument(uri, bitmap) }
+}
+
+// Providers and system services throw an open-ended exception set; every failure must return a result, not crash.
+@Suppress("TooGenericExceptionCaught")
+private fun Context.writePngOrDeleteDocument(
+    uri: Uri,
+    bitmap: Bitmap,
+): BitmapSaveResult {
+    val result =
         try {
-            val outputStream = contentResolver.openOutputStream(uri) ?: return@withContext BitmapSaveResult.WriteFailed
-            outputStream.use {
+            contentResolver.openOutputStream(uri)?.use {
                 if (bitmap.writePng(it)) BitmapSaveResult.Saved(SaveLocation.CUSTOM) else BitmapSaveResult.EncodingFailed
-            }
+            } ?: BitmapSaveResult.WriteFailed
         } catch (e: Exception) {
             Log.e(TAG, "Error saving bitmap to uri", e)
             BitmapSaveResult.WriteFailed
         }
+    if (result !is BitmapSaveResult.Saved) {
+        try {
+            DocumentsContract.deleteDocument(contentResolver, uri)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting document", e)
+        }
     }
+    return result
 }
 
 /** Converts this string to a filesystem-safe filename, appending a timestamp and [extension]. */
