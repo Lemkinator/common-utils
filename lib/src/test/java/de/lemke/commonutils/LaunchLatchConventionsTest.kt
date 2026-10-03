@@ -237,6 +237,14 @@ class LaunchLatchConventionsTest : ShouldSpec() {
         should("report showNow with a receiver") {
             LaunchLatchConventions.violations("sheet.showNow(fm, TAG)") shouldBe listOf(LaunchLatchViolation(1, "sheet.showNow"))
         }
+        should("report a show with type arguments") {
+            LaunchLatchConventions.violations("sheets.show<InfoSheet>(supportFragmentManager)") shouldBe
+                listOf(LaunchLatchViolation(1, "sheets.show"))
+        }
+        should("report a show with a trailing lambda") {
+            LaunchLatchConventions.violations("dialog.show { setTitle(R.string.title) }") shouldBe
+                listOf(LaunchLatchViolation(1, "dialog.show"))
+        }
         should("report a super show inside an overriding show") {
             val source =
                 """

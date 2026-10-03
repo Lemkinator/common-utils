@@ -93,7 +93,7 @@ object LaunchLatchConventions {
         val isReference = before >= REFERENCE.length && startsWith(REFERENCE, before - REFERENCE.length)
         return when {
             isReference -> Usage(receiverChain(before - REFERENCE.length), isReference = true)
-            !isParenthesisAt(start + name.length) || isDeclaration(start) -> null
+            !isSegmentCall(start + name.length) || isDeclaration(start) -> null
             else -> Usage(receiverBefore(before), isReference = false)
         }
     }
