@@ -42,20 +42,23 @@ private const val TAG = "ExportUtils"
 private const val MIME_TYPE_PNG = "image/png"
 private const val EXTENSION_PNG = ".png"
 
-/** The outcome of [saveBitmapToDirectory] and [saveBitmapToUri]; [toast] shows the matching message. */
+/** The outcome of [saveBitmapToDirectory] and [saveBitmapToUri]. */
 sealed interface BitmapSaveResult {
+    /** A terminal result; [toast] shows its message. */
+    sealed interface Finished : BitmapSaveResult
+
     /** The bitmap was written to [location]; [SaveLocation.CUSTOM] stands for a document picked through [exportBitmap]. */
     data class Saved(
         val location: SaveLocation,
-    ) : BitmapSaveResult
+    ) : Finished
 
     /** The bitmap could not be encoded as PNG. */
-    data object EncodingFailed : BitmapSaveResult
+    data object EncodingFailed : Finished
 
     /** The target file could not be created or written. */
-    data object WriteFailed : BitmapSaveResult
+    data object WriteFailed : Finished
 
-    /** The location needs the document picker on this device; see [SaveLocation.needsPicker]. */
+    /** No failure: the location needs the document picker on this device, so the caller launches [exportBitmap]. */
     data object NeedsPicker : BitmapSaveResult
 }
 
@@ -97,7 +100,8 @@ fun Context.exportBitmap(
 /**
  * Writes [bitmap] as a PNG named after [filename] to the public directory of [saveLocation] on [ioDispatcher].
  *
- * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [toast] in its `then`.
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input. In its `then`, launch [exportBitmap] for
+ * [BitmapSaveResult.NeedsPicker] and pass a [BitmapSaveResult.Finished] result to [toast].
  * A location that [SaveLocation.needsPicker] writes nothing and returns [BitmapSaveResult.NeedsPicker].
  */
 suspend fun saveBitmapToDirectory(
@@ -121,16 +125,15 @@ suspend fun saveBitmapToDirectory(
 }
 
 /** Shows the message for [result]. */
-fun Fragment.toast(result: BitmapSaveResult) = requireContext().toast(result)
+fun Fragment.toast(result: BitmapSaveResult.Finished) = requireContext().toast(result)
 
 /** Shows the message for [result]. */
-fun Context.toast(result: BitmapSaveResult) {
+fun Context.toast(result: BitmapSaveResult.Finished) {
     when (result) {
         BitmapSaveResult.Saved(SaveLocation.CUSTOM) -> toast(R.string.commonutils_image_saved)
         is BitmapSaveResult.Saved -> toast(getString(R.string.commonutils_image_saved) + ": ${result.location.toLocalizedString(this)}")
         BitmapSaveResult.EncodingFailed -> toast(R.string.commonutils_error_saving_image)
         BitmapSaveResult.WriteFailed -> toast(R.string.commonutils_error_creating_file)
-        BitmapSaveResult.NeedsPicker -> toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
     }
 }
 
@@ -145,7 +148,7 @@ suspend fun Context.saveBitmapToUri(
     uri: Uri?,
     bitmap: Bitmap?,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-): BitmapSaveResult {
+): BitmapSaveResult.Finished {
     if (uri == null || bitmap == null) return BitmapSaveResult.WriteFailed
     return withContext(ioDispatcher) { writePngOrDeleteDocument(uri, bitmap) }
 }
@@ -155,7 +158,7 @@ suspend fun Context.saveBitmapToUri(
 private fun Context.writePngOrDeleteDocument(
     uri: Uri,
     bitmap: Bitmap,
-): BitmapSaveResult {
+): BitmapSaveResult.Finished {
     val result =
         try {
             val outputStream = contentResolver.openOutputStream(uri)

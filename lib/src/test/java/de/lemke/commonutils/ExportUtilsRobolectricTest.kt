@@ -217,12 +217,6 @@ class ExportUtilsRobolectricTest {
         ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
     }
 
-    @Test
-    fun `toast NeedsPicker shows the not-supported error`() {
-        ctx.toast(BitmapSaveResult.NeedsPicker)
-        ShadowToast.getTextOfLatestToast() shouldBe "Error: Saving content is not supported on your device."
-    }
-
     // ── SaveLocation ──────────────────────────────────────────────────────────
 
     @Test
