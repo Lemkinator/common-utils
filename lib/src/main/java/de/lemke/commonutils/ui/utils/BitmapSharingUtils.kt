@@ -58,7 +58,8 @@ fun Bitmap.share(
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
-        val cacheFile = context.resolveShareCacheFile(shareFileName)
+        if (!context.admitsGatedLaunch()) return false
+        val cacheFile = context.resolveCacheFile(CacheFileKind.SHARE, shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
             cacheFile.delete()
             context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
@@ -99,7 +100,8 @@ fun Bitmap.quickShare(
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
-        val cacheFile = context.resolveShareCacheFile(shareFileName)
+        if (!context.admitsGatedLaunch()) return false
+        val cacheFile = context.resolveCacheFile(CacheFileKind.SHARE, shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
             cacheFile.delete()
             context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
@@ -128,8 +130,7 @@ internal fun Context.createBaseIntent() =
 
 internal fun Intent.start(context: Context): Boolean {
     try {
-        context.startActivity(this)
-        return true
+        return context.launchGated { context.startActivity(this) }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to start activity with specific package: ${e.message}")
         `package` = null

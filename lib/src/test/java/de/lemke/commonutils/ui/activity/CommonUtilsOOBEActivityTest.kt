@@ -15,11 +15,14 @@
  */
 package de.lemke.commonutils.ui.activity
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Looper
 import android.text.Spanned
 import android.text.style.ClickableSpan
+import android.view.View
 import android.widget.TextView
+import androidx.core.view.isVisible
 import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
 import de.lemke.commonutils.domain.AppStartResult
@@ -27,12 +30,14 @@ import de.lemke.commonutils.track
 import de.lemke.commonutils.ui.utils.OnboardingContext
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import java.time.Duration
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
 
@@ -65,12 +70,54 @@ class CommonUtilsOOBEActivityTest {
         ShadowDialog.getLatestDialog() shouldNotBe null
     }
 
+    private fun onboardingController(): ActivityController<CommonUtilsOOBEActivity> {
+        val ctx =
+            OnboardingContext(
+                mainActivityName = Activity::class.java.name,
+                steps = emptyList(),
+                versionCode = 1,
+                versionName = "1.0",
+                appStartResult = AppStartResult.FIRST_TIME,
+                lastVersionCode = -1,
+                lastVersionName = "",
+                tosChanged = false,
+            )
+        val intent = Intent().putExtra("commonUtilsOnboardingContext", ctx)
+        return Robolectric.buildActivity(CommonUtilsOOBEActivity::class.java, intent).setup().track(destroyActivities)
+    }
+
     @Test
-    fun `footer button click triggers proceed-delay coroutine`() {
-        val activity = launchActivity()
-        activity.findViewById<android.view.View>(R.id.oobeIntroFooterButton).performClick()
-        // Idle to let the lifecycleScope.launch block enqueue; actual delay runs async.
-        shadowOf(Looper.getMainLooper()).idle()
+    fun `footer button hides itself and starts the main activity after the delay`() {
+        val activity = onboardingController().get()
+        val button = activity.findViewById<View>(R.id.oobeIntroFooterButton)
+
+        button.performClick()
+
+        button.isVisible shouldBe false
+        activity.findViewById<View>(R.id.oobeIntroFooterButtonProgress).isVisible shouldBe true
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(499))
+        shadowOf(activity).nextStartedActivity shouldBe null
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(1))
+        shadowOf(activity).nextStartedActivity.component?.className shouldBe Activity::class.java.name
+        activity.isFinishing shouldBe true
+    }
+
+    @Test
+    fun `footer button launch waits until the user returns`() {
+        val controller = onboardingController()
+        val activity = controller.get()
+        activity.findViewById<View>(R.id.oobeIntroFooterButton).performClick()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(200))
+
+        controller.pause().stop()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
+        shadowOf(activity).nextStartedActivity shouldBe null
+        activity.isFinishing shouldBe false
+
+        controller.restart().start().resume()
+
+        shadowOf(activity).nextStartedActivity.component?.className shouldBe Activity::class.java.name
+        activity.isFinishing shouldBe true
     }
 
     @Test

@@ -15,15 +15,19 @@
  */
 package de.lemke.commonutils
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.navigation.NavigationView
 import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_IS_ACTION_MODE
 import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_IS_SEARCH_MODE
 import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_SELECTED_IDS
-import de.lemke.commonutils.ui.utils.onNavigationSingleClick
+import de.lemke.commonutils.ui.utils.onSingleLaunchItemSelected
 import de.lemke.commonutils.ui.utils.restoreSearchAndActionMode
 import de.lemke.commonutils.ui.utils.saveSearchAndActionMode
+import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -31,14 +35,19 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class DrawerUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     @Test
     fun `saveSearchAndActionMode sets search mode key`() {
         val bundle = Bundle()
@@ -100,40 +109,40 @@ class DrawerUtilsRobolectricTest {
     }
 
     @Test
-    fun `onNavigationSingleClick first click is allowed and rapid repeat is blocked`() {
-        val navView = mockk<DrawerNavigationView>()
+    fun `onSingleLaunchItemSelected runs the first selection and drops a fast repeat`() {
+        val navView = navigationView()
         val listenerSlot = slot<NavigationView.OnNavigationItemSelectedListener>()
         every { navView.setNavigationItemSelectedListener(capture(listenerSlot)) } answers { }
         val item = mockk<MenuItem>()
-        var delegateCallCount = 0
-        // Advance Robolectric's monotonic clock so elapsedRealtime() >> interval before the first click.
-        android.os.SystemClock.sleep(1_000_001L)
-        navView.onNavigationSingleClick(interval = 1_000_000L) {
-            delegateCallCount++
-            true
+        val selected = mutableListOf<MenuItem>()
+        navView.onSingleLaunchItemSelected {
+            selected += it
+            navView.context.singleLaunchActivity(Intent(navView.context, Activity::class.java))
         }
-        listenerSlot.captured.onNavigationItemSelected(item) // first: allowed (elapsed >> interval)
-        delegateCallCount shouldBe 1
-        listenerSlot.captured.onNavigationItemSelected(item) // immediate repeat: blocked
-        delegateCallCount shouldBe 1
+
+        listenerSlot.captured.onNavigationItemSelected(item).shouldBeTrue()
+        listenerSlot.captured.onNavigationItemSelected(item).shouldBeFalse()
+
+        selected shouldBe listOf(item)
     }
 
     @Test
-    fun `onNavigationSingleClick with default interval allows first click and blocks rapid repeat`() {
-        val navView = mockk<DrawerNavigationView>()
+    fun `onSingleLaunchItemSelected returns the listener result`() {
+        val navView = navigationView()
         val listenerSlot = slot<NavigationView.OnNavigationItemSelectedListener>()
         every { navView.setNavigationItemSelectedListener(capture(listenerSlot)) } answers { }
-        val item = mockk<MenuItem>()
-        var delegateCallCount = 0
-        // Default interval is 600ms; advance clock past it so the first click is not throttled.
-        android.os.SystemClock.sleep(601L)
-        navView.onNavigationSingleClick {
-            delegateCallCount++
-            true
-        }
-        listenerSlot.captured.onNavigationItemSelected(item) // first: allowed (elapsed > 600ms)
-        delegateCallCount shouldBe 1
-        listenerSlot.captured.onNavigationItemSelected(item) // immediate repeat: blocked
-        delegateCallCount shouldBe 1
+        navView.onSingleLaunchItemSelected { false }
+
+        listenerSlot.captured.onNavigationItemSelected(mockk()).shouldBeFalse()
+    }
+
+    private fun navigationView(): DrawerNavigationView {
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
+        return mockk { every { context } returns activity }
     }
 }

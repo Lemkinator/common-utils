@@ -101,6 +101,19 @@ class InfoBottomSheetTest {
     }
 
     @Test
+    fun `showInfoBottomSheet twice shows one sheet`() {
+        val a = activity()
+
+        a.showInfoBottomSheet("First", "Message") shouldBe true
+        a.showInfoBottomSheet("Second", "Message") shouldBe false
+        shadowOf(Looper.getMainLooper()).idle()
+
+        a.supportFragmentManager.fragments
+            .filterIsInstance<InfoBottomSheet>()
+            .size shouldBe 1
+    }
+
+    @Test
     fun `showInfoBottomSheet(FragmentActivity, StringRes, StringRes) shows sheet`() {
         val a = activity()
         a.showInfoBottomSheet(R.string.commonutils_ok, R.string.commonutils_tos)

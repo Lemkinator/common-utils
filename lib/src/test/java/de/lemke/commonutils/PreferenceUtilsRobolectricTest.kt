@@ -22,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.ui.utils.deleteAppDataAndExit
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -65,6 +66,14 @@ class PreferenceUtilsRobolectricTest {
     fun `deleteAppDataAndExit with custom args shows dialog`() {
         fragment.deleteAppDataAndExit(title = "T", message = "M", cancel = "C", delete = "D")
         (ShadowDialog.getLatestDialog() as AlertDialog).isShowing.shouldBeTrue()
+    }
+
+    @Test
+    fun `deleteAppDataAndExit twice shows one dialog`() {
+        fragment.deleteAppDataAndExit()
+        fragment.deleteAppDataAndExit()
+
+        ShadowDialog.getShownDialogs().size shouldBe 1
     }
 
     @Test
