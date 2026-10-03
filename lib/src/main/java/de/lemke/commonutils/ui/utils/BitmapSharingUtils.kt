@@ -25,7 +25,6 @@ import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Bitmap.CompressFormat.PNG
 import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
@@ -33,7 +32,6 @@ import de.lemke.commonutils.R
 private const val SAMSUNG_QUICK_SHARE_PACKAGE = "com.samsung.android.app.sharelive"
 private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
-private const val COMPRESS_QUALITY_MAX = 100
 
 /** Shares [bitmap] via the system share sheet, optionally including [shareText]. */
 fun Fragment.shareBitmap(
@@ -59,12 +57,11 @@ fun Bitmap.share(
     @Suppress("TooGenericExceptionCaught")
     try {
         if (!context.admitsGatedLaunch()) return false
-        val cacheFile = context.resolveCacheFile(CacheFileKind.SHARE, shareFileName)
-        if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
-            cacheFile.delete()
-            context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-            return false
-        }
+        val cacheFile =
+            context.writePngCacheFile(this, CacheFileKind.SHARE, shareFileName) ?: run {
+                context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+                return false
+            }
         val uri = cacheFile.getFileUri(context)
         Intent(ACTION_SEND).run {
             clipData = ClipData.newRawUri(shareFileName, uri)
@@ -101,12 +98,11 @@ fun Bitmap.quickShare(
     @Suppress("TooGenericExceptionCaught")
     try {
         if (!context.admitsGatedLaunch()) return false
-        val cacheFile = context.resolveCacheFile(CacheFileKind.SHARE, shareFileName)
-        if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
-            cacheFile.delete()
-            context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-            return false
-        }
+        val cacheFile =
+            context.writePngCacheFile(this, CacheFileKind.SHARE, shareFileName) ?: run {
+                context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+                return false
+            }
         context
             .createBaseIntent()
             .apply {

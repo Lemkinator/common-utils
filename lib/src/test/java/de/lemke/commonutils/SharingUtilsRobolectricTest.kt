@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.CacheFileKind
 import de.lemke.commonutils.ui.utils.copyToClipboard
+import de.lemke.commonutils.ui.utils.createBitmapClip
 import de.lemke.commonutils.ui.utils.getFileUri
 import de.lemke.commonutils.ui.utils.isSamsungQuickShareAvailable
 import de.lemke.commonutils.ui.utils.quickShare
@@ -53,6 +54,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import java.io.File
 import java.io.OutputStream
+import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -232,72 +234,97 @@ class SharingUtilsBitmapRobolectricTest {
         shouldThrow<IllegalArgumentException> { outside.getFileUri(ctx) }
     }
 
-    // ── copyToClipboard(Bitmap) ─────────────────────────────────────────────────
+    // ── createBitmapClip / copyToClipboard(ClipData) ────────────────────────────
 
     @Test
-    fun `copyToClipboard bitmap success - clips the bitmap's content uri and returns true`() {
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeTrue()
-        val clip = ctx.getSystemService(ClipboardManager::class.java).primaryClip.shouldNotBeNull()
-        clip.getItemAt(0).uri.toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
-        clip.description.getMimeType(0) shouldBe "image/png"
-    }
+    fun `createBitmapClip clips the bitmap's content uri as a PNG under the label`() =
+        runTest {
+            val clip = ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "test.png").shouldNotBeNull()
+
+            clip.getItemAt(0).uri.toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
+            clip.description.label shouldBe "label"
+            clip.description.getMimeType(0) shouldBe "image/png"
+        }
 
     @Test
-    fun `copyToClipboard bitmap compress-fail - returns false`() {
-        val bitmap = mockk<Bitmap>()
-        every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
-        ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
-    }
+    fun `copyToClipboard sets a created bitmap clip and confirms with a toast`() =
+        runTest {
+            val clip = ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "test.png")
+
+            ctx.copyToClipboard(clip).shouldBeTrue()
+
+            ctx
+                .getSystemService(ClipboardManager::class.java)
+                .primaryClip
+                .shouldNotBeNull()
+                .getItemAt(0)
+                .uri
+                .toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
+            ShadowToast.getTextOfLatestToast() shouldBe "Copied to clipboard"
+        }
 
     @Test
-    fun `copyToClipboard bitmap without a FileProvider for the package - exception caught, returns false`() {
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        contextWithoutFileProvider().copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
-        ctx.getSystemService(ClipboardManager::class.java).hasPrimaryClip().shouldBeFalse()
-    }
+    fun `createBitmapClip returns null and deletes the cache file when the bitmap cannot be encoded`() =
+        runTest {
+            val bitmap = mockk<Bitmap>()
+            every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.createBitmapClip(bitmap, "label", "test.png") shouldBe null
+            File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeFalse()
+        }
 
     @Test
-    fun `copyToClipboard bitmap into an unwritable cache file - IOException caught, returns false`() {
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        ctx.copyToClipboard(bitmap, "label", unwritableCacheFileName("clipboard")).shouldBeFalse()
+    fun `createBitmapClip returns null without a FileProvider for the package`() =
+        runTest {
+            contextWithoutFileProvider().createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "test.png") shouldBe
+                null
+        }
+
+    @Test
+    fun `createBitmapClip returns null for an unwritable cache file`() =
+        runTest {
+            val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+
+            ctx.createBitmapClip(bitmap, "label", unwritableCacheFileName("clipboard")) shouldBe null
+        }
+
+    @Test
+    fun `createBitmapClip returns null for a file name that escapes the cache directory`() =
+        runTest {
+            ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "../evil.png") shouldBe null
+            File(ctx.cacheDir, "evil.png").exists().shouldBeFalse()
+        }
+
+    @Test
+    fun `copyToClipboard without a clip shows the share toast and leaves the clipboard empty`() {
+        ctx.copyToClipboard(null).shouldBeFalse()
+
         latestToastIsShareNotSupported()
         ctx.getSystemService(ClipboardManager::class.java).hasPrimaryClip().shouldBeFalse()
     }
 
     @Test
     @Config(shadows = [ShadowFileProvider::class, ShadowDeniedClipboardManager::class])
-    fun `copyToClipboard bitmap SecurityException from setPrimaryClip shows the share toast and returns false`() {
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeFalse()
+    fun `copyToClipboard SecurityException from setPrimaryClip shows the share toast and returns false`() {
+        ctx.copyToClipboard(ClipData.newPlainText("label", "text")).shouldBeFalse()
+
         latestToastIsShareNotSupported()
     }
 
     @Test
-    fun `copyToClipboard bitmap rejects shareFileName that escapes cacheDir`() {
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        ctx.copyToClipboard(bitmap, "label", "../evil.png").shouldBeFalse()
-    }
+    fun `createBitmapClip keeps a pending share's file intact`() =
+        runTest {
+            val act = activity()
+            bitmapWriting("share").share(act, "test.png").shouldBeTrue()
+            val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
 
-    @Test
-    fun `copyToClipboard bitmap keeps a pending share's file intact`() {
-        val act = activity()
-        bitmapWriting("share").share(act, "test.png").shouldBeTrue()
-        val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
+            ctx.createBitmapClip(bitmapWriting("clipboard"), "label", "test.png").shouldNotBeNull()
 
-        bitmapWriting("clipboard").copyToClipboard(ctx, "label", "test.png").shouldBeTrue()
-
-        ctx.contentResolver
-            .openInputStream(pendingUri)
-            .shouldNotBeNull()
-            .use { it.reader().readText() } shouldBe "share"
-    }
-
-    @Test
-    fun `Bitmap copyToClipboard extension delegates to Context copyToClipboard`() {
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        bitmap.copyToClipboard(ctx, "label", "test.png").shouldBeTrue()
-    }
+            ctx.contentResolver
+                .openInputStream(pendingUri)
+                .shouldNotBeNull()
+                .use { it.reader().readText() } shouldBe "share"
+        }
 
     // ── Bitmap.share ────────────────────────────────────────────────────────────
 
