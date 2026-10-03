@@ -27,7 +27,6 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout.LayoutParams
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityOobeBinding
@@ -35,10 +34,10 @@ import de.lemke.commonutils.ui.utils.advanceOnboarding
 import de.lemke.commonutils.ui.utils.onboardingContext
 import de.lemke.commonutils.ui.utils.overrideFadeOpenTransition
 import de.lemke.commonutils.ui.utils.showTosDialogOnce
+import de.lemke.commonutils.ui.utils.singleLaunchSuspending
 import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /** Pre-built onboarding (OOBE) screen that presents feature tips and a TOS acceptance flow. */
 class CommonUtilsOOBEActivity : AppCompatActivity() {
@@ -93,13 +92,14 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
             binding.oobeIntroFooterButton.layoutParams.width = MATCH_PARENT
         }
         binding.oobeIntroFooterButton.setOnClickListener {
-            binding.oobeIntroFooterTosText.isEnabled = false
-            binding.oobeIntroFooterButton.isVisible = false
-            binding.oobeIntroFooterButtonProgress.isVisible = true
-            lifecycleScope.launch {
-                delay(PROCEED_DELAY_MS.milliseconds)
-                advanceOnboarding()
-            }
+            singleLaunchSuspending(
+                work = {
+                    binding.oobeIntroFooterTosText.isEnabled = false
+                    binding.oobeIntroFooterButton.isVisible = false
+                    binding.oobeIntroFooterButtonProgress.isVisible = true
+                    delay(PROCEED_DELAY_MS.milliseconds)
+                },
+            ) { advanceOnboarding() }
         }
     }
 
