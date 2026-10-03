@@ -58,6 +58,7 @@ fun Bitmap.share(
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
+        if (!context.admitsGatedLaunch()) return false
         val cacheFile = context.resolveShareCacheFile(shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
             cacheFile.delete()
@@ -99,6 +100,7 @@ fun Bitmap.quickShare(
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
+        if (!context.admitsGatedLaunch()) return false
         val cacheFile = context.resolveShareCacheFile(shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
             cacheFile.delete()

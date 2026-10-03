@@ -22,6 +22,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.graphics.Bitmap
 import android.os.Looper
 import android.view.ContextThemeWrapper
 import android.view.View
@@ -34,6 +35,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
+import de.lemke.commonutils.ui.utils.quickShare
+import de.lemke.commonutils.ui.utils.share
 import de.lemke.commonutils.ui.utils.singleLaunch
 import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import de.lemke.commonutils.ui.utils.singleLaunchMenuItem
@@ -47,6 +50,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.io.File
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
@@ -250,5 +254,29 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
         work.complete(Unit)
         shadowLooper.idle()
         activity.singleLaunch {}.shouldBeTrue()
+    }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `leaving bitmap share drops and keeps the pending share's file`() {
+        val activity = resumed().get()
+        activity.launchScreen()
+        val pending = File(activity.cacheDir, "shared.png").apply { writeText("pending") }
+
+        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).share(activity, "shared.png").shouldBeFalse()
+
+        pending.readText() shouldBe "pending"
+    }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `leaving bitmap quick share drops and keeps the pending share's file`() {
+        val activity = resumed().get()
+        activity.launchScreen()
+        val pending = File(activity.cacheDir, "shared.png").apply { writeText("pending") }
+
+        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).quickShare(activity, "shared.png").shouldBeFalse()
+
+        pending.readText() shouldBe "pending"
     }
 }

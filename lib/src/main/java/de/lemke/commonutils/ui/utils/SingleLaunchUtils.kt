@@ -98,6 +98,14 @@ private class LaunchLatch(
     val admitsInput: Boolean
         get() = activity.lifecycle.currentState == RESUMED && phase == LatchPhase.Idle && busy == 0
 
+    val admitsLaunch: Boolean
+        get() =
+            when (phase) {
+                LatchPhase.Idle -> true
+                is LatchPhase.Leaving -> false
+                LatchPhase.Away -> sources.isNotEmpty()
+            }
+
     init {
         activity.lifecycle.addObserver(this)
         activity.addOnNewIntentListener(newIntentListener)
@@ -133,14 +141,8 @@ private class LaunchLatch(
         owner: ActivityResultLauncher<*>?,
         start: () -> Unit,
     ): Boolean {
+        if (!admitsLaunch) return false
         val previous = phase
-        val admitted =
-            when (previous) {
-                LatchPhase.Idle -> true
-                is LatchPhase.Leaving -> false
-                LatchPhase.Away -> sources.isNotEmpty()
-            }
-        if (!admitted) return false
         phase = LatchPhase.Leaving(owner)
         if (resumed) armLeavingTimeout()
         runCatching(start)
@@ -240,6 +242,10 @@ private val ComponentActivity.liveLaunchLatch: LaunchLatch
 /** Runs [action] as an input and returns its result, or null if the latch dropped it; see [Context.singleLaunch]. */
 @MainThread
 internal fun <R : Any> Context?.singleLaunchOrNull(action: () -> R): R? = if (launchLatch?.admitsInput == false) null else action()
+
+/** Returns true if a gated launch of this context's activity would run now; see [launchGated]. */
+@MainThread
+internal fun Context?.admitsGatedLaunch(): Boolean = launchLatch?.admitsLaunch != false
 
 /**
  * Runs [start] as a gated launch of this context's activity; [owner] is the result launcher that launches, if any.
