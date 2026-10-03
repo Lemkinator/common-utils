@@ -304,6 +304,10 @@ class LaunchLatchConventionsTest : ShouldSpec() {
 
             LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(5, "ProgressDialog.show"))
         }
+        should("report a show of a parenthesized group by the chain that ends the group") {
+            LaunchLatchConventions.violations("(sheet as? AlertDialog)?.show()") shouldBe
+                listOf(LaunchLatchViolation(1, "AlertDialog.show"))
+        }
         should("report a show reference without a receiver") {
             LaunchLatchConventions.violations("val open = ::show") shouldBe listOf(LaunchLatchViolation(1, "::show"))
         }
@@ -320,6 +324,7 @@ class LaunchLatchConventionsTest : ShouldSpec() {
             "tipPopup.show(TipPopup.Direction.DEFAULT)",
             "PopupMenu(this, anchor).show()",
             "snackbar?.show()",
+            "(popup as Toast).show()",
             "dialog.showOnce(TAG)",
             "imm.showSoftInput(view, 0)",
             "if (dialog.isShowing) dismiss()",

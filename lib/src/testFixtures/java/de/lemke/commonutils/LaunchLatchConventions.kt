@@ -46,6 +46,7 @@ object LaunchLatchConventions {
     private val showName = Regex("""\b(show|showNow)\b""")
     private val declarationPrefix = Regex("""\bfun\s[^(){}=;]*$""")
     private val closingBrackets = mapOf(')' to '(', ']' to '[', '}' to '{', '>' to '<')
+    private val openingBrackets = closingBrackets.entries.associate { (close, open) -> open to close }
 
     /** The violations in [source], in source order. */
     fun violations(
@@ -126,34 +127,42 @@ object LaunchLatchConventions {
         val next = skipWhitespaceForward(end)
         return when (getOrNull(next)) {
             '(', '{' -> true
-            '<' -> isParenthesisAt(closingAngleIndex(next) + 1)
+            '<' -> isParenthesisAt(closingBracketIndex(next) + 1)
             else -> false
         }
     }
 
-    private fun String.closingAngleIndex(openIndex: Int): Int {
+    private fun String.closingBracketIndex(openIndex: Int): Int {
+        val open = this[openIndex]
+        val close = openingBrackets.getValue(open)
         var depth = 0
         var index = openIndex
         while (index < length) {
             when (this[index]) {
-                '<' -> depth++
-                '>' -> if (--depth == 0) return index
+                open -> depth++
+                close -> if (--depth == 0) return index
             }
             index++
         }
         return length
     }
 
-    /** The segments of the call chain that ends at the access at [accessIndex], from its root; arguments and `!!` are skipped. */
+    /**
+     * The segments of the call chain that ends at the access at [accessIndex], from its root; arguments and `!!` are
+     * skipped. A chain rooted in a parenthesized group, as in `(x as Toast).show()`, is the chain that ends the group.
+     */
     private fun String.receiverChain(accessIndex: Int): List<Segment> {
         val end = skipCallSuffixes(accessIndex)
         val start = identifierStart(end)
-        if (start == end) return emptyList()
+        if (start == end) return groupedChain(skipWhitespaceForward(end))
         val segment = Segment(substring(start, end), end)
         val beforeAccess = skipWhitespaceBackward(start)
         val access = memberAccessLength(beforeAccess)
         return if (access == 0) listOf(segment) else receiverChain(beforeAccess - access) + segment
     }
+
+    private fun String.groupedChain(groupStart: Int): List<Segment> =
+        if (getOrNull(groupStart) == '(') receiverChain(closingBracketIndex(groupStart)) else emptyList()
 
     private fun String.skipWhitespaceBackward(end: Int): Int {
         var index = end
