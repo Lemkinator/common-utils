@@ -42,6 +42,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withResumed
 import androidx.preference.Preference
 import dev.oneuiproject.oneui.ktx.activity
+import dev.oneuiproject.oneui.ktx.onClick
 import java.util.Collections
 import java.util.EnumSet
 import java.util.WeakHashMap
@@ -371,13 +372,7 @@ fun View.onSingleLaunchClick(action: (View) -> Unit) {
 }
 
 /** Sets a click listener that runs [action] as an input; a dropped click stays consumed. See [Context.singleLaunch]. */
-fun <P : Preference> P.onSingleLaunchClick(action: (P) -> Unit): P =
-    apply {
-        setOnPreferenceClickListener {
-            context.singleLaunch { action(this) }
-            true
-        }
-    }
+fun <P : Preference> P.onSingleLaunchClick(action: (P) -> Unit): P = apply { onClick<Preference> { context.singleLaunch { action(this) } } }
 
 /**
  * Runs a menu item's [action] as an input, for `onOptionsItemSelected` and `onMenuItemSelected`.
