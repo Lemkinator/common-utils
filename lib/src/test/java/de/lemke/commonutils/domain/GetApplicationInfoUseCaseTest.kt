@@ -16,65 +16,91 @@
 package de.lemke.commonutils.domain
 
 import android.content.Context
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
+import android.content.pm.PackageInfo
+import androidx.test.core.app.ApplicationProvider
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
-/**
- * Robolectric-backed so [Config.sdk] can drive [android.os.Build.VERSION.SDK_INT] and exercise
- * both the modern (API 33+) and legacy `getApplicationInfo` overloads; [Context] itself stays mocked.
- */
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class GetApplicationInfoUseCaseTest {
-    private val context = mockk<Context>(relaxed = true)
-    private val packageManager = mockk<PackageManager>(relaxed = true)
-    private lateinit var useCase: GetApplicationInfoUseCase
+    private val context: Context get() = ApplicationProvider.getApplicationContext()
 
     @Before
-    fun setUp() {
-        every { context.packageManager } returns packageManager
-        useCase = GetApplicationInfoUseCase(context)
+    fun installPackage() {
+        shadowOf(context.packageManager).installPackage(PackageInfo().also { it.packageName = INSTALLED_PACKAGE })
     }
 
     @Test
-    fun `returns ApplicationInfo when package exists on API 33+`() {
-        val appInfo = ApplicationInfo().also { it.packageName = "com.example.test" }
-        every {
-            packageManager.getApplicationInfo("com.example.test", any<PackageManager.ApplicationInfoFlags>())
-        } returns appInfo
-        useCase("com.example.test") shouldBe appInfo
-    }
+    fun `returns the ApplicationInfo of an installed package on API 33+`() =
+        runTest {
+            GetApplicationInfoUseCase(context, UnconfinedTestDispatcher(testScheduler))(INSTALLED_PACKAGE)?.packageName shouldBe
+                INSTALLED_PACKAGE
+        }
 
     @Test
-    fun `returns null when package is not found on API 33+`() {
-        every {
-            packageManager.getApplicationInfo(any(), any<PackageManager.ApplicationInfoFlags>())
-        } throws PackageManager.NameNotFoundException("not found")
-        useCase("com.nonexistent.pkg") shouldBe null
-    }
+    fun `returns null for a missing package on API 33+`() =
+        runTest {
+            GetApplicationInfoUseCase(context, UnconfinedTestDispatcher(testScheduler))(MISSING_PACKAGE) shouldBe null
+        }
 
     @Config(sdk = [32])
     @Test
-    fun `returns ApplicationInfo when package exists below API 33`() {
-        val appInfo = ApplicationInfo().also { it.packageName = "com.example.test" }
-        every { packageManager.getApplicationInfo("com.example.test", 0) } returns appInfo
-        useCase("com.example.test") shouldBe appInfo
-    }
+    fun `returns the ApplicationInfo of an installed package below API 33`() =
+        runTest {
+            GetApplicationInfoUseCase(context, UnconfinedTestDispatcher(testScheduler))(INSTALLED_PACKAGE)?.packageName shouldBe
+                INSTALLED_PACKAGE
+        }
 
     @Config(sdk = [32])
     @Test
-    fun `returns null when package is not found below API 33`() {
-        every {
-            packageManager.getApplicationInfo(any(), 0)
-        } throws PackageManager.NameNotFoundException("not found")
-        useCase("com.nonexistent.pkg") shouldBe null
+    fun `returns null for a missing package below API 33`() =
+        runTest {
+            GetApplicationInfoUseCase(context, UnconfinedTestDispatcher(testScheduler))(MISSING_PACKAGE) shouldBe null
+        }
+
+    @Test
+    fun `looks the package up on the injected IO dispatcher`() =
+        runTest {
+            val io = HeldDispatcher()
+            val lookup = async { GetApplicationInfoUseCase(context, io)(INSTALLED_PACKAGE) }
+            runCurrent()
+
+            lookup.isCompleted.shouldBeFalse()
+            io.held shouldHaveSize 1
+
+            io.held.removeFirst().run()
+            lookup.await()?.packageName shouldBe INSTALLED_PACKAGE
+        }
+
+    private class HeldDispatcher : CoroutineDispatcher() {
+        val held = ArrayDeque<Runnable>()
+
+        override fun dispatch(
+            context: CoroutineContext,
+            block: Runnable,
+        ) {
+            held += block
+        }
+    }
+
+    private companion object {
+        const val INSTALLED_PACKAGE = "com.example.installed"
+        const val MISSING_PACKAGE = "com.example.missing"
     }
 }
