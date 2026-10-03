@@ -97,12 +97,12 @@ private class LaunchLatch(
     private val newIntentListener = Consumer<Intent> { onNewIntent() }
     private val sources = EnumSet.noneOf(LaunchSource::class.java)
     private var phase: LatchPhase = LatchPhase.Idle
-    private val heldInputs = mutableSetOf<HeldInput>()
+    private var heldInput: HeldInput? = null
     private var deliveringInput: HeldInput? = null
     private var resumed = activity.lifecycle.currentState == RESUMED
 
     val admitsInput: Boolean
-        get() = activity.lifecycle.currentState == RESUMED && phase == LatchPhase.Idle && heldInputs.isEmpty()
+        get() = activity.lifecycle.currentState == RESUMED && phase == LatchPhase.Idle && heldInput == null
 
     val admitsLaunch: Boolean
         get() =
@@ -136,7 +136,7 @@ private class LaunchLatch(
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        heldInputs.forEach { it.stopped = true }
+        heldInput?.stopped = true
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
@@ -157,7 +157,7 @@ private class LaunchLatch(
     ): Boolean {
         if (!admitsInput) return false
         val input = HeldInput()
-        heldInputs += input
+        heldInput = input
         scope
             .launch {
                 val result = work()
@@ -169,7 +169,7 @@ private class LaunchLatch(
                         deliveringInput = null
                     }
                 }
-            }.invokeOnCompletion { heldInputs -= input }
+            }.invokeOnCompletion { heldInput = null }
         return true
     }
 
