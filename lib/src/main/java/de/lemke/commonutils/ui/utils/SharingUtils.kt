@@ -117,8 +117,13 @@ private fun File.openOutputStream(): FileOutputStream = outputStream()
  */
 internal fun File.writePngOrDelete(bitmap: Bitmap): Boolean =
     runCatching { openOutputStream().use(bitmap::writePng) }
-        .also { if (it.getOrNull() != true) delete() }
+        .also { if (it.getOrNull() != true) deleteOrLog() }
         .getOrThrow()
+
+/** Deletes this file and logs a warning if it remains. */
+internal fun File.deleteOrLog() {
+    if (!delete()) Log.w(TAG, "Could not delete $path")
+}
 
 /**
  * Writes [bitmap] as a PNG to [fileName] in [kind]'s cache directory.
