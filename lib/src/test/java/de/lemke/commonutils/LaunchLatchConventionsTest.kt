@@ -195,6 +195,15 @@ class LaunchLatchConventionsTest : ShouldSpec() {
 
             LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(3, "startActivity"))
         }
+        should("not open a literal at a quote inside a backtick identifier") {
+            val source =
+                """
+                fun `it's a "quote`() = Unit
+                startActivity(intent)
+                """.trimIndent()
+
+            LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(2, "startActivity"))
+        }
         should("report a show of a dialog variable") {
             LaunchLatchConventions.violations("dialog.show()") shouldBe listOf(LaunchLatchViolation(1, "dialog.show"))
         }

@@ -27,7 +27,8 @@ data class LaunchLatchViolation(
  * Finds raw activity launches and dialog shows in Kotlin source that bypass the common-utils launch latch.
  *
  * Konsist has no type resolution, so both rules match names: a launch by its function name, a show by the
- * names in its receiver chain. Comments, string literals and char literals never match.
+ * names in its receiver chain. Comments, string literals, char literals and backtick identifiers
+ * never match.
  */
 object LaunchLatchConventions {
     /** Receiver types whose `show` is no dialog: Snackbar, Toast, PopupMenu, TipPopup. */
@@ -207,7 +208,10 @@ object LaunchLatchConventions {
 
     private fun String.lineAt(index: Int): Int = 1 + (0 until index).count { this[it] == '\n' }
 
-    /** [source] with every comment, string and char literal blanked to spaces; line breaks stay, so offsets and lines match. */
+    /**
+     * [source] with every comment, string literal, char literal and backtick identifier blanked to spaces; line breaks
+     * stay, so offsets and lines match.
+     */
     private fun stripLiterals(source: String): String {
         val code = StringBuilder(source)
         var index = 0
@@ -221,7 +225,7 @@ object LaunchLatchConventions {
         return code.toString()
     }
 
-    /** The end of the comment, string or char literal that starts at [start], or [start] if none starts there. */
+    /** The end of the comment, literal or backtick identifier that starts at [start], or [start] if none starts there. */
     private fun String.literalEnd(start: Int): Int =
         when {
             startsWith("//", start) -> indexOf('\n', start).takeIf { it >= 0 } ?: length
@@ -229,6 +233,7 @@ object LaunchLatchConventions {
             startsWith(RAW_QUOTE, start) -> stringEnd(start + RAW_QUOTE.length, raw = true)
             this[start] == '"' -> stringEnd(start + 1, raw = false)
             this[start] == '\'' -> charEnd(start + 1)
+            this[start] == '`' -> indexOf('`', start + 1).takeIf { it >= 0 }?.plus(1) ?: length
             else -> start
         }
 
