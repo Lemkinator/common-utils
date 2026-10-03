@@ -16,8 +16,6 @@
 package de.lemke.commonutils.ui.utils
 
 import android.os.Bundle
-import android.os.SystemClock
-import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
@@ -91,20 +89,10 @@ private fun View.openAboutActivity() {
     transformToActivity(CommonUtilsAboutActivity::class.java, transitionName = "CommonUtilsAboutAppTransition")
 }
 
-/** Wraps [listener] to ignore repeated clicks within [interval] milliseconds, preventing double-navigation. */
-fun DrawerNavigationView.onNavigationSingleClick(
-    interval: Long = 600,
-    listener: NavigationView.OnNavigationItemSelectedListener,
-) {
-    var lastClick = 0L
-    setNavigationItemSelectedListener(
-        object : NavigationView.OnNavigationItemSelectedListener {
-            override fun onNavigationItemSelected(item: MenuItem): Boolean {
-                val currentTime = SystemClock.elapsedRealtime()
-                if (currentTime - lastClick < interval) return false
-                lastClick = currentTime
-                return listener.onNavigationItemSelected(item)
-            }
-        },
-    )
+/**
+ * Sets [listener] to handle item selections as inputs, so a fast second tap launches nothing; a dropped selection
+ * leaves the item unselected. See [singleLaunch].
+ */
+fun DrawerNavigationView.onSingleLaunchItemSelected(listener: NavigationView.OnNavigationItemSelectedListener) {
+    setNavigationItemSelectedListener { item -> context.singleLaunchOrNull { listener.onNavigationItemSelected(item) } ?: false }
 }
