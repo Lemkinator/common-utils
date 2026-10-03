@@ -44,6 +44,13 @@ fun Context.copyToClipboard(
  * shows the error toast instead.
  * @return true if the clipboard holds [clip].
  */
+fun Fragment.copyToClipboard(clip: ClipData?): Boolean = requireContext().copyToClipboard(clip)
+
+/**
+ * Sets [clip] as the primary clip and shows a confirmation toast; a null [clip], from a failed [createBitmapClip],
+ * shows the error toast instead.
+ * @return true if the clipboard holds [clip].
+ */
 fun Context.copyToClipboard(clip: ClipData?): Boolean {
     if (clip == null) {
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
@@ -61,6 +68,20 @@ fun Context.copyToClipboard(clip: ClipData?): Boolean {
         false
     }
 }
+
+/**
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns a clip of its content URI under
+ * [label], or null if writing fails.
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
+ * `then`.
+ */
+suspend fun Fragment.createBitmapClip(
+    bitmap: Bitmap,
+    label: String,
+    fileName: String,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): ClipData? = requireContext().createBitmapClip(bitmap, label, fileName, ioDispatcher)
 
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns a clip of its content URI under

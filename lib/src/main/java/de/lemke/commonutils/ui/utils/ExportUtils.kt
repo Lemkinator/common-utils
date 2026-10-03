@@ -120,6 +120,9 @@ suspend fun saveBitmapToDirectory(
 }
 
 /** Shows the message for [result]. */
+fun Fragment.toast(result: BitmapSaveResult) = requireContext().toast(result)
+
+/** Shows the message for [result]. */
 fun Context.toast(result: BitmapSaveResult) {
     when (result) {
         BitmapSaveResult.Saved(SaveLocation.CUSTOM) -> toast(R.string.commonutils_image_saved)
