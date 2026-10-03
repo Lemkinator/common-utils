@@ -104,6 +104,11 @@ private class LaunchLatch(
         PreResumeCallbacks.register(activity.application)
     }
 
+    override fun onResume(owner: LifecycleOwner) {
+        // A latch first created inside onResume or Fragment.onResume missed its pre-resume callback.
+        if (!resumed) onPreResume()
+    }
+
     override fun onPause(owner: LifecycleOwner) {
         resumed = false
         if (phase is LatchPhase.Leaving) {
@@ -137,7 +142,7 @@ private class LaunchLatch(
             }
         if (!admitted) return false
         phase = LatchPhase.Leaving(owner)
-        if (resumed) handler.postDelayed(leavingTimeout, LEAVING_TIMEOUT.inWholeMilliseconds)
+        if (resumed) armLeavingTimeout()
         runCatching(start)
             .onFailure {
                 handler.removeCallbacks(leavingTimeout)
@@ -163,7 +168,7 @@ private class LaunchLatch(
         resumed = true
         when (phase) {
             LatchPhase.Idle -> Unit
-            is LatchPhase.Leaving -> handler.postDelayed(leavingTimeout, LEAVING_TIMEOUT.inWholeMilliseconds)
+            is LatchPhase.Leaving -> armLeavingTimeout()
             LatchPhase.Away -> phase = LatchPhase.Idle
         }
     }
@@ -172,6 +177,11 @@ private class LaunchLatch(
         if (phase is LatchPhase.Leaving) settle()
         sources += LaunchSource.NEW_INTENT
         handler.postAtFrontOfQueue { sources -= LaunchSource.NEW_INTENT }
+    }
+
+    private fun armLeavingTimeout() {
+        handler.removeCallbacks(leavingTimeout)
+        handler.postDelayed(leavingTimeout, LEAVING_TIMEOUT.inWholeMilliseconds)
     }
 
     private fun settle() {

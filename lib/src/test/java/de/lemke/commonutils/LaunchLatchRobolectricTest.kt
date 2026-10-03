@@ -77,6 +77,14 @@ abstract class LaunchLatchRobolectricTest {
     protected fun untrackedResumed(): ActivityController<LatchTestActivity> =
         Robolectric.buildActivity(LatchTestActivity::class.java).setup()
 
+    protected fun started(): ActivityController<LatchTestActivity> =
+        Robolectric
+            .buildActivity(LatchTestActivity::class.java)
+            .create()
+            .start()
+            .postCreate(null)
+            .track(destroyActivities)
+
     protected fun away(): ActivityController<LatchTestActivity> =
         resumed().also {
             it.get().launchScreen().shouldBeTrue()
@@ -100,6 +108,10 @@ abstract class LaunchLatchRobolectricTest {
     /** A stale timer of an earlier launch would end this launch's second early. */
     protected fun LatchTestActivity.shouldHoldANewLaunchForOneSecond() {
         launchScreen().shouldBeTrue()
+        shouldSettleAfterOneSecond()
+    }
+
+    protected fun LatchTestActivity.shouldSettleAfterOneSecond() {
         shadowLooper.idleFor(Duration.ofMillis(999))
         singleLaunch {}.shouldBeFalse()
         shadowLooper.idleFor(Duration.ofMillis(1))

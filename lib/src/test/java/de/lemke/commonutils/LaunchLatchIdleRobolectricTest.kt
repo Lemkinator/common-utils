@@ -206,6 +206,33 @@ class LaunchLatchIdleRobolectricTest : LaunchLatchRobolectricTest() {
     }
 
     @Test
+    fun `idle latch first created in the onResume body launches and settles after the timer`() {
+        val controller = started()
+        val activity = controller.get()
+        var launched: Boolean? = null
+        activity.onResumeAction = { launched = activity.launchScreen() }
+
+        controller.resume()
+
+        launched shouldBe true
+        activity.shouldSettleAfterOneSecond()
+    }
+
+    @Test
+    fun `idle latch first created in Fragment onResume launches and settles after the timer`() {
+        val controller = started()
+        val activity = controller.get()
+        val fragment = activity.addFragment()
+        var launched: Boolean? = null
+        fragment.onResumeAction = { launched = fragment.requireContext().launchScreen() }
+
+        controller.resume()
+
+        launched shouldBe true
+        activity.shouldSettleAfterOneSecond()
+    }
+
+    @Test
     fun `idle destroy removes the latch`() {
         val controller = untrackedResumed()
         val twin = untrackedResumed()
