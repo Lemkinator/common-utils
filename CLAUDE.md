@@ -36,6 +36,11 @@ resolves roots per call. An unshadowed
 test that calls the stock `getUriForFile` calls the published `resetFileProviderCache()` in `@Before`
 and `@After`.
 
+**`assertLaunchLatchConventions`** (published testFixtures, `LaunchLatchConventions.kt`) — each app's
+Konsist `CodingConventionsTest` calls `Konsist.scopeFromProduction().assertLaunchLatchConventions()`.
+It fails on raw activity launches, raw result registration and every `show`/`showNow` whose receiver
+is no allowlisted non-dialog type; an app passes its own non-dialog types as `extraShowReceivers`.
+
 **Robolectric + JUnit 5**: See the shared Robolectric/JUnit 5 policy in
 `A:\repo\android\CLAUDE.md`. This repo previously bridged Robolectric onto JUnit 5 via the
 experimental `tech.apter.junit5.jupiter:robolectric-extension`; it was reverted because

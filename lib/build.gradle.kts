@@ -185,6 +185,7 @@ dependencies {
     // implementation(oneui.design), inherited by src/test).
     testFixturesCompileOnly(libs.oneui.design)
     testFixturesCompileOnly(libs.robolectric)
+    testFixturesCompileOnly(libs.konsist)
 
     // JUnit4 island: Robolectric has no native JUnit5 support, and HiltAndroidRule/@HiltAndroidTest
     // are JUnit4-only. junit-vintage-engine lets the JUnit Platform (useJUnitPlatform() above)
