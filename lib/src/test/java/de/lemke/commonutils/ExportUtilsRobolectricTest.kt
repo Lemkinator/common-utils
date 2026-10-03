@@ -124,13 +124,15 @@ class ExportUtilsRobolectricTest {
         }
 
     @Test
-    fun `saveBitmapToDirectory reports EncodingFailed when the bitmap cannot be encoded`() =
+    fun `saveBitmapToDirectory reports EncodingFailed when the bitmap cannot be encoded and leaves no file`() =
         runTest {
-            publicDirectory(Environment.DIRECTORY_DCIM)
+            val directory = publicDirectory(Environment.DIRECTORY_DCIM)
             val failing = mockk<Bitmap>()
             every { failing.compress(any(), any(), any<OutputStream>()) } returns false
 
             saveBitmapToDirectory(SaveLocation.DCIM, failing, "test") shouldBe BitmapSaveResult.EncodingFailed
+
+            directory.listFiles()!!.shouldBeEmpty()
         }
 
     @Test
@@ -145,13 +147,15 @@ class ExportUtilsRobolectricTest {
         }
 
     @Test
-    fun `saveBitmapToDirectory reports WriteFailed when encoding throws`() =
+    fun `saveBitmapToDirectory reports WriteFailed when encoding throws and leaves no file`() =
         runTest {
-            publicDirectory(Environment.DIRECTORY_PICTURES)
+            val directory = publicDirectory(Environment.DIRECTORY_PICTURES)
             val throwing = mockk<Bitmap>()
             every { throwing.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
 
             saveBitmapToDirectory(SaveLocation.PICTURES, throwing, "test") shouldBe BitmapSaveResult.WriteFailed
+
+            directory.listFiles()!!.shouldBeEmpty()
         }
 
     @Test

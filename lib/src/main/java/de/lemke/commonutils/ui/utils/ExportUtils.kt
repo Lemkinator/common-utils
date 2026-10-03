@@ -27,7 +27,6 @@ import android.os.Environment
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
 import java.io.File
@@ -94,12 +93,6 @@ fun Context.exportBitmap(
         false
     }
 
-// File.outputStream() is inline; its FileOutputStream constructor is inlined at every call site
-// and attributed as an uncoverable branch by JaCoCo on Linux/CI. Wrapping it here keeps the
-// inline expansion inside excluded code while the call site stays a plain Kotlin function call.
-@NoCoverage
-private fun File.openOutputStream(): java.io.FileOutputStream = outputStream()
-
 /**
  * Writes [bitmap] as a PNG named after [filename] to the public directory of [saveLocation] on [ioDispatcher].
  *
@@ -118,7 +111,7 @@ suspend fun saveBitmapToDirectory(
         @Suppress("TooGenericExceptionCaught")
         try {
             val file = File(Environment.getExternalStoragePublicDirectory(directoryType), filename.toSafeFileName(EXTENSION_PNG))
-            if (file.openOutputStream().use(bitmap::writePng)) BitmapSaveResult.Saved(saveLocation) else BitmapSaveResult.EncodingFailed
+            if (file.writePngOrDelete(bitmap)) BitmapSaveResult.Saved(saveLocation) else BitmapSaveResult.EncodingFailed
         } catch (e: Exception) {
             Log.e(TAG, "Error saving bitmap to directory", e)
             BitmapSaveResult.WriteFailed

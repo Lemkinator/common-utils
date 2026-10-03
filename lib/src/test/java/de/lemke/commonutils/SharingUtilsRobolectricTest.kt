@@ -44,6 +44,7 @@ import de.lemke.commonutils.ui.utils.shareText
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -53,6 +54,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import java.io.File
+import java.io.IOException
 import java.io.OutputStream
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -271,6 +273,16 @@ class SharingUtilsBitmapRobolectricTest {
 
             ctx.createBitmapClip(bitmap, "label", "test.png") shouldBe null
             File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeFalse()
+        }
+
+    @Test
+    fun `createBitmapClip returns null and deletes the cache file when encoding throws`() =
+        runTest {
+            val bitmap = mockk<Bitmap>()
+            every { bitmap.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
+
+            ctx.createBitmapClip(bitmap, "label", "test.png") shouldBe null
+            File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
         }
 
     @Test
