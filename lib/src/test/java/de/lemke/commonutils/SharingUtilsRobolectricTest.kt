@@ -330,6 +330,15 @@ class SharingUtilsBitmapRobolectricTest {
         }
 
     @Test
+    fun `createBitmapClip logs no failed delete for a cache file it never created`() =
+        runTest {
+            ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "missing/test.png") shouldBe null
+
+            File(ctx.cacheDir, "clipboard/missing/test.png").exists().shouldBeFalse()
+            ShadowLog.getLogsForTag("SharingUtils").shouldBeEmpty()
+        }
+
+    @Test
     fun `createBitmapClip returns null for an unwritable cache file`() =
         runTest {
             val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)

@@ -122,7 +122,7 @@ internal fun File.writePngOrDelete(bitmap: Bitmap): Boolean =
 
 /** Deletes this file and logs a warning if it remains. */
 internal fun File.deleteOrLog() {
-    if (!delete()) Log.w(TAG, "Could not delete $path")
+    if (!delete() && exists()) Log.w(TAG, "Could not delete $path")
 }
 
 /**
