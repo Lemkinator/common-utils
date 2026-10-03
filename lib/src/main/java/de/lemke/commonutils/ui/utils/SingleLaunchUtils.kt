@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 
 private val LEAVING_TIMEOUT = 1.seconds
 
-private val launchLatches = WeakHashMap<Activity, LaunchLatch>()
+private val launchLatches = hashMapOf<Activity, LaunchLatch>()
 
 /** Where an activity stands between a gated launch and its return to the foreground. */
 private sealed interface LatchPhase {
