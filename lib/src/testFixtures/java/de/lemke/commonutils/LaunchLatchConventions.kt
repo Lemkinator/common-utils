@@ -27,8 +27,7 @@ data class LaunchLatchViolation(
  * Finds raw activity launches and dialog shows in Kotlin source that bypass the common-utils launch latch.
  *
  * Konsist has no type resolution, so both rules match names: a launch by its function name, a show by the
- * names in its receiver chain. Comments, string literals, char literals and backtick identifiers
- * never match.
+ * names in its receiver chain. Comments, string literals and char literals never match.
  */
 object LaunchLatchConventions {
     /** Receiver types whose `show` is no dialog: Snackbar, Toast, PopupMenu, TipPopup. */
@@ -37,6 +36,8 @@ object LaunchLatchConventions {
     private const val RAW_QUOTE = "\"\"\""
     private const val TEMPLATE_START = "\${"
     private const val REFERENCE = "::"
+    private const val TYPE_ARGUMENT_SYMBOLS = "_.,?*<>@"
+    private const val BACKTICK_BLANKED = "`'\""
 
     private val launchName =
         Regex(
@@ -127,10 +128,16 @@ object LaunchLatchConventions {
         val next = skipWhitespaceForward(end)
         return when (getOrNull(next)) {
             '(', '{' -> true
-            '<' -> isParenthesisAt(closingBracketIndex(next) + 1)
+            '<' -> closingBracketIndex(next).let { close -> isTypeArgumentList(next + 1, close) && isParenthesisAt(close + 1) }
             else -> false
         }
     }
+
+    /** Whether the text from [start] to [end] can be type arguments, so a comparison as in `show < a && b > (c)` is none. */
+    private fun String.isTypeArgumentList(
+        start: Int,
+        end: Int,
+    ): Boolean = substring(start, minOf(end, length)).all { it.isLetterOrDigit() || it.isWhitespace() || it in TYPE_ARGUMENT_SYMBOLS }
 
     private fun String.closingBracketIndex(openIndex: Int): Int {
         val open = this[openIndex]
@@ -218,16 +225,18 @@ object LaunchLatchConventions {
     private fun String.lineAt(index: Int): Int = 1 + (0 until index).count { this[it] == '\n' }
 
     /**
-     * [source] with every comment, string literal, char literal and backtick identifier blanked to spaces; line breaks
-     * stay, so offsets and lines match.
+     * [source] with every comment, string literal and char literal blanked to spaces; a backtick identifier keeps its
+     * name and loses only its backticks and quotes. Line breaks stay, so offsets and lines match.
      */
     private fun stripLiterals(source: String): String {
         val code = StringBuilder(source)
         var index = 0
         while (index < source.length) {
             val end = source.literalEnd(index)
+            val isBacktick = source[index] == '`'
             for (blanked in index until end) {
-                if (code[blanked] != '\n' && code[blanked] != '\r') code[blanked] = ' '
+                val char = code[blanked]
+                if (char != '\n' && char != '\r' && (!isBacktick || char in BACKTICK_BLANKED)) code[blanked] = ' '
             }
             index = maxOf(end, index + 1)
         }

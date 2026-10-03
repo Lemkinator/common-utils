@@ -209,6 +209,9 @@ class LaunchLatchConventionsTest : ShouldSpec() {
 
             LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(2, "startActivity"))
         }
+        should("report a show named by a backtick identifier") {
+            LaunchLatchConventions.violations("dialog.`show`()") shouldBe listOf(LaunchLatchViolation(1, "dialog.show"))
+        }
         should("report a show of a dialog variable") {
             LaunchLatchConventions.violations("dialog.show()") shouldBe listOf(LaunchLatchViolation(1, "dialog.show"))
         }
@@ -333,6 +336,7 @@ class LaunchLatchConventionsTest : ShouldSpec() {
             "dialog.showOnce(TAG)",
             "imm.showSoftInput(view, 0)",
             "if (dialog.isShowing) dismiss()",
+            "show < limit && x > (y)",
         ).forEach { source ->
             should("accept $source") {
                 LaunchLatchConventions.violations(source).shouldBeEmpty()
