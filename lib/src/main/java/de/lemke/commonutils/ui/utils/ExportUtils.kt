@@ -41,9 +41,9 @@ private const val TAG = "ExportUtils"
 private const val MIME_TYPE_PNG = "image/png"
 private const val EXTENSION_PNG = ".png"
 
-/** The outcome of [saveBitmapToDirectory]; [toast] shows the matching message. */
+/** The outcome of [saveBitmapToDirectory] and [saveBitmapToUri]; [toast] shows the matching message. */
 sealed interface BitmapSaveResult {
-    /** The bitmap was written to [location]. */
+    /** The bitmap was written to [location]; [SaveLocation.CUSTOM] stands for a document picked through [exportBitmap]. */
     data class Saved(
         val location: SaveLocation,
     ) : BitmapSaveResult
@@ -122,6 +122,7 @@ suspend fun saveBitmapToDirectory(
 /** Shows the message for [result]. */
 fun Context.toast(result: BitmapSaveResult) {
     when (result) {
+        BitmapSaveResult.Saved(SaveLocation.CUSTOM) -> toast(R.string.commonutils_image_saved)
         is BitmapSaveResult.Saved -> toast(getString(R.string.commonutils_image_saved) + ": ${result.location.toLocalizedString(this)}")
         BitmapSaveResult.EncodingFailed -> toast(R.string.commonutils_error_saving_image)
         BitmapSaveResult.WriteFailed -> toast(R.string.commonutils_error_creating_file)
@@ -129,34 +130,30 @@ fun Context.toast(result: BitmapSaveResult) {
     }
 }
 
-/** Compresses [bitmap] as PNG and writes it to [uri], showing a toast on success or failure. */
-fun Context.saveBitmapToUri(
+/**
+ * Writes [bitmap] as a PNG to [uri], the document picked through [exportBitmap], on [ioDispatcher].
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [toast] in its `then`.
+ * A written bitmap returns [BitmapSaveResult.Saved] with [SaveLocation.CUSTOM]; a null [uri] or [bitmap] writes nothing
+ * and returns [BitmapSaveResult.WriteFailed].
+ */
+suspend fun Context.saveBitmapToUri(
     uri: Uri?,
     bitmap: Bitmap?,
-): Boolean {
-    if (uri == null || bitmap == null) {
-        toast(R.string.commonutils_error_creating_file)
-        return false
-    }
-    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
-    @Suppress("TooGenericExceptionCaught")
-    return try {
-        contentResolver.openOutputStream(uri)?.use { outputStream ->
-            if (bitmap.writePng(outputStream)) {
-                toast(R.string.commonutils_image_saved)
-                true
-            } else {
-                toast(R.string.commonutils_error_saving_image)
-                false
-            }
-        } ?: run {
-            toast(R.string.commonutils_error_creating_file)
-            false
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): BitmapSaveResult {
+    if (uri == null || bitmap == null) return BitmapSaveResult.WriteFailed
+    return withContext(ioDispatcher) {
+        // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            contentResolver.openOutputStream(uri)?.use { outputStream ->
+                if (bitmap.writePng(outputStream)) BitmapSaveResult.Saved(SaveLocation.CUSTOM) else BitmapSaveResult.EncodingFailed
+            } ?: BitmapSaveResult.WriteFailed
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving bitmap to uri", e)
+            BitmapSaveResult.WriteFailed
         }
-    } catch (e: Exception) {
-        Log.e(TAG, "Error saving bitmap to uri", e)
-        toast(R.string.commonutils_error_creating_file)
-        false
     }
 }
 

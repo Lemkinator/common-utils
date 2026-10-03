@@ -173,6 +173,12 @@ class ExportUtilsRobolectricTest {
     }
 
     @Test
+    fun `toast Saved to CUSTOM shows the plain confirmation`() {
+        ctx.toast(BitmapSaveResult.Saved(SaveLocation.CUSTOM))
+        ShadowToast.getTextOfLatestToast() shouldBe "Image saved"
+    }
+
+    @Test
     fun `toast EncodingFailed shows the saving error`() {
         ctx.toast(BitmapSaveResult.EncodingFailed)
         ShadowToast.getTextOfLatestToast() shouldBe "Error saving image"
@@ -211,71 +217,81 @@ class ExportUtilsRobolectricTest {
     // ── saveBitmapToUri ───────────────────────────────────────────────────────
 
     @Test
-    fun `saveBitmapToUri returns false when uri is null`() {
-        ctx.saveBitmapToUri(null, bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    fun `saveBitmapToUri reports WriteFailed when uri is null`() =
+        runTest {
+            ctx.saveBitmapToUri(null, bitmap) shouldBe BitmapSaveResult.WriteFailed
+        }
 
     @Test
-    fun `saveBitmapToUri returns false when bitmap is null`() {
-        val uri = Uri.fromFile(File(ctx.cacheDir, "null_bitmap_test.png"))
-        ctx.saveBitmapToUri(uri, null).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    fun `saveBitmapToUri reports WriteFailed when bitmap is null and writes nothing`() =
+        runTest {
+            val file = File(ctx.cacheDir, "null_bitmap_test.png")
+
+            ctx.saveBitmapToUri(Uri.fromFile(file), null) shouldBe BitmapSaveResult.WriteFailed
+
+            file.exists().shouldBeFalse()
+        }
 
     @Test
-    fun `saveBitmapToUri writes the PNG and confirms with a toast`() {
-        val file = File(ctx.cacheDir, "export_test.png").also { it.createNewFile() }
-        ctx.saveBitmapToUri(Uri.fromFile(file), bitmap).shouldBeTrue()
-        (file.length() > 0).shouldBeTrue()
-        ShadowToast.getTextOfLatestToast() shouldBe "Image saved"
-    }
+    fun `saveBitmapToUri writes the PNG and reports Saved to CUSTOM`() =
+        runTest {
+            val file = File(ctx.cacheDir, "export_test.png").also { it.createNewFile() }
+
+            ctx.saveBitmapToUri(Uri.fromFile(file), bitmap) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+
+            (file.length() > 0).shouldBeTrue()
+        }
 
     @Test
-    fun `saveBitmapToUri reports an encoding failure`() {
-        val file = File(ctx.cacheDir, "export_fail.png").also { it.createNewFile() }
-        val failing = mockk<Bitmap>()
-        every { failing.compress(any(), any(), any<OutputStream>()) } returns false
-        ctx.saveBitmapToUri(Uri.fromFile(file), failing).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error saving image"
-    }
+    fun `saveBitmapToUri reports EncodingFailed when the bitmap cannot be encoded`() =
+        runTest {
+            val file = File(ctx.cacheDir, "export_fail.png").also { it.createNewFile() }
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.saveBitmapToUri(Uri.fromFile(file), failing) shouldBe BitmapSaveResult.EncodingFailed
+        }
 
     @Test
-    fun `saveBitmapToUri without a provider for the uri shows the file error`() {
-        ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nonexistent/data/1"), bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    fun `saveBitmapToUri reports WriteFailed without a provider for the uri`() =
+        runTest {
+            ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nonexistent/data/1"), bitmap) shouldBe BitmapSaveResult.WriteFailed
+        }
 
     @Test
-    fun `saveBitmapToUri SecurityException from openOutputStream returns false`() {
-        val uri = Uri.parse("content://de.lemke.provider/revoked/1")
-        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw SecurityException("permission revoked") }
-        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    fun `saveBitmapToUri reports WriteFailed for a SecurityException from openOutputStream`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.provider/revoked/1")
+            shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw SecurityException("permission revoked") }
+
+            ctx.saveBitmapToUri(uri, bitmap) shouldBe BitmapSaveResult.WriteFailed
+        }
 
     @Test
-    fun `saveBitmapToUri IllegalArgumentException from the resolver shows the error toast and returns false`() {
-        val uri = Uri.parse("content://de.lemke.provider/unknown/1")
-        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw IllegalArgumentException("Unknown URI") }
-        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    fun `saveBitmapToUri reports WriteFailed for an IllegalArgumentException from the resolver`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.provider/unknown/1")
+            shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw IllegalArgumentException("Unknown URI") }
+
+            ctx.saveBitmapToUri(uri, bitmap) shouldBe BitmapSaveResult.WriteFailed
+        }
 
     @Test
-    fun `saveBitmapToUri UnsupportedOperationException from the resolver shows the error toast and returns false`() {
-        val uri = Uri.parse("content://de.lemke.provider/readonly/1")
-        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw UnsupportedOperationException("Writing not supported") }
-        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    fun `saveBitmapToUri reports WriteFailed for an UnsupportedOperationException from the resolver`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.provider/readonly/1")
+            shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw UnsupportedOperationException("Writing not supported") }
+
+            ctx.saveBitmapToUri(uri, bitmap) shouldBe BitmapSaveResult.WriteFailed
+        }
 
     @Test
-    fun `saveBitmapToUri null stream shows the error toast and returns false`() {
-        Robolectric.buildContentProvider(NoFileContentProvider::class.java).create("de.lemke.nofile")
-        ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nofile/1"), bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    fun `saveBitmapToUri reports WriteFailed for a null stream`() =
+        runTest {
+            Robolectric.buildContentProvider(NoFileContentProvider::class.java).create("de.lemke.nofile")
+
+            ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nofile/1"), bitmap) shouldBe BitmapSaveResult.WriteFailed
+        }
 }
 
 private class NoFileContentProvider : ContentProvider() {
