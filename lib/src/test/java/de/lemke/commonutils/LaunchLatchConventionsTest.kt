@@ -95,6 +95,9 @@ class LaunchLatchConventionsTest : ShouldSpec() {
 
             LaunchLatchConventions.violations(source).shouldBeEmpty()
         }
+        should("report a show in the expression body of a declaration") {
+            LaunchLatchConventions.violations("fun open() = dialog.show()") shouldBe listOf(LaunchLatchViolation(1, "dialog.show"))
+        }
         should("accept declarations of launch and show names") {
             val source =
                 """
