@@ -110,9 +110,10 @@ private fun AppCompatActivity.commitAppStart(
 /**
  * Call as the FIRST thing in the launcher activity's `onCreate`, after `super.onCreate`.
  *
- * @return `null` if onboarding was launched (caller must `return` immediately). Otherwise, the
- *   [AppStart] snapshot — valid for `isFirstTime`, `isFirstTimeVersion`, etc. even when called
- *   after the onboarding chain completes (the chain passes the original state back via the carrier).
+ * @return `null` if onboarding was launched, or dropped by a pending launch of this activity (caller must
+ *   `return` immediately). Otherwise, the [AppStart] snapshot — valid for `isFirstTime`,
+ *   `isFirstTimeVersion`, etc. even when called after the onboarding chain completes (the chain passes
+ *   the original state back via the carrier).
  *
  * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_ONBOARDING], the chain is
  * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g., a BuildConfig flag).
@@ -141,21 +142,22 @@ fun AppCompatActivity.onboardIfNeeded(
         } else {
             val freshAppStart = CheckAppStartUseCase(applicationContext, settings)(versionCode, versionName)
             if (freshAppStart.shouldShowOOBE && !(allowSkip && intent.getBooleanExtra(EXTRA_SKIP_ONBOARDING, false))) {
-                startActivity(
-                    Intent(this, CommonUtilsOOBEActivity::class.java).putOnboardingContext(
-                        OnboardingContext(
-                            mainActivityName = this::class.java.name,
-                            steps = Onboarding.steps.map { it.name },
-                            versionCode = versionCode,
-                            versionName = versionName,
-                            appStartResult = freshAppStart.result,
-                            lastVersionCode = freshAppStart.lastVersionCode,
-                            lastVersionName = freshAppStart.lastVersionName,
-                            tosChanged = freshAppStart.result == AppStartResult.FIRST_TIME_VERSION && !freshAppStart.tosAccepted,
+                val launched =
+                    singleLaunchActivity(
+                        Intent(this, CommonUtilsOOBEActivity::class.java).putOnboardingContext(
+                            OnboardingContext(
+                                mainActivityName = this::class.java.name,
+                                steps = Onboarding.steps.map { it.name },
+                                versionCode = versionCode,
+                                versionName = versionName,
+                                appStartResult = freshAppStart.result,
+                                lastVersionCode = freshAppStart.lastVersionCode,
+                                lastVersionName = freshAppStart.lastVersionName,
+                                tosChanged = freshAppStart.result == AppStartResult.FIRST_TIME_VERSION && !freshAppStart.tosAccepted,
+                            ),
                         ),
-                    ),
-                )
-                finishWithFade()
+                    )
+                if (launched) finishWithFade()
                 return null
             }
             freshAppStart
@@ -179,35 +181,27 @@ internal fun nextInChain(
 
 /**
  * Advances the onboarding chain from the current step: starts the next step (forwarding the carrier
- * unchanged), or past the last step, starts the main activity. Then finishes this step.
+ * unchanged), or past the last step, starts the main activity, so `onboardIfNeeded` can commit and
+ * reconstruct `AppStart`. Then finishes this step, unless the launch latch dropped the start.
  *
  * Call from a step activity when the user finishes that step. Safe to call from standalone context
  * (activity not launched as part of the chain) — just finishes the activity.
  */
 fun Activity.advanceOnboarding() {
     val ctx = intent.onboardingContext
-    if (ctx == null) {
-        finishWithFade()
-        return
-    }
-    val chain = listOf(CommonUtilsOOBEActivity::class.java.name) + ctx.steps
-    val current = this::class.java.name
-    if (!chain.contains(current)) {
-        Log.w(TAG, "advanceOnboarding: ${this::class.java.simpleName} not in chain — finishing without advancing")
-    } else {
-        val next = nextInChain(chain, current)
-        if (next != null) {
-            startActivity(Intent().setClassName(this, next).putOnboardingContext(ctx))
-        } else {
-            completeOnboarding(ctx)
-        }
-    }
-    finishWithFade()
+    if (ctx == null || startNextOnboardingStep(ctx)) finishWithFade()
 }
 
-/** Starts the main activity with the carrier so `onboardIfNeeded` can commit and reconstruct `AppStart`. */
-private fun Activity.completeOnboarding(ctx: OnboardingContext) {
-    startActivity(Intent().setClassName(this, ctx.mainActivityName).putOnboardingContext(ctx))
+/** Starts the step after this one, or past the last step the main activity; true if this step may finish. */
+private fun Activity.startNextOnboardingStep(ctx: OnboardingContext): Boolean {
+    val chain = listOf(CommonUtilsOOBEActivity::class.java.name) + ctx.steps
+    val current = this::class.java.name
+    if (current !in chain) {
+        Log.w(TAG, "advanceOnboarding: ${this::class.java.simpleName} not in chain — finishing without advancing")
+        return true
+    }
+    val next = nextInChain(chain, current) ?: ctx.mainActivityName
+    return singleLaunchActivity(Intent().setClassName(this, next).putOnboardingContext(ctx))
 }
 
 /** `true` if this activity was launched as a step of the onboarding chain (vs. standalone). */

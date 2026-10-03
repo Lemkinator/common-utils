@@ -21,12 +21,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.ParcelCompat
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.domain.AppStartResult
+import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
 import de.lemke.commonutils.ui.utils.Onboarding
 import de.lemke.commonutils.ui.utils.OnboardingContext
 import de.lemke.commonutils.ui.utils.advanceOnboarding
 import de.lemke.commonutils.ui.utils.isOnboardingStep
 import de.lemke.commonutils.ui.utils.onboardIfNeeded
 import de.lemke.commonutils.ui.utils.setupOnboarding
+import de.lemke.commonutils.ui.utils.singleLaunch
+import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -52,6 +55,13 @@ class OnboardingUtilsRobolectricTest {
     private fun activity(): Activity =
         Robolectric
             .buildActivity(Activity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
+
+    private fun appCompatActivity(intent: Intent = Intent()): AppCompatActivity =
+        Robolectric
+            .buildActivity(AppCompatActivity::class.java, intent)
             .setup()
             .track(destroyActivities)
             .get()
@@ -153,7 +163,7 @@ class OnboardingUtilsRobolectricTest {
     @Test
     fun `setupOnboarding with OOBE class in steps throws IllegalArgumentException`() {
         shouldThrow<IllegalArgumentException> {
-            setupOnboarding(listOf(de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity::class.java))
+            setupOnboarding(listOf(CommonUtilsOOBEActivity::class.java))
         }
     }
 
@@ -199,6 +209,56 @@ class OnboardingUtilsRobolectricTest {
         val result = controller.get().onboardIfNeeded(1, "1.0", settings, allowSkip = true)
         result shouldBe null
         shadowOf(controller.get()).nextStartedActivity shouldNotBe null
+    }
+
+    @Test
+    fun `advanceOnboarding starts the main activity through the latch and finishes`() {
+        val ctx = onboardingContext(steps = listOf(AppCompatActivity::class.java.name))
+        val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
+        val a = appCompatActivity(intent)
+
+        a.advanceOnboarding()
+
+        shadowOf(a).nextStartedActivity.component?.className shouldBe Activity::class.java.name
+        a.isFinishing.shouldBeTrue()
+        a.singleLaunch {}.shouldBeFalse()
+    }
+
+    @Test
+    fun `advanceOnboarding during a pending launch neither starts the next step nor finishes`() {
+        val ctx = onboardingContext(steps = listOf(AppCompatActivity::class.java.name))
+        val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
+        val a = appCompatActivity(intent)
+        a.singleLaunchActivity(Intent(a, Activity::class.java)).shouldBeTrue()
+        shadowOf(a).nextStartedActivity
+
+        a.advanceOnboarding()
+
+        shadowOf(a).nextStartedActivity shouldBe null
+        a.isFinishing.shouldBeFalse()
+    }
+
+    @Test
+    fun `onboardIfNeeded during a pending launch returns null without starting OOBE or finishing`() {
+        val a = appCompatActivity()
+        a.singleLaunchActivity(Intent(a, Activity::class.java)).shouldBeTrue()
+        shadowOf(a).nextStartedActivity
+
+        a.onboardIfNeeded(1, "1.0", settings) shouldBe null
+
+        shadowOf(a).nextStartedActivity shouldBe null
+        a.isFinishing.shouldBeFalse()
+    }
+
+    @Test
+    fun `onboardIfNeeded starts OOBE through the latch and finishes`() {
+        val a = appCompatActivity()
+
+        a.onboardIfNeeded(1, "1.0", settings) shouldBe null
+
+        shadowOf(a).nextStartedActivity.component?.className shouldBe CommonUtilsOOBEActivity::class.java.name
+        a.isFinishing.shouldBeTrue()
+        a.singleLaunch {}.shouldBeFalse()
     }
 
     // onboardIfNeeded - Path 1: intent carries onboarding context (post-onboarding re-launch)
