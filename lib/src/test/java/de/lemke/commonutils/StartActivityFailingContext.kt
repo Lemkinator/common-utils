@@ -18,6 +18,7 @@ package de.lemke.commonutils
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.os.Bundle
 
 /** Records every intent passed to [startActivity], then throws [failure]. */
 internal class StartActivityFailingContext(
@@ -27,6 +28,14 @@ internal class StartActivityFailingContext(
     val startedIntents = mutableListOf<Intent>()
 
     override fun startActivity(intent: Intent) {
+        startedIntents += intent
+        throw failure
+    }
+
+    override fun startActivity(
+        intent: Intent,
+        options: Bundle?,
+    ) {
         startedIntents += intent
         throw failure
     }
