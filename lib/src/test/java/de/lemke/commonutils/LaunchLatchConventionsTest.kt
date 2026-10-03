@@ -130,6 +130,19 @@ class LaunchLatchConventionsTest : ShouldSpec() {
 
             LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(3, "dialog.show"))
         }
+        should("report a show in a default argument, a default lambda and an anonymous function") {
+            val source =
+                """
+                fun open(
+                    shown: Unit = dialog.show(),
+                    action: Dialog.() -> Unit = { show() },
+                ) = Unit
+                val action = fun Dialog.() { show() }
+                """.trimIndent()
+
+            LaunchLatchConventions.violations(source) shouldBe
+                listOf(LaunchLatchViolation(2, "dialog.show"), LaunchLatchViolation(3, "show"), LaunchLatchViolation(5, "show"))
+        }
         should("report every line of a multi-line file in source order") {
             val source =
                 """
