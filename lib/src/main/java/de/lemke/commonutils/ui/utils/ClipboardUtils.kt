@@ -100,8 +100,10 @@ suspend fun Context.createBitmapClip(
         // Providers and the file system throw an open-ended exception set; a failure must yield no clip, not crash.
         @Suppress("TooGenericExceptionCaught")
         try {
-            writePngCacheFile(bitmap, CacheFileKind.CLIPBOARD, fileName)?.let {
-                ClipData.newUri(contentResolver, label, it.getFileUri(this@createBitmapClip))
+            writePngCacheFile(bitmap, CacheFileKind.CLIPBOARD, fileName)?.let { file ->
+                runCatching { ClipData.newUri(contentResolver, label, file.getFileUri(this@createBitmapClip)) }
+                    .onFailure { file.deleteOrLog() }
+                    .getOrThrow()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error writing bitmap clip", e)

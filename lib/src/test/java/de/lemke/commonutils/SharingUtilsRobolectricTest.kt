@@ -25,6 +25,7 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.Fragment
@@ -45,6 +46,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -69,6 +71,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
 import org.robolectric.shadows.ShadowClipboardManager
+import org.robolectric.shadows.ShadowLog
 import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
@@ -308,10 +311,22 @@ class SharingUtilsBitmapRobolectricTest {
         }
 
     @Test
-    fun `createBitmapClip returns null without a FileProvider for the package`() =
+    fun `createBitmapClip returns null and deletes the cache file without a FileProvider for the package`() =
         runTest {
             contextWithoutFileProvider().createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "test.png") shouldBe
                 null
+            File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeFalse()
+        }
+
+    @Test
+    fun `createBitmapClip logs a cache file it cannot delete`() =
+        runTest {
+            File(ctx.cacheDir, "clipboard/directory.png/child.png").mkdirs()
+
+            ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "directory.png") shouldBe null
+
+            ShadowLog.getLogsForTag("SharingUtils").map { it.type to it.msg } shouldContainExactly
+                listOf(Log.WARN to "Could not delete ${File(ctx.cacheDir, "clipboard/directory.png").canonicalPath}")
         }
 
     @Test
