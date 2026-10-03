@@ -19,13 +19,16 @@ import android.app.Activity
 import android.content.Intent
 import android.view.View
 import de.lemke.commonutils.ui.utils.TRANSITION_NAME_KEY
+import de.lemke.commonutils.ui.utils.singleLaunch
 import de.lemke.commonutils.ui.utils.singleLaunchSuspending
 import de.lemke.commonutils.ui.utils.transformToActivity
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -152,6 +155,32 @@ class TransformToActivityGuardRobolectricTest : LaunchLatchRobolectricTest() {
 
         work.complete(Unit)
         shadowLooper.idle()
+
+        activity.startedLaunch().shouldUseTheTransition(view)
+    }
+
+    @Test
+    fun `then that throws after a stop leaves a later launch its transition`() {
+        val controller = resumed()
+        val activity = controller.get()
+        val work = CompletableDeferred<Unit>()
+        activity.singleLaunchSuspending(work = { work.await() }, then = { error("then failed") }).shouldBeTrue()
+        controller.pause().stop()
+        work.complete(Unit)
+        shadowLooper.idle()
+
+        val failure =
+            shouldThrow<IllegalStateException> {
+                runTest {
+                    controller.restart().resume()
+                    shadowLooper.idle()
+                }
+            }
+
+        failure.message shouldBe "then failed"
+        activity.singleLaunch {}.shouldBeTrue()
+        val view = activity.attachedView()
+        view.transformToActivity(Intent(activity, Activity::class.java), "shared").shouldBeTrue()
 
         activity.startedLaunch().shouldUseTheTransition(view)
     }
