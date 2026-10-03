@@ -21,13 +21,18 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.EXTRA_TITLE
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 
 private const val MIME_TYPE_TEXT = "text/plain"
 private const val TAG = "SharingUtils"
+private const val PNG_QUALITY = 100
 
 /** Shares the app's Play Store link via the system share sheet. */
 fun Fragment.shareApp(): Boolean = requireContext().shareApp()
@@ -96,3 +101,31 @@ internal fun Context.resolveCacheFile(
     }
     return File(resolved)
 }
+
+/** Encodes this bitmap as a lossless PNG into [out]; returns false if the bitmap cannot be encoded. */
+internal fun Bitmap.writePng(out: OutputStream): Boolean = compress(Bitmap.CompressFormat.PNG, PNG_QUALITY, out)
+
+// File.outputStream() is inline; its FileOutputStream constructor is inlined at every call site
+// and attributed as an uncoverable branch by JaCoCo on Linux/CI. Wrapping it here keeps the
+// inline expansion inside excluded code while the call site stays a plain Kotlin function call.
+@NoCoverage
+private fun File.openOutputStream(): FileOutputStream = outputStream()
+
+/**
+ * Writes [bitmap] as a PNG to this file and deletes the file if the bitmap cannot be encoded or the write throws.
+ * @return false if the bitmap cannot be encoded; I/O errors propagate.
+ */
+internal fun File.writePngOrDelete(bitmap: Bitmap): Boolean =
+    runCatching { openOutputStream().use(bitmap::writePng) }
+        .also { if (it.getOrNull() != true) delete() }
+        .getOrThrow()
+
+/**
+ * Writes [bitmap] as a PNG to [fileName] in [kind]'s cache directory.
+ * @return the written file, or null if the bitmap cannot be encoded; I/O and path errors propagate.
+ */
+internal fun Context.writePngCacheFile(
+    bitmap: Bitmap,
+    kind: CacheFileKind,
+    fileName: String,
+): File? = resolveCacheFile(kind, fileName).takeIf { it.writePngOrDelete(bitmap) }

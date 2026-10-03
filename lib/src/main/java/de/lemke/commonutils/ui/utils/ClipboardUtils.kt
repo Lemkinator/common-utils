@@ -18,12 +18,13 @@ package de.lemke.commonutils.ui.utils
 import android.content.ClipData
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Bitmap.CompressFormat.PNG
 import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-private const val COMPRESS_QUALITY_MAX = 100
 private const val TAG = "ClipboardUtils"
 
 /** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
@@ -33,43 +34,77 @@ fun Fragment.copyToClipboard(
 ): Boolean = requireContext().copyToClipboard(text, label)
 
 /** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
-@Suppress("SameReturnValue")
 fun Context.copyToClipboard(
     text: String,
     label: String,
-): Boolean {
-    setClip(ClipData.newPlainText(label, text))
-    toast(R.string.commonutils_copied_to_clipboard)
-    return true
-}
+): Boolean = copyToClipboard(ClipData.newPlainText(label, text))
 
-/** Copies [bitmap] to the clipboard via a cached file URI under [label]. */
-fun Context.copyToClipboard(
-    bitmap: Bitmap,
-    label: String,
-    shareFileName: String,
-): Boolean =
+/**
+ * Sets [clip] as the primary clip and shows a confirmation toast; a null [clip], from a failed [createBitmapClip],
+ * shows the error toast instead.
+ * @return true if the clipboard holds [clip].
+ */
+fun Fragment.copyToClipboard(clip: ClipData?): Boolean = requireContext().copyToClipboard(clip)
+
+/**
+ * Sets [clip] as the primary clip and shows a confirmation toast; a null [clip], from a failed [createBitmapClip],
+ * shows the error toast instead.
+ * @return true if the clipboard holds [clip].
+ */
+fun Context.copyToClipboard(clip: ClipData?): Boolean {
+    if (clip == null) {
+        toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        return false
+    }
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
-    try {
-        val cacheFile = resolveCacheFile(CacheFileKind.CLIPBOARD, shareFileName)
-        if (!cacheFile.outputStream().use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
-            cacheFile.delete()
-            toast(R.string.commonutils_error_share_content_not_supported_on_device)
-            return false
-        }
-        setClip(ClipData.newUri(contentResolver, label, cacheFile.getFileUri(this)))
+    return try {
+        setClip(clip)
         toast(R.string.commonutils_copied_to_clipboard)
         true
     } catch (e: Exception) {
-        Log.e(TAG, "Error copying bitmap to clipboard", e)
+        Log.e(TAG, "Error copying to clipboard", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
         false
     }
+}
 
-/** Copies this bitmap to the clipboard via a cached file URI under [label]. */
-fun Bitmap.copyToClipboard(
-    context: Context,
+/**
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns a clip of its content URI under
+ * [label], or null if writing fails.
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
+ * `then`.
+ */
+suspend fun Fragment.createBitmapClip(
+    bitmap: Bitmap,
     label: String,
-    shareFileName: String,
-): Boolean = context.copyToClipboard(this, label, shareFileName)
+    fileName: String,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): ClipData? = requireContext().createBitmapClip(bitmap, label, fileName, ioDispatcher)
+
+/**
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns a clip of its content URI under
+ * [label], or null if writing fails.
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
+ * `then`.
+ */
+suspend fun Context.createBitmapClip(
+    bitmap: Bitmap,
+    label: String,
+    fileName: String,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): ClipData? =
+    withContext(ioDispatcher) {
+        // Providers and the file system throw an open-ended exception set; a failure must yield no clip, not crash.
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            writePngCacheFile(bitmap, CacheFileKind.CLIPBOARD, fileName)?.let {
+                ClipData.newUri(contentResolver, label, it.getFileUri(this@createBitmapClip))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error writing bitmap clip", e)
+            null
+        }
+    }

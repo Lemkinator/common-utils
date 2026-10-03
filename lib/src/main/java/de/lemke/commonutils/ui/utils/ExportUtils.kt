@@ -22,120 +22,160 @@ import android.content.Intent.ACTION_CREATE_DOCUMENT
 import android.content.Intent.CATEGORY_OPENABLE
 import android.content.Intent.EXTRA_TITLE
 import android.graphics.Bitmap
-import android.graphics.Bitmap.CompressFormat.PNG
 import android.net.Uri
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private const val TAG = "ExportUtils"
 private const val MIME_TYPE_PNG = "image/png"
 private const val EXTENSION_PNG = ".png"
-private const val COMPRESS_QUALITY_MAX = 100
 
-/** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */
+/** The outcome of [saveBitmapToDirectory] and [saveBitmapToUri]; [toast] shows the matching message. */
+sealed interface BitmapSaveResult {
+    /** The bitmap was written to [location]; [SaveLocation.CUSTOM] stands for a document picked through [exportBitmap]. */
+    data class Saved(
+        val location: SaveLocation,
+    ) : BitmapSaveResult
+
+    /** The bitmap could not be encoded as PNG. */
+    data object EncodingFailed : BitmapSaveResult
+
+    /** The target file could not be created or written. */
+    data object WriteFailed : BitmapSaveResult
+
+    /** The location needs the document picker on this device; see [SaveLocation.needsPicker]. */
+    data object NeedsPicker : BitmapSaveResult
+}
+
+/**
+ * Launches the document picker through [activityResultLauncher] to create a PNG named after [filename].
+ *
+ * The launcher's callback writes the bitmap with [saveBitmapToUri].
+ * @return true if the picker was launched.
+ */
 fun Fragment.exportBitmap(
-    saveLocation: SaveLocation,
-    bitmap: Bitmap,
     filename: String,
-    activityResultLauncher: ActivityResultLauncher<Intent>?,
-): Boolean = requireContext().exportBitmap(saveLocation, bitmap, filename, activityResultLauncher)
+    activityResultLauncher: ActivityResultLauncher<Intent>,
+): Boolean = requireContext().exportBitmap(filename, activityResultLauncher)
 
-// File.outputStream() is inline; its FileOutputStream constructor is inlined at every call site
-// and attributed as an uncoverable branch by JaCoCo on Linux/CI. Wrapping it here keeps the
-// inline expansion inside excluded code while the call site stays a plain Kotlin function call.
-@NoCoverage
-private fun File.openOutputStream(): java.io.FileOutputStream = outputStream()
-
-/** Exports [bitmap] to the given [saveLocation]; launches the document picker if needed via [activityResultLauncher]. */
+/**
+ * Launches the document picker through [activityResultLauncher] to create a PNG named after [filename].
+ *
+ * The launcher's callback writes the bitmap with [saveBitmapToUri].
+ * @return true if the picker was launched.
+ */
 fun Context.exportBitmap(
-    saveLocation: SaveLocation,
-    bitmap: Bitmap,
     filename: String,
-    activityResultLauncher: ActivityResultLauncher<Intent>?,
+    activityResultLauncher: ActivityResultLauncher<Intent>,
 ): Boolean =
-    if (saveLocation != SaveLocation.CUSTOM && SDK_INT > Build.VERSION_CODES.Q) {
-        // Scoped storage and the file system throw an open-ended exception set; every failure must toast, not crash.
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            val dir: String =
-                when (saveLocation) {
-                    SaveLocation.DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
-                    SaveLocation.PICTURES -> Environment.DIRECTORY_PICTURES
-                    else -> Environment.DIRECTORY_DCIM // SaveLocation.DCIM; CUSTOM excluded by outer if
-                }
-            if (File(Environment.getExternalStoragePublicDirectory(dir), filename.toSafeFileName(EXTENSION_PNG))
-                    .openOutputStream()
-                    .use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }
-            ) {
-                toast(getString(R.string.commonutils_image_saved) + ": ${saveLocation.toLocalizedString(this)}")
-                true
-            } else {
-                toast(R.string.commonutils_error_saving_image)
-                false
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error saving bitmap to directory", e)
-            toast(R.string.commonutils_error_creating_file)
-            false
-        }
-    } else if (activityResultLauncher == null) {
+    try {
+        activityResultLauncher.launch(
+            Intent(ACTION_CREATE_DOCUMENT)
+                .addCategory(CATEGORY_OPENABLE)
+                .setType(MIME_TYPE_PNG)
+                .putExtra(EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG)),
+        )
+        true
+    } catch (e: ActivityNotFoundException) {
+        Log.e(TAG, "Error launching document picker", e)
         toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
         false
-    } else {
-        try {
-            val intent = Intent(ACTION_CREATE_DOCUMENT)
-            intent.addCategory(CATEGORY_OPENABLE)
-            intent.type = MIME_TYPE_PNG
-            intent.putExtra(EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG))
-            activityResultLauncher.launch(intent)
-            true
-        } catch (e: ActivityNotFoundException) {
-            Log.e(TAG, "Error launching document picker", e)
-            toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
-            false
-        }
     }
 
-/** Compresses [bitmap] as PNG and writes it to [uri], showing a toast on success or failure. */
-fun Context.saveBitmapToUri(
+/**
+ * Writes [bitmap] as a PNG named after [filename] to the public directory of [saveLocation] on [ioDispatcher].
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [toast] in its `then`.
+ * A location that [SaveLocation.needsPicker] writes nothing and returns [BitmapSaveResult.NeedsPicker].
+ */
+suspend fun saveBitmapToDirectory(
+    saveLocation: SaveLocation,
+    bitmap: Bitmap,
+    filename: String,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): BitmapSaveResult {
+    val directoryType = saveLocation.publicDirectoryType?.takeUnless { saveLocation.needsPicker } ?: return BitmapSaveResult.NeedsPicker
+    return withContext(ioDispatcher) {
+        // Scoped storage and the file system throw an open-ended exception set; every failure must return a result, not crash.
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            val file = File(Environment.getExternalStoragePublicDirectory(directoryType), filename.toSafeFileName(EXTENSION_PNG))
+            if (file.writePngOrDelete(bitmap)) BitmapSaveResult.Saved(saveLocation) else BitmapSaveResult.EncodingFailed
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving bitmap to directory", e)
+            BitmapSaveResult.WriteFailed
+        }
+    }
+}
+
+/** Shows the message for [result]. */
+fun Fragment.toast(result: BitmapSaveResult) = requireContext().toast(result)
+
+/** Shows the message for [result]. */
+fun Context.toast(result: BitmapSaveResult) {
+    when (result) {
+        BitmapSaveResult.Saved(SaveLocation.CUSTOM) -> toast(R.string.commonutils_image_saved)
+        is BitmapSaveResult.Saved -> toast(getString(R.string.commonutils_image_saved) + ": ${result.location.toLocalizedString(this)}")
+        BitmapSaveResult.EncodingFailed -> toast(R.string.commonutils_error_saving_image)
+        BitmapSaveResult.WriteFailed -> toast(R.string.commonutils_error_creating_file)
+        BitmapSaveResult.NeedsPicker -> toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
+    }
+}
+
+/**
+ * Writes [bitmap] as a PNG to [uri], the document picked through [exportBitmap], on [ioDispatcher].
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [toast] in its `then`.
+ * A written bitmap returns [BitmapSaveResult.Saved] with [SaveLocation.CUSTOM]; a null [uri] or [bitmap] writes nothing
+ * and returns [BitmapSaveResult.WriteFailed]. A failed write deletes the document.
+ */
+suspend fun Context.saveBitmapToUri(
     uri: Uri?,
     bitmap: Bitmap?,
-): Boolean {
-    if (uri == null || bitmap == null) {
-        toast(R.string.commonutils_error_creating_file)
-        return false
-    }
-    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
-    @Suppress("TooGenericExceptionCaught")
-    return try {
-        contentResolver.openOutputStream(uri)?.use { outputStream ->
-            if (bitmap.compress(PNG, COMPRESS_QUALITY_MAX, outputStream)) {
-                toast(R.string.commonutils_image_saved)
-                true
-            } else {
-                toast(R.string.commonutils_error_saving_image)
-                false
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): BitmapSaveResult {
+    if (uri == null || bitmap == null) return BitmapSaveResult.WriteFailed
+    return withContext(ioDispatcher) { writePngOrDeleteDocument(uri, bitmap) }
+}
+
+// Providers and system services throw an open-ended exception set; every failure must return a result, not crash.
+@Suppress("TooGenericExceptionCaught")
+private fun Context.writePngOrDeleteDocument(
+    uri: Uri,
+    bitmap: Bitmap,
+): BitmapSaveResult {
+    val result =
+        try {
+            val outputStream = contentResolver.openOutputStream(uri)
+            when {
+                outputStream == null -> BitmapSaveResult.WriteFailed
+                outputStream.use { bitmap.writePng(it) } -> BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+                else -> BitmapSaveResult.EncodingFailed
             }
-        } ?: run {
-            toast(R.string.commonutils_error_creating_file)
-            false
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving bitmap to uri", e)
+            BitmapSaveResult.WriteFailed
         }
-    } catch (e: Exception) {
-        Log.e(TAG, "Error saving bitmap to uri", e)
-        toast(R.string.commonutils_error_creating_file)
-        false
+    if (result !is BitmapSaveResult.Saved) {
+        try {
+            DocumentsContract.deleteDocument(contentResolver, uri)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting document", e)
+        }
     }
+    return result
 }
 
 /** Converts this string to a filesystem-safe filename, appending a timestamp and [extension]. */
