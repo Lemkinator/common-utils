@@ -40,12 +40,14 @@ import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityAboutMeBinding
+import de.lemke.commonutils.ui.utils.onSingleLaunchClick
 import de.lemke.commonutils.ui.utils.openApp
 import de.lemke.commonutils.ui.utils.openURL
 import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
 import de.lemke.commonutils.ui.utils.sendEmailAboutMe
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import de.lemke.commonutils.ui.utils.shareApp
+import de.lemke.commonutils.ui.utils.showOnce
 import dev.oneuiproject.oneui.ktx.isInMultiWindowModeCompat
 import dev.oneuiproject.oneui.ktx.semSetToolTipText
 import dev.oneuiproject.oneui.ktx.setEnableRecursive
@@ -157,7 +159,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
             .setMessage(getString(R.string.commonutils_playstore_redirect_message))
             .setPositiveButton(getString(R.string.commonutils_yes)) { _, _ -> onPlayStoreConfirmed() }
             .setNegativeButton(getString(designR.string.oui_des_common_cancel), null)
-            .show()
+            .showOnce(PLAY_STORE_DIALOG_TAG)
     }
 
     /** Opens the developer's Play Store page after the user confirms the redirect dialog. */
@@ -180,18 +182,18 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     private fun setupOnClickListeners() {
-        binding.aboutHeaderGithub.setOnClickListener { openURL(getString(R.string.commonutils_my_github)) }
-        binding.aboutHeaderPlayStore.setOnClickListener { openPlayStore() }
-        binding.aboutHeaderWebsite.setOnClickListener { openURL(getString(R.string.commonutils_my_website)) }
-        binding.aboutHeaderInsta.setOnClickListener { openURL(getString(R.string.commonutils_my_insta)) }
-        binding.aboutHeaderTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
+        binding.aboutHeaderGithub.onSingleLaunchClick { openURL(getString(R.string.commonutils_my_github)) }
+        binding.aboutHeaderPlayStore.onSingleLaunchClick { openPlayStore() }
+        binding.aboutHeaderWebsite.onSingleLaunchClick { openURL(getString(R.string.commonutils_my_website)) }
+        binding.aboutHeaderInsta.onSingleLaunchClick { openURL(getString(R.string.commonutils_my_insta)) }
+        binding.aboutHeaderTiktok.onSingleLaunchClick { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
         with(binding.aboutBottomContent) {
-            aboutBottomRelativePlayStore.setOnClickListener { openPlayStore() }
-            aboutBottomRelativeWebsite.setOnClickListener { openURL(getString(R.string.commonutils_my_website)) }
-            aboutBottomRelativeTiktok.setOnClickListener { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
-            aboutBottomRateApp.setOnClickListener { openApp(packageName, false) }
-            aboutBottomShareApp.setOnClickListener { handleShareApp() }
-            aboutBottomWriteEmail.setOnClickListener { handleWriteEmail() }
+            aboutBottomRelativePlayStore.onSingleLaunchClick { openPlayStore() }
+            aboutBottomRelativeWebsite.onSingleLaunchClick { openURL(getString(R.string.commonutils_my_website)) }
+            aboutBottomRelativeTiktok.onSingleLaunchClick { openURL(getString(R.string.commonutils_rick_roll_troll_link)) }
+            aboutBottomRateApp.onSingleLaunchClick { openApp(packageName, false) }
+            aboutBottomShareApp.onSingleLaunchClick { handleShareApp() }
+            aboutBottomWriteEmail.onSingleLaunchClick { handleWriteEmail() }
         }
     }
 
@@ -233,6 +235,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val PLAY_STORE_DIALOG_TAG = "commonutils_play_store_redirect"
         private const val BACK_COLLAPSE_THRESHOLD = 0.3f
         private const val BACK_EXPAND_THRESHOLD = 0.5f
         private const val EXPANDED_HEIGHT_PROPORTION = 0.5f

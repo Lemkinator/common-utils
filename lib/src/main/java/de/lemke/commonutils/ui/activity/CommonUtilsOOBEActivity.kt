@@ -25,7 +25,6 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout.LayoutParams
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -35,6 +34,7 @@ import de.lemke.commonutils.databinding.ActivityOobeBinding
 import de.lemke.commonutils.ui.utils.advanceOnboarding
 import de.lemke.commonutils.ui.utils.onboardingContext
 import de.lemke.commonutils.ui.utils.overrideFadeOpenTransition
+import de.lemke.commonutils.ui.utils.showTosDialogOnce
 import dev.oneuiproject.oneui.widget.OnboardingTipsItemView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
@@ -78,14 +78,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
         val tos = getString(R.string.commonutils_tos)
         val tosText = getString(if (tosChanged) R.string.commonutils_oobe_new_tos_text else R.string.commonutils_oobe_tos_text, tos)
         val spanned =
-            buildTosSpannable(tosText, tos) {
-                AlertDialog
-                    .Builder(this)
-                    .setTitle(getString(R.string.commonutils_tos))
-                    .setMessage(getString(R.string.commonutils_tos_content))
-                    .setPositiveButton(R.string.commonutils_ok, null)
-                    .show()
-            }
+            buildTosSpannable(tosText, tos) { showTosDialogOnce() }
         if (spanned == null) {
             binding.oobeIntroFooterTosText.text = tosText
             return

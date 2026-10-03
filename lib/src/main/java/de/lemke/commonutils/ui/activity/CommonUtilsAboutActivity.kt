@@ -43,6 +43,7 @@ import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.databinding.ActivityAboutBinding
+import de.lemke.commonutils.ui.utils.onSingleLaunchClick
 import de.lemke.commonutils.ui.utils.openApp
 import de.lemke.commonutils.ui.utils.prepareActivityTransformationBetween
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
@@ -79,9 +80,9 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         appUpdateManager = AppUpdateManagerFactory.create(this)
         setVersionText()
         setOptionalText()
-        binding.aboutButtonOpenInStore.setOnClickListener { openApp(packageName, false) }
-        binding.aboutButtonOpenSourceLicenses.apply {
-            setOnClickListener { transformToActivity(CommonUtilsLibsActivity::class.java, transitionName = "CommonUtilsLibsTransition") }
+        binding.aboutButtonOpenInStore.onSingleLaunchClick { openApp(packageName, false) }
+        binding.aboutButtonOpenSourceLicenses.onSingleLaunchClick {
+            it.transformToActivity(CommonUtilsLibsActivity::class.java, transitionName = "CommonUtilsLibsTransition")
         }
         activityResultLauncher = registerForActivityResult(StartIntentSenderForResult(), ::onUpdateActivityResult)
         checkUpdate()

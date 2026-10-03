@@ -40,7 +40,6 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.data.SettingsRepository
 import dev.oneuiproject.oneui.ktx.addRelativeLinksCard
-import dev.oneuiproject.oneui.ktx.onClick
 import dev.oneuiproject.oneui.ktx.onNewValue
 import dev.oneuiproject.oneui.ktx.setOnClickListenerWithProgress
 import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
@@ -52,6 +51,7 @@ import dev.oneuiproject.oneui.design.R as designR
 
 private const val TAG = "PreferenceUtils"
 private const val DELETE_APP_DATA_DELAY_MS = 500L
+private const val DELETE_APP_DATA_DIALOG_TAG = "commonutils_delete_app_data"
 
 /** Adds a relative-links card with "Share app" and "Rate app" actions to the preference screen. */
 @NoCoverage
@@ -72,33 +72,26 @@ fun PreferenceFragmentCompat.initCommonUtilsPreferences(settings: SettingsReposi
     } ?: Log.w(TAG, "dev options preference category is null, skipping initialization")
 
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_delete_app_data))?.apply {
-        onClick { deleteAppDataAndExit() }
+        onSingleLaunchClick { deleteAppDataAndExit() }
     } ?: Log.w(TAG, "delete app data preference is null, skipping initialization")
 
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_language))?.apply {
         if (SDK_INT >= VERSION_CODES.TIRAMISU) {
             isVisible = true
-            onClick { openAppLocaleSettings() }
+            onSingleLaunchClick { openAppLocaleSettings() }
         }
     } ?: Log.w(TAG, "language preference is null, skipping initialization")
 }
 
 private fun PreferenceFragmentCompat.initMoreInfo() {
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_privacy_policy))?.apply {
-        onClick { openURL(getString(R.string.commonutils_privacy_website)) }
+        onSingleLaunchClick { openURL(getString(R.string.commonutils_privacy_website)) }
     } ?: Log.w(TAG, "privacy preference is null, skipping initialization")
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_tos))?.apply {
-        onClick {
-            AlertDialog
-                .Builder(requireContext())
-                .setTitle(getString(R.string.commonutils_tos))
-                .setMessage(getString(R.string.commonutils_tos_content))
-                .setPositiveButton(R.string.commonutils_ok, null)
-                .show()
-        }
+        onSingleLaunchClick { requireContext().showTosDialogOnce() }
     } ?: Log.w(TAG, "tos preference is null, skipping initialization")
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_report_bug))?.apply {
-        onClick {
+        onSingleLaunchClick {
             sendEmailBugReport(
                 getString(R.string.commonutils_email),
                 requireContext().applicationInfo.loadLabel(requireContext().packageManager).toString(),
@@ -118,7 +111,7 @@ private fun PreferenceFragmentCompat.initImageSaveLocation() {
     } ?: Log.w(TAG, "imageSaveLocation preference is null, skipping initialization")
 }
 
-/** Shows a confirmation dialog and clears all application user data on confirmation. */
+/** Shows a confirmation dialog, unless it already shows, and clears all application user data on confirmation. */
 fun Fragment.deleteAppDataAndExit(
     title: String? = null,
     message: String? = null,
@@ -132,8 +125,7 @@ fun Fragment.deleteAppDataAndExit(
             .setMessage(message ?: getString(R.string.commonutils_delete_appdata_and_exit_warning))
             .setNegativeButton(cancel ?: getString(designR.string.oui_des_common_cancel), null)
             .setPositiveButton(delete ?: getString(R.string.commonutils_delete), null)
-            .create()
-    dialog.show()
+            .showOnce(DELETE_APP_DATA_DIALOG_TAG) ?: return
     dialog.getButton(BUTTON_POSITIVE).apply {
         setTextColor(requireContext().getColor(designR.color.oui_des_functional_red_color))
         setOnClickListenerWithProgress { _, _ ->

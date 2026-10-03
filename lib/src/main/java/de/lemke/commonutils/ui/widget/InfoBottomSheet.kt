@@ -29,6 +29,7 @@ import androidx.fragment.app.FragmentManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import de.lemke.commonutils.databinding.WidgetInfoBottomsheetBinding
+import de.lemke.commonutils.ui.utils.showOnce
 import dev.oneuiproject.oneui.app.SemBottomSheetDialogFragment
 
 /** Bottom sheet dialog that displays a title and a message, used for informational overlays. */
@@ -106,13 +107,17 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
             textGravity: Int? = null,
         ) = showInfoBottomSheet(childFragmentManager, title, message, textGravity)
 
-        /** Shows an [InfoBottomSheet] using the given [fragmentManager], [title], [message], and optional [textGravity]. */
+        /**
+         * Shows an [InfoBottomSheet] using the given [fragmentManager], [title], [message], and optional [textGravity],
+         * unless one already shows there.
+         * @return true if the sheet was shown; see [showOnce].
+         */
         fun showInfoBottomSheet(
             fragmentManager: FragmentManager,
             title: String,
             message: String,
             textGravity: Int? = null,
-        ) = newInstance(title, message, textGravity ?: CENTER).show(fragmentManager, InfoBottomSheet::class.java.simpleName)
+        ) = newInstance(title, message, textGravity ?: CENTER).showOnce(fragmentManager, InfoBottomSheet::class.java.simpleName)
 
         private fun newInstance(
             title: String,
