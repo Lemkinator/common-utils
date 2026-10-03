@@ -17,12 +17,9 @@ package de.lemke.commonutils
 
 import android.content.ClipboardManager
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Looper
-import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.exportBitmap
 import de.lemke.commonutils.ui.utils.openApp
@@ -35,7 +32,6 @@ import de.lemke.commonutils.ui.utils.toast
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
-import io.mockk.mockk
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -149,16 +145,10 @@ class FragmentExtensionsRobolectricTest {
     // ── ExportUtils Fragment overload ─────────────────────────────────────────
 
     @Test
-    fun `Fragment exportBitmap with null launcher and CUSTOM returns false`() {
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        fragment.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", null).shouldBeFalse()
-    }
-
-    @Test
-    fun `Fragment exportBitmap with non-null launcher and CUSTOM returns true`() {
-        val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        val launcher = mockk<ActivityResultLauncher<Intent>>(relaxed = true)
-        fragment.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", launcher).shouldBeTrue()
+    fun `Fragment exportBitmap launches the document picker`() {
+        val launcher = RecordingIntentLauncher()
+        fragment.exportBitmap("test", launcher).shouldBeTrue()
+        launcher.launched.single().action shouldBe Intent.ACTION_CREATE_DOCUMENT
     }
 }
 

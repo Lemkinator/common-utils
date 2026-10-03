@@ -16,6 +16,9 @@
 package de.lemke.commonutils.data
 
 import android.content.Context
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.Q
+import android.os.Environment
 import de.lemke.commonutils.R
 
 /** Target directory for exported images. */
@@ -32,6 +35,20 @@ enum class SaveLocation {
     /** Saves to [android.os.Environment.DIRECTORY_DCIM]. */
     DCIM,
     ;
+
+    /** The public [Environment] directory type this location saves to, or null for [CUSTOM]. */
+    val publicDirectoryType: String?
+        get() =
+            when (this) {
+                CUSTOM -> null
+                DOWNLOADS -> Environment.DIRECTORY_DOWNLOADS
+                PICTURES -> Environment.DIRECTORY_PICTURES
+                DCIM -> Environment.DIRECTORY_DCIM
+            }
+
+    /** True if saving here goes through the document picker: always for [CUSTOM], and for every location up to API 29. */
+    val needsPicker: Boolean
+        get() = publicDirectoryType == null || SDK_INT <= Q
 
     /** Returns a user-facing label for this save location. */
     fun toLocalizedString(context: Context): String =
