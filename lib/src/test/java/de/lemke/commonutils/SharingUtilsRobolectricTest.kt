@@ -29,12 +29,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.CacheFileKind
 import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.getFileUri
 import de.lemke.commonutils.ui.utils.isSamsungQuickShareAvailable
 import de.lemke.commonutils.ui.utils.quickShare
 import de.lemke.commonutils.ui.utils.quickShareBitmap
-import de.lemke.commonutils.ui.utils.resolveShareCacheFile
+import de.lemke.commonutils.ui.utils.resolveCacheFile
 import de.lemke.commonutils.ui.utils.share
 import de.lemke.commonutils.ui.utils.shareApp
 import de.lemke.commonutils.ui.utils.shareBitmap
@@ -149,20 +150,20 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `resolveShareCacheFile resolves a plain filename inside cacheDir`() {
-        val file = ctx.resolveShareCacheFile("test.png")
-        file.parentFile?.canonicalPath shouldBe ctx.cacheDir.canonicalPath
+    fun `resolveCacheFile resolves a plain filename inside the kind's cache directory`() {
+        val file = ctx.resolveCacheFile(CacheFileKind.SHARE, "test.png")
+        file.canonicalPath shouldBe File(ctx.cacheDir, "share/test.png").canonicalPath
     }
 
     @Test
-    fun `resolveShareCacheFile resolves an empty name to cacheDir itself`() {
-        val file = ctx.resolveShareCacheFile("")
-        file.canonicalPath shouldBe ctx.cacheDir.canonicalPath
+    fun `resolveCacheFile resolves an empty name to the kind's cache directory itself`() {
+        val file = ctx.resolveCacheFile(CacheFileKind.CLIPBOARD, "")
+        file.canonicalPath shouldBe File(ctx.cacheDir, "clipboard").canonicalPath
     }
 
     @Test
-    fun `resolveShareCacheFile rejects a name that escapes cacheDir`() {
-        shouldThrow<IllegalArgumentException> { ctx.resolveShareCacheFile("../evil.png") }
+    fun `resolveCacheFile rejects a name that escapes the kind's cache directory`() {
+        shouldThrow<IllegalArgumentException> { ctx.resolveCacheFile(CacheFileKind.SHARE, "../evil.png") }
     }
 }
 
@@ -197,10 +198,18 @@ class SharingUtilsBitmapRobolectricTest {
 
     private fun Intent.streamUri(): String = IntentCompat.getParcelableExtra(this, Intent.EXTRA_STREAM, Uri::class.java).toString()
 
+    private fun bitmapWriting(content: String): Bitmap =
+        mockk {
+            every { compress(any(), any(), any<OutputStream>()) } answers {
+                thirdArg<OutputStream>().write(content.toByteArray())
+                true
+            }
+        }
+
     private fun Intent.readGrantFlag(): Int = flags and Intent.FLAG_GRANT_READ_URI_PERMISSION
 
-    private fun unwritableShareFileName(): String {
-        File(ctx.cacheDir, "directory.png").mkdirs()
+    private fun unwritableCacheFileName(directoryName: String): String {
+        File(ctx.cacheDir, "$directoryName/directory.png").mkdirs()
         return "directory.png"
     }
 
@@ -230,7 +239,7 @@ class SharingUtilsBitmapRobolectricTest {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         ctx.copyToClipboard(bitmap, "label", "test.png").shouldBeTrue()
         val clip = ctx.getSystemService(ClipboardManager::class.java).primaryClip.shouldNotBeNull()
-        clip.getItemAt(0).uri.toString() shouldBe "$CACHE_ROOT_URI/test.png"
+        clip.getItemAt(0).uri.toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
         clip.description.getMimeType(0) shouldBe "image/png"
     }
 
@@ -251,7 +260,7 @@ class SharingUtilsBitmapRobolectricTest {
     @Test
     fun `copyToClipboard bitmap into an unwritable cache file - IOException caught, returns false`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        ctx.copyToClipboard(bitmap, "label", unwritableShareFileName()).shouldBeFalse()
+        ctx.copyToClipboard(bitmap, "label", unwritableCacheFileName("clipboard")).shouldBeFalse()
         latestToastIsShareNotSupported()
         ctx.getSystemService(ClipboardManager::class.java).hasPrimaryClip().shouldBeFalse()
     }
@@ -271,6 +280,20 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
+    fun `copyToClipboard bitmap keeps a pending share's file intact`() {
+        val act = activity()
+        bitmapWriting("share").share(act, "test.png").shouldBeTrue()
+        val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
+
+        bitmapWriting("clipboard").copyToClipboard(ctx, "label", "test.png").shouldBeTrue()
+
+        ctx.contentResolver
+            .openInputStream(pendingUri)
+            .shouldNotBeNull()
+            .use { it.reader().readText() } shouldBe "share"
+    }
+
+    @Test
     fun `Bitmap copyToClipboard extension delegates to Context copyToClipboard`() {
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         bitmap.copyToClipboard(ctx, "label", "test.png").shouldBeTrue()
@@ -285,11 +308,11 @@ class SharingUtilsBitmapRobolectricTest {
         bitmap.share(act, "test.png").shouldBeTrue()
         val target = act.startedChooserTarget()
         target.action shouldBe Intent.ACTION_SEND
-        target.streamUri() shouldBe "$CACHE_ROOT_URI/test.png"
+        target.streamUri() shouldBe "$CACHE_ROOT_URI/share/test.png"
         target.clipData
             ?.getItemAt(0)
             ?.uri
-            .toString() shouldBe "$CACHE_ROOT_URI/test.png"
+            .toString() shouldBe "$CACHE_ROOT_URI/share/test.png"
         target.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
 
@@ -318,7 +341,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `Bitmap share into an unwritable cache file - IOException caught, returns false`() {
         val act = activity()
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        bitmap.share(act, unwritableShareFileName()).shouldBeFalse()
+        bitmap.share(act, unwritableCacheFileName("share")).shouldBeFalse()
         latestToastIsShareNotSupported()
         shadowOf(act).nextStartedActivity shouldBe null
     }
@@ -353,7 +376,7 @@ class SharingUtilsBitmapRobolectricTest {
         bitmap.quickShare(act, "test.png").shouldBeTrue()
         val intent = shadowOf(act).nextStartedActivity.shouldNotBeNull()
         intent.action shouldBe Intent.ACTION_SEND
-        intent.streamUri() shouldBe "$CACHE_ROOT_URI/test.png"
+        intent.streamUri() shouldBe "$CACHE_ROOT_URI/share/test.png"
         intent.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
 
@@ -374,7 +397,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `quickShare into an unwritable cache file - IOException caught, returns false`() {
         val act = activity()
         val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        bitmap.quickShare(act, unwritableShareFileName()).shouldBeFalse()
+        bitmap.quickShare(act, unwritableCacheFileName("share")).shouldBeFalse()
         latestToastIsShareNotSupported()
         shadowOf(act).nextStartedActivity shouldBe null
     }

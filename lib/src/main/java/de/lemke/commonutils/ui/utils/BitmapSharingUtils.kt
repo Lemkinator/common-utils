@@ -59,7 +59,7 @@ fun Bitmap.share(
     @Suppress("TooGenericExceptionCaught")
     try {
         if (!context.admitsGatedLaunch()) return false
-        val cacheFile = context.resolveShareCacheFile(shareFileName)
+        val cacheFile = context.resolveCacheFile(CacheFileKind.SHARE, shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
             cacheFile.delete()
             context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
@@ -101,7 +101,7 @@ fun Bitmap.quickShare(
     @Suppress("TooGenericExceptionCaught")
     try {
         if (!context.admitsGatedLaunch()) return false
-        val cacheFile = context.resolveShareCacheFile(shareFileName)
+        val cacheFile = context.resolveCacheFile(CacheFileKind.SHARE, shareFileName)
         if (!cacheFile.outputStream().use { compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
             cacheFile.delete()
             context.toast(R.string.commonutils_error_share_content_not_supported_on_device)

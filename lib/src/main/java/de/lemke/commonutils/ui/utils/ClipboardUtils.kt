@@ -52,7 +52,7 @@ fun Context.copyToClipboard(
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
-        val cacheFile = resolveShareCacheFile(shareFileName)
+        val cacheFile = resolveCacheFile(CacheFileKind.CLIPBOARD, shareFileName)
         if (!cacheFile.outputStream().use { bitmap.compress(PNG, COMPRESS_QUALITY_MAX, it) }) {
             cacheFile.delete()
             toast(R.string.commonutils_error_share_content_not_supported_on_device)

@@ -75,12 +75,24 @@ internal fun Context.safeStartActivity(intent: Intent): Boolean {
     }
 }
 
-/** Resolves [shareFileName] to a file under [Context.getCacheDir], rejecting names that would escape it (e.g. `..` traversal). */
-internal fun Context.resolveShareCacheFile(shareFileName: String): File {
-    val cacheRoot = cacheDir.canonicalPath.trimEnd(File.separatorChar)
-    val resolved = File(cacheDir, shareFileName).canonicalPath
-    require(resolved == cacheRoot || resolved.startsWith(cacheRoot + File.separatorChar)) {
-        "shareFileName must resolve inside cacheDir: $shareFileName"
+/** Kinds of cache file handed to other apps, each in its own [Context.getCacheDir] subdirectory so no kind overwrites another's. */
+internal enum class CacheFileKind(
+    val directoryName: String,
+) {
+    SHARE("share"),
+    CLIPBOARD("clipboard"),
+}
+
+/** Resolves [fileName] to a file in [kind]'s cache directory, rejecting names that would escape it (e.g. `..` traversal). */
+internal fun Context.resolveCacheFile(
+    kind: CacheFileKind,
+    fileName: String,
+): File {
+    val directory = File(cacheDir, kind.directoryName).apply { mkdirs() }
+    val root = directory.canonicalPath
+    val resolved = File(directory, fileName).canonicalPath
+    require(resolved == root || resolved.startsWith(root + File.separatorChar)) {
+        "fileName must resolve inside ${kind.directoryName}: $fileName"
     }
     return File(resolved)
 }

@@ -261,7 +261,11 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
     fun `leaving bitmap share drops and keeps the pending share's file`() {
         val activity = resumed().get()
         activity.launchScreen()
-        val pending = File(activity.cacheDir, "shared.png").apply { writeText("pending") }
+        val pending =
+            File(activity.cacheDir, "share/shared.png").apply {
+                parentFile?.mkdirs()
+                writeText("pending")
+            }
 
         Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).share(activity, "shared.png").shouldBeFalse()
 
@@ -273,7 +277,11 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
     fun `leaving bitmap quick share drops and keeps the pending share's file`() {
         val activity = resumed().get()
         activity.launchScreen()
-        val pending = File(activity.cacheDir, "shared.png").apply { writeText("pending") }
+        val pending =
+            File(activity.cacheDir, "share/shared.png").apply {
+                parentFile?.mkdirs()
+                writeText("pending")
+            }
 
         Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).quickShare(activity, "shared.png").shouldBeFalse()
 
