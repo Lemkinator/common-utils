@@ -44,8 +44,16 @@ private const val EXTENSION_PNG = ".png"
 
 /** The outcome of [saveBitmapToDirectory] and [saveBitmapToUri]. */
 sealed interface BitmapSaveResult {
+    /** The outcome of [saveBitmapToDirectory]: [Finished] or [NeedsPicker]. */
+    sealed interface DirectoryResult : BitmapSaveResult
+
+    /** The outcome of [saveBitmapToUri]: [Finished] or [Canceled]. */
+    sealed interface UriResult : BitmapSaveResult
+
     /** A terminal result; [toast] shows its message. */
-    sealed interface Finished : BitmapSaveResult
+    sealed interface Finished :
+        DirectoryResult,
+        UriResult
 
     /** The bitmap was written to [location]; [SaveLocation.CUSTOM] stands for a document picked through [exportBitmap]. */
     data class Saved(
@@ -59,7 +67,10 @@ sealed interface BitmapSaveResult {
     data object WriteFailed : Finished
 
     /** No failure: the location needs the document picker on this device, so the caller launches [exportBitmap]. */
-    data object NeedsPicker : BitmapSaveResult
+    data object NeedsPicker : DirectoryResult
+
+    /** No failure: the user canceled the document picker, so there is nothing to save or show. */
+    data object Canceled : UriResult
 }
 
 /**
@@ -109,7 +120,7 @@ suspend fun saveBitmapToDirectory(
     bitmap: Bitmap,
     filename: String,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-): BitmapSaveResult {
+): BitmapSaveResult.DirectoryResult {
     val directoryType = saveLocation.publicDirectoryType?.takeUnless { saveLocation.needsPicker } ?: return BitmapSaveResult.NeedsPicker
     return withContext(ioDispatcher) {
         // Scoped storage and the file system throw an open-ended exception set; every failure must return a result, not crash.
@@ -140,8 +151,10 @@ fun Context.toast(result: BitmapSaveResult.Finished) {
 /**
  * Writes [bitmap] as a PNG to [uri], the document picked through [exportBitmap], on [ioDispatcher].
  *
- * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [toast] in its `then`.
- * A written bitmap returns [BitmapSaveResult.Saved] with [SaveLocation.CUSTOM]; a null [uri] or [bitmap] writes nothing
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input. In its `then`, pass a
+ * [BitmapSaveResult.Finished] result to [toast] and ignore [BitmapSaveResult.Canceled].
+ * A null [uri], the result of a canceled picker, writes nothing and returns [BitmapSaveResult.Canceled].
+ * A written bitmap returns [BitmapSaveResult.Saved] with [SaveLocation.CUSTOM]; a null [bitmap] writes nothing
  * and returns [BitmapSaveResult.WriteFailed]. Only if [createdDocument] is true, as for the result of the
  * `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] launches, does a failed save delete the document at [uri].
  */
@@ -150,8 +163,8 @@ suspend fun Context.saveBitmapToUri(
     bitmap: Bitmap?,
     createdDocument: Boolean,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-): BitmapSaveResult.Finished {
-    if (uri == null) return BitmapSaveResult.WriteFailed
+): BitmapSaveResult.UriResult {
+    if (uri == null) return BitmapSaveResult.Canceled
     return withContext(ioDispatcher) {
         val result = if (bitmap == null) BitmapSaveResult.WriteFailed else writePng(uri, bitmap)
         if (createdDocument && result !is BitmapSaveResult.Saved) deleteDocument(uri)

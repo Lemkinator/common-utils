@@ -238,9 +238,17 @@ class ExportUtilsRobolectricTest {
     // ── saveBitmapToUri ───────────────────────────────────────────────────────
 
     @Test
-    fun `saveBitmapToUri reports WriteFailed when uri is null`() =
+    fun `saveBitmapToUri reports Canceled for the null uri of a canceled picker and the caller shows no toast`() =
         runTest {
-            ctx.saveBitmapToUri(null, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+            val result = ctx.saveBitmapToUri(null, bitmap, createdDocument = true)
+
+            when (result) {
+                is BitmapSaveResult.Finished -> ctx.toast(result)
+                BitmapSaveResult.Canceled -> Unit
+            }
+
+            result shouldBe BitmapSaveResult.Canceled
+            ShadowToast.shownToastCount() shouldBe 0
         }
 
     @Test
