@@ -23,21 +23,32 @@ import android.content.Intent
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Bundle
 import android.os.Environment
 import android.os.ParcelFileDescriptor
-import androidx.activity.result.ActivityResultLauncher
+import androidx.core.os.BundleCompat
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SaveLocation
+import de.lemke.commonutils.ui.utils.BitmapSaveResult
 import de.lemke.commonutils.ui.utils.exportBitmap
+import de.lemke.commonutils.ui.utils.saveBitmapToDirectory
 import de.lemke.commonutils.ui.utils.saveBitmapToUri
+import de.lemke.commonutils.ui.utils.toast
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldMatch
 import io.mockk.every
 import io.mockk.mockk
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.OutputStream
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -46,181 +57,438 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
+private val bitmap: Bitmap get() = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+
+private const val DOCUMENTS_AUTHORITY = "de.lemke.documents"
+
+// The hidden DocumentsContract.METHOD_DELETE_DOCUMENT and EXTRA_URI that deleteDocument sends to the provider.
+private const val METHOD_DELETE_DOCUMENT = "android:deleteDocument"
+private const val EXTRA_DOCUMENT_URI = "uri"
+
+private val timestampedPng = Regex("""test_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}\.png""")
+
+private fun publicDirectory(type: String): File = Environment.getExternalStoragePublicDirectory(type).apply { mkdirs() }
+
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class ExportUtilsRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-    private val bitmap: Bitmap get() = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+
+    // ── exportBitmap ──────────────────────────────────────────────────────────
 
     @Test
-    fun `saveBitmapToUri returns false when uri is null`() {
-        ctx.saveBitmapToUri(null, bitmap).shouldBeFalse()
+    fun `exportBitmap launches the document picker for a timestamped PNG`() {
+        val launcher = RecordingIntentLauncher()
+
+        ctx.exportBitmap("test", launcher).shouldBeTrue()
+
+        val intent = launcher.launched.single()
+        intent.action shouldBe Intent.ACTION_CREATE_DOCUMENT
+        intent.categories shouldContainExactly setOf(Intent.CATEGORY_OPENABLE)
+        intent.type shouldBe "image/png"
+        intent.getStringExtra(Intent.EXTRA_TITLE)!! shouldMatch timestampedPng
     }
 
     @Test
-    fun `saveBitmapToUri returns false when bitmap is null`() {
-        ctx.saveBitmapToUri(null, null).shouldBeFalse()
+    fun `exportBitmap without a document picker shows the not-supported toast and returns false`() {
+        val launcher = RecordingIntentLauncher(ActivityNotFoundException("no picker"))
+
+        ctx.exportBitmap("test", launcher).shouldBeFalse()
+
+        launcher.launched.shouldBeEmpty()
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: Saving content is not supported on your device."
+    }
+
+    // ── saveBitmapToDirectory ─────────────────────────────────────────────────
+
+    @Test
+    fun `saveBitmapToDirectory writes a PNG to Pictures`() =
+        runTest {
+            val directory = publicDirectory(Environment.DIRECTORY_PICTURES)
+
+            saveBitmapToDirectory(SaveLocation.PICTURES, bitmap, "test") shouldBe
+                BitmapSaveResult.Saved(SaveLocation.PICTURES)
+
+            directory.listFiles()!!.single().name shouldMatch timestampedPng
+        }
+
+    @Test
+    fun `saveBitmapToDirectory writes a PNG to DCIM`() =
+        runTest {
+            val directory = publicDirectory(Environment.DIRECTORY_DCIM)
+
+            saveBitmapToDirectory(SaveLocation.DCIM, bitmap, "test") shouldBe
+                BitmapSaveResult.Saved(SaveLocation.DCIM)
+
+            directory.listFiles()!!.single().name shouldMatch timestampedPng
+        }
+
+    @Test
+    fun `saveBitmapToDirectory writes a PNG to Downloads`() =
+        runTest {
+            val directory = publicDirectory(Environment.DIRECTORY_DOWNLOADS)
+
+            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test") shouldBe
+                BitmapSaveResult.Saved(SaveLocation.DOWNLOADS)
+
+            directory.listFiles()!!.single().name shouldMatch timestampedPng
+        }
+
+    @Test
+    fun `saveBitmapToDirectory reports EncodingFailed when the bitmap cannot be encoded and leaves no file`() =
+        runTest {
+            val directory = publicDirectory(Environment.DIRECTORY_DCIM)
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            saveBitmapToDirectory(SaveLocation.DCIM, failing, "test") shouldBe BitmapSaveResult.EncodingFailed
+
+            directory.listFiles()!!.shouldBeEmpty()
+        }
+
+    @Test
+    fun `saveBitmapToDirectory reports WriteFailed when the directory is a file`() =
+        runTest {
+            val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            downloads.deleteRecursively()
+            downloads.parentFile!!.mkdirs()
+            downloads.createNewFile().shouldBeTrue()
+
+            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test") shouldBe BitmapSaveResult.WriteFailed
+        }
+
+    @Test
+    fun `saveBitmapToDirectory reports WriteFailed when encoding throws and leaves no file`() =
+        runTest {
+            val directory = publicDirectory(Environment.DIRECTORY_PICTURES)
+            val throwing = mockk<Bitmap>()
+            every { throwing.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
+
+            saveBitmapToDirectory(SaveLocation.PICTURES, throwing, "test") shouldBe BitmapSaveResult.WriteFailed
+
+            directory.listFiles()!!.shouldBeEmpty()
+        }
+
+    @Test
+    fun `saveBitmapToDirectory writes on the given IO dispatcher`() =
+        runTest {
+            val directory = publicDirectory(Environment.DIRECTORY_PICTURES)
+            val io = HeldDispatcher()
+            val save = async { saveBitmapToDirectory(SaveLocation.PICTURES, bitmap, "test", io) }
+            runCurrent()
+
+            save.isCompleted.shouldBeFalse()
+            directory.listFiles()!!.shouldBeEmpty()
+
+            io.held.removeFirst().run()
+            save.await() shouldBe BitmapSaveResult.Saved(SaveLocation.PICTURES)
+            directory.listFiles()!!.single().name shouldMatch timestampedPng
+        }
+
+    @Test
+    fun `saveBitmapToDirectory reports NeedsPicker for CUSTOM`() =
+        runTest {
+            saveBitmapToDirectory(SaveLocation.CUSTOM, bitmap, "test") shouldBe BitmapSaveResult.NeedsPicker
+        }
+
+    // ── toast(BitmapSaveResult) ───────────────────────────────────────────────
+
+    @Test
+    fun `toast Saved names the location`() {
+        ctx.toast(BitmapSaveResult.Saved(SaveLocation.PICTURES))
+        ShadowToast.getTextOfLatestToast() shouldBe "Image saved: Pictures"
     }
 
     @Test
-    fun `exportBitmap returns false when launcher is null and saveLocation is CUSTOM`() {
-        ctx.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", null).shouldBeFalse()
+    fun `toast Saved to CUSTOM shows the plain confirmation`() {
+        ctx.toast(BitmapSaveResult.Saved(SaveLocation.CUSTOM))
+        ShadowToast.getTextOfLatestToast() shouldBe "Image saved"
     }
 
     @Test
-    fun `exportBitmap with non-null launcher and CUSTOM launches picker and returns true`() {
-        val launcher = mockk<ActivityResultLauncher<Intent>>(relaxed = true)
-        ctx.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", launcher).shouldBeTrue()
+    fun `toast EncodingFailed shows the saving error`() {
+        ctx.toast(BitmapSaveResult.EncodingFailed)
+        ShadowToast.getTextOfLatestToast() shouldBe "Error saving image"
     }
 
     @Test
-    fun `exportBitmap DOWNLOADS on API 36 hits external storage path without crashing`() {
-        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null)
-    }
-
-    @Test
-    fun `toLocalizedString returns non-blank string for CUSTOM`() {
-        SaveLocation.CUSTOM.toLocalizedString(ctx).shouldNotBeBlank()
-    }
-
-    @Test
-    fun `toLocalizedString returns non-blank string for DOWNLOADS`() {
-        SaveLocation.DOWNLOADS.toLocalizedString(ctx).shouldNotBeBlank()
-    }
-
-    @Test
-    fun `toLocalizedString returns non-blank string for PICTURES`() {
-        SaveLocation.PICTURES.toLocalizedString(ctx).shouldNotBeBlank()
-    }
-
-    @Test
-    fun `toLocalizedString returns non-blank string for DCIM`() {
-        SaveLocation.DCIM.toLocalizedString(ctx).shouldNotBeBlank()
-    }
-
-    @Test
-    fun `getLocalizedEntries returns four entries`() {
-        val entries = SaveLocation.getLocalizedEntries(ctx)
-        entries.size shouldBe 4
-    }
-
-    @Test
-    fun `saveBitmapToUri success returns true when stream opens and compress succeeds`() {
-        val file = File(ctx.cacheDir, "export_test.png").also { it.createNewFile() }
-        val uri = Uri.fromFile(file)
-        ctx.saveBitmapToUri(uri, bitmap).shouldBeTrue()
-    }
-
-    @Test
-    fun `saveBitmapToUri compress fail returns false`() {
-        val file = File(ctx.cacheDir, "export_fail.png").also { it.createNewFile() }
-        val uri = Uri.fromFile(file)
-        val failBitmap = mockk<Bitmap>()
-        every { failBitmap.compress(any(), any(), any<OutputStream>()) } returns false
-        ctx.saveBitmapToUri(uri, failBitmap).shouldBeFalse()
-    }
-
-    @Test
-    fun `saveBitmapToUri exception returns false`() {
-        // Pass a content URI with no registered provider → openOutputStream throws
-        val uri = Uri.parse("content://de.lemke.nonexistent/data/1")
-        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
-    }
-
-    @Test
-    fun `saveBitmapToUri SecurityException from openOutputStream returns false`() {
-        val uri = Uri.parse("content://de.lemke.provider/revoked/1")
-        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw SecurityException("permission revoked") }
-        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
+    fun `toast WriteFailed shows the file error`() {
+        ctx.toast(BitmapSaveResult.WriteFailed)
         ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
     }
 
+    // ── SaveLocation ──────────────────────────────────────────────────────────
+
     @Test
-    fun `saveBitmapToUri IllegalArgumentException from the resolver shows the error toast and returns false`() {
-        val uri = Uri.parse("content://de.lemke.provider/unknown/1")
-        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw IllegalArgumentException("Unknown URI") }
-        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
+    fun `publicDirectoryType maps every location`() {
+        SaveLocation.entries.associateWith { it.publicDirectoryType } shouldBe
+            mapOf(
+                SaveLocation.CUSTOM to null,
+                SaveLocation.DOWNLOADS to Environment.DIRECTORY_DOWNLOADS,
+                SaveLocation.PICTURES to Environment.DIRECTORY_PICTURES,
+                SaveLocation.DCIM to Environment.DIRECTORY_DCIM,
+            )
     }
 
     @Test
-    fun `saveBitmapToUri UnsupportedOperationException from the resolver shows the error toast and returns false`() {
-        val uri = Uri.parse("content://de.lemke.provider/readonly/1")
-        shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw UnsupportedOperationException("Writing not supported") }
-        ctx.saveBitmapToUri(uri, bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
+    fun `needsPicker holds only for CUSTOM on API 30+`() {
+        SaveLocation.entries.filter { it.needsPicker } shouldBe listOf(SaveLocation.CUSTOM)
     }
 
-    @Test
-    fun `exportBitmap to DOWNLOADS shows the error toast and returns false when the output stream cannot open`() {
-        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        downloads.deleteRecursively()
-        downloads.parentFile!!.mkdirs()
-        downloads.createNewFile().shouldBeTrue()
-        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    // ── saveBitmapToUri ───────────────────────────────────────────────────────
 
     @Test
-    fun `saveBitmapToUri null stream shows the error toast and returns false`() {
-        Robolectric.buildContentProvider(NoFileContentProvider::class.java).create("de.lemke.nofile")
-        ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nofile/1"), bitmap).shouldBeFalse()
-        ShadowToast.getTextOfLatestToast() shouldBe "Error creating file"
-    }
+    fun `saveBitmapToUri reports Canceled for the null uri of a canceled picker and the caller shows no toast`() =
+        runTest {
+            val result = ctx.saveBitmapToUri(null, bitmap, createdDocument = true)
+
+            when (result) {
+                is BitmapSaveResult.Finished -> ctx.toast(result)
+                BitmapSaveResult.Canceled -> Unit
+            }
+
+            result shouldBe BitmapSaveResult.Canceled
+            ShadowToast.shownToastCount() shouldBe 0
+        }
 
     @Test
-    fun `exportBitmap PICTURES on API 36 directory success returns true`() {
-        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-        dir.mkdirs()
-        ctx.exportBitmap(SaveLocation.PICTURES, bitmap, "test", null).shouldBeTrue()
-    }
+    fun `saveBitmapToUri reports WriteFailed when bitmap is null and writes nothing`() =
+        runTest {
+            val file = File(ctx.cacheDir, "null_bitmap_test.png")
+
+            ctx.saveBitmapToUri(Uri.fromFile(file), null, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+
+            file.exists().shouldBeFalse()
+        }
 
     @Test
-    fun `exportBitmap DCIM on API 36 directory compress-fail returns false`() {
-        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
-        dir.mkdirs()
-        val failBitmap = mockk<Bitmap>()
-        every { failBitmap.compress(any(), any(), any<OutputStream>()) } returns false
-        ctx.exportBitmap(SaveLocation.DCIM, failBitmap, "test", null).shouldBeFalse()
-    }
+    fun `saveBitmapToUri writes the PNG and reports Saved to CUSTOM`() =
+        runTest {
+            val file = File(ctx.cacheDir, "export_test.png").also { it.createNewFile() }
+
+            ctx.saveBitmapToUri(Uri.fromFile(file), bitmap, createdDocument = false) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+
+            (file.length() > 0).shouldBeTrue()
+        }
 
     @Test
-    fun `exportBitmap DCIM on API 36 directory success returns true`() {
-        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
-        dir.mkdirs()
-        ctx.exportBitmap(SaveLocation.DCIM, bitmap, "test", null).shouldBeTrue()
-    }
+    fun `saveBitmapToUri writes on the given IO dispatcher`() =
+        runTest {
+            val file = File(ctx.cacheDir, "export_held.png")
+            val io = HeldDispatcher()
+            val save = async { ctx.saveBitmapToUri(Uri.fromFile(file), bitmap, createdDocument = false, io) }
+            runCurrent()
+
+            save.isCompleted.shouldBeFalse()
+            file.exists().shouldBeFalse()
+
+            io.held.removeFirst().run()
+            save.await() shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+            (file.length() > 0).shouldBeTrue()
+        }
 
     @Test
-    fun `exportBitmap DOWNLOADS on API 36 directory success returns true`() {
-        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        dir.mkdirs()
-        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null).shouldBeTrue()
-    }
+    fun `saveBitmapToUri reports EncodingFailed when the bitmap cannot be encoded`() =
+        runTest {
+            val file = File(ctx.cacheDir, "export_fail.png").also { it.createNewFile() }
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.saveBitmapToUri(Uri.fromFile(file), failing, createdDocument = false) shouldBe BitmapSaveResult.EncodingFailed
+        }
 
     @Test
-    fun `exportBitmap launcher throws ActivityNotFoundException returns false`() {
-        val launcher = mockk<ActivityResultLauncher<Intent>>()
-        every { launcher.launch(any()) } throws ActivityNotFoundException("no picker")
-        ctx.exportBitmap(SaveLocation.CUSTOM, bitmap, "test", launcher).shouldBeFalse()
-    }
+    fun `saveBitmapToUri reports WriteFailed without a provider for the uri`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.nonexistent/data/1")
+
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+        }
 
     @Test
-    fun `saveBitmapToUri non-null uri and null bitmap returns false`() {
-        // uri != null → check second: bitmap == null → true → if-body → false (covers || right-side branch)
-        val uri = Uri.fromFile(File(ctx.cacheDir, "null_bitmap_test.png"))
-        ctx.saveBitmapToUri(uri, null).shouldBeFalse()
-    }
+    fun `saveBitmapToUri reports WriteFailed when neither writing nor deleting a created document reaches a provider`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.nonexistent/data/1")
+
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = true) shouldBe BitmapSaveResult.WriteFailed
+        }
 
     @Test
-    fun `exportBitmap IOException from compress covers catch block`() {
-        // Make Bitmap.compress throw IOException inside the try block → caught → returns false
-        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-        dir.mkdirs()
-        val throwingBitmap = mockk<Bitmap>()
-        every { throwingBitmap.compress(any(), any(), any<OutputStream>()) } throws java.io.IOException("simulated IO error")
-        ctx.exportBitmap(SaveLocation.PICTURES, throwingBitmap, "test", null).shouldBeFalse()
+    fun `saveBitmapToUri reports WriteFailed for a SecurityException from openOutputStream`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.provider/revoked/1")
+            shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw SecurityException("permission revoked") }
+
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+        }
+
+    @Test
+    fun `saveBitmapToUri reports WriteFailed for an IllegalArgumentException from the resolver`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.provider/unknown/1")
+            shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw IllegalArgumentException("Unknown URI") }
+
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+        }
+
+    @Test
+    fun `saveBitmapToUri reports WriteFailed for an UnsupportedOperationException from the resolver`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.provider/readonly/1")
+            shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw UnsupportedOperationException("Writing not supported") }
+
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+        }
+
+    @Test
+    fun `saveBitmapToUri reports WriteFailed for a null stream`() =
+        runTest {
+            Robolectric.buildContentProvider(NoFileContentProvider::class.java).create("de.lemke.nofile")
+            val uri = Uri.parse("content://de.lemke.nofile/1")
+
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+        }
+
+    @Test
+    fun `saveBitmapToUri deletes the document when the bitmap cannot be encoded`() =
+        runTest {
+            val provider = documentProvider()
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.saveBitmapToUri(provider.uri, failing, createdDocument = true) shouldBe BitmapSaveResult.EncodingFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    @Test
+    fun `saveBitmapToUri deletes the document when the write throws`() =
+        runTest {
+            val provider = documentProvider()
+            val throwing = mockk<Bitmap>()
+            every { throwing.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
+
+            ctx.saveBitmapToUri(provider.uri, throwing, createdDocument = true) shouldBe BitmapSaveResult.WriteFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    @Test
+    fun `saveBitmapToUri keeps the document it wrote`() =
+        runTest {
+            val provider = documentProvider()
+
+            ctx.saveBitmapToUri(provider.uri, bitmap, createdDocument = true) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+
+            provider.deleted.shouldBeEmpty()
+            (provider.file.length() > 0).shouldBeTrue()
+        }
+
+    @Test
+    fun `saveBitmapToUri deletes the created document when the bitmap is null`() =
+        runTest {
+            val provider = documentProvider()
+
+            ctx.saveBitmapToUri(provider.uri, null, createdDocument = true) shouldBe BitmapSaveResult.WriteFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    @Test
+    fun `saveBitmapToUri keeps an existing document when the bitmap cannot be encoded`() =
+        runTest {
+            val provider = documentProvider()
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.saveBitmapToUri(provider.uri, failing, createdDocument = false) shouldBe BitmapSaveResult.EncodingFailed
+
+            provider.deleted.shouldBeEmpty()
+            provider.file.exists().shouldBeTrue()
+        }
+
+    @Test
+    fun `saveBitmapToUri keeps an existing document when the bitmap is null`() =
+        runTest {
+            val provider = documentProvider()
+
+            ctx.saveBitmapToUri(provider.uri, null, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+
+            provider.deleted.shouldBeEmpty()
+        }
+
+    @Test
+    fun `saveBitmapToUri reports the failure when deleting the document fails`() =
+        runTest {
+            val provider = documentProvider().apply { deleteFailure = FileNotFoundException("gone") }
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.saveBitmapToUri(provider.uri, failing, createdDocument = true) shouldBe BitmapSaveResult.EncodingFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    private fun documentProvider(): DocumentRecordingProvider =
+        Robolectric
+            .buildContentProvider(DocumentRecordingProvider::class.java)
+            .create(DOCUMENTS_AUTHORITY)
+            .get()
+            .apply { file = File(ctx.cacheDir, "document.png").also { it.createNewFile() } }
+}
+
+private class DocumentRecordingProvider : ContentProvider() {
+    lateinit var file: File
+    var deleteFailure: Exception? = null
+    val deleted = mutableListOf<Uri>()
+    val uri: Uri = Uri.parse("content://$DOCUMENTS_AUTHORITY/document/1")
+
+    override fun onCreate() = true
+
+    override fun call(
+        method: String,
+        arg: String?,
+        extras: Bundle?,
+    ): Bundle? {
+        if (method == METHOD_DELETE_DOCUMENT) {
+            deleted += BundleCompat.getParcelable(extras!!, EXTRA_DOCUMENT_URI, Uri::class.java)!!
+            deleteFailure?.let { throw it }
+        }
+        return null
     }
+
+    override fun openFile(
+        uri: Uri,
+        mode: String,
+    ): ParcelFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.parseMode(mode))
+
+    override fun query(
+        uri: Uri,
+        projection: Array<out String>?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+        sortOrder: String?,
+    ): Cursor? = null
+
+    override fun getType(uri: Uri): String? = null
+
+    override fun insert(
+        uri: Uri,
+        values: ContentValues?,
+    ): Uri? = null
+
+    override fun delete(
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+    ) = 0
+
+    override fun update(
+        uri: Uri,
+        values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+    ) = 0
 }
 
 private class NoFileContentProvider : ContentProvider() {
@@ -263,12 +531,18 @@ private class NoFileContentProvider : ContentProvider() {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
 class ExportUtilsSdk29RobolectricTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-    private val bitmap: Bitmap get() = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+    @Test
+    fun `needsPicker holds for every location up to API 29`() {
+        SaveLocation.entries.filter { it.needsPicker } shouldBe SaveLocation.entries
+    }
 
     @Test
-    fun `exportBitmap DOWNLOADS on API 29 SDK not gt Q falls through to else-if branch`() {
-        // SDK_INT (29) > Q (29) = false → else-if: activityResultLauncher == null → toast + false
-        ctx.exportBitmap(SaveLocation.DOWNLOADS, bitmap, "test", null).shouldBeFalse()
-    }
+    fun `saveBitmapToDirectory reports NeedsPicker for Downloads on API 29 and writes nothing`() =
+        runTest {
+            val directory = publicDirectory(Environment.DIRECTORY_DOWNLOADS)
+
+            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test") shouldBe BitmapSaveResult.NeedsPicker
+
+            directory.listFiles()!!.shouldBeEmpty()
+        }
 }

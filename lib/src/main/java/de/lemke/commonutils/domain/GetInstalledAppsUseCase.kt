@@ -29,8 +29,7 @@ import kotlinx.coroutines.withContext
  * Returns installed apps ready for a `SeslAppPickerGridView`, as an injectable seam apps can substitute in tests.
  * Callers rendering through `AppPickerStrategy` get the sub-label shaping applied there, not here.
  *
- * [invoke] does blocking `PackageManager` enumeration — call it from a background dispatcher (e.g. `Dispatchers.IO`
- * via `withContext`), not directly on the main thread.
+ * [invoke] enumerates packages on its injected IO dispatcher, so callers may invoke it from the main thread.
  */
 class GetInstalledAppsUseCase @Inject constructor(
     @param:ApplicationContext private val context: Context,

@@ -27,7 +27,7 @@ import de.lemke.commonutils.NoCoverage
  * Looks up [serviceClass] via [ContextCompat.getSystemService] and, if present, runs [action] on it.
  * The null case (service unregistered for this Context) can't be produced under Robolectric for any
  * real platform service, so it stays untested here deliberately — same reasoning as
- * `ExportUtils.openOutputStream()`.
+ * `SharingUtils.openOutputStream()`.
  */
 @NoCoverage
 fun <T, R> Context.withSystemService(
