@@ -21,8 +21,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldEndWith
+import java.io.File
+import kotlin.io.path.Path
 import kotlin.io.path.createTempDirectory
+import kotlin.io.path.name
 import kotlin.io.path.writeText
 
 class LaunchLatchConventionsTest : ShouldSpec() {
@@ -351,17 +353,16 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 listOf(LaunchLatchViolation(3, "dialog.show"))
             LaunchLatchConventions.defaultShowReceivers shouldBe setOf("Snackbar", "Toast", "PopupMenu", "TipPopup")
         }
-        should("list every hit of a scope as path, line and match") {
-            val dir = createTempDirectory("launch-latch")
+        should("list every hit of a scope as project path, line and match") {
+            val dir = createTempDirectory(Path("build", "tmp").toAbsolutePath(), "launch-latch")
             try {
                 dir.resolve("Clean.kt").writeText("package demo\n\nfun clean() = safeStartActivity(intent)\n")
                 dir.resolve("Hits.kt").writeText("package demo\n\nfun open() {\n    startActivity(intent)\n    dialog.show()\n}\n")
                 val scope = Konsist.scopeFromExternalDirectories(listOf(dir.toString()))
-                val hitsPath = scope.files.single { it.path.endsWith("Hits.kt") }.path
+                val hitsPath = listOf("", "lib", "build", "tmp", dir.name, "Hits.kt").joinToString(File.separator)
 
                 val error = shouldThrow<AssertionError> { scope.assertLaunchLatchConventions() }
 
-                hitsPath shouldEndWith "Hits.kt"
                 error.message shouldBe "2 calls bypass the launch latch:\n$hitsPath:4: startActivity\n$hitsPath:5: dialog.show"
             } finally {
                 dir.toFile().deleteRecursively()

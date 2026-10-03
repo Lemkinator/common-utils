@@ -329,14 +329,14 @@ object LaunchLatchConventions {
 }
 
 /**
- * Fails with one message that lists every violation in this scope's files as `path:line: match`, one per line.
+ * Fails with one message that lists every violation in this scope's files as `projectPath:line: match`, one per line.
  */
 fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = emptySet()) {
     val hits =
         files
-            .sortedBy { it.path }
+            .sortedBy { it.projectPath }
             .flatMap { file ->
-                LaunchLatchConventions.violations(file.text, extraShowReceivers).map { "${file.path}:${it.line}: ${it.match}" }
+                LaunchLatchConventions.violations(file.text, extraShowReceivers).map { "${file.projectPath}:${it.line}: ${it.match}" }
             }
     if (hits.isNotEmpty()) {
         val header = if (hits.size == 1) "1 call bypasses the launch latch:" else "${hits.size} calls bypass the launch latch:"
