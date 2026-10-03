@@ -45,7 +45,8 @@ object LaunchLatchConventions {
                 "startIntentSender|startIntentSenderForResult|registerForActivityResult)\\b",
         )
     private val showName = Regex("""\b(show|showNow)\b""")
-    private val declarationPrefix = Regex("""\bfun\s[^(){}=;]*$""")
+    private val declarationKeyword = Regex("""\bfun\s""")
+    private val declarationBoundaries = charArrayOf('(', ')', '{', '}', '=', ';')
     private val closingBrackets = mapOf(')' to '(', ']' to '[', '}' to '{', '>' to '<')
     private val openingBrackets = closingBrackets.entries.associate { (close, open) -> open to close }
 
@@ -103,8 +104,9 @@ object LaunchLatchConventions {
 
     private fun String.isParenthesisAt(index: Int): Boolean = getOrNull(skipWhitespaceForward(index)) == '('
 
+    /** Whether a `fun` precedes [start] with no bracket, `=` or `;` between, on this line or a line before. */
     private fun String.isDeclaration(start: Int): Boolean =
-        declarationPrefix.containsMatchIn(substring(lastIndexOf('\n', start - 1) + 1, start))
+        declarationKeyword.containsMatchIn(substring(lastIndexOfAny(declarationBoundaries, start - 1) + 1, start))
 
     private fun String.receiverBefore(end: Int): List<Segment> {
         val access = memberAccessLength(end)

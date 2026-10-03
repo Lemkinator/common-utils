@@ -109,6 +109,27 @@ class LaunchLatchConventionsTest : ShouldSpec() {
 
             LaunchLatchConventions.violations(source).shouldBeEmpty()
         }
+        should("accept a declaration wrapped after its receiver") {
+            val source =
+                """
+                fun Foo.
+                    show() = Unit
+                fun <T> Bar<T>
+                    .startActivity(x: T) = Unit
+                """.trimIndent()
+
+            LaunchLatchConventions.violations(source).shouldBeEmpty()
+        }
+        should("report a show on a line after a declaration header") {
+            val source =
+                """
+                fun open()
+                    = dialog
+                        .show()
+                """.trimIndent()
+
+            LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(3, "dialog.show"))
+        }
         should("report every line of a multi-line file in source order") {
             val source =
                 """
