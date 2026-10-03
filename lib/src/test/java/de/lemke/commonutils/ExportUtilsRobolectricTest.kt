@@ -240,7 +240,7 @@ class ExportUtilsRobolectricTest {
     @Test
     fun `saveBitmapToUri reports WriteFailed when uri is null`() =
         runTest {
-            ctx.saveBitmapToUri(null, bitmap) shouldBe BitmapSaveResult.WriteFailed
+            ctx.saveBitmapToUri(null, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
         }
 
     @Test
@@ -248,7 +248,7 @@ class ExportUtilsRobolectricTest {
         runTest {
             val file = File(ctx.cacheDir, "null_bitmap_test.png")
 
-            ctx.saveBitmapToUri(Uri.fromFile(file), null) shouldBe BitmapSaveResult.WriteFailed
+            ctx.saveBitmapToUri(Uri.fromFile(file), null, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
 
             file.exists().shouldBeFalse()
         }
@@ -258,7 +258,7 @@ class ExportUtilsRobolectricTest {
         runTest {
             val file = File(ctx.cacheDir, "export_test.png").also { it.createNewFile() }
 
-            ctx.saveBitmapToUri(Uri.fromFile(file), bitmap) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+            ctx.saveBitmapToUri(Uri.fromFile(file), bitmap, createdDocument = false) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
 
             (file.length() > 0).shouldBeTrue()
         }
@@ -268,7 +268,7 @@ class ExportUtilsRobolectricTest {
         runTest {
             val file = File(ctx.cacheDir, "export_held.png")
             val io = HeldDispatcher()
-            val save = async { ctx.saveBitmapToUri(Uri.fromFile(file), bitmap, io) }
+            val save = async { ctx.saveBitmapToUri(Uri.fromFile(file), bitmap, createdDocument = false, io) }
             runCurrent()
 
             save.isCompleted.shouldBeFalse()
@@ -286,13 +286,23 @@ class ExportUtilsRobolectricTest {
             val failing = mockk<Bitmap>()
             every { failing.compress(any(), any(), any<OutputStream>()) } returns false
 
-            ctx.saveBitmapToUri(Uri.fromFile(file), failing) shouldBe BitmapSaveResult.EncodingFailed
+            ctx.saveBitmapToUri(Uri.fromFile(file), failing, createdDocument = false) shouldBe BitmapSaveResult.EncodingFailed
         }
 
     @Test
     fun `saveBitmapToUri reports WriteFailed without a provider for the uri`() =
         runTest {
-            ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nonexistent/data/1"), bitmap) shouldBe BitmapSaveResult.WriteFailed
+            val uri = Uri.parse("content://de.lemke.nonexistent/data/1")
+
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+        }
+
+    @Test
+    fun `saveBitmapToUri reports WriteFailed when neither writing nor deleting a created document reaches a provider`() =
+        runTest {
+            val uri = Uri.parse("content://de.lemke.nonexistent/data/1")
+
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = true) shouldBe BitmapSaveResult.WriteFailed
         }
 
     @Test
@@ -301,7 +311,7 @@ class ExportUtilsRobolectricTest {
             val uri = Uri.parse("content://de.lemke.provider/revoked/1")
             shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw SecurityException("permission revoked") }
 
-            ctx.saveBitmapToUri(uri, bitmap) shouldBe BitmapSaveResult.WriteFailed
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
         }
 
     @Test
@@ -310,7 +320,7 @@ class ExportUtilsRobolectricTest {
             val uri = Uri.parse("content://de.lemke.provider/unknown/1")
             shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw IllegalArgumentException("Unknown URI") }
 
-            ctx.saveBitmapToUri(uri, bitmap) shouldBe BitmapSaveResult.WriteFailed
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
         }
 
     @Test
@@ -319,15 +329,16 @@ class ExportUtilsRobolectricTest {
             val uri = Uri.parse("content://de.lemke.provider/readonly/1")
             shadowOf(ctx.contentResolver).registerOutputStreamSupplier(uri) { throw UnsupportedOperationException("Writing not supported") }
 
-            ctx.saveBitmapToUri(uri, bitmap) shouldBe BitmapSaveResult.WriteFailed
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
         }
 
     @Test
     fun `saveBitmapToUri reports WriteFailed for a null stream`() =
         runTest {
             Robolectric.buildContentProvider(NoFileContentProvider::class.java).create("de.lemke.nofile")
+            val uri = Uri.parse("content://de.lemke.nofile/1")
 
-            ctx.saveBitmapToUri(Uri.parse("content://de.lemke.nofile/1"), bitmap) shouldBe BitmapSaveResult.WriteFailed
+            ctx.saveBitmapToUri(uri, bitmap, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
         }
 
     @Test
@@ -337,7 +348,7 @@ class ExportUtilsRobolectricTest {
             val failing = mockk<Bitmap>()
             every { failing.compress(any(), any(), any<OutputStream>()) } returns false
 
-            ctx.saveBitmapToUri(provider.uri, failing) shouldBe BitmapSaveResult.EncodingFailed
+            ctx.saveBitmapToUri(provider.uri, failing, createdDocument = true) shouldBe BitmapSaveResult.EncodingFailed
 
             provider.deleted shouldContainExactly listOf(provider.uri)
         }
@@ -349,7 +360,7 @@ class ExportUtilsRobolectricTest {
             val throwing = mockk<Bitmap>()
             every { throwing.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
 
-            ctx.saveBitmapToUri(provider.uri, throwing) shouldBe BitmapSaveResult.WriteFailed
+            ctx.saveBitmapToUri(provider.uri, throwing, createdDocument = true) shouldBe BitmapSaveResult.WriteFailed
 
             provider.deleted shouldContainExactly listOf(provider.uri)
         }
@@ -359,10 +370,43 @@ class ExportUtilsRobolectricTest {
         runTest {
             val provider = documentProvider()
 
-            ctx.saveBitmapToUri(provider.uri, bitmap) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+            ctx.saveBitmapToUri(provider.uri, bitmap, createdDocument = true) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
 
             provider.deleted.shouldBeEmpty()
             (provider.file.length() > 0).shouldBeTrue()
+        }
+
+    @Test
+    fun `saveBitmapToUri deletes the created document when the bitmap is null`() =
+        runTest {
+            val provider = documentProvider()
+
+            ctx.saveBitmapToUri(provider.uri, null, createdDocument = true) shouldBe BitmapSaveResult.WriteFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    @Test
+    fun `saveBitmapToUri keeps an existing document when the bitmap cannot be encoded`() =
+        runTest {
+            val provider = documentProvider()
+            val failing = mockk<Bitmap>()
+            every { failing.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.saveBitmapToUri(provider.uri, failing, createdDocument = false) shouldBe BitmapSaveResult.EncodingFailed
+
+            provider.deleted.shouldBeEmpty()
+            provider.file.exists().shouldBeTrue()
+        }
+
+    @Test
+    fun `saveBitmapToUri keeps an existing document when the bitmap is null`() =
+        runTest {
+            val provider = documentProvider()
+
+            ctx.saveBitmapToUri(provider.uri, null, createdDocument = false) shouldBe BitmapSaveResult.WriteFailed
+
+            provider.deleted.shouldBeEmpty()
         }
 
     @Test
@@ -372,7 +416,7 @@ class ExportUtilsRobolectricTest {
             val failing = mockk<Bitmap>()
             every { failing.compress(any(), any(), any<OutputStream>()) } returns false
 
-            ctx.saveBitmapToUri(provider.uri, failing) shouldBe BitmapSaveResult.EncodingFailed
+            ctx.saveBitmapToUri(provider.uri, failing, createdDocument = true) shouldBe BitmapSaveResult.EncodingFailed
 
             provider.deleted shouldContainExactly listOf(provider.uri)
         }
