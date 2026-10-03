@@ -45,18 +45,18 @@ private const val EXTENSION_PNG = ".png"
 /** The outcome of [saveBitmapToDirectory]; [toast] shows the matching message. */
 sealed interface BitmapSaveResult {
     /** The bitmap was written to [location]. */
-    class Saved(
+    data class Saved(
         val location: SaveLocation,
     ) : BitmapSaveResult
 
     /** The bitmap could not be encoded as PNG. */
-    object EncodingFailed : BitmapSaveResult
+    data object EncodingFailed : BitmapSaveResult
 
     /** The target file could not be created or written. */
-    object WriteFailed : BitmapSaveResult
+    data object WriteFailed : BitmapSaveResult
 
     /** The location needs the document picker on this device; see [SaveLocation.needsPicker]. */
-    object NeedsPicker : BitmapSaveResult
+    data object NeedsPicker : BitmapSaveResult
 }
 
 /**

@@ -38,8 +38,6 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldMatch
-import io.kotest.matchers.types.shouldBeInstanceOf
-import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
 import java.io.File
@@ -97,8 +95,8 @@ class ExportUtilsRobolectricTest {
         runTest {
             val directory = publicDirectory(Environment.DIRECTORY_PICTURES)
 
-            saveBitmapToDirectory(SaveLocation.PICTURES, bitmap, "test").shouldBeInstanceOf<BitmapSaveResult.Saved>().location shouldBe
-                SaveLocation.PICTURES
+            saveBitmapToDirectory(SaveLocation.PICTURES, bitmap, "test") shouldBe
+                BitmapSaveResult.Saved(SaveLocation.PICTURES)
 
             directory.listFiles()!!.single().name shouldMatch timestampedPng
         }
@@ -108,8 +106,8 @@ class ExportUtilsRobolectricTest {
         runTest {
             val directory = publicDirectory(Environment.DIRECTORY_DCIM)
 
-            saveBitmapToDirectory(SaveLocation.DCIM, bitmap, "test").shouldBeInstanceOf<BitmapSaveResult.Saved>().location shouldBe
-                SaveLocation.DCIM
+            saveBitmapToDirectory(SaveLocation.DCIM, bitmap, "test") shouldBe
+                BitmapSaveResult.Saved(SaveLocation.DCIM)
 
             directory.listFiles()!!.single().name shouldMatch timestampedPng
         }
@@ -119,8 +117,8 @@ class ExportUtilsRobolectricTest {
         runTest {
             val directory = publicDirectory(Environment.DIRECTORY_DOWNLOADS)
 
-            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test").shouldBeInstanceOf<BitmapSaveResult.Saved>().location shouldBe
-                SaveLocation.DOWNLOADS
+            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test") shouldBe
+                BitmapSaveResult.Saved(SaveLocation.DOWNLOADS)
 
             directory.listFiles()!!.single().name shouldMatch timestampedPng
         }
@@ -132,7 +130,7 @@ class ExportUtilsRobolectricTest {
             val failing = mockk<Bitmap>()
             every { failing.compress(any(), any(), any<OutputStream>()) } returns false
 
-            saveBitmapToDirectory(SaveLocation.DCIM, failing, "test") shouldBeSameInstanceAs BitmapSaveResult.EncodingFailed
+            saveBitmapToDirectory(SaveLocation.DCIM, failing, "test") shouldBe BitmapSaveResult.EncodingFailed
         }
 
     @Test
@@ -143,7 +141,7 @@ class ExportUtilsRobolectricTest {
             downloads.parentFile!!.mkdirs()
             downloads.createNewFile().shouldBeTrue()
 
-            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test") shouldBeSameInstanceAs BitmapSaveResult.WriteFailed
+            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test") shouldBe BitmapSaveResult.WriteFailed
         }
 
     @Test
@@ -153,13 +151,13 @@ class ExportUtilsRobolectricTest {
             val throwing = mockk<Bitmap>()
             every { throwing.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
 
-            saveBitmapToDirectory(SaveLocation.PICTURES, throwing, "test") shouldBeSameInstanceAs BitmapSaveResult.WriteFailed
+            saveBitmapToDirectory(SaveLocation.PICTURES, throwing, "test") shouldBe BitmapSaveResult.WriteFailed
         }
 
     @Test
     fun `saveBitmapToDirectory reports NeedsPicker for CUSTOM`() =
         runTest {
-            saveBitmapToDirectory(SaveLocation.CUSTOM, bitmap, "test") shouldBeSameInstanceAs BitmapSaveResult.NeedsPicker
+            saveBitmapToDirectory(SaveLocation.CUSTOM, bitmap, "test") shouldBe BitmapSaveResult.NeedsPicker
         }
 
     // ── toast(BitmapSaveResult) ───────────────────────────────────────────────
@@ -326,7 +324,7 @@ class ExportUtilsSdk29RobolectricTest {
         runTest {
             val directory = publicDirectory(Environment.DIRECTORY_DOWNLOADS)
 
-            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test") shouldBeSameInstanceAs BitmapSaveResult.NeedsPicker
+            saveBitmapToDirectory(SaveLocation.DOWNLOADS, bitmap, "test") shouldBe BitmapSaveResult.NeedsPicker
 
             directory.listFiles()!!.shouldBeEmpty()
         }
