@@ -151,6 +151,26 @@ class SingleLaunchUtilsRobolectricTest : LaunchLatchRobolectricTest() {
     }
 
     @Test
+    fun `removed fragment cancels its suspend work and releases the latch`() {
+        val activity = resumed().get()
+        val fragment = activity.addFragment()
+        val work = CompletableDeferred<Unit>()
+        var thenRuns = 0
+        fragment.singleLaunchSuspending(work = { work.await() }, then = { thenRuns++ }).shouldBeTrue()
+        activity.singleLaunch {}.shouldBeFalse()
+
+        activity.supportFragmentManager
+            .beginTransaction()
+            .remove(fragment)
+            .commitNow()
+        work.complete(Unit)
+        shadowLooper.idle()
+
+        thenRuns shouldBe 0
+        activity.singleLaunch {}.shouldBeTrue()
+    }
+
+    @Test
     fun `recreation cancels suspend work and the new activity starts idle`() {
         val controller = resumed()
         val work = CompletableDeferred<Unit>()

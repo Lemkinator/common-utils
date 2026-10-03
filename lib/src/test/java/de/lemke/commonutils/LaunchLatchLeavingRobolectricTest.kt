@@ -221,12 +221,13 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
     }
 
     @Test
-    fun `leaving destroy removes the timer and the latch`() {
+    fun `leaving destroy removes the latch`() {
         val controller = untrackedResumed()
         val twin = untrackedResumed()
-        controller.get().launchScreen()
+        controller.pause().stop()
+        controller.get().launchScreen().shouldBeTrue()
 
-        controller.pause().stop().destroy()
+        controller.destroy()
         twin.pause().stop().destroy()
 
         controller.observerCount shouldBe twin.observerCount

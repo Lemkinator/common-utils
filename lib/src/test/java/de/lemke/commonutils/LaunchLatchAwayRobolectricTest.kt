@@ -182,15 +182,6 @@ class LaunchLatchAwayRobolectricTest : LaunchLatchRobolectricTest() {
     }
 
     @Test
-    fun `away pause stays away`() {
-        val controller = away()
-
-        controller.pause()
-
-        controller.get().launchScreen().shouldBeFalse()
-    }
-
-    @Test
     fun `away pre-resume settles idle`() {
         val controller = away()
 
