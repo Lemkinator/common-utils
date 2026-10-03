@@ -150,9 +150,10 @@ suspend fun Context.saveBitmapToUri(
         // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
         @Suppress("TooGenericExceptionCaught")
         try {
-            contentResolver.openOutputStream(uri)?.use { outputStream ->
-                if (bitmap.writePng(outputStream)) BitmapSaveResult.Saved(SaveLocation.CUSTOM) else BitmapSaveResult.EncodingFailed
-            } ?: BitmapSaveResult.WriteFailed
+            val outputStream = contentResolver.openOutputStream(uri) ?: return@withContext BitmapSaveResult.WriteFailed
+            outputStream.use {
+                if (bitmap.writePng(it)) BitmapSaveResult.Saved(SaveLocation.CUSTOM) else BitmapSaveResult.EncodingFailed
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error saving bitmap to uri", e)
             BitmapSaveResult.WriteFailed
