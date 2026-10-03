@@ -18,11 +18,10 @@ package de.lemke.commonutils.domain
 import android.content.Context
 import android.content.pm.PackageInfo
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.HeldDispatcher
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -87,17 +86,6 @@ class GetApplicationInfoUseCaseTest {
             io.held.removeFirst().run()
             lookup.await()?.packageName shouldBe INSTALLED_PACKAGE
         }
-
-    private class HeldDispatcher : CoroutineDispatcher() {
-        val held = ArrayDeque<Runnable>()
-
-        override fun dispatch(
-            context: CoroutineContext,
-            block: Runnable,
-        ) {
-            held += block
-        }
-    }
 
     private companion object {
         const val INSTALLED_PACKAGE = "com.example.installed"

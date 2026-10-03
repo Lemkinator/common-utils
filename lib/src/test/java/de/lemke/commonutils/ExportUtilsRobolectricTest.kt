@@ -43,6 +43,8 @@ import io.mockk.mockk
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -159,6 +161,22 @@ class ExportUtilsRobolectricTest {
         }
 
     @Test
+    fun `saveBitmapToDirectory writes on the given IO dispatcher`() =
+        runTest {
+            val directory = publicDirectory(Environment.DIRECTORY_PICTURES)
+            val io = HeldDispatcher()
+            val save = async { saveBitmapToDirectory(SaveLocation.PICTURES, bitmap, "test", io) }
+            runCurrent()
+
+            save.isCompleted.shouldBeFalse()
+            directory.listFiles()!!.shouldBeEmpty()
+
+            io.held.removeFirst().run()
+            save.await() shouldBe BitmapSaveResult.Saved(SaveLocation.PICTURES)
+            directory.listFiles()!!.single().name shouldMatch timestampedPng
+        }
+
+    @Test
     fun `saveBitmapToDirectory reports NeedsPicker for CUSTOM`() =
         runTest {
             saveBitmapToDirectory(SaveLocation.CUSTOM, bitmap, "test") shouldBe BitmapSaveResult.NeedsPicker
@@ -239,6 +257,22 @@ class ExportUtilsRobolectricTest {
 
             ctx.saveBitmapToUri(Uri.fromFile(file), bitmap) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
 
+            (file.length() > 0).shouldBeTrue()
+        }
+
+    @Test
+    fun `saveBitmapToUri writes on the given IO dispatcher`() =
+        runTest {
+            val file = File(ctx.cacheDir, "export_held.png")
+            val io = HeldDispatcher()
+            val save = async { ctx.saveBitmapToUri(Uri.fromFile(file), bitmap, io) }
+            runCurrent()
+
+            save.isCompleted.shouldBeFalse()
+            file.exists().shouldBeFalse()
+
+            io.held.removeFirst().run()
+            save.await() shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
             (file.length() > 0).shouldBeTrue()
         }
 

@@ -56,6 +56,8 @@ import io.mockk.spyk
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -246,6 +248,26 @@ class SharingUtilsBitmapRobolectricTest {
             clip.getItemAt(0).uri.toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
             clip.description.label shouldBe "label"
             clip.description.getMimeType(0) shouldBe "image/png"
+        }
+
+    @Test
+    fun `createBitmapClip writes on the given IO dispatcher`() =
+        runTest {
+            val io = HeldDispatcher()
+            val clip = async { ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "test.png", io) }
+            runCurrent()
+
+            clip.isCompleted.shouldBeFalse()
+            File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeFalse()
+
+            io.held.removeFirst().run()
+            clip
+                .await()
+                .shouldNotBeNull()
+                .getItemAt(0)
+                .uri
+                .toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
+            File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeTrue()
         }
 
     @Test
