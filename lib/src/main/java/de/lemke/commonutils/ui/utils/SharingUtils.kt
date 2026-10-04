@@ -145,15 +145,22 @@ internal class CacheWriteDirectory private constructor(
     }
 }
 
+/** The cache subdirectory that holds the write directories of [kind], created if missing. */
+private fun Context.cacheDirectoryOf(kind: CacheFileKind): File = File(cacheDir, kind.directoryName).apply { mkdirs() }
+
 /**
- * Deletes the write directories of [kind] last modified more than [CACHE_WRITE_RETENTION] ago, then creates the
- * directory of a new write of [kind].
+ * Creates the directory of a new write of [kind].
  * @throws java.io.IOException if the directory cannot be created.
  */
-internal fun Context.createCacheWriteDirectory(kind: CacheFileKind): CacheWriteDirectory {
-    val kindDirectory = File(cacheDir, kind.directoryName).apply { mkdirs() }
-    CacheWriteDirectory.deleteExpiredIn(kindDirectory, System.currentTimeMillis())
-    return CacheWriteDirectory.createIn(kindDirectory)
+internal fun Context.createCacheWriteDirectory(kind: CacheFileKind): CacheWriteDirectory =
+    CacheWriteDirectory.createIn(cacheDirectoryOf(kind))
+
+/** Deletes the write directories of [kind] last modified more than [CACHE_WRITE_RETENTION] before [nowMillis]. */
+internal fun Context.deleteExpiredCacheWrites(
+    kind: CacheFileKind,
+    nowMillis: Long,
+) {
+    CacheWriteDirectory.deleteExpiredIn(cacheDirectoryOf(kind), nowMillis)
 }
 
 /** Encodes this bitmap as a lossless PNG into [out]; returns false if the bitmap cannot be encoded. */
@@ -187,7 +194,9 @@ internal fun File.deleteOrLog() {
 
 /**
  * Writes [bitmap] as a PNG named [fileName] into a new write directory of [kind] and maps the file's content URI with
- * [transform]; deletes that directory if the bitmap cannot be encoded or anything throws.
+ * [transform]; deletes that directory if the bitmap cannot be encoded or anything throws. Only a call that returns a
+ * URI deletes the write directories of [kind] that were expired when it started, so a failed call keeps every earlier
+ * file, such as the one behind the current clipboard clip.
  * @return the mapped URI, or null if the bitmap cannot be encoded; I/O, path and provider errors propagate.
  */
 internal fun <R : Any> Context.writePngCacheUri(
@@ -196,8 +205,13 @@ internal fun <R : Any> Context.writePngCacheUri(
     fileName: String,
     transform: (Uri) -> R,
 ): R? {
+    val startMillis = System.currentTimeMillis()
     val directory = createCacheWriteDirectory(kind)
-    return runCatching { directory.resolve(fileName).takeIf { it.writePng(bitmap) }?.let { transform(it.getFileUri(this)) } }
-        .also { if (it.getOrNull() == null) directory.delete() }
+    return runCatching {
+        directory
+            .resolve(fileName)
+            .takeIf { it.writePng(bitmap) }
+            ?.let { file -> transform(file.getFileUri(this)).also { deleteExpiredCacheWrites(kind, startMillis) } }
+    }.also { if (it.getOrNull() == null) directory.delete() }
         .getOrThrow()
 }

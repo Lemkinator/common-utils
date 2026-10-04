@@ -54,9 +54,10 @@ sealed interface BitmapShareFile {
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher]. Each write gets a file of its own, so no
  * later write with the same [fileName] changes the file of a pending share. The first [createBitmapShareFile] call that
- * starts more than one day after this write deletes the file; a call that returns [BitmapShareFile.Dropped] writes and
- * deletes nothing. The system can delete the file earlier when it evicts cache files. A receiver that keeps the URI
- * longer reads a dead URI.
+ * starts more than one day after this write and returns [BitmapShareFile.Written] deletes the file; a call that returns
+ * [BitmapShareFile.Dropped] writes nothing, and one that returns [BitmapShareFile.Dropped] or [BitmapShareFile.Failed]
+ * deletes no earlier file. The system can delete the file earlier when it evicts cache files. A receiver that keeps
+ * the URI longer reads a dead URI.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
  * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
@@ -71,9 +72,10 @@ suspend fun Fragment.createBitmapShareFile(
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher]. Each write gets a file of its own, so no
  * later write with the same [fileName] changes the file of a pending share. The first [createBitmapShareFile] call that
- * starts more than one day after this write deletes the file; a call that returns [BitmapShareFile.Dropped] writes and
- * deletes nothing. The system can delete the file earlier when it evicts cache files. A receiver that keeps the URI
- * longer reads a dead URI.
+ * starts more than one day after this write and returns [BitmapShareFile.Written] deletes the file; a call that returns
+ * [BitmapShareFile.Dropped] writes nothing, and one that returns [BitmapShareFile.Dropped] or [BitmapShareFile.Failed]
+ * deletes no earlier file. The system can delete the file earlier when it evicts cache files. A receiver that keeps
+ * the URI longer reads a dead URI.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
  * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns

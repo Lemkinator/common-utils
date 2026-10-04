@@ -37,6 +37,7 @@ import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.createBitmapClip
 import de.lemke.commonutils.ui.utils.createBitmapShareFile
 import de.lemke.commonutils.ui.utils.createCacheWriteDirectory
+import de.lemke.commonutils.ui.utils.deleteExpiredCacheWrites
 import de.lemke.commonutils.ui.utils.deleteOrLog
 import de.lemke.commonutils.ui.utils.getFileUri
 import de.lemke.commonutils.ui.utils.isSamsungQuickShareAvailable
@@ -184,7 +185,7 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `createCacheWriteDirectory deletes an expired write directory and keeps a younger one`() {
+    fun `deleteExpiredCacheWrites deletes an expired write directory and keeps a younger one`() {
         val now = System.currentTimeMillis()
         val expired = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
         val recent = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
@@ -193,14 +194,14 @@ class SharingUtilsRobolectricTest {
         expired.setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds - 60_000).shouldBeTrue()
         recent.setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds + 60_000).shouldBeTrue()
 
-        val created = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+        ctx.deleteExpiredCacheWrites(CacheFileKind.SHARE, now)
 
-        File(ctx.cacheDir, "share").list()!!.asList() shouldContainExactlyInAnyOrder listOf(recent.name, created.name)
+        File(ctx.cacheDir, "share").list()!!.asList() shouldContainExactly listOf(recent.name)
         File(recent, "test.png").readText() shouldBe "recent"
     }
 
     @Test
-    fun `createCacheWriteDirectory keeps expired foreign entries in the kind's cache directory`() {
+    fun `deleteExpiredCacheWrites keeps expired foreign entries in the kind's cache directory`() {
         val shareDirectory = File(ctx.cacheDir, "share")
         val foreignFile = File(shareDirectory, "icon.png").apply { parentFile?.mkdirs() }
         foreignFile.writeText("foreign")
@@ -211,16 +212,15 @@ class SharingUtilsRobolectricTest {
         prefixedFile.writeText("prefixed")
         prefixedFile.setLastModified(0).shouldBeTrue()
 
-        val created = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+        ctx.deleteExpiredCacheWrites(CacheFileKind.SHARE, System.currentTimeMillis())
 
-        shareDirectory.list()!!.asList() shouldContainExactlyInAnyOrder
-            listOf("icon.png", "exports", "commonutils-notes.txt", created.name)
+        shareDirectory.list()!!.asList() shouldContainExactlyInAnyOrder listOf("icon.png", "exports", "commonutils-notes.txt")
         foreignFile.readText() shouldBe "foreign"
         prefixedFile.readText() shouldBe "prefixed"
     }
 
     @Test
-    fun `createCacheWriteDirectory keeps a prefixed symbolic link and the files of its target`() {
+    fun `deleteExpiredCacheWrites keeps a prefixed symbolic link and the files of its target`() {
         val target = File(ctx.cacheDir, "target").apply { mkdirs() }
         val targetFile = File(target, "test.png").apply { writeText("target") }
         target.setLastModified(0).shouldBeTrue()
@@ -233,19 +233,19 @@ class SharingUtilsRobolectricTest {
             assumeNoException(e)
         }
 
-        ctx.createCacheWriteDirectory(CacheFileKind.SHARE)
+        ctx.deleteExpiredCacheWrites(CacheFileKind.SHARE, System.currentTimeMillis())
 
         Files.isSymbolicLink(link).shouldBeTrue()
         targetFile.readText() shouldBe "target"
     }
 
     @Test
-    fun `createCacheWriteDirectory leaves the other kind's write directories alone`() {
+    fun `deleteExpiredCacheWrites leaves the other kind's write directories alone`() {
         val clip = ctx.createCacheWriteDirectory(CacheFileKind.CLIPBOARD).root
         File(clip, "test.png").writeText("clip")
         clip.setLastModified(0).shouldBeTrue()
 
-        ctx.createCacheWriteDirectory(CacheFileKind.SHARE)
+        ctx.deleteExpiredCacheWrites(CacheFileKind.SHARE, System.currentTimeMillis())
 
         File(clip, "test.png").readText() shouldBe "clip"
     }
@@ -328,6 +328,17 @@ class SharingUtilsBitmapRobolectricTest {
     private fun Intent.readGrantFlag(): Int = flags and Intent.FLAG_GRANT_READ_URI_PERMISSION
 
     private fun blockCacheDirectory(directoryName: String) = File(ctx.cacheDir, directoryName).writeText("not a directory")
+
+    private fun Context.expiredCacheWrite(
+        kind: CacheFileKind,
+        content: String,
+    ): File {
+        val directory = createCacheWriteDirectory(kind).root
+        return File(directory, "test.png").apply {
+            writeText(content)
+            directory.setLastModified(0).shouldBeTrue()
+        }
+    }
 
     private fun writtenUri(
         directoryName: String,
@@ -509,6 +520,40 @@ class SharingUtilsBitmapRobolectricTest {
             listOf(first.readText(), second.readText()) shouldContainExactly listOf("first", "second")
         }
 
+    @Test
+    fun `createBitmapClip deletes clips older than the retention once it writes a new clip`() =
+        runTest {
+            ctx.expiredCacheWrite(CacheFileKind.CLIPBOARD, "expired")
+
+            ctx.createBitmapClip(bitmapWriting("new"), "label", "test.png").shouldNotBeNull()
+
+            ctx.cacheWriteFiles("clipboard").map { it.readText() } shouldContainExactly listOf("new")
+        }
+
+    @Test
+    fun `createBitmapClip that cannot encode the bitmap keeps the file of an expired clip`() =
+        runTest {
+            val expired = ctx.expiredCacheWrite(CacheFileKind.CLIPBOARD, "expired")
+            val bitmap = mockk<Bitmap>()
+            every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.createBitmapClip(bitmap, "label", "test.png") shouldBe null
+
+            ctx.cacheWriteFiles("clipboard").map { it.readText() } shouldContainExactly listOf("expired")
+            expired.readText() shouldBe "expired"
+        }
+
+    @Test
+    fun `createBitmapClip without a FileProvider for the package keeps the file of an expired clip`() =
+        runTest {
+            val expired = ctx.expiredCacheWrite(CacheFileKind.CLIPBOARD, "expired")
+
+            contextWithoutFileProvider().createBitmapClip(bitmapWriting("new"), "label", "test.png") shouldBe null
+
+            ctx.cacheWriteFiles("clipboard").map { it.readText() } shouldContainExactly listOf("expired")
+            expired.readText() shouldBe "expired"
+        }
+
     // ── createBitmapShareFile ───────────────────────────────────────────────────
 
     @Test
@@ -580,6 +625,19 @@ class SharingUtilsBitmapRobolectricTest {
             ctx.cacheWriteFiles("share").map { it.readText() } shouldContainExactlyInAnyOrder listOf("pending", "new")
             pendingUri.readText() shouldBe "pending"
             written.readText() shouldBe "new"
+        }
+
+    @Test
+    fun `createBitmapShareFile that returns Failed keeps the file of an expired share`() =
+        runTest {
+            val expired = ctx.expiredCacheWrite(CacheFileKind.SHARE, "expired")
+            val bitmap = mockk<Bitmap>()
+            every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
+
+            ctx.createBitmapShareFile(bitmap, "test.png") shouldBe BitmapShareFile.Failed
+
+            ctx.cacheWriteFiles("share").map { it.readText() } shouldContainExactly listOf("expired")
+            expired.readText() shouldBe "expired"
         }
 
     @Test
