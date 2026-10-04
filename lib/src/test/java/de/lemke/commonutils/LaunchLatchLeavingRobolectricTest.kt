@@ -35,7 +35,8 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
-import de.lemke.commonutils.ui.utils.createBitmapShareUri
+import de.lemke.commonutils.ui.utils.BitmapShareFile
+import de.lemke.commonutils.ui.utils.createBitmapShareFile
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
 import de.lemke.commonutils.ui.utils.quickShareBitmap
 import de.lemke.commonutils.ui.utils.shareBitmap
@@ -273,7 +274,7 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
 
         activity
             .singleLaunchSuspending(
-                work = { activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png") },
+                work = { activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png") },
                 then = { activity.shareBitmap(it) },
             ).shouldBeFalse()
         shadowLooper.idle()
@@ -286,12 +287,13 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
     fun `leaving bitmap share uri outside an input writes nothing and keeps the pending share's file`() =
         runTest {
             val activity = resumed().get()
-            val uri = activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png")
-            activity.shareBitmap(uri).shouldBeTrue()
+            val shareFile = activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png")
+            activity.shareBitmap(shareFile).shouldBeTrue()
             val file = File(activity.cacheDir, "share/shared.png")
             val pending = file.readBytes()
 
-            activity.createBitmapShareUri(Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888), "shared.png").shouldBeNull()
+            activity.createBitmapShareFile(Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888), "shared.png") shouldBe
+                BitmapShareFile.Dropped
 
             file.readBytes() shouldBe pending
         }
@@ -301,23 +303,24 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
     fun `leaving bitmap share uri writes as the work of the held input but not outside it`() {
         val activity = resumed().get()
         val work = CompletableDeferred<Unit>()
-        val uris = mutableListOf<Uri?>()
+        val files = mutableListOf<BitmapShareFile>()
         activity.singleLaunchSuspending(
             work = {
                 work.await()
-                activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
+                activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
             },
-            then = { uris += it },
+            then = { files += it },
         )
         activity.launchScreen().shouldBeTrue()
 
         runTest {
-            activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "outside.png").shouldBeNull()
+            activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "outside.png") shouldBe
+                BitmapShareFile.Dropped
         }
         work.complete(Unit)
         shadowLooper.idle()
 
-        uris.single().shouldNotBeNull()
+        files.single().shouldBeInstanceOf<BitmapShareFile.Written>()
         File(activity.cacheDir, "share/shared.png").exists().shouldBeTrue()
         File(activity.cacheDir, "share/outside.png").exists().shouldBeFalse()
     }
@@ -327,10 +330,10 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
         val activity = resumed().get()
         activity.launchScreen()
         shadowOf(activity).clearNextStartedActivities()
-        val uri = Uri.parse("content://de.lemke.commonutils.test.fileprovider/cache_root/share/shared.png")
+        val shareFile = BitmapShareFile.Written(Uri.parse("content://de.lemke.commonutils.test.fileprovider/cache_root/share/shared.png"))
 
-        activity.shareBitmap(uri).shouldBeFalse()
-        activity.quickShareBitmap(uri).shouldBeFalse()
+        activity.shareBitmap(shareFile).shouldBeFalse()
+        activity.quickShareBitmap(shareFile).shouldBeFalse()
 
         shadowOf(activity).nextStartedActivity.shouldBeNull()
     }

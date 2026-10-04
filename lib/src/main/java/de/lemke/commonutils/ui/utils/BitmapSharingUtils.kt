@@ -37,66 +37,78 @@ private const val SAMSUNG_QUICK_SHARE_PACKAGE = "com.samsung.android.app.shareli
 private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
 
-/**
- * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns its content URI, or null if
- * writing fails.
- *
- * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the URI to [shareBitmap] or
- * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns null without writing,
- * unless it runs as that work, so a pending share keeps its file.
- */
-suspend fun Fragment.createBitmapShareUri(
-    bitmap: Bitmap,
-    fileName: String,
-    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-): Uri? = requireContext().createBitmapShareUri(bitmap, fileName, ioDispatcher)
+/** Outcome of [createBitmapShareFile], passed to [shareBitmap] or [quickShareBitmap]. */
+sealed interface BitmapShareFile {
+    /** The PNG cache file was written; [uri] is its content URI. */
+    data class Written(
+        val uri: Uri,
+    ) : BitmapShareFile
+
+    /** The activity's launch latch drops launches, so nothing was written and the share drops silently. */
+    data object Dropped : BitmapShareFile
+
+    /** Writing the PNG cache file failed. */
+    data object Failed : BitmapShareFile
+}
 
 /**
- * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns its content URI, or null if
- * writing fails.
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher].
  *
- * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the URI to [shareBitmap] or
- * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns null without writing,
- * unless it runs as that work, so a pending share keeps its file.
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
+ * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
+ * [BitmapShareFile.Dropped] without writing, unless it runs as that work, so a pending share keeps its file.
  */
-suspend fun Context.createBitmapShareUri(
+suspend fun Fragment.createBitmapShareFile(
     bitmap: Bitmap,
     fileName: String,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-): Uri? {
-    if (!admitsLaunchPreparation()) return null
+): BitmapShareFile = requireContext().createBitmapShareFile(bitmap, fileName, ioDispatcher)
+
+/**
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher].
+ *
+ * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
+ * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
+ * [BitmapShareFile.Dropped] without writing, unless it runs as that work, so a pending share keeps its file.
+ */
+suspend fun Context.createBitmapShareFile(
+    bitmap: Bitmap,
+    fileName: String,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+): BitmapShareFile {
+    if (!admitsLaunchPreparation()) return BitmapShareFile.Dropped
     return withContext(ioDispatcher) {
-        // Providers and the file system throw an open-ended exception set; a failure must yield no URI, not crash.
+        // Providers and the file system throw an open-ended exception set; a failure must yield Failed, not crash.
         @Suppress("TooGenericExceptionCaught")
         try {
-            writePngCacheUri(bitmap, CacheFileKind.SHARE, fileName) { it }
+            writePngCacheUri(bitmap, CacheFileKind.SHARE, fileName, BitmapShareFile::Written) ?: BitmapShareFile.Failed
         } catch (e: Exception) {
             Log.e(TAG, "Error writing bitmap share file", e)
-            null
+            BitmapShareFile.Failed
         }
     }
 }
 
 /**
- * Shares the PNG at [uri], from [createBitmapShareUri], via the system share sheet, optionally including [shareText];
- * a null [uri] shows the error toast instead.
+ * Shares the PNG of [file], from [createBitmapShareFile], via the system share sheet, optionally including [shareText].
+ * A [BitmapShareFile.Failed] file shows the error toast; a [BitmapShareFile.Dropped] file starts nothing.
  * @return true if the share sheet was started.
  */
 fun Fragment.shareBitmap(
-    uri: Uri?,
+    file: BitmapShareFile,
     shareText: String? = null,
-): Boolean = requireContext().shareBitmap(uri, shareText)
+): Boolean = requireContext().shareBitmap(file, shareText)
 
 /**
- * Shares the PNG at [uri], from [createBitmapShareUri], via the system share sheet, optionally including [shareText];
- * a null [uri] shows the error toast instead.
+ * Shares the PNG of [file], from [createBitmapShareFile], via the system share sheet, optionally including [shareText].
+ * A [BitmapShareFile.Failed] file shows the error toast; a [BitmapShareFile.Dropped] file starts nothing.
  * @return true if the share sheet was started.
  */
 fun Context.shareBitmap(
-    uri: Uri?,
+    file: BitmapShareFile,
     shareText: String? = null,
 ): Boolean =
-    sharePng(uri) {
+    sharePng(file) {
         val intent =
             Intent(ACTION_SEND).apply {
                 clipData = ClipData.newRawUri(null, it)
@@ -109,19 +121,21 @@ fun Context.shareBitmap(
     }
 
 /**
- * Shares the PNG at [uri], from [createBitmapShareUri], directly via Samsung Quick Share if available, falling back to
- * the system share sheet; a null [uri] shows the error toast instead.
+ * Shares the PNG of [file], from [createBitmapShareFile], directly via Samsung Quick Share if available, falling back
+ * to the system share sheet. A [BitmapShareFile.Failed] file shows the error toast; a [BitmapShareFile.Dropped] file
+ * starts nothing.
  * @return true if a share target was started.
  */
-fun Fragment.quickShareBitmap(uri: Uri?): Boolean = requireContext().quickShareBitmap(uri)
+fun Fragment.quickShareBitmap(file: BitmapShareFile): Boolean = requireContext().quickShareBitmap(file)
 
 /**
- * Shares the PNG at [uri], from [createBitmapShareUri], directly via Samsung Quick Share if available, falling back to
- * the system share sheet; a null [uri] shows the error toast instead.
+ * Shares the PNG of [file], from [createBitmapShareFile], directly via Samsung Quick Share if available, falling back
+ * to the system share sheet. A [BitmapShareFile.Failed] file shows the error toast; a [BitmapShareFile.Dropped] file
+ * starts nothing.
  * @return true if a share target was started.
  */
-fun Context.quickShareBitmap(uri: Uri?): Boolean =
-    sharePng(uri) {
+fun Context.quickShareBitmap(file: BitmapShareFile): Boolean =
+    sharePng(file) {
         createBaseIntent()
             .apply {
                 type = MIME_TYPE_PNG
@@ -130,17 +144,20 @@ fun Context.quickShareBitmap(uri: Uri?): Boolean =
     }
 
 private fun Context.sharePng(
-    uri: Uri?,
+    file: BitmapShareFile,
     start: (Uri) -> Boolean,
-): Boolean {
-    if (uri == null) {
-        toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        return false
+): Boolean =
+    when (file) {
+        is BitmapShareFile.Written -> startOrToast { start(file.uri) }
+        BitmapShareFile.Dropped -> false
+        BitmapShareFile.Failed -> false.also { toast(R.string.commonutils_error_share_content_not_supported_on_device) }
     }
+
+private fun Context.startOrToast(start: () -> Boolean): Boolean {
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     return try {
-        start(uri)
+        start()
     } catch (e: Exception) {
         Log.e(TAG, "Error sharing bitmap", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)

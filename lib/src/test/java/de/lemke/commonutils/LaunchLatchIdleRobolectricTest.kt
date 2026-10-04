@@ -34,7 +34,7 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
-import de.lemke.commonutils.ui.utils.createBitmapShareUri
+import de.lemke.commonutils.ui.utils.createBitmapShareFile
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
 import de.lemke.commonutils.ui.utils.shareBitmap
 import de.lemke.commonutils.ui.utils.singleLaunch
@@ -135,7 +135,7 @@ class LaunchLatchIdleRobolectricTest : LaunchLatchRobolectricTest() {
         activity
             .singleLaunchSuspending(
                 work = {
-                    activity.createBitmapShareUri(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
+                    activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
                 },
                 then = { activity.shareBitmap(it).shouldBeTrue() },
             ).shouldBeTrue()
