@@ -544,6 +544,19 @@ class SharingUtilsBitmapRobolectricTest {
             expired.readText() shouldBe "expired"
         }
 
+    @Test
+    fun `createBitmapClip whose encoding throws keeps the file of an expired clip`() =
+        runTest {
+            val expired = ctx.expiredCacheWrite(CacheFileKind.CLIPBOARD, "expired")
+            val bitmap = mockk<Bitmap>()
+            every { bitmap.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
+
+            ctx.createBitmapClip(bitmap, "label", "test.png") shouldBe null
+
+            ctx.cacheWriteFiles("clipboard").map { it.readText() } shouldContainExactly listOf("expired")
+            expired.readText() shouldBe "expired"
+        }
+
     // ── createBitmapShareFile ───────────────────────────────────────────────────
 
     @Test
@@ -625,6 +638,30 @@ class SharingUtilsBitmapRobolectricTest {
             every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
 
             ctx.createBitmapShareFile(bitmap, "test.png") shouldBe BitmapShareFile.Failed
+
+            ctx.cacheWriteFiles("share").map { it.readText() } shouldContainExactly listOf("expired")
+            expired.readText() shouldBe "expired"
+        }
+
+    @Test
+    fun `createBitmapShareFile whose encoding throws keeps the file of an expired share`() =
+        runTest {
+            val expired = ctx.expiredCacheWrite(CacheFileKind.SHARE, "expired")
+            val bitmap = mockk<Bitmap>()
+            every { bitmap.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
+
+            ctx.createBitmapShareFile(bitmap, "test.png") shouldBe BitmapShareFile.Failed
+
+            ctx.cacheWriteFiles("share").map { it.readText() } shouldContainExactly listOf("expired")
+            expired.readText() shouldBe "expired"
+        }
+
+    @Test
+    fun `createBitmapShareFile without a FileProvider for the package keeps the file of an expired share`() =
+        runTest {
+            val expired = ctx.expiredCacheWrite(CacheFileKind.SHARE, "expired")
+
+            contextWithoutFileProvider().createBitmapShareFile(bitmapWriting("new"), "test.png") shouldBe BitmapShareFile.Failed
 
             ctx.cacheWriteFiles("share").map { it.readText() } shouldContainExactly listOf("expired")
             expired.readText() shouldBe "expired"
