@@ -33,7 +33,6 @@ import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.BitmapShareFile
 import de.lemke.commonutils.ui.utils.CACHE_WRITE_RETENTION
 import de.lemke.commonutils.ui.utils.CacheFileKind
-import de.lemke.commonutils.ui.utils.CacheWriteDirectory
 import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.createBitmapClip
 import de.lemke.commonutils.ui.utils.createBitmapShareFile
@@ -55,6 +54,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.Runs
 import io.mockk.every
@@ -177,30 +177,55 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `createCacheWriteDirectory deletes entries older than the retention and keeps younger ones`() {
-        val shareDirectory = File(ctx.cacheDir, "share")
-        val now = System.currentTimeMillis()
-        File(shareDirectory, "expired/test.png").apply { parentFile?.mkdirs() }.writeText("expired")
-        File(shareDirectory, "expired").setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds - 60_000).shouldBeTrue()
-        File(shareDirectory, "legacy.png").apply { writeText("legacy") }.setLastModified(0).shouldBeTrue()
-        File(shareDirectory, "recent/test.png").apply { parentFile?.mkdirs() }.writeText("recent")
-        File(shareDirectory, "recent").setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds + 60_000).shouldBeTrue()
-
-        val created = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
-
-        shareDirectory.list()!!.asList() shouldContainExactlyInAnyOrder listOf("recent", created.name)
-        File(shareDirectory, "recent/test.png").readText() shouldBe "recent"
+    fun `createCacheWriteDirectory names every write directory with the library prefix`() {
+        ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root.name shouldStartWith "commonutils-"
     }
 
     @Test
-    fun `createCacheWriteDirectory leaves the other kind's entries alone`() {
-        val legacy = File(ctx.cacheDir, "clipboard/legacy.png").apply { parentFile?.mkdirs() }
-        legacy.writeText("clip")
-        legacy.setLastModified(0).shouldBeTrue()
+    fun `createCacheWriteDirectory deletes an expired write directory and keeps a younger one`() {
+        val now = System.currentTimeMillis()
+        val expired = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+        File(expired, "test.png").writeText("expired")
+        expired.setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds - 60_000).shouldBeTrue()
+        val recent = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+        File(recent, "test.png").writeText("recent")
+        recent.setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds + 60_000).shouldBeTrue()
+
+        val created = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+
+        File(ctx.cacheDir, "share").list()!!.asList() shouldContainExactlyInAnyOrder listOf(recent.name, created.name)
+        File(recent, "test.png").readText() shouldBe "recent"
+    }
+
+    @Test
+    fun `createCacheWriteDirectory keeps expired foreign entries in the kind's cache directory`() {
+        val shareDirectory = File(ctx.cacheDir, "share")
+        val foreignFile = File(shareDirectory, "icon.png").apply { parentFile?.mkdirs() }
+        foreignFile.writeText("foreign")
+        foreignFile.setLastModified(0).shouldBeTrue()
+        val foreignDirectory = File(shareDirectory, "exports").apply { mkdirs() }
+        foreignDirectory.setLastModified(0).shouldBeTrue()
+        val prefixedFile = File(shareDirectory, "commonutils-notes.txt")
+        prefixedFile.writeText("prefixed")
+        prefixedFile.setLastModified(0).shouldBeTrue()
+
+        val created = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+
+        shareDirectory.list()!!.asList() shouldContainExactlyInAnyOrder
+            listOf("icon.png", "exports", "commonutils-notes.txt", created.name)
+        foreignFile.readText() shouldBe "foreign"
+        prefixedFile.readText() shouldBe "prefixed"
+    }
+
+    @Test
+    fun `createCacheWriteDirectory leaves the other kind's write directories alone`() {
+        val clip = ctx.createCacheWriteDirectory(CacheFileKind.CLIPBOARD).root
+        File(clip, "test.png").writeText("clip")
+        clip.setLastModified(0).shouldBeTrue()
 
         ctx.createCacheWriteDirectory(CacheFileKind.SHARE)
 
-        legacy.readText() shouldBe "clip"
+        File(clip, "test.png").readText() shouldBe "clip"
     }
 
     @Test
@@ -223,19 +248,19 @@ class SharingUtilsRobolectricTest {
 
     @Test
     fun `CacheWriteDirectory resolves a plain filename inside itself`() {
-        val directory = CacheWriteDirectory(File(ctx.cacheDir, "share/write"))
+        val directory = ctx.createCacheWriteDirectory(CacheFileKind.SHARE)
 
-        directory.resolve("test.png").canonicalPath shouldBe File(ctx.cacheDir, "share/write/test.png").canonicalPath
+        directory.resolve("test.png").canonicalPath shouldBe File(directory.root, "test.png").canonicalPath
     }
 
     @Test
     fun `CacheWriteDirectory rejects an empty name that resolves to the directory itself`() {
-        shouldThrow<IllegalArgumentException> { CacheWriteDirectory(File(ctx.cacheDir, "share/write")).resolve("") }
+        shouldThrow<IllegalArgumentException> { ctx.createCacheWriteDirectory(CacheFileKind.SHARE).resolve("") }
     }
 
     @Test
     fun `CacheWriteDirectory rejects a name that escapes it`() {
-        shouldThrow<IllegalArgumentException> { CacheWriteDirectory(File(ctx.cacheDir, "share/write")).resolve("../evil.png") }
+        shouldThrow<IllegalArgumentException> { ctx.createCacheWriteDirectory(CacheFileKind.SHARE).resolve("../evil.png") }
     }
 }
 

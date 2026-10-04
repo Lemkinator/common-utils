@@ -95,11 +95,17 @@ internal enum class CacheFileKind(
 /** How long a cache write stays on disk before a later write of its kind deletes it. */
 internal val CACHE_WRITE_RETENTION: Duration = 1.days
 
-/** A uniquely named directory that holds the file of exactly one cache write, so no other write can overwrite that file. */
+/**
+ * A uniquely named directory that holds the file of exactly one cache write, so no other write can overwrite that file.
+ * Its name prefix marks it as the library's own, so the cleanup never touches other files in the same directory.
+ */
 @JvmInline
-internal value class CacheWriteDirectory(
+internal value class CacheWriteDirectory private constructor(
     val root: File,
 ) {
+    /** True if this directory was last modified more than [CACHE_WRITE_RETENTION] before [nowMillis]. */
+    fun isExpiredAt(nowMillis: Long): Boolean = root.lastModified() < nowMillis - CACHE_WRITE_RETENTION.inWholeMilliseconds
+
     /** Resolves [fileName] to a file inside this directory, rejecting names that resolve to it or escape it (e.g. `..` traversal). */
     fun resolve(fileName: String): File {
         val resolved = File(root, fileName).canonicalPath
@@ -111,18 +117,33 @@ internal value class CacheWriteDirectory(
     fun delete() {
         root.deleteRecursively()
     }
+
+    companion object {
+        private const val NAME_PREFIX = "commonutils-"
+
+        /**
+         * Creates a new write directory inside [parent].
+         * @throws java.io.IOException if the directory cannot be created.
+         */
+        fun createIn(parent: File): CacheWriteDirectory =
+            CacheWriteDirectory(Files.createTempDirectory(parent.toPath(), NAME_PREFIX).toFile())
+
+        /** Lists the write directories inside [parent]; foreign files and directories stay out. */
+        fun listIn(parent: File): List<CacheWriteDirectory> =
+            parent.listFiles { file -> file.isDirectory && file.name.startsWith(NAME_PREFIX) }.orEmpty().map(::CacheWriteDirectory)
+    }
 }
 
 /**
- * Deletes every entry of [kind]'s cache directory last modified more than [CACHE_WRITE_RETENTION] ago, then creates
- * the directory of a new write of [kind].
+ * Deletes the write directories of [kind] last modified more than [CACHE_WRITE_RETENTION] ago, then creates the
+ * directory of a new write of [kind].
  * @throws java.io.IOException if the directory cannot be created.
  */
 internal fun Context.createCacheWriteDirectory(kind: CacheFileKind): CacheWriteDirectory {
     val kindDirectory = File(cacheDir, kind.directoryName).apply { mkdirs() }
-    val oldest = System.currentTimeMillis() - CACHE_WRITE_RETENTION.inWholeMilliseconds
-    kindDirectory.listFiles()?.filter { it.lastModified() < oldest }?.forEach { it.deleteRecursively() }
-    return CacheWriteDirectory(Files.createTempDirectory(kindDirectory.toPath(), null).toFile())
+    val now = System.currentTimeMillis()
+    CacheWriteDirectory.listIn(kindDirectory).filter { it.isExpiredAt(now) }.forEach(CacheWriteDirectory::delete)
+    return CacheWriteDirectory.createIn(kindDirectory)
 }
 
 /** Encodes this bitmap as a lossless PNG into [out]; returns false if the bitmap cannot be encoded. */
