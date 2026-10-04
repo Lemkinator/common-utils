@@ -107,8 +107,10 @@ internal value class CacheWriteDirectory(
         return File(resolved)
     }
 
-    /** Deletes this directory with its file and logs a warning if anything remains. */
-    fun delete() = root.deleteRecursivelyOrLog()
+    /** Deletes this directory with its file; whatever remains goes with a later write's cleanup. */
+    fun delete() {
+        root.deleteRecursively()
+    }
 }
 
 /**
@@ -119,7 +121,7 @@ internal value class CacheWriteDirectory(
 internal fun Context.createCacheWriteDirectory(kind: CacheFileKind): CacheWriteDirectory {
     val kindDirectory = File(cacheDir, kind.directoryName).apply { mkdirs() }
     val oldest = System.currentTimeMillis() - CACHE_WRITE_RETENTION.inWholeMilliseconds
-    kindDirectory.listFiles()?.filter { it.lastModified() < oldest }?.forEach { it.deleteRecursivelyOrLog() }
+    kindDirectory.listFiles()?.filter { it.lastModified() < oldest }?.forEach { it.deleteRecursively() }
     return CacheWriteDirectory(Files.createTempDirectory(kindDirectory.toPath(), null).toFile())
 }
 
@@ -150,10 +152,6 @@ internal fun File.writePngOrDelete(bitmap: Bitmap): Boolean =
 /** Deletes this file and logs a warning if it remains. */
 internal fun File.deleteOrLog() {
     if (!delete() && exists()) Log.w(TAG, "Could not delete $path")
-}
-
-private fun File.deleteRecursivelyOrLog() {
-    if (!deleteRecursively()) Log.w(TAG, "Could not delete $path")
 }
 
 /**

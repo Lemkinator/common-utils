@@ -25,6 +25,7 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.Fragment
@@ -37,6 +38,7 @@ import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.createBitmapClip
 import de.lemke.commonutils.ui.utils.createBitmapShareFile
 import de.lemke.commonutils.ui.utils.createCacheWriteDirectory
+import de.lemke.commonutils.ui.utils.deleteOrLog
 import de.lemke.commonutils.ui.utils.getFileUri
 import de.lemke.commonutils.ui.utils.isSamsungQuickShareAvailable
 import de.lemke.commonutils.ui.utils.quickShareBitmap
@@ -199,6 +201,24 @@ class SharingUtilsRobolectricTest {
         ctx.createCacheWriteDirectory(CacheFileKind.SHARE)
 
         legacy.readText() shouldBe "clip"
+    }
+
+    @Test
+    fun `deleteOrLog logs a directory it cannot delete`() {
+        val directory = File(ctx.cacheDir, "directory").apply { File(this, "child").mkdirs() }
+
+        directory.deleteOrLog()
+
+        directory.exists().shouldBeTrue()
+        ShadowLog.getLogsForTag("SharingUtils").map { it.type to it.msg } shouldContainExactly
+            listOf(Log.WARN to "Could not delete ${directory.path}")
+    }
+
+    @Test
+    fun `deleteOrLog logs nothing for a missing file`() {
+        File(ctx.cacheDir, "missing.png").deleteOrLog()
+
+        ShadowLog.getLogsForTag("SharingUtils").shouldBeEmpty()
     }
 
     @Test
