@@ -329,17 +329,6 @@ class SharingUtilsBitmapRobolectricTest {
 
     private fun blockCacheDirectory(directoryName: String) = File(ctx.cacheDir, directoryName).writeText("not a directory")
 
-    private fun Context.expiredCacheWrite(
-        kind: CacheFileKind,
-        content: String,
-    ): File {
-        val directory = createCacheWriteDirectory(kind).root
-        return File(directory, "test.png").apply {
-            writeText(content)
-            directory.setLastModified(0).shouldBeTrue()
-        }
-    }
-
     private fun writtenUri(
         directoryName: String,
         fileName: String,

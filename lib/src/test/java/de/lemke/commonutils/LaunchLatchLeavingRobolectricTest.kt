@@ -36,6 +36,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
 import de.lemke.commonutils.ui.utils.BitmapShareFile
+import de.lemke.commonutils.ui.utils.CacheFileKind
 import de.lemke.commonutils.ui.utils.createBitmapShareFile
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
 import de.lemke.commonutils.ui.utils.quickShareBitmap
@@ -289,6 +290,21 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
                 BitmapShareFile.Dropped
 
             activity.cacheWriteFiles("share") shouldContainExactly listOf(pending)
+        }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `leaving bitmap share uri outside an input keeps the file of an expired share`() =
+        runTest {
+            val activity = resumed().get()
+            val expired = activity.expiredCacheWrite(CacheFileKind.SHARE, "expired")
+            activity.launchScreen().shouldBeTrue()
+
+            activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png") shouldBe
+                BitmapShareFile.Dropped
+
+            activity.cacheWriteFiles("share") shouldContainExactly listOf(expired)
+            expired.readText() shouldBe "expired"
         }
 
     @Test

@@ -16,6 +16,9 @@
 package de.lemke.commonutils
 
 import android.content.Context
+import de.lemke.commonutils.ui.utils.CacheFileKind
+import de.lemke.commonutils.ui.utils.createCacheWriteDirectory
+import io.kotest.matchers.booleans.shouldBeTrue
 import java.io.File
 
 /** The file of every cache write in [directoryName] of the cache directory, one per write directory. */
@@ -29,3 +32,15 @@ internal fun Context.cacheWriteDirectoryName(directoryName: String): String =
         .orEmpty()
         .single()
         .name
+
+/** Writes [content] to `test.png` in a new write directory of [kind] that expired long ago, and returns that file. */
+internal fun Context.expiredCacheWrite(
+    kind: CacheFileKind,
+    content: String,
+): File {
+    val directory = createCacheWriteDirectory(kind).root
+    return File(directory, "test.png").apply {
+        writeText(content)
+        directory.setLastModified(0).shouldBeTrue()
+    }
+}
