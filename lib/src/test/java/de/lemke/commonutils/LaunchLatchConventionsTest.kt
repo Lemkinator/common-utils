@@ -22,7 +22,6 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.name
 import kotlin.io.path.writeText
@@ -409,20 +408,8 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 dir.toFile().deleteRecursively()
             }
         }
-        should("print a nested project path with / separators") {
-            val dir = Path("build", "tmp", "launch-latch-paths").toAbsolutePath()
-            try {
-                val ui = dir.resolve("demo").resolve("ui").createDirectories()
-                ui.resolve("Hits.kt").writeText("package demo.ui\n\nfun open() = startActivity(intent)\n")
-                val scope = Konsist.scopeFromExternalDirectories(listOf(dir.toString()))
-
-                val error = shouldThrow<AssertionError> { scope.assertLaunchLatchConventions() }
-
-                error.message shouldBe
-                    "1 call bypasses the launch latch:\n/lib/build/tmp/launch-latch-paths/demo/ui/Hits.kt:3: startActivity"
-            } finally {
-                dir.toFile().deleteRecursively()
-            }
+        should("print a project path with / separators") {
+            portableProjectPath("\\lib\\build\\tmp\\demo\\ui\\Hits.kt") shouldBe "/lib/build/tmp/demo/ui/Hits.kt"
         }
         should("pass a scope of clean files") {
             val dir = createTempDirectory("launch-latch")

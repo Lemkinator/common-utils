@@ -346,7 +346,7 @@ object LaunchLatchConventions {
 fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = emptySet()) {
     val hits =
         files
-            .map { it.projectPath.replace('\\', '/') to it.text }
+            .map { portableProjectPath(it.projectPath) to it.text }
             .sortedBy { (path, _) -> path }
             .flatMap { (path, text) ->
                 LaunchLatchConventions.violations(text, extraShowReceivers).map { "$path:${it.line}: ${it.match}" }
@@ -356,3 +356,6 @@ fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = empty
         throw AssertionError(hits.joinToString("\n", prefix = "$header\n"))
     }
 }
+
+/** [projectPath] with `/` as the path separator; Konsist reports it with the separator of the platform. */
+internal fun portableProjectPath(projectPath: String): String = projectPath.replace('\\', '/')
