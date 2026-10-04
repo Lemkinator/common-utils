@@ -72,7 +72,8 @@ fun Context.copyToClipboard(clip: ClipData?): Boolean {
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns a clip of its content URI under
  * [label], or null if writing fails. Each write gets a file of its own, so no later write with the same [fileName]
- * changes the file of an earlier clip.
+ * changes the file of an earlier clip. The file stays until the first [createBitmapClip] call more than one day later
+ * deletes it; a receiver that keeps the URI longer reads a dead URI.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
  * `then`.
@@ -87,7 +88,8 @@ suspend fun Fragment.createBitmapClip(
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns a clip of its content URI under
  * [label], or null if writing fails. Each write gets a file of its own, so no later write with the same [fileName]
- * changes the file of an earlier clip.
+ * changes the file of an earlier clip. The file stays until the first [createBitmapClip] call more than one day later
+ * deletes it; a receiver that keeps the URI longer reads a dead URI.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
  * `then`.

@@ -53,7 +53,8 @@ sealed interface BitmapShareFile {
 
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher]. Each write gets a file of its own, so no
- * later write with the same [fileName] changes the file of a pending share.
+ * later write with the same [fileName] changes the file of a pending share. The file stays until the first
+ * [createBitmapShareFile] call more than one day later deletes it; a receiver that keeps the URI longer reads a dead URI.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
  * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
@@ -67,7 +68,8 @@ suspend fun Fragment.createBitmapShareFile(
 
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher]. Each write gets a file of its own, so no
- * later write with the same [fileName] changes the file of a pending share.
+ * later write with the same [fileName] changes the file of a pending share. The file stays until the first
+ * [createBitmapShareFile] call more than one day later deletes it; a receiver that keeps the URI longer reads a dead URI.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
  * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
