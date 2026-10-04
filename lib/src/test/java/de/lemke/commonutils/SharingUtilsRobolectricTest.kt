@@ -185,10 +185,10 @@ class SharingUtilsRobolectricTest {
     fun `createCacheWriteDirectory deletes an expired write directory and keeps a younger one`() {
         val now = System.currentTimeMillis()
         val expired = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
-        File(expired, "test.png").writeText("expired")
-        expired.setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds - 60_000).shouldBeTrue()
         val recent = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+        File(expired, "test.png").writeText("expired")
         File(recent, "test.png").writeText("recent")
+        expired.setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds - 60_000).shouldBeTrue()
         recent.setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds + 60_000).shouldBeTrue()
 
         val created = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
