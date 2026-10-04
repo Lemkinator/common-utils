@@ -104,7 +104,7 @@ internal value class CacheWriteDirectory private constructor(
     val root: File,
 ) {
     /** True if this directory was last modified more than [CACHE_WRITE_RETENTION] before [nowMillis]. */
-    fun isExpiredAt(nowMillis: Long): Boolean = root.lastModified() < nowMillis - CACHE_WRITE_RETENTION.inWholeMilliseconds
+    private fun isExpiredAt(nowMillis: Long): Boolean = root.lastModified() < nowMillis - CACHE_WRITE_RETENTION.inWholeMilliseconds
 
     /** Resolves [fileName] to a file inside this directory, rejecting names that resolve to it or escape it (e.g. `..` traversal). */
     fun resolve(fileName: String): File {
@@ -128,9 +128,16 @@ internal value class CacheWriteDirectory private constructor(
         fun createIn(parent: File): CacheWriteDirectory =
             CacheWriteDirectory(Files.createTempDirectory(parent.toPath(), NAME_PREFIX).toFile())
 
-        /** Lists the write directories inside [parent]; foreign files and directories stay out. */
-        fun listIn(parent: File): List<CacheWriteDirectory> =
-            parent.listFiles { file -> file.isDirectory && file.name.startsWith(NAME_PREFIX) }.orEmpty().map(::CacheWriteDirectory)
+        /** Deletes the write directories inside [parent] that are expired at [nowMillis]; foreign entries stay. */
+        fun deleteExpiredIn(
+            parent: File,
+            nowMillis: Long,
+        ) {
+            parent.listFiles { file -> file.isDirectory && file.name.startsWith(NAME_PREFIX) }.orEmpty().forEach { file ->
+                val directory = CacheWriteDirectory(file)
+                if (directory.isExpiredAt(nowMillis)) directory.delete()
+            }
+        }
     }
 }
 
@@ -141,8 +148,7 @@ internal value class CacheWriteDirectory private constructor(
  */
 internal fun Context.createCacheWriteDirectory(kind: CacheFileKind): CacheWriteDirectory {
     val kindDirectory = File(cacheDir, kind.directoryName).apply { mkdirs() }
-    val now = System.currentTimeMillis()
-    CacheWriteDirectory.listIn(kindDirectory).filter { it.isExpiredAt(now) }.forEach(CacheWriteDirectory::delete)
+    CacheWriteDirectory.deleteExpiredIn(kindDirectory, System.currentTimeMillis())
     return CacheWriteDirectory.createIn(kindDirectory)
 }
 
