@@ -53,7 +53,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.io.File
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -263,14 +262,9 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
 
     @Test
     @Config(shadows = [ShadowFileProvider::class])
-    fun `leaving bitmap share input drops before its write and keeps the pending share's file`() {
+    fun `leaving bitmap share input drops before its write`() {
         val activity = resumed().get()
         activity.launchScreen()
-        val pending =
-            File(activity.cacheDir, "share/shared.png").apply {
-                parentFile?.mkdirs()
-                writeText("pending")
-            }
 
         activity
             .singleLaunchSuspending(
@@ -279,23 +273,22 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
             ).shouldBeFalse()
         shadowLooper.idle()
 
-        pending.readText() shouldBe "pending"
+        activity.cacheWriteFiles("share").shouldBeEmpty()
     }
 
     @Test
     @Config(shadows = [ShadowFileProvider::class])
-    fun `leaving bitmap share uri outside an input writes nothing and keeps the pending share's file`() =
+    fun `leaving bitmap share uri outside an input writes nothing`() =
         runTest {
             val activity = resumed().get()
             val shareFile = activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png")
             activity.shareBitmap(shareFile).shouldBeTrue()
-            val file = File(activity.cacheDir, "share/shared.png")
-            val pending = file.readBytes()
+            val pending = activity.cacheWriteFiles("share").single()
 
             activity.createBitmapShareFile(Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888), "shared.png") shouldBe
                 BitmapShareFile.Dropped
 
-            file.readBytes() shouldBe pending
+            activity.cacheWriteFiles("share") shouldContainExactly listOf(pending)
         }
 
     @Test
@@ -321,8 +314,7 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
         shadowLooper.idle()
 
         files.single().shouldBeInstanceOf<BitmapShareFile.Written>()
-        File(activity.cacheDir, "share/shared.png").exists().shouldBeTrue()
-        File(activity.cacheDir, "share/outside.png").exists().shouldBeFalse()
+        activity.cacheWriteFiles("share").map { it.name } shouldContainExactly listOf("shared.png")
     }
 
     @Test

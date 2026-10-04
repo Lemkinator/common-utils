@@ -52,11 +52,12 @@ sealed interface BitmapShareFile {
 }
 
 /**
- * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher].
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher]. Each write gets a file of its own, so no
+ * later write with the same [fileName] changes the file of a pending share.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
  * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
- * [BitmapShareFile.Dropped] without writing, unless it runs as that work, so a pending share keeps its file.
+ * [BitmapShareFile.Dropped] without writing, unless it runs as that work.
  */
 suspend fun Fragment.createBitmapShareFile(
     bitmap: Bitmap,
@@ -65,11 +66,12 @@ suspend fun Fragment.createBitmapShareFile(
 ): BitmapShareFile = requireContext().createBitmapShareFile(bitmap, fileName, ioDispatcher)
 
 /**
- * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher].
+ * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher]. Each write gets a file of its own, so no
+ * later write with the same [fileName] changes the file of a pending share.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
  * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
- * [BitmapShareFile.Dropped] without writing, unless it runs as that work, so a pending share keeps its file.
+ * [BitmapShareFile.Dropped] without writing, unless it runs as that work.
  */
 suspend fun Context.createBitmapShareFile(
     bitmap: Bitmap,

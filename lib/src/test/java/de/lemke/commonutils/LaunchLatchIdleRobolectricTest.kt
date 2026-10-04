@@ -50,7 +50,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.io.File
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -142,7 +141,7 @@ class LaunchLatchIdleRobolectricTest : LaunchLatchRobolectricTest() {
         shadowLooper.idle()
 
         shadowOf(activity).nextStartedActivity.shouldNotBeNull()
-        File(activity.cacheDir, "share/shared.png").exists().shouldBeTrue()
+        activity.cacheWriteFiles("share").map { it.name } shouldContainExactly listOf("shared.png")
     }
 
     @Test

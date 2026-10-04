@@ -25,20 +25,21 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.BitmapShareFile
+import de.lemke.commonutils.ui.utils.CACHE_WRITE_RETENTION
 import de.lemke.commonutils.ui.utils.CacheFileKind
+import de.lemke.commonutils.ui.utils.CacheWriteDirectory
 import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.createBitmapClip
 import de.lemke.commonutils.ui.utils.createBitmapShareFile
+import de.lemke.commonutils.ui.utils.createCacheWriteDirectory
 import de.lemke.commonutils.ui.utils.getFileUri
 import de.lemke.commonutils.ui.utils.isSamsungQuickShareAvailable
 import de.lemke.commonutils.ui.utils.quickShareBitmap
-import de.lemke.commonutils.ui.utils.resolveCacheFile
 import de.lemke.commonutils.ui.utils.share
 import de.lemke.commonutils.ui.utils.shareApp
 import de.lemke.commonutils.ui.utils.shareBitmap
@@ -48,8 +49,10 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.Runs
 import io.mockk.every
@@ -161,20 +164,58 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `resolveCacheFile resolves a plain filename inside the kind's cache directory`() {
-        val file = ctx.resolveCacheFile(CacheFileKind.SHARE, "test.png")
-        file.canonicalPath shouldBe File(ctx.cacheDir, "share/test.png").canonicalPath
+    fun `createCacheWriteDirectory creates a new directory inside the kind's cache directory for every write`() {
+        val first = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+        val second = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+
+        first shouldNotBe second
+        listOf(first, second).map { it.parentFile?.canonicalPath } shouldContainExactly
+            List(2) { File(ctx.cacheDir, "share").canonicalPath }
+        listOf(first, second).map { it.isDirectory } shouldContainExactly listOf(true, true)
     }
 
     @Test
-    fun `resolveCacheFile resolves an empty name to the kind's cache directory itself`() {
-        val file = ctx.resolveCacheFile(CacheFileKind.CLIPBOARD, "")
-        file.canonicalPath shouldBe File(ctx.cacheDir, "clipboard").canonicalPath
+    fun `createCacheWriteDirectory deletes entries older than the retention and keeps younger ones`() {
+        val shareDirectory = File(ctx.cacheDir, "share")
+        val now = System.currentTimeMillis()
+        File(shareDirectory, "expired/test.png").apply { parentFile?.mkdirs() }.writeText("expired")
+        File(shareDirectory, "expired").setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds - 60_000).shouldBeTrue()
+        File(shareDirectory, "legacy.png").apply { writeText("legacy") }.setLastModified(0).shouldBeTrue()
+        File(shareDirectory, "recent/test.png").apply { parentFile?.mkdirs() }.writeText("recent")
+        File(shareDirectory, "recent").setLastModified(now - CACHE_WRITE_RETENTION.inWholeMilliseconds + 60_000).shouldBeTrue()
+
+        val created = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+
+        shareDirectory.list()!!.asList() shouldContainExactlyInAnyOrder listOf("recent", created.name)
+        File(shareDirectory, "recent/test.png").readText() shouldBe "recent"
     }
 
     @Test
-    fun `resolveCacheFile rejects a name that escapes the kind's cache directory`() {
-        shouldThrow<IllegalArgumentException> { ctx.resolveCacheFile(CacheFileKind.SHARE, "../evil.png") }
+    fun `createCacheWriteDirectory leaves the other kind's entries alone`() {
+        val legacy = File(ctx.cacheDir, "clipboard/legacy.png").apply { parentFile?.mkdirs() }
+        legacy.writeText("clip")
+        legacy.setLastModified(0).shouldBeTrue()
+
+        ctx.createCacheWriteDirectory(CacheFileKind.SHARE)
+
+        legacy.readText() shouldBe "clip"
+    }
+
+    @Test
+    fun `CacheWriteDirectory resolves a plain filename inside itself`() {
+        val directory = CacheWriteDirectory(File(ctx.cacheDir, "share/write"))
+
+        directory.resolve("test.png").canonicalPath shouldBe File(ctx.cacheDir, "share/write/test.png").canonicalPath
+    }
+
+    @Test
+    fun `CacheWriteDirectory rejects an empty name that resolves to the directory itself`() {
+        shouldThrow<IllegalArgumentException> { CacheWriteDirectory(File(ctx.cacheDir, "share/write")).resolve("") }
+    }
+
+    @Test
+    fun `CacheWriteDirectory rejects a name that escapes it`() {
+        shouldThrow<IllegalArgumentException> { CacheWriteDirectory(File(ctx.cacheDir, "share/write")).resolve("../evil.png") }
     }
 }
 
@@ -219,10 +260,18 @@ class SharingUtilsBitmapRobolectricTest {
 
     private fun Intent.readGrantFlag(): Int = flags and Intent.FLAG_GRANT_READ_URI_PERMISSION
 
-    private fun unwritableCacheFileName(directoryName: String): String {
-        File(ctx.cacheDir, "$directoryName/directory.png").mkdirs()
-        return "directory.png"
-    }
+    private fun blockCacheDirectory(directoryName: String) = File(ctx.cacheDir, directoryName).writeText("not a directory")
+
+    private fun writtenUri(
+        directoryName: String,
+        fileName: String,
+    ): String = "$CACHE_ROOT_URI/$directoryName/${ctx.cacheWriteDirectoryName(directoryName)}/$fileName"
+
+    private fun Uri.readText(): String =
+        ctx.contentResolver
+            .openInputStream(this)
+            .shouldNotBeNull()
+            .use { it.reader().readText() }
 
     private fun latestToastIsShareNotSupported() =
         ShadowToast.getTextOfLatestToast() shouldBe "Error: Sharing content is not supported on your device."
@@ -250,7 +299,7 @@ class SharingUtilsBitmapRobolectricTest {
         runTest {
             val clip = ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "test.png").shouldNotBeNull()
 
-            clip.getItemAt(0).uri.toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
+            clip.getItemAt(0).uri.toString() shouldBe writtenUri("clipboard", "test.png")
             clip.description.label shouldBe "label"
             clip.description.getMimeType(0) shouldBe "image/png"
         }
@@ -263,7 +312,7 @@ class SharingUtilsBitmapRobolectricTest {
             runCurrent()
 
             clip.isCompleted.shouldBeFalse()
-            File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeFalse()
+            ctx.cacheWriteFiles("clipboard").shouldBeEmpty()
 
             io.held.removeFirst().run()
             clip
@@ -271,8 +320,8 @@ class SharingUtilsBitmapRobolectricTest {
                 .shouldNotBeNull()
                 .getItemAt(0)
                 .uri
-                .toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
-            File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeTrue()
+                .toString() shouldBe writtenUri("clipboard", "test.png")
+            ctx.cacheWriteFiles("clipboard").map { it.name } shouldContainExactly listOf("test.png")
         }
 
     @Test
@@ -288,7 +337,7 @@ class SharingUtilsBitmapRobolectricTest {
                 .shouldNotBeNull()
                 .getItemAt(0)
                 .uri
-                .toString() shouldBe "$CACHE_ROOT_URI/clipboard/test.png"
+                .toString() shouldBe writtenUri("clipboard", "test.png")
             ShadowToast.getTextOfLatestToast() shouldBe "Copied to clipboard"
         }
 
@@ -299,7 +348,7 @@ class SharingUtilsBitmapRobolectricTest {
             every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
 
             ctx.createBitmapClip(bitmap, "label", "test.png") shouldBe null
-            File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeFalse()
+            File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
         }
 
     @Test
@@ -317,18 +366,7 @@ class SharingUtilsBitmapRobolectricTest {
         runTest {
             contextWithoutFileProvider().createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "test.png") shouldBe
                 null
-            File(ctx.cacheDir, "clipboard/test.png").exists().shouldBeFalse()
-        }
-
-    @Test
-    fun `createBitmapClip logs a cache file it cannot delete`() =
-        runTest {
-            File(ctx.cacheDir, "clipboard/directory.png/child.png").mkdirs()
-
-            ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "directory.png") shouldBe null
-
-            ShadowLog.getLogsForTag("SharingUtils").map { it.type to it.msg } shouldContainExactly
-                listOf(Log.WARN to "Could not delete ${File(ctx.cacheDir, "clipboard/directory.png").canonicalPath}")
+            File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
         }
 
     @Test
@@ -336,23 +374,23 @@ class SharingUtilsBitmapRobolectricTest {
         runTest {
             ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "missing/test.png") shouldBe null
 
-            File(ctx.cacheDir, "clipboard/missing/test.png").exists().shouldBeFalse()
+            File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
             ShadowLog.getLogsForTag("SharingUtils").shouldBeEmpty()
         }
 
     @Test
-    fun `createBitmapClip returns null for an unwritable cache file`() =
+    fun `createBitmapClip returns null when the clipboard cache directory cannot be created`() =
         runTest {
-            val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+            blockCacheDirectory("clipboard")
 
-            ctx.createBitmapClip(bitmap, "label", unwritableCacheFileName("clipboard")) shouldBe null
+            ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "test.png") shouldBe null
         }
 
     @Test
     fun `createBitmapClip returns null for a file name that escapes the cache directory`() =
         runTest {
             ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "../evil.png") shouldBe null
-            File(ctx.cacheDir, "evil.png").exists().shouldBeFalse()
+            File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
         }
 
     @Test
@@ -381,10 +419,27 @@ class SharingUtilsBitmapRobolectricTest {
 
             ctx.createBitmapClip(bitmapWriting("clipboard"), "label", "test.png").shouldNotBeNull()
 
-            ctx.contentResolver
-                .openInputStream(pendingUri)
-                .shouldNotBeNull()
-                .use { it.reader().readText() } shouldBe "share"
+            pendingUri.readText() shouldBe "share"
+        }
+
+    @Test
+    fun `createBitmapClip writes two clips with the same file name to files of their own`() =
+        runTest {
+            val first =
+                ctx
+                    .createBitmapClip(bitmapWriting("first"), "label", "test.png")
+                    .shouldNotBeNull()
+                    .getItemAt(0)
+                    .uri
+            val second =
+                ctx
+                    .createBitmapClip(bitmapWriting("second"), "label", "test.png")
+                    .shouldNotBeNull()
+                    .getItemAt(0)
+                    .uri
+
+            first shouldNotBe second
+            listOf(first.readText(), second.readText()) shouldContainExactly listOf("first", "second")
         }
 
     // ── createBitmapShareFile ───────────────────────────────────────────────────
@@ -394,11 +449,8 @@ class SharingUtilsBitmapRobolectricTest {
         runTest {
             val uri = ctx.createBitmapShareFile(bitmapWriting("png"), "test.png").shouldBeInstanceOf<BitmapShareFile.Written>().uri
 
-            uri.toString() shouldBe "$CACHE_ROOT_URI/share/test.png"
-            ctx.contentResolver
-                .openInputStream(uri)
-                .shouldNotBeNull()
-                .use { it.reader().readText() } shouldBe "png"
+            uri.toString() shouldBe writtenUri("share", "test.png")
+            uri.readText() shouldBe "png"
         }
 
     @Test
@@ -409,11 +461,57 @@ class SharingUtilsBitmapRobolectricTest {
             runCurrent()
 
             file.isCompleted.shouldBeFalse()
-            File(ctx.cacheDir, "share/test.png").exists().shouldBeFalse()
+            ctx.cacheWriteFiles("share").shouldBeEmpty()
 
             io.held.removeFirst().run()
-            file.await() shouldBe BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))
-            File(ctx.cacheDir, "share/test.png").readText() shouldBe "png"
+            file.await() shouldBe BitmapShareFile.Written(Uri.parse(writtenUri("share", "test.png")))
+            ctx.cacheWriteFiles("share").map { it.readText() } shouldContainExactly listOf("png")
+        }
+
+    @Test
+    fun `overlapping createBitmapShareFile writes with the same file name each keep their own bytes`() =
+        runTest {
+            val io = HeldDispatcher()
+            val first = async { ctx.createBitmapShareFile(bitmapWriting("first"), "test.png", io) }
+            val second = async { ctx.createBitmapShareFile(bitmapWriting("second"), "test.png", io) }
+            runCurrent()
+
+            io.held.removeLast().run()
+            io.held.removeFirst().run()
+
+            val firstUri = first.await().shouldBeInstanceOf<BitmapShareFile.Written>().uri
+            val secondUri = second.await().shouldBeInstanceOf<BitmapShareFile.Written>().uri
+            firstUri shouldNotBe secondUri
+            listOf(firstUri.readText(), secondUri.readText()) shouldContainExactly listOf("first", "second")
+        }
+
+    @Test
+    fun `createBitmapShareFile outside an input keeps a pending share's bytes`() =
+        runTest {
+            val act = activity()
+            act.shareBitmap(act.createBitmapShareFile(bitmapWriting("pending"), "test.png")).shouldBeTrue()
+            val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
+
+            val later = ctx.createBitmapShareFile(bitmapWriting("later"), "test.png").shouldBeInstanceOf<BitmapShareFile.Written>().uri
+
+            pendingUri.readText() shouldBe "pending"
+            later.readText() shouldBe "later"
+        }
+
+    @Test
+    fun `createBitmapShareFile deletes writes older than the retention and keeps a pending share's file`() =
+        runTest {
+            val act = activity()
+            act.shareBitmap(act.createBitmapShareFile(bitmapWriting("pending"), "test.png")).shouldBeTrue()
+            val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
+            File(ctx.cacheDir, "share/expired/test.png").apply { parentFile?.mkdirs() }.writeText("expired")
+            File(ctx.cacheDir, "share/expired").setLastModified(0).shouldBeTrue()
+
+            val written = ctx.createBitmapShareFile(bitmapWriting("new"), "test.png").shouldBeInstanceOf<BitmapShareFile.Written>().uri
+
+            ctx.cacheWriteFiles("share").map { it.readText() } shouldContainExactlyInAnyOrder listOf("pending", "new")
+            pendingUri.readText() shouldBe "pending"
+            written.readText() shouldBe "new"
         }
 
     @Test
@@ -423,7 +521,7 @@ class SharingUtilsBitmapRobolectricTest {
             every { bitmap.compress(any(), any(), any<OutputStream>()) } returns false
 
             ctx.createBitmapShareFile(bitmap, "test.png") shouldBe BitmapShareFile.Failed
-            File(ctx.cacheDir, "share/test.png").exists().shouldBeFalse()
+            File(ctx.cacheDir, "share").listFiles()!!.shouldBeEmpty()
         }
 
     @Test
@@ -435,16 +533,18 @@ class SharingUtilsBitmapRobolectricTest {
         }
 
     @Test
-    fun `createBitmapShareFile returns Failed for an unwritable cache file`() =
+    fun `createBitmapShareFile returns Failed when the share cache directory cannot be created`() =
         runTest {
-            ctx.createBitmapShareFile(bitmapWriting("png"), unwritableCacheFileName("share")) shouldBe BitmapShareFile.Failed
+            blockCacheDirectory("share")
+
+            ctx.createBitmapShareFile(bitmapWriting("png"), "test.png") shouldBe BitmapShareFile.Failed
         }
 
     @Test
     fun `createBitmapShareFile returns Failed for a file name that escapes the cache directory`() =
         runTest {
             ctx.createBitmapShareFile(bitmapWriting("png"), "../evil.png") shouldBe BitmapShareFile.Failed
-            File(ctx.cacheDir, "evil.png").exists().shouldBeFalse()
+            File(ctx.cacheDir, "share").listFiles()!!.shouldBeEmpty()
         }
 
     // ── shareBitmap ─────────────────────────────────────────────────────────────
@@ -681,7 +781,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `Fragment createBitmapShareFile writes through the fragment's context`() =
         runTest {
             attachedFragment().createBitmapShareFile(bitmapWriting("png"), "test.png") shouldBe
-                BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))
+                BitmapShareFile.Written(Uri.parse(writtenUri("share", "test.png")))
         }
 
     @Test
