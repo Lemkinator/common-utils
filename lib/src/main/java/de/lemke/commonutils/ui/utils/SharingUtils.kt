@@ -99,8 +99,7 @@ internal val CACHE_WRITE_RETENTION: Duration = 1.days
  * A uniquely named directory that holds the file of exactly one cache write, so no other write can overwrite that file.
  * Its name prefix marks it as the library's own, so the cleanup never touches other files in the same directory.
  */
-@JvmInline
-internal value class CacheWriteDirectory private constructor(
+internal class CacheWriteDirectory private constructor(
     val root: File,
 ) {
     /** True if this directory was last modified more than [CACHE_WRITE_RETENTION] before [nowMillis]. */
