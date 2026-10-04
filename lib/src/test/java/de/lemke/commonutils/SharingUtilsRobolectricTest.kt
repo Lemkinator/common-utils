@@ -65,9 +65,11 @@ import io.mockk.spyk
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
+import java.nio.file.Files
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.Assume.assumeNoException
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -215,6 +217,26 @@ class SharingUtilsRobolectricTest {
             listOf("icon.png", "exports", "commonutils-notes.txt", created.name)
         foreignFile.readText() shouldBe "foreign"
         prefixedFile.readText() shouldBe "prefixed"
+    }
+
+    @Test
+    fun `createCacheWriteDirectory keeps a prefixed symbolic link and the files of its target`() {
+        val target = File(ctx.cacheDir, "target").apply { mkdirs() }
+        val targetFile = File(target, "test.png").apply { writeText("target") }
+        target.setLastModified(0).shouldBeTrue()
+        val link = File(ctx.cacheDir, "share/commonutils-link").toPath()
+        Files.createDirectories(link.parent)
+        try {
+            Files.createSymbolicLink(link, target.toPath())
+        } catch (e: IOException) {
+            // Windows refuses symbolic links without the SeCreateSymbolicLinkPrivilege or developer mode.
+            assumeNoException(e)
+        }
+
+        ctx.createCacheWriteDirectory(CacheFileKind.SHARE)
+
+        Files.isSymbolicLink(link).shouldBeTrue()
+        targetFile.readText() shouldBe "target"
     }
 
     @Test

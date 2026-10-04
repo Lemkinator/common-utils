@@ -31,6 +31,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 
@@ -127,15 +128,19 @@ internal class CacheWriteDirectory private constructor(
         fun createIn(parent: File): CacheWriteDirectory =
             CacheWriteDirectory(Files.createTempDirectory(parent.toPath(), NAME_PREFIX).toFile())
 
-        /** Deletes the write directories inside [parent] that are expired at [nowMillis]; foreign entries stay. */
+        /** Deletes the write directories inside [parent] that are expired at [nowMillis]; foreign entries and symbolic links stay. */
         fun deleteExpiredIn(
             parent: File,
             nowMillis: Long,
         ) {
-            parent.listFiles { file -> file.isDirectory && file.name.startsWith(NAME_PREFIX) }.orEmpty().forEach { file ->
-                val directory = CacheWriteDirectory(file)
-                if (directory.isExpiredAt(nowMillis)) directory.delete()
-            }
+            parent
+                .listFiles { file ->
+                    Files.isDirectory(file.toPath(), LinkOption.NOFOLLOW_LINKS) && file.name.startsWith(NAME_PREFIX)
+                }.orEmpty()
+                .forEach { file ->
+                    val directory = CacheWriteDirectory(file)
+                    if (directory.isExpiredAt(nowMillis)) directory.delete()
+                }
         }
     }
 }
