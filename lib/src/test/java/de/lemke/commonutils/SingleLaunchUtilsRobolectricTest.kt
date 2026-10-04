@@ -171,6 +171,25 @@ class SingleLaunchUtilsRobolectricTest : LaunchLatchRobolectricTest() {
     }
 
     @Test
+    fun `fragment input in an already cancelled view scope never works and releases the latch`() {
+        val activity = resumed().get()
+        val fragment = activity.addFragment()
+        var admitted: Boolean? = null
+        var worked = false
+        fragment.onDestroyViewAction = { admitted = fragment.singleLaunchSuspending(work = { worked = true }, then = {}) }
+
+        activity.supportFragmentManager
+            .beginTransaction()
+            .remove(fragment)
+            .commitNow()
+        shadowLooper.idle()
+
+        admitted shouldBe true
+        worked.shouldBeFalse()
+        activity.singleLaunch {}.shouldBeTrue()
+    }
+
+    @Test
     fun `recreation cancels suspend work and the new activity starts idle`() {
         val controller = resumed()
         val work = CompletableDeferred<Unit>()

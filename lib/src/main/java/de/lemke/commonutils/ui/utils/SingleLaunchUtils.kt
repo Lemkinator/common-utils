@@ -46,9 +46,11 @@ import dev.oneuiproject.oneui.ktx.onClick
 import java.util.Collections
 import java.util.EnumSet
 import java.util.WeakHashMap
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 
 private val LEAVING_TIMEOUT = 1.seconds
@@ -78,6 +80,14 @@ private enum class LaunchSource {
     NEW_INTENT,
 }
 
+/** A [singleLaunchSuspending] input whose work or `then` still runs; its coroutine carries it as a context element. */
+private class HeldInput : AbstractCoroutineContextElement(HeldInput) {
+    /** True once the activity stopped after this input was admitted, so views captured at the input may be stale. */
+    var stopped = false
+
+    companion object Key : CoroutineContext.Key<HeldInput>
+}
+
 /**
  * Launch latch of one activity: the View counterpart of Lifecycle's `dropUnlessResumed`.
  *
@@ -92,11 +102,12 @@ private class LaunchLatch(
     private val newIntentListener = Consumer<Intent> { onNewIntent() }
     private val sources = EnumSet.noneOf(LaunchSource::class.java)
     private var phase: LatchPhase = LatchPhase.Idle
-    private var busy = 0
+    private var heldInput: HeldInput? = null
+    private var deliveringInput: HeldInput? = null
     private var resumed = activity.lifecycle.currentState == RESUMED
 
     val admitsInput: Boolean
-        get() = activity.lifecycle.currentState == RESUMED && phase == LatchPhase.Idle && busy == 0
+        get() = activity.lifecycle.currentState == RESUMED && phase == LatchPhase.Idle && heldInput == null
 
     val admitsLaunch: Boolean
         get() =
@@ -105,6 +116,10 @@ private class LaunchLatch(
                 is LatchPhase.Leaving -> false
                 LatchPhase.Away -> sources.isNotEmpty()
             }
+
+    /** True unless a held input's `then` runs and the activity stopped since that input was admitted. */
+    val inputViewsCurrent: Boolean
+        get() = deliveringInput?.stopped != true
 
     init {
         activity.lifecycle.addObserver(this)
@@ -125,6 +140,10 @@ private class LaunchLatch(
         }
     }
 
+    override fun onStop(owner: LifecycleOwner) {
+        heldInput?.stopped = true
+    }
+
     override fun onDestroy(owner: LifecycleOwner) {
         handler.removeCallbacks(leavingTimeout)
         activity.lifecycle.removeObserver(this)
@@ -132,9 +151,37 @@ private class LaunchLatch(
         launchLatches.remove(activity)
     }
 
-    fun holdWhileActive(job: Job) {
-        busy++
-        job.invokeOnCompletion { busy-- }
+    /** True if a launch from a coroutine with [context] passes the latch: [admitsLaunch], or the work of the held input. */
+    fun admitsLaunchFrom(context: CoroutineContext): Boolean {
+        val input = heldInput ?: return admitsLaunch
+        return admitsLaunch || context[HeldInput] === input
+    }
+
+    /**
+     * Runs [work] in [scope] as a held input, then [then] once the activity is RESUMED; see [singleLaunchSuspending].
+     * @return true if the input was admitted.
+     */
+    fun <T> launchHeldInput(
+        scope: CoroutineScope,
+        work: suspend CoroutineScope.() -> T,
+        then: (T) -> Unit,
+    ): Boolean {
+        if (!admitsInput) return false
+        val input = HeldInput()
+        heldInput = input
+        scope
+            .launch(input) {
+                val result = work()
+                activity.lifecycle.withResumed {
+                    deliveringInput = input
+                    try {
+                        then(result)
+                    } finally {
+                        deliveringInput = null
+                    }
+                }
+            }.invokeOnCompletion { heldInput = null }
+        return true
     }
 
     fun launch(
@@ -239,13 +286,24 @@ private val Context?.launchLatch: LaunchLatch?
 private val ComponentActivity.liveLaunchLatch: LaunchLatch
     get() = launchLatches.getOrPut(this) { LaunchLatch(this) }
 
+/**
+ * Returns false inside the `then` of a [singleLaunchSuspending] input if this context's activity stopped since the
+ * input, because a view captured at the input may no longer be on screen; true otherwise.
+ */
+@MainThread
+internal fun Context?.inputViewsCurrent(): Boolean = launchLatch?.inputViewsCurrent != false
+
+/**
+ * Returns false while this context's activity does not admit a launch, unless the caller runs as the work of its held
+ * [singleLaunchSuspending] input; true otherwise.
+ */
+@MainThread
+internal suspend fun Context.admitsLaunchPreparation(): Boolean =
+    (activity as? ComponentActivity)?.let(launchLatches::get)?.admitsLaunchFrom(currentCoroutineContext()) != false
+
 /** Runs [action] as an input and returns its result, or null if the latch dropped it; see [Context.singleLaunch]. */
 @MainThread
 internal fun <R : Any> Context?.singleLaunchOrNull(action: () -> R): R? = if (launchLatch?.admitsInput == false) null else action()
-
-/** Returns true if a gated launch of this context's activity would run now; see [launchGated]. */
-@MainThread
-internal fun Context?.admitsGatedLaunch(): Boolean = launchLatch?.admitsLaunch != false
 
 /**
  * Runs [start] as a gated launch of this context's activity; [owner] is the result launcher that launches, if any.
@@ -307,21 +365,12 @@ fun <T> Fragment.singleLaunchSuspending(
     then: (T) -> Unit,
 ): Boolean = requireActivity().launchInput(viewLifecycleOwner.lifecycleScope, work, then)
 
+// Without a latch the activity is destroyed, and so is the scope: nothing would run.
 private fun <T> ComponentActivity.launchInput(
     scope: CoroutineScope,
     work: suspend CoroutineScope.() -> T,
     then: (T) -> Unit,
-): Boolean {
-    val latch = launchLatch
-    if (latch?.admitsInput == false) return false
-    val job =
-        scope.launch {
-            val result = work()
-            lifecycle.withResumed { then(result) }
-        }
-    latch?.holdWhileActive(job)
-    return true
-}
+): Boolean = launchLatch?.launchHeldInput(scope, work, then) ?: true
 
 /**
  * Starts [intent] as a gated launch: unless an earlier gated launch of this context's activity is still pending, and,

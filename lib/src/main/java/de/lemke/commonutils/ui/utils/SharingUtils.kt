@@ -22,6 +22,7 @@ import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.EXTRA_TITLE
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.NoCoverage
@@ -29,6 +30,10 @@ import de.lemke.commonutils.R
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
+import java.nio.file.Files
+import java.nio.file.LinkOption
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 private const val MIME_TYPE_TEXT = "text/plain"
 private const val TAG = "SharingUtils"
@@ -88,18 +93,74 @@ internal enum class CacheFileKind(
     CLIPBOARD("clipboard"),
 }
 
-/** Resolves [fileName] to a file in [kind]'s cache directory, rejecting names that would escape it (e.g. `..` traversal). */
-internal fun Context.resolveCacheFile(
-    kind: CacheFileKind,
-    fileName: String,
-): File {
-    val directory = File(cacheDir, kind.directoryName).apply { mkdirs() }
-    val root = directory.canonicalPath
-    val resolved = File(directory, fileName).canonicalPath
-    require(resolved == root || resolved.startsWith(root + File.separatorChar)) {
-        "fileName must resolve inside ${kind.directoryName}: $fileName"
+/** How long a cache write stays on disk before a later write of its kind deletes it. */
+internal val CACHE_WRITE_RETENTION: Duration = 1.days
+
+/**
+ * A uniquely named directory that holds the file of exactly one cache write, so no other write can overwrite that file.
+ * Its name prefix marks it as the library's own, so the cleanup never touches other files in the same directory.
+ */
+internal class CacheWriteDirectory private constructor(
+    val root: File,
+) {
+    /** True if this directory was last modified more than [CACHE_WRITE_RETENTION] before [nowMillis]. */
+    private fun isExpiredAt(nowMillis: Long): Boolean = root.lastModified() < nowMillis - CACHE_WRITE_RETENTION.inWholeMilliseconds
+
+    /** Resolves [fileName] to a file inside this directory, rejecting names that resolve to it or escape it (e.g. `..` traversal). */
+    fun resolve(fileName: String): File {
+        val resolved = File(root, fileName).canonicalPath
+        require(resolved.startsWith(root.canonicalPath + File.separatorChar)) { "fileName escapes the write directory: $fileName" }
+        return File(resolved)
     }
-    return File(resolved)
+
+    /** Deletes this directory with its file; whatever remains goes with a later write's cleanup. */
+    fun delete() {
+        root.deleteRecursively()
+    }
+
+    companion object {
+        private const val NAME_PREFIX = "commonutils-"
+
+        /**
+         * Creates a new write directory inside [parent].
+         * @throws java.io.IOException if the directory cannot be created.
+         */
+        fun createIn(parent: File): CacheWriteDirectory =
+            CacheWriteDirectory(Files.createTempDirectory(parent.toPath(), NAME_PREFIX).toFile())
+
+        /** Deletes the write directories inside [parent] that are expired at [nowMillis]; foreign entries and symbolic links stay. */
+        fun deleteExpiredIn(
+            parent: File,
+            nowMillis: Long,
+        ) {
+            parent
+                .listFiles { file ->
+                    Files.isDirectory(file.toPath(), LinkOption.NOFOLLOW_LINKS) && file.name.startsWith(NAME_PREFIX)
+                }.orEmpty()
+                .forEach { file ->
+                    val directory = CacheWriteDirectory(file)
+                    if (directory.isExpiredAt(nowMillis)) directory.delete()
+                }
+        }
+    }
+}
+
+/** The cache subdirectory that holds the write directories of [kind], created if missing. */
+private fun Context.cacheDirectoryOf(kind: CacheFileKind): File = File(cacheDir, kind.directoryName).apply { mkdirs() }
+
+/**
+ * Creates the directory of a new write of [kind].
+ * @throws java.io.IOException if the directory cannot be created.
+ */
+internal fun Context.createCacheWriteDirectory(kind: CacheFileKind): CacheWriteDirectory =
+    CacheWriteDirectory.createIn(cacheDirectoryOf(kind))
+
+/** Deletes the write directories of [kind] last modified more than [CACHE_WRITE_RETENTION] before [nowMillis]. */
+internal fun Context.deleteExpiredCacheWrites(
+    kind: CacheFileKind,
+    nowMillis: Long,
+) {
+    CacheWriteDirectory.deleteExpiredIn(cacheDirectoryOf(kind), nowMillis)
 }
 
 /** Encodes this bitmap as a lossless PNG into [out]; returns false if the bitmap cannot be encoded. */
@@ -112,11 +173,17 @@ internal fun Bitmap.writePng(out: OutputStream): Boolean = compress(Bitmap.Compr
 private fun File.openOutputStream(): FileOutputStream = outputStream()
 
 /**
+ * Writes [bitmap] as a PNG to this file.
+ * @return false if the bitmap cannot be encoded; I/O errors propagate.
+ */
+private fun File.writePng(bitmap: Bitmap): Boolean = openOutputStream().use(bitmap::writePng)
+
+/**
  * Writes [bitmap] as a PNG to this file and deletes the file if the bitmap cannot be encoded or the write throws.
  * @return false if the bitmap cannot be encoded; I/O errors propagate.
  */
 internal fun File.writePngOrDelete(bitmap: Bitmap): Boolean =
-    runCatching { openOutputStream().use(bitmap::writePng) }
+    runCatching { writePng(bitmap) }
         .also { if (it.getOrNull() != true) deleteOrLog() }
         .getOrThrow()
 
@@ -126,11 +193,22 @@ internal fun File.deleteOrLog() {
 }
 
 /**
- * Writes [bitmap] as a PNG to [fileName] in [kind]'s cache directory.
- * @return the written file, or null if the bitmap cannot be encoded; I/O and path errors propagate.
+ * Writes [bitmap] as a PNG named [fileName] into a new write directory of [kind] and maps the file's content URI with
+ * [transform]; deletes that directory if the bitmap cannot be encoded or anything throws. Only a call that returns a
+ * URI deletes the write directories of [kind] that were expired when it started, and only after its mapped URI is
+ * final, so a failed call keeps every earlier file, such as the one behind the current clipboard clip.
+ * @return the mapped URI, or null if the bitmap cannot be encoded; I/O, path and provider errors propagate.
  */
-internal fun Context.writePngCacheFile(
+internal fun <R : Any> Context.writePngCacheUri(
     bitmap: Bitmap,
     kind: CacheFileKind,
     fileName: String,
-): File? = resolveCacheFile(kind, fileName).takeIf { it.writePngOrDelete(bitmap) }
+    transform: (Uri) -> R,
+): R? {
+    val startMillis = System.currentTimeMillis()
+    val directory = createCacheWriteDirectory(kind)
+    return runCatching { directory.resolve(fileName).takeIf { it.writePng(bitmap) }?.let { file -> transform(file.getFileUri(this)) } }
+        .also { if (it.getOrNull() == null) directory.delete() }
+        .getOrThrow()
+        ?.also { deleteExpiredCacheWrites(kind, startMillis) }
+}

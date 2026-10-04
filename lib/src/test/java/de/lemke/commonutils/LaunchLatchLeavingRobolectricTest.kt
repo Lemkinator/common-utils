@@ -23,6 +23,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Looper
 import android.view.ContextThemeWrapper
 import android.view.View
@@ -34,9 +35,12 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
+import de.lemke.commonutils.ui.utils.BitmapShareFile
+import de.lemke.commonutils.ui.utils.CacheFileKind
+import de.lemke.commonutils.ui.utils.createBitmapShareFile
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
-import de.lemke.commonutils.ui.utils.quickShare
-import de.lemke.commonutils.ui.utils.share
+import de.lemke.commonutils.ui.utils.quickShareBitmap
+import de.lemke.commonutils.ui.utils.shareBitmap
 import de.lemke.commonutils.ui.utils.singleLaunch
 import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import de.lemke.commonutils.ui.utils.singleLaunchMenuItem
@@ -50,11 +54,12 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.io.File
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -258,33 +263,86 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
 
     @Test
     @Config(shadows = [ShadowFileProvider::class])
-    fun `leaving bitmap share drops and keeps the pending share's file`() {
+    fun `leaving bitmap share input drops before its write`() {
         val activity = resumed().get()
         activity.launchScreen()
-        val pending =
-            File(activity.cacheDir, "share/shared.png").apply {
-                parentFile?.mkdirs()
-                writeText("pending")
-            }
 
-        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).share(activity, "shared.png").shouldBeFalse()
+        activity
+            .singleLaunchSuspending(
+                work = { activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png") },
+                then = { activity.shareBitmap(it) },
+            ).shouldBeFalse()
+        shadowLooper.idle()
 
-        pending.readText() shouldBe "pending"
+        activity.cacheWriteFiles("share").shouldBeEmpty()
     }
 
     @Test
     @Config(shadows = [ShadowFileProvider::class])
-    fun `leaving bitmap quick share drops and keeps the pending share's file`() {
+    fun `leaving bitmap share uri outside an input writes nothing`() =
+        runTest {
+            val activity = resumed().get()
+            val shareFile = activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png")
+            activity.shareBitmap(shareFile).shouldBeTrue()
+            val pending = activity.cacheWriteFiles("share").single()
+
+            activity.createBitmapShareFile(Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888), "shared.png") shouldBe
+                BitmapShareFile.Dropped
+
+            activity.cacheWriteFiles("share") shouldContainExactly listOf(pending)
+        }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `leaving bitmap share uri outside an input keeps the file of an expired share`() =
+        runTest {
+            val activity = resumed().get()
+            val expired = activity.expiredCacheWrite(CacheFileKind.SHARE, "expired")
+            activity.launchScreen().shouldBeTrue()
+
+            activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png") shouldBe
+                BitmapShareFile.Dropped
+
+            activity.cacheWriteFiles("share") shouldContainExactly listOf(expired)
+            expired.readText() shouldBe "expired"
+        }
+
+    @Test
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `leaving bitmap share uri writes as the work of the held input but not outside it`() {
+        val activity = resumed().get()
+        val work = CompletableDeferred<Unit>()
+        val files = mutableListOf<BitmapShareFile>()
+        activity.singleLaunchSuspending(
+            work = {
+                work.await()
+                activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
+            },
+            then = { files += it },
+        )
+        activity.launchScreen().shouldBeTrue()
+
+        runTest {
+            activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "outside.png") shouldBe
+                BitmapShareFile.Dropped
+        }
+        work.complete(Unit)
+        shadowLooper.idle()
+
+        files.single().shouldBeInstanceOf<BitmapShareFile.Written>()
+        activity.cacheWriteFiles("share").map { it.name } shouldContainExactly listOf("shared.png")
+    }
+
+    @Test
+    fun `leaving bitmap share and quick share drop`() {
         val activity = resumed().get()
         activity.launchScreen()
-        val pending =
-            File(activity.cacheDir, "share/shared.png").apply {
-                parentFile?.mkdirs()
-                writeText("pending")
-            }
+        shadowOf(activity).clearNextStartedActivities()
+        val shareFile = BitmapShareFile.Written(Uri.parse("content://de.lemke.commonutils.test.fileprovider/cache_root/share/shared.png"))
 
-        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).quickShare(activity, "shared.png").shouldBeFalse()
+        activity.shareBitmap(shareFile).shouldBeFalse()
+        activity.quickShareBitmap(shareFile).shouldBeFalse()
 
-        pending.readText() shouldBe "pending"
+        shadowOf(activity).nextStartedActivity.shouldBeNull()
     }
 }

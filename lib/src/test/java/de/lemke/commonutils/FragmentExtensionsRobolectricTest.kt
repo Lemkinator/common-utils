@@ -154,13 +154,14 @@ class FragmentExtensionsRobolectricTest {
 
             fragment.copyToClipboard(clip).shouldBeTrue()
 
-            fragment
-                .requireContext()
+            val context = fragment.requireContext()
+            val directory = context.cacheWriteDirectoryName("clipboard")
+            context
                 .getSystemService(ClipboardManager::class.java)
                 .primaryClip
                 ?.getItemAt(0)
                 ?.uri
-                .toString() shouldBe "content://de.lemke.commonutils.test.fileprovider/cache_root/clipboard/test.png"
+                .toString() shouldBe "content://de.lemke.commonutils.test.fileprovider/cache_root/clipboard/$directory/test.png"
         }
 
     // ── ExportUtils Fragment overloads ────────────────────────────────────────

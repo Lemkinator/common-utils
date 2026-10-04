@@ -59,6 +59,10 @@ inline fun <reified T : Activity> View.transformToActivity(
 
 /**
  * Extension function to start an activity with a shared element transition from a view.
+ *
+ * The view is the shared element only while it is attached to a window and, inside the `then` of a
+ * [singleLaunchSuspending] input, only if the activity did not stop since that input. Otherwise the activity starts
+ * without the transition.
  * @receiver View The view to transition from.
  * @param intent The intent to start the new activity.
  * @param transitionName The name of the shared element transition.
@@ -73,7 +77,9 @@ fun View.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean {
-    val activity = context.activity ?: return context.singleLaunchActivity(intent)
+    val activity =
+        context.activity?.takeIf { isAttachedToWindow && it.inputViewsCurrent() }
+            ?: return context.singleLaunchActivity(intent)
     return activity.launchGated {
         suspendStateListAnimator()
         this.transitionName = transitionName
@@ -88,7 +94,8 @@ fun View.transformToActivity(
 
 /**
  * Starts an activity with a shared element transition from the view identified by [viewId].
- * Falls back to a launch without a transition if the view is not found (e.g., recycled drawer item).
+ * Falls back to a launch without a transition if the view is not found (e.g., recycled drawer item) or stale; see
+ * [View.transformToActivity].
  * @receiver The activity that owns the view hierarchy.
  * @param viewId The ID of the view to transition from.
  * @param cls The class of the activity to start.
@@ -107,7 +114,7 @@ fun Activity.transformToActivity(
 
 /**
  * Starts an activity with a shared element transition from the view identified by [viewId].
- * Falls back to a launch without a transition if the view is not found.
+ * Falls back to a launch without a transition if the view is not found or stale; see [View.transformToActivity].
  * @receiver The activity that owns the view hierarchy.
  * @param viewId The ID of the view to transition from.
  * @param transitionName The name of the shared element transition.
@@ -125,7 +132,8 @@ inline fun <reified T : Activity> Activity.transformToActivity(
 
 /**
  * Starts an activity with a shared element transition from the view identified by [viewId].
- * Falls back to a launch without a transition if the view is not found (e.g., recycled drawer item).
+ * Falls back to a launch without a transition if the view is not found (e.g., recycled drawer item) or stale; see
+ * [View.transformToActivity].
  * @receiver The activity that owns the view hierarchy.
  * @param viewId The ID of the view to transition from.
  * @param intent The intent to start the new activity.
@@ -144,7 +152,7 @@ fun Activity.transformToActivity(
 
 /**
  * Starts an activity with a shared element transition from [view].
- * Falls back to a launch without a transition if [view] is null.
+ * Falls back to a launch without a transition if [view] is null or stale; see [View.transformToActivity].
  * @receiver The activity to start from.
  * @param view The view to transition from, or null to fall back to a launch without a transition.
  * @param intent The intent to start the new activity.
@@ -168,7 +176,7 @@ fun Activity.transformToActivity(
 
 /**
  * Starts an activity with a shared element transition from [view].
- * Falls back to a launch without a transition if [view] is null.
+ * Falls back to a launch without a transition if [view] is null or stale; see [View.transformToActivity].
  * @receiver The activity to start from.
  * @param view The view to transition from, or null to fall back to a launch without a transition.
  * @param transitionName The name of the shared element transition.

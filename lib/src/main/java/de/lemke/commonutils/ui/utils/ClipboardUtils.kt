@@ -71,7 +71,12 @@ fun Context.copyToClipboard(clip: ClipData?): Boolean {
 
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns a clip of its content URI under
- * [label], or null if writing fails.
+ * [label], or null if writing fails. Each write gets a file of its own, so no later write with the same [fileName]
+ * changes the file of an earlier clip. The first [createBitmapClip] call that starts more than one day after this write
+ * and returns a clip deletes the file; a call that returns null deletes no earlier file. That call deletes the file
+ * even if its own clip never reaches the clipboard, so a clipboard that still holds the older clip points to a deleted
+ * file. The system can delete the file earlier when it evicts cache files. A receiver that keeps the URI longer reads
+ * a dead URI.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
  * `then`.
@@ -85,7 +90,12 @@ suspend fun Fragment.createBitmapClip(
 
 /**
  * Writes [bitmap] as a PNG cache file named [fileName] on [ioDispatcher] and returns a clip of its content URI under
- * [label], or null if writing fails.
+ * [label], or null if writing fails. Each write gets a file of its own, so no later write with the same [fileName]
+ * changes the file of an earlier clip. The first [createBitmapClip] call that starts more than one day after this write
+ * and returns a clip deletes the file; a call that returns null deletes no earlier file. That call deletes the file
+ * even if its own clip never reaches the clipboard, so a clipboard that still holds the older clip points to a deleted
+ * file. The system can delete the file earlier when it evicts cache files. A receiver that keeps the URI longer reads
+ * a dead URI.
  *
  * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
  * `then`.
@@ -100,11 +110,7 @@ suspend fun Context.createBitmapClip(
         // Providers and the file system throw an open-ended exception set; a failure must yield no clip, not crash.
         @Suppress("TooGenericExceptionCaught")
         try {
-            writePngCacheFile(bitmap, CacheFileKind.CLIPBOARD, fileName)?.let { file ->
-                runCatching { ClipData.newUri(contentResolver, label, file.getFileUri(this@createBitmapClip)) }
-                    .onFailure { file.deleteOrLog() }
-                    .getOrThrow()
-            }
+            writePngCacheUri(bitmap, CacheFileKind.CLIPBOARD, fileName) { ClipData.newUri(contentResolver, label, it) }
         } catch (e: Exception) {
             Log.e(TAG, "Error writing bitmap clip", e)
             null

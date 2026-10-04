@@ -46,9 +46,10 @@ class LatchTestActivity : AppCompatActivity() {
     fun deliverNewIntent(intent: Intent) = onNewIntent(intent)
 }
 
-/** Fragment with a view whose `onResume` and result launcher drive the launch latch in tests. */
+/** Fragment with a view whose `onResume`, `onDestroyView` and result launcher drive the launch latch in tests. */
 class LatchTestFragment : Fragment() {
     var onResumeAction: () -> Unit = {}
+    var onDestroyViewAction: () -> Unit = {}
     var onResult: (ActivityResult) -> Unit = {}
     val launcher = registerForSingleLaunchResult(StartActivityForResult()) { onResult(it) }
 
@@ -61,5 +62,10 @@ class LatchTestFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         onResumeAction()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        onDestroyViewAction()
     }
 }
