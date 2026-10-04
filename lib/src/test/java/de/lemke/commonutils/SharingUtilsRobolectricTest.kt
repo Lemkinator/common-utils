@@ -46,7 +46,6 @@ import de.lemke.commonutils.ui.utils.share
 import de.lemke.commonutils.ui.utils.shareApp
 import de.lemke.commonutils.ui.utils.shareBitmap
 import de.lemke.commonutils.ui.utils.shareText
-import de.lemke.commonutils.ui.utils.writePngCacheUri
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -699,42 +698,6 @@ class SharingUtilsBitmapRobolectricTest {
             ctx.createBitmapShareFile(bitmapWriting("png"), "../evil.png") shouldBe BitmapShareFile.Failed
             File(ctx.cacheDir, "share").listFiles()!!.shouldBeEmpty()
         }
-
-    // ── writePngCacheUri ────────────────────────────────────────────────────────
-
-    private fun throwingDeleteExpired(): Context.(CacheFileKind, Long) -> Unit = { _, _ -> throw SecurityException("cache access denied") }
-
-    @Test
-    fun `writePngCacheUri keeps a written share file when deleting expired writes throws`() {
-        val file =
-            ctx
-                .writePngCacheUri(
-                    bitmapWriting("new"),
-                    CacheFileKind.SHARE,
-                    "test.png",
-                    deleteExpired = throwingDeleteExpired(),
-                    transform = BitmapShareFile::Written,
-                ).shouldNotBeNull()
-
-        file shouldBe BitmapShareFile.Written(Uri.parse(writtenUri("share", "test.png")))
-        file.uri.readText() shouldBe "new"
-        ShadowLog.getLogsForTag("SharingUtils").map { Triple(it.type, it.msg, it.throwable?.message) } shouldContainExactly
-            listOf(Triple(Log.WARN, "Could not delete expired share cache writes", "cache access denied"))
-    }
-
-    @Test
-    fun `writePngCacheUri keeps a written clip file when deleting expired writes throws`() {
-        val clip =
-            ctx
-                .writePngCacheUri(bitmapWriting("new"), CacheFileKind.CLIPBOARD, "test.png", throwingDeleteExpired()) {
-                    ClipData.newUri(ctx.contentResolver, "label", it)
-                }.shouldNotBeNull()
-
-        clip.getItemAt(0).uri.toString() shouldBe writtenUri("clipboard", "test.png")
-        clip.getItemAt(0).uri.readText() shouldBe "new"
-        ShadowLog.getLogsForTag("SharingUtils").map { Triple(it.type, it.msg, it.throwable?.message) } shouldContainExactly
-            listOf(Triple(Log.WARN, "Could not delete expired clipboard cache writes", "cache access denied"))
-    }
 
     // ── shareBitmap ─────────────────────────────────────────────────────────────
 

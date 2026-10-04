@@ -195,16 +195,14 @@ internal fun File.deleteOrLog() {
 /**
  * Writes [bitmap] as a PNG named [fileName] into a new write directory of [kind] and maps the file's content URI with
  * [transform]; deletes that directory if the bitmap cannot be encoded or anything throws. Only a call that returns a
- * URI runs [deleteExpired] for the write directories of [kind] that were expired when it started, so a failed call
- * keeps every earlier file, such as the one behind the current clipboard clip. That deletion runs after the mapped URI
- * is final; if it throws, it logs a warning and keeps the mapped URI and its file.
+ * URI deletes the write directories of [kind] that were expired when it started, and only after its mapped URI is
+ * final, so a failed call keeps every earlier file, such as the one behind the current clipboard clip.
  * @return the mapped URI, or null if the bitmap cannot be encoded; I/O, path and provider errors propagate.
  */
 internal fun <R : Any> Context.writePngCacheUri(
     bitmap: Bitmap,
     kind: CacheFileKind,
     fileName: String,
-    deleteExpired: Context.(CacheFileKind, Long) -> Unit = Context::deleteExpiredCacheWrites,
     transform: (Uri) -> R,
 ): R? {
     val startMillis = System.currentTimeMillis()
@@ -212,8 +210,5 @@ internal fun <R : Any> Context.writePngCacheUri(
     return runCatching { directory.resolve(fileName).takeIf { it.writePng(bitmap) }?.let { file -> transform(file.getFileUri(this)) } }
         .also { if (it.getOrNull() == null) directory.delete() }
         .getOrThrow()
-        ?.also {
-            runCatching { deleteExpired(kind, startMillis) }
-                .onFailure { e -> Log.w(TAG, "Could not delete expired ${kind.directoryName} cache writes", e) }
-        }
+        ?.also { deleteExpiredCacheWrites(kind, startMillis) }
 }
