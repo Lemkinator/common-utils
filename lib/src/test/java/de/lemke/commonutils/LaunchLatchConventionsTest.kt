@@ -21,8 +21,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import java.io.File
 import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.name
 import kotlin.io.path.writeText
@@ -400,11 +400,26 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 dir.resolve("Clean.kt").writeText("package demo\n\nfun clean() = safeStartActivity(intent)\n")
                 dir.resolve("Hits.kt").writeText("package demo\n\nfun open() {\n    startActivity(intent)\n    dialog.show()\n}\n")
                 val scope = Konsist.scopeFromExternalDirectories(listOf(dir.toString()))
-                val hitsPath = listOf("", "lib", "build", "tmp", dir.name, "Hits.kt").joinToString(File.separator)
+                val hitsPath = "/lib/build/tmp/${dir.name}/Hits.kt"
 
                 val error = shouldThrow<AssertionError> { scope.assertLaunchLatchConventions() }
 
                 error.message shouldBe "2 calls bypass the launch latch:\n$hitsPath:4: startActivity\n$hitsPath:5: dialog.show"
+            } finally {
+                dir.toFile().deleteRecursively()
+            }
+        }
+        should("print a nested project path with / separators") {
+            val dir = Path("build", "tmp", "launch-latch-paths").toAbsolutePath()
+            try {
+                val ui = dir.resolve("demo").resolve("ui").createDirectories()
+                ui.resolve("Hits.kt").writeText("package demo.ui\n\nfun open() = startActivity(intent)\n")
+                val scope = Konsist.scopeFromExternalDirectories(listOf(dir.toString()))
+
+                val error = shouldThrow<AssertionError> { scope.assertLaunchLatchConventions() }
+
+                error.message shouldBe
+                    "1 call bypasses the launch latch:\n/lib/build/tmp/launch-latch-paths/demo/ui/Hits.kt:3: startActivity"
             } finally {
                 dir.toFile().deleteRecursively()
             }
