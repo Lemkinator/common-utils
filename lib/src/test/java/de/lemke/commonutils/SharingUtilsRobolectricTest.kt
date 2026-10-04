@@ -549,8 +549,9 @@ class SharingUtilsBitmapRobolectricTest {
             val act = activity()
             act.shareBitmap(act.createBitmapShareFile(bitmapWriting("pending"), "test.png")).shouldBeTrue()
             val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
-            File(ctx.cacheDir, "share/expired/test.png").apply { parentFile?.mkdirs() }.writeText("expired")
-            File(ctx.cacheDir, "share/expired").setLastModified(0).shouldBeTrue()
+            val expired = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
+            File(expired, "test.png").writeText("expired")
+            expired.setLastModified(0).shouldBeTrue()
 
             val written = ctx.createBitmapShareFile(bitmapWriting("new"), "test.png").shouldBeInstanceOf<BitmapShareFile.Written>().uri
 
