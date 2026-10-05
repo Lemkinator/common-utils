@@ -112,7 +112,8 @@ fun Context.exportBitmap(
  * Writes [bitmap] as a PNG named after [filename] to the public directory of [saveLocation] on [ioDispatcher].
  *
  * Main-safe: call it from `viewModelScope` and expose the [BitmapSaveResult] as UI state; a RESUMED collector launches
- * [exportBitmap] for [BitmapSaveResult.NeedsPicker] and passes a [BitmapSaveResult.Finished] result to [toast].
+ * [exportBitmap] for [BitmapSaveResult.NeedsPicker] and passes a [BitmapSaveResult.Finished] result to [toast]. The
+ * collector resets that state after it acts on it, since a `StateFlow` replays its value on each resume.
  * A location that [SaveLocation.needsPicker] writes nothing and returns [BitmapSaveResult.NeedsPicker].
  */
 suspend fun saveBitmapToDirectory(
@@ -152,7 +153,8 @@ fun Context.toast(result: BitmapSaveResult.Finished) {
  * Writes [bitmap] as a PNG to [uri], the document picked through [exportBitmap], on [ioDispatcher].
  *
  * Main-safe: call it from `viewModelScope` and expose the [BitmapSaveResult] as UI state; a RESUMED collector passes a
- * [BitmapSaveResult.Finished] result to [toast] and ignores [BitmapSaveResult.Canceled].
+ * [BitmapSaveResult.Finished] result to [toast] and ignores [BitmapSaveResult.Canceled]. The collector resets that
+ * state after it acts on it, since a `StateFlow` replays its value on each resume.
  * A null [uri], the result of a canceled picker, writes nothing and returns [BitmapSaveResult.Canceled].
  * A written bitmap returns [BitmapSaveResult.Saved] with [SaveLocation.CUSTOM]; a null [bitmap] writes nothing
  * and returns [BitmapSaveResult.WriteFailed]. Only if [createdDocument] is true, as for the result of the

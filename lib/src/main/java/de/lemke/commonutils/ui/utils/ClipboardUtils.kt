@@ -98,7 +98,8 @@ suspend fun Fragment.createBitmapClip(
  * a dead URI.
  *
  * Main-safe: call it from `viewModelScope` and expose the clip as UI state; a RESUMED collector passes it to
- * [copyToClipboard].
+ * [copyToClipboard]. The collector resets that state after it acts on it, since a `StateFlow` replays its value on
+ * each resume.
  */
 suspend fun Context.createBitmapClip(
     bitmap: Bitmap,

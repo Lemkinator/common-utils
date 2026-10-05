@@ -79,7 +79,8 @@ suspend fun Fragment.createBitmapShareFile(
  * the URI longer reads a dead URI.
  *
  * Main-safe: call it from `viewModelScope` and expose the result as UI state; a RESUMED collector passes it to
- * [shareBitmap] or [quickShareBitmap]. With an activity context, while its launch latch drops launches, it returns
+ * [shareBitmap] or [quickShareBitmap]. The collector resets that state after it acts on it, since a `StateFlow` replays
+ * its value on each resume. With an activity context, while its launch latch drops launches, it returns
  * [BitmapShareFile.Dropped] without writing, unless it runs as the work of a `singleLaunchSuspending` input.
  */
 suspend fun Context.createBitmapShareFile(

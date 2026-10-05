@@ -343,7 +343,8 @@ fun Fragment.singleLaunch(action: () -> Unit): Boolean = context.singleLaunchOrN
  * before a launch.
  *
  * Data, network and disk work belongs in a ViewModel instead: it runs in `viewModelScope` and exposes its result as
- * UI state, and a RESUMED collector of that state launches.
+ * UI state, and a RESUMED collector of that state launches. The collector resets that state after it acts on it, since
+ * a `StateFlow` replays its value on each resume.
  *
  * The input is admitted like [Context.singleLaunch]. Until [then] returns or the scope cancels the work, every other
  * input of this activity drops, also across a stop. [then] waits until the user is back if the work ends while the
