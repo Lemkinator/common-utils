@@ -11,24 +11,11 @@
   "packageRules": [
     {
       "matchUpdateTypes": [
+        "minor",
         "patch",
         "digest"
       ],
       "matchCurrentVersion": "!/^0/",
-      "automerge": true
-    },
-    {
-      "matchUpdateTypes": [
-        "minor"
-      ],
-      "matchCurrentVersion": "!/^0/",
-      "matchPackageNames": [
-        "com.google.truth:truth",
-        "io.mockk:**",
-        "app.cash.turbine:**",
-        "com.google.dagger:**",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-test"
-      ],
       "automerge": true
     },
     {
@@ -61,15 +48,15 @@
     {
       "groupName": "junit5",
       "matchPackageNames": [
-        "org.junit:junit-bom",
         "org.junit.jupiter:**",
         "org.junit.platform:**",
         "org.junit.vintage:**"
       ]
     },
     {
-      "groupName": "robolectric",
+      "groupName": "screenshot-testing",
       "matchPackageNames": [
+        "io.github.takahirom.roborazzi**",
         "org.robolectric:**"
       ]
     },
@@ -86,14 +73,6 @@
         "io.gitlab.arturbosch.detekt**",
         "com.diffplug.spotless**"
       ]
-    },
-    {
-      "groupName": "oneui-design",
-      "matchPackageNames": [
-        "io.github.tribalfs:oneui-design",
-        "io.github.oneuiproject:icons"
-      ],
-      "automerge": false
     }
   ]
 }
