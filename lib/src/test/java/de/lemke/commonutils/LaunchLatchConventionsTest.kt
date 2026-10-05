@@ -21,7 +21,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import java.io.File
 import kotlin.io.path.Path
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.name
@@ -400,7 +399,7 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 dir.resolve("Clean.kt").writeText("package demo\n\nfun clean() = safeStartActivity(intent)\n")
                 dir.resolve("Hits.kt").writeText("package demo\n\nfun open() {\n    startActivity(intent)\n    dialog.show()\n}\n")
                 val scope = Konsist.scopeFromExternalDirectories(listOf(dir.toString()))
-                val hitsPath = listOf("", "lib", "build", "tmp", dir.name, "Hits.kt").joinToString(File.separator)
+                val hitsPath = "/lib/build/tmp/${dir.name}/Hits.kt"
 
                 val error = shouldThrow<AssertionError> { scope.assertLaunchLatchConventions() }
 
@@ -408,6 +407,12 @@ class LaunchLatchConventionsTest : ShouldSpec() {
             } finally {
                 dir.toFile().deleteRecursively()
             }
+        }
+        should("print a Windows project path with / separators") {
+            portableProjectPath("\\lib\\build\\tmp\\demo\\ui\\Hits.kt", separator = '\\') shouldBe "/lib/build/tmp/demo/ui/Hits.kt"
+        }
+        should("keep a backslash in a Unix file name") {
+            portableProjectPath("/lib/build/tmp/demo/a\\b.kt", separator = '/') shouldBe "/lib/build/tmp/demo/a\\b.kt"
         }
         should("pass a scope of clean files") {
             val dir = createTempDirectory("launch-latch")

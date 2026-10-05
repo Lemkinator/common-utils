@@ -78,8 +78,8 @@ fun Context.copyToClipboard(clip: ClipData?): Boolean {
  * file. The system can delete the file earlier when it evicts cache files. A receiver that keeps the URI longer reads
  * a dead URI.
  *
- * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
- * `then`.
+ * Main-safe. A ViewModel calls the [Context.createBitmapClip] overload with an application context instead; a
+ * ViewModel that holds this fragment leaks it, and the call throws once the fragment detaches.
  */
 suspend fun Fragment.createBitmapClip(
     bitmap: Bitmap,
@@ -97,8 +97,9 @@ suspend fun Fragment.createBitmapClip(
  * file. The system can delete the file earlier when it evicts cache files. A receiver that keeps the URI longer reads
  * a dead URI.
  *
- * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the clip to [copyToClipboard] in its
- * `then`.
+ * Main-safe: call it from `viewModelScope` and expose the clip as UI state; a RESUMED collector passes it to
+ * [copyToClipboard]. The collector resets that state after it acts on it, since a `StateFlow` replays its value on
+ * each resume.
  */
 suspend fun Context.createBitmapClip(
     bitmap: Bitmap,

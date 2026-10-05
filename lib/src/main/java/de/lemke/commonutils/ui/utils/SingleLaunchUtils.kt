@@ -339,11 +339,17 @@ fun Fragment.singleLaunch(action: () -> Unit): Boolean = context.singleLaunchOrN
 
 /**
  * Runs an input that does async [work] in [lifecycleScope], then passes its result to [then] once this activity is
- * RESUMED, for a tap whose launch waits on work or whose work must not run twice.
+ * RESUMED, for an await that needs this activity itself, such as a sign-in flow or a pause on this activity's views
+ * before a launch.
+ *
+ * Data, network and disk work belongs in a ViewModel instead: it runs in `viewModelScope` and exposes its result as
+ * UI state, and a RESUMED collector of that state launches. The collector resets that state after it acts on it, since
+ * a `StateFlow` replays its value on each resume.
  *
  * The input is admitted like [Context.singleLaunch]. Until [then] returns or the scope cancels the work, every other
  * input of this activity drops, also across a stop. [then] waits until the user is back if the work ends while the
- * activity is not RESUMED, and launches like any other gated launch.
+ * activity is not RESUMED, and launches like any other gated launch. Destroying the activity, also for a
+ * configuration change, cancels [work], and [then] never runs.
  * @return true if [work] was launched, false if the latch dropped it.
  */
 @MainThread
@@ -353,7 +359,8 @@ fun <T> ComponentActivity.singleLaunchSuspending(
 ): Boolean = launchInput(lifecycleScope, work, then)
 
 /**
- * Runs an input that does async [work] in the view lifecycle scope of this fragment through its activity's latch.
+ * Runs an input that does async [work] in the view lifecycle scope of this fragment through its activity's latch, for
+ * an await that needs the activity itself; data, network and disk work belongs in a ViewModel.
  *
  * [then] waits until the activity, not this fragment, is RESUMED, so an off-screen tab capped at STARTED still
  * launches. Destroying the view cancels [work]. Call it while the fragment has a view.

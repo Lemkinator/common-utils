@@ -59,9 +59,10 @@ sealed interface BitmapShareFile {
  * deletes no earlier file. The system can delete the file earlier when it evicts cache files. A receiver that keeps
  * the URI longer reads a dead URI.
  *
- * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
- * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
- * [BitmapShareFile.Dropped] without writing, unless it runs as that work.
+ * Main-safe. A ViewModel calls the [Context.createBitmapShareFile] overload with an application context instead; a
+ * ViewModel that holds this fragment leaks it, and the call throws once the fragment detaches.
+ * While the launch latch of this fragment's activity drops launches, it returns [BitmapShareFile.Dropped] without
+ * writing, unless it runs as the work of a `singleLaunchSuspending` input.
  */
 suspend fun Fragment.createBitmapShareFile(
     bitmap: Bitmap,
@@ -77,9 +78,10 @@ suspend fun Fragment.createBitmapShareFile(
  * deletes no earlier file. The system can delete the file earlier when it evicts cache files. A receiver that keeps
  * the URI longer reads a dead URI.
  *
- * Main-safe: run it as the work of a `singleLaunchSuspending` input and pass the result to [shareBitmap] or
- * [quickShareBitmap] in its `then`. While the activity's launch latch drops launches, it returns
- * [BitmapShareFile.Dropped] without writing, unless it runs as that work.
+ * Main-safe: call it from `viewModelScope` and expose the result as UI state; a RESUMED collector passes it to
+ * [shareBitmap] or [quickShareBitmap]. The collector resets that state after it acts on it, since a `StateFlow` replays
+ * its value on each resume. With an activity context, while its launch latch drops launches, it returns
+ * [BitmapShareFile.Dropped] without writing, unless it runs as the work of a `singleLaunchSuspending` input.
  */
 suspend fun Context.createBitmapShareFile(
     bitmap: Bitmap,

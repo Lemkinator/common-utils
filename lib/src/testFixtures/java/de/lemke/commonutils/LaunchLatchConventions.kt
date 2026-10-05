@@ -16,6 +16,7 @@
 package de.lemke.commonutils
 
 import com.lemonappdev.konsist.api.container.KoScope
+import java.io.File
 
 /** One raw launch or dialog show that bypasses the launch latch. */
 data class LaunchLatchViolation(
@@ -340,17 +341,25 @@ object LaunchLatchConventions {
 }
 
 /**
- * Fails with one message that lists every violation in this scope's files as `projectPath:line: match`, one per line.
+ * Fails with one message that lists every violation in this scope's files as `projectPath:line: match`, one per line,
+ * with `/` as the path separator on every platform.
  */
 fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = emptySet()) {
     val hits =
         files
-            .sortedBy { it.projectPath }
-            .flatMap { file ->
-                LaunchLatchConventions.violations(file.text, extraShowReceivers).map { "${file.projectPath}:${it.line}: ${it.match}" }
+            .map { portableProjectPath(it.projectPath) to it.text }
+            .sortedBy { (path, _) -> path }
+            .flatMap { (path, text) ->
+                LaunchLatchConventions.violations(text, extraShowReceivers).map { "$path:${it.line}: ${it.match}" }
             }
     if (hits.isNotEmpty()) {
         val header = if (hits.size == 1) "1 call bypasses the launch latch:" else "${hits.size} calls bypass the launch latch:"
         throw AssertionError(hits.joinToString("\n", prefix = "$header\n"))
     }
 }
+
+/** [projectPath] with `/` as the path separator; Konsist reports it with the separator of the platform. */
+internal fun portableProjectPath(
+    projectPath: String,
+    separator: Char = File.separatorChar,
+): String = projectPath.replace(separator, '/')
