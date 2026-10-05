@@ -16,6 +16,7 @@
 package de.lemke.commonutils
 
 import com.lemonappdev.konsist.api.container.KoScope
+import java.io.File
 
 /** One raw launch or dialog show that bypasses the launch latch. */
 data class LaunchLatchViolation(
@@ -358,4 +359,7 @@ fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = empty
 }
 
 /** [projectPath] with `/` as the path separator; Konsist reports it with the separator of the platform. */
-internal fun portableProjectPath(projectPath: String): String = projectPath.replace('\\', '/')
+internal fun portableProjectPath(
+    projectPath: String,
+    separator: Char = File.separatorChar,
+): String = projectPath.replace(separator, '/')

@@ -408,8 +408,11 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 dir.toFile().deleteRecursively()
             }
         }
-        should("print a project path with / separators") {
-            portableProjectPath("\\lib\\build\\tmp\\demo\\ui\\Hits.kt") shouldBe "/lib/build/tmp/demo/ui/Hits.kt"
+        should("print a Windows project path with / separators") {
+            portableProjectPath("\\lib\\build\\tmp\\demo\\ui\\Hits.kt", separator = '\\') shouldBe "/lib/build/tmp/demo/ui/Hits.kt"
+        }
+        should("keep a backslash in a Unix file name") {
+            portableProjectPath("/lib/build/tmp/demo/a\\b.kt", separator = '/') shouldBe "/lib/build/tmp/demo/a\\b.kt"
         }
         should("pass a scope of clean files") {
             val dir = createTempDirectory("launch-latch")
