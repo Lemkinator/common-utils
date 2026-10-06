@@ -39,6 +39,7 @@ object LaunchLatchConventions {
     private const val REFERENCE = "::"
     private const val TYPE_ARGUMENT_SYMBOLS = "_.,?*<>@"
     private const val BACKTICK_BLANKED = "`'\""
+    private const val DECLARATION_KEYWORD = "fun"
 
     private val launchName =
         Regex(
@@ -46,8 +47,6 @@ object LaunchLatchConventions {
                 "startIntentSender|startIntentSenderForResult|registerForActivityResult)\\b",
         )
     private val showName = Regex("""\b(show|showNow)\b""")
-    private val declarationKeyword = Regex("""\bfun\s""")
-    private val declarationBoundaries = charArrayOf('(', ')', '{', '}', '=', ';')
     private val closingBrackets = mapOf(')' to '(', ']' to '[', '}' to '{', '>' to '<')
     private val openingBrackets = closingBrackets.entries.associate { (close, open) -> open to close }
 
@@ -56,17 +55,17 @@ object LaunchLatchConventions {
         source: String,
         extraShowReceivers: Set<String> = emptySet(),
     ): List<LaunchLatchViolation> {
-        val code = stripLiterals(source)
+        val stripped = stripLiterals(source)
         val allowed = defaultShowReceivers + extraShowReceivers
-        val launches = launchName.findAll(code).mapNotNull { code.launchViolation(it.range.first, it.value) }
-        val shows = showName.findAll(code).mapNotNull { code.showViolation(it.range.first, it.value, allowed) }
+        val launches = launchName.findAll(stripped.code).mapNotNull { stripped.launchViolation(it.range.first, it.value) }
+        val shows = showName.findAll(stripped.code).mapNotNull { stripped.showViolation(it.range.first, it.value, allowed) }
         return (launches + shows)
             .sortedBy { it.first }
-            .map { (index, match) -> LaunchLatchViolation(code.lineAt(index), match) }
+            .map { (index, match) -> LaunchLatchViolation(stripped.code.lineAt(index), match) }
             .toList()
     }
 
-    private fun String.launchViolation(
+    private fun StrippedSource.launchViolation(
         start: Int,
         name: String,
     ): Pair<Int, String>? =
@@ -74,12 +73,12 @@ object LaunchLatchConventions {
             Pair(start, if (usage.isReference) usage.referenceText(name) else name)
         }
 
-    private fun String.showViolation(
+    private fun StrippedSource.showViolation(
         start: Int,
         name: String,
         allowed: Set<String>,
     ): Pair<Int, String>? {
-        val usage = usageAt(start, name)?.takeUnless { isAllowedReceiver(it.receiver, allowed) } ?: return null
+        val usage = usageAt(start, name)?.takeUnless { code.isAllowedReceiver(it.receiver, allowed) } ?: return null
         val text =
             when {
                 usage.isReference -> usage.referenceText(name)
@@ -90,24 +89,55 @@ object LaunchLatchConventions {
     }
 
     /** The call or reference of the name at [start], or null for a declaration or any other use. */
-    private fun String.usageAt(
+    private fun StrippedSource.usageAt(
         start: Int,
         name: String,
     ): Usage? {
-        val before = skipWhitespaceBackward(start)
-        val isReference = before >= REFERENCE.length && startsWith(REFERENCE, before - REFERENCE.length)
+        val before = code.skipWhitespaceBackward(start)
+        val isReference = before >= REFERENCE.length && code.startsWith(REFERENCE, before - REFERENCE.length)
         return when {
-            isReference -> Usage(receiverChain(before - REFERENCE.length), isReference = true)
-            !isSegmentCall(start + name.length) || isDeclaration(start) -> null
-            else -> Usage(receiverBefore(before), isReference = false)
+            isReference -> Usage(code.receiverChain(before - REFERENCE.length), isReference = true)
+            !code.isSegmentCall(start + name.length) || isDeclaration(start) -> null
+            else -> Usage(code.receiverBefore(before), isReference = false)
         }
     }
 
     private fun String.isParenthesisAt(index: Int): Boolean = getOrNull(skipWhitespaceForward(index)) == '('
 
-    /** Whether a `fun` precedes [start] with no bracket, `=` or `;` between, on this line or a line before. */
-    private fun String.isDeclaration(start: Int): Boolean =
-        declarationKeyword.containsMatchIn(substring(lastIndexOfAny(declarationBoundaries, start - 1) + 1, start))
+    /** Whether the name at [nameStart] ends a function declaration header: `fun`, type parameters, a receiver type, `.`. */
+    private fun StrippedSource.isDeclaration(nameStart: Int): Boolean {
+        val keywordEnd = code.skipWhitespaceBackward(code.typeParametersStart(code.receiverTypeStart(nameStart)))
+        return isKeyword(code.identifierStart(keywordEnd) until keywordEnd, DECLARATION_KEYWORD)
+    }
+
+    /** The start of the receiver type whose `.` or `?.` precedes the name at [nameStart], or [nameStart] without one. */
+    private fun String.receiverTypeStart(nameStart: Int): Int {
+        val beforeName = skipWhitespaceBackward(nameStart)
+        val access = memberAccessLength(beforeName)
+        return if (access == 0) nameStart else typeStart(beforeName - access)
+    }
+
+    /** The start of the type that ends at [end]: qualified, nullable, generic or parenthesized, as in `(() -> Unit)?`. */
+    private fun String.typeStart(end: Int): Int {
+        var index = skipWhitespaceBackward(end)
+        while (index > 0 && (this[index - 1] == '?' || this[index - 1] == ')' || isClosingAngle(index - 1))) {
+            index = if (this[index - 1] == '?') index - 1 else openingBracketIndex(index - 1)
+        }
+        val start = identifierStart(index)
+        val beforeStart = skipWhitespaceBackward(start)
+        return if (start < index && getOrNull(beforeStart - 1) == '.') typeStart(beforeStart - 1) else start
+    }
+
+    /** The start of the type parameter list that ends before [end], or [end] without one. */
+    private fun String.typeParametersStart(end: Int): Int {
+        val close = skipWhitespaceBackward(end) - 1
+        return if (close >= 0 && isClosingAngle(close)) openingBracketIndex(close) else end
+    }
+
+    private fun String.isClosingAngle(index: Int): Boolean = this[index] == '>' && !isArrowHead(index)
+
+    /** Whether [index] holds the `>` of an arrow `->`, as in a function type or a lambda. */
+    private fun String.isArrowHead(index: Int): Boolean = this[index] == '>' && getOrNull(index - 1) == '-'
 
     private fun String.receiverBefore(end: Int): List<Segment> {
         val access = memberAccessLength(end)
@@ -202,9 +232,9 @@ object LaunchLatchConventions {
         var depth = 0
         var index = closeIndex
         while (index >= 0) {
-            when (this[index]) {
-                close -> depth++
-                open -> if (--depth == 0) return index
+            when {
+                this[index] == close && !isArrowHead(index) -> depth++
+                this[index] == open -> if (--depth == 0) return index
             }
             index--
         }
@@ -231,19 +261,21 @@ object LaunchLatchConventions {
      * [source] with every comment, string literal and char literal blanked to spaces; a backtick identifier keeps its
      * name and loses only its backticks and quotes. Line breaks stay, so offsets and lines match.
      */
-    private fun stripLiterals(source: String): String {
+    private fun stripLiterals(source: String): StrippedSource {
         val code = StringBuilder(source)
+        val quotedIdentifiers = mutableListOf<IntRange>()
         var index = 0
         while (index < source.length) {
             val end = source.literalEnd(index)
             val isBacktick = source[index] == '`'
+            if (isBacktick) quotedIdentifiers += index until end
             for (blanked in index until end) {
                 val char = code[blanked]
                 if (char != '\n' && char != '\r' && (!isBacktick || char in BACKTICK_BLANKED)) code[blanked] = ' '
             }
             index = maxOf(end, index + 1)
         }
-        return code.toString()
+        return StrippedSource(code.toString(), quotedIdentifiers)
     }
 
     /** The end of the comment, literal or backtick identifier that starts at [start], or [start] if none starts there. */
@@ -325,6 +357,18 @@ object LaunchLatchConventions {
     private fun String.charEnd(start: Int): Int {
         val contentEnd = if (getOrNull(start) == '\\') start + 2 else start + 1
         return indexOf('\'', contentEnd).takeIf { it >= 0 }?.plus(1) ?: length
+    }
+
+    /** Source with every comment and literal blanked; [quotedIdentifiers] are the ranges of its backtick identifiers. */
+    private class StrippedSource(
+        val code: String,
+        private val quotedIdentifiers: List<IntRange>,
+    ) {
+        /** Whether [range] holds [keyword] itself, not a backtick identifier of that name. */
+        fun isKeyword(
+            range: IntRange,
+            keyword: String,
+        ): Boolean = code.substring(range) == keyword && quotedIdentifiers.none { range.first in it }
     }
 
     private data class Segment(

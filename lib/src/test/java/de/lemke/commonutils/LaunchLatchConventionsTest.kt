@@ -119,6 +119,30 @@ class LaunchLatchConventionsTest : ShouldSpec() {
 
             LaunchLatchConventions.violations(source).shouldBeEmpty()
         }
+        should("accept declarations with a parenthesized or function type receiver") {
+            val source =
+                """
+                fun (() -> Unit).show() = Unit
+                fun ((Int) -> Unit)?.show() = Unit
+                fun <T> Foo<(T) -> Unit>.startActivity(x: T) = Unit
+                fun <T> T.showNow() = Unit
+                """.trimIndent()
+
+            LaunchLatchConventions.violations(source).shouldBeEmpty()
+        }
+        should("report a show next to a backtick identifier named fun") {
+            val source =
+                """
+                `fun`.show()
+                dialog `fun` show()
+                """.trimIndent()
+
+            LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(1, "fun.show"), LaunchLatchViolation(2, "show"))
+        }
+        should("report a show after the arrow of a lambda parameter") {
+            LaunchLatchConventions.violations("dialogs.forEach { dialog -> dialog.show() }") shouldBe
+                listOf(LaunchLatchViolation(1, "dialog.show"))
+        }
         should("report a show on a line after a declaration header") {
             val source =
                 """
