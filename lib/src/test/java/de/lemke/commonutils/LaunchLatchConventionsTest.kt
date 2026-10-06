@@ -104,6 +104,9 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 fun Context.startActivity(x: Int) = Unit
                 fun <T> Foo<T>.startActivity(x: T) = Unit
                 override fun show(manager: FragmentManager, tag: String?) = Unit
+                fun @receiver:Fancy Foo.show() = Unit
+                fun @A Foo.show() = Unit
+                fun <T> @A(1) @a.B T.showNow() = Unit
                 """.trimIndent()
 
             LaunchLatchConventions.violations(source).shouldBeEmpty()

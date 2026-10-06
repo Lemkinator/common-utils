@@ -110,11 +110,27 @@ object LaunchLatchConventions {
         return isKeyword(code.identifierStart(keywordEnd) until keywordEnd, DECLARATION_KEYWORD)
     }
 
-    /** The start of the receiver type whose `.` or `?.` precedes the name at [nameStart], or [nameStart] without one. */
+    /**
+     * The start of the receiver type whose `.` or `?.` precedes the name at [nameStart], with its annotations, or
+     * [nameStart] without one.
+     */
     private fun String.receiverTypeStart(nameStart: Int): Int {
         val beforeName = skipWhitespaceBackward(nameStart)
         val access = memberAccessLength(beforeName)
-        return if (access == 0) nameStart else typeStart(beforeName - access)
+        return if (access == 0) nameStart else annotationsStart(typeStart(beforeName - access))
+    }
+
+    /** The start of the annotations that precede [typeStart], as in `@A @receiver:B @C(1) Foo`, or [typeStart] without one. */
+    private fun String.annotationsStart(typeStart: Int): Int =
+        annotationStart(skipWhitespaceBackward(typeStart))?.let { annotationsStart(it) } ?: typeStart
+
+    /** The index of the `@` of the annotation `@Name`, `@target:Name` or `@Name(...)` that ends at [end], or null without one. */
+    private fun String.annotationStart(end: Int): Int? {
+        val nameEnd = if (getOrNull(end - 1) == ')') openingBracketIndex(end - 1) else end
+        var nameStart = identifierStart(nameEnd)
+        while (nameStart < nameEnd && getOrNull(nameStart - 1) == '.') nameStart = identifierStart(nameStart - 1)
+        if (nameStart < nameEnd && getOrNull(nameStart - 1) == ':') nameStart = identifierStart(nameStart - 1)
+        return (nameStart - 1).takeIf { nameStart < nameEnd && getOrNull(it) == '@' }
     }
 
     /** The start of the type that ends at [end]: qualified, nullable, generic or parenthesized, as in `(() -> Unit)?`. */
