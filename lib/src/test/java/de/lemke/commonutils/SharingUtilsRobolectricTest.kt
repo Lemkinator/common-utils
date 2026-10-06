@@ -57,6 +57,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -64,6 +65,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.file.Files
@@ -419,13 +421,17 @@ class SharingUtilsBitmapRobolectricTest {
         }
 
     @Test
-    fun `createBitmapClip returns null and deletes the cache file when encoding throws`() =
+    fun `createBitmapClip returns null, deletes the cache file and logs the error when encoding throws`() =
         runTest {
+            val error = IOException("disk full")
             val bitmap = mockk<Bitmap>()
-            every { bitmap.compress(any(), any(), any<OutputStream>()) } throws IOException("disk full")
+            every { bitmap.compress(any(), any(), any<OutputStream>()) } throws error
 
             ctx.createBitmapClip(bitmap, "label", "test.png") shouldBe null
             File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
+            val log = ShadowLog.getLogsForTag("ClipboardUtils").single()
+            log.type to log.msg shouldBe (Log.ERROR to "Error writing bitmap clip")
+            log.throwable shouldBeSameInstanceAs error
         }
 
     @Test
@@ -437,12 +443,14 @@ class SharingUtilsBitmapRobolectricTest {
         }
 
     @Test
-    fun `createBitmapClip logs no failed delete for a cache file it never created`() =
+    fun `createBitmapClip returns null and logs the error for a cache file it cannot create`() =
         runTest {
             ctx.createBitmapClip(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "label", "missing/test.png") shouldBe null
 
             File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
-            ShadowLog.getLogsForTag("SharingUtils").shouldBeEmpty()
+            val log = ShadowLog.getLogsForTag("ClipboardUtils").single()
+            log.type to log.msg shouldBe (Log.ERROR to "Error writing bitmap clip")
+            log.throwable.shouldBeInstanceOf<FileNotFoundException>()
         }
 
     @Test
