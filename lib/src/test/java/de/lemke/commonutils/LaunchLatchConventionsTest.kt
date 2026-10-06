@@ -129,6 +129,11 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 fun ((Int) -> Unit)?.show() = Unit
                 fun <T> Foo<(T) -> Unit>.startActivity(x: T) = Unit
                 fun <T> T.showNow() = Unit
+                fun <T> show(x: T) = Unit
+                fun <T>
+                    ((T) -> Unit)
+                    .show() = Unit
+                fun interface X { fun show() }
                 """.trimIndent()
 
             LaunchLatchConventions.violations(source).shouldBeEmpty()
@@ -143,7 +148,7 @@ class LaunchLatchConventionsTest : ShouldSpec() {
             LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(1, "fun.show"), LaunchLatchViolation(2, "show"))
         }
         should("report a show after the arrow of a lambda parameter") {
-            LaunchLatchConventions.violations("dialogs.forEach { dialog -> dialog.show() }") shouldBe
+            LaunchLatchConventions.violations("fun <T> open() = dialogs.forEach { dialog -> dialog.show() }") shouldBe
                 listOf(LaunchLatchViolation(1, "dialog.show"))
         }
         should("report a show on a line after a declaration header") {
