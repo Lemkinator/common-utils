@@ -34,7 +34,7 @@ class FakeSharedPreferencesTest : ShouldSpec(
 
         // Android's order of per-key notifications is undocumented; only the clear's null key comes first.
         fun notifiedClearThen(vararg keys: String) {
-            notifiedKeys.first() shouldBe null
+            notifiedKeys.take(1) shouldBe listOf(null)
             notifiedKeys.drop(1) shouldContainExactlyInAnyOrder keys.toList()
         }
 
