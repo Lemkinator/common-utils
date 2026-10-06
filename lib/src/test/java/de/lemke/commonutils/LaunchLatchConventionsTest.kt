@@ -104,6 +104,9 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 fun Context.startActivity(x: Int) = Unit
                 fun <T> Foo<T>.startActivity(x: T) = Unit
                 override fun show(manager: FragmentManager, tag: String?) = Unit
+                fun @receiver:Fancy Foo.show() = Unit
+                fun @A Foo.show() = Unit
+                fun <T> @A(1) @a.B T.showNow() = Unit
                 """.trimIndent()
 
             LaunchLatchConventions.violations(source).shouldBeEmpty()
@@ -118,6 +121,35 @@ class LaunchLatchConventionsTest : ShouldSpec() {
                 """.trimIndent()
 
             LaunchLatchConventions.violations(source).shouldBeEmpty()
+        }
+        should("accept declarations with a parenthesized or function type receiver") {
+            val source =
+                """
+                fun (() -> Unit).show() = Unit
+                fun ((Int) -> Unit)?.show() = Unit
+                fun <T> Foo<(T) -> Unit>.startActivity(x: T) = Unit
+                fun <T> T.showNow() = Unit
+                fun <T> show(x: T) = Unit
+                fun <T>
+                    ((T) -> Unit)
+                    .show() = Unit
+                fun interface X { fun show() }
+                """.trimIndent()
+
+            LaunchLatchConventions.violations(source).shouldBeEmpty()
+        }
+        should("report a show next to a backtick identifier named fun") {
+            val source =
+                """
+                `fun`.show()
+                dialog `fun` show()
+                """.trimIndent()
+
+            LaunchLatchConventions.violations(source) shouldBe listOf(LaunchLatchViolation(1, "fun.show"), LaunchLatchViolation(2, "show"))
+        }
+        should("report a show after the arrow of a lambda parameter") {
+            LaunchLatchConventions.violations("fun <T> open() = dialogs.forEach { dialog -> dialog.show() }") shouldBe
+                listOf(LaunchLatchViolation(1, "dialog.show"))
         }
         should("report a show on a line after a declaration header") {
             val source =
