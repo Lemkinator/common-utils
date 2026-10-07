@@ -15,10 +15,16 @@
  */
 package de.lemke.commonutils.data
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import androidx.picker.model.AppInfo
+import androidx.picker.model.AppInfoData
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.FAKE_LAUNCHER_APP
+import de.lemke.commonutils.registerFakeLauncherApp
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -33,6 +39,16 @@ import org.robolectric.annotation.Config
 abstract class PackageLookupContract {
     /** Returns a lookup on which exactly [installedPackage] is installed among the packages these tests query. */
     abstract fun createLookup(installedPackage: String): PackageLookup
+
+    /** Returns a lookup on which [FAKE_LAUNCHER_APP] is an installed launcher app. */
+    abstract fun createLookupWithLauncherApp(): PackageLookup
+
+    @Test
+    fun `installedApps lists an installed launcher app with its launcher activity`() =
+        runTest {
+            createLookupWithLauncherApp().installedApps().map { ComponentName(it.packageName, it.activityName) } shouldContain
+                FAKE_LAUNCHER_APP
+        }
 
     @Test
     fun `applicationInfo of an installed package carries its package name`() =
@@ -61,6 +77,12 @@ class DefaultPackageLookupContractTest : PackageLookupContract() {
         shadowOf(context.packageManager).installPackage(PackageInfo().also { it.packageName = installedPackage })
         return DefaultPackageLookup(context, UnconfinedTestDispatcher())
     }
+
+    override fun createLookupWithLauncherApp(): PackageLookup {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        registerFakeLauncherApp(context)
+        return DefaultPackageLookup(context, UnconfinedTestDispatcher())
+    }
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -68,4 +90,10 @@ class DefaultPackageLookupContractTest : PackageLookupContract() {
 class FakePackageLookupContractTest : PackageLookupContract() {
     override fun createLookup(installedPackage: String): PackageLookup =
         FakePackageLookup(ApplicationInfo().also { it.packageName = installedPackage })
+
+    override fun createLookupWithLauncherApp(): PackageLookup =
+        FakePackageLookup().apply {
+            installedAppsResult =
+                Result.success(listOf(AppInfoData(AppInfo(FAKE_LAUNCHER_APP.packageName, FAKE_LAUNCHER_APP.className))))
+        }
 }

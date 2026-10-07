@@ -18,6 +18,7 @@ package de.lemke.commonutils.data
 import android.content.Context
 import android.content.pm.PackageInfo
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.FAKE_LAUNCHER_APP
 import de.lemke.commonutils.HeldDispatcher
 import de.lemke.commonutils.registerFakeLauncherApp
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -50,12 +51,6 @@ class DefaultPackageLookupTest {
     }
 
     @Test
-    fun `installedApps includes the registered fake launcher app`() =
-        runTest {
-            unconfinedLookup().installedApps().map { it.packageName } shouldContain FAKE_LAUNCHER_PACKAGE
-        }
-
-    @Test
     fun `installedApps enumerates packages on the injected IO dispatcher`() =
         runTest {
             val io = HeldDispatcher()
@@ -66,7 +61,7 @@ class DefaultPackageLookupTest {
             io.held shouldHaveSize 1
 
             io.held.removeFirst().run()
-            apps.await().map { it.packageName } shouldContain FAKE_LAUNCHER_PACKAGE
+            apps.await().map { it.packageName } shouldContain FAKE_LAUNCHER_APP.packageName
         }
 
     @Test
@@ -114,6 +109,5 @@ class DefaultPackageLookupTest {
     private companion object {
         const val INSTALLED_PACKAGE = "com.example.installed"
         const val MISSING_PACKAGE = "com.example.missing"
-        const val FAKE_LAUNCHER_PACKAGE = "de.lemke.commonutils.fakeapp"
     }
 }
