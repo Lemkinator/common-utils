@@ -26,8 +26,11 @@ import kotlinx.coroutines.CompletableDeferred
  * result.
  */
 class FakeBitmapExporter : BitmapExporter {
-    /** The result of [saveToDirectory]. */
-    var directoryResult: BitmapSaveResult.DirectoryResult = BitmapSaveResult.Saved(SaveLocation.DOWNLOADS)
+    /**
+     * The result of [saveToDirectory] for a location that needs no picker; null returns [BitmapSaveResult.Saved] to that
+     * location. A location that [SaveLocation.needsPicker] always returns [BitmapSaveResult.NeedsPicker].
+     */
+    var directoryResult: BitmapSaveResult.DirectoryResult? = null
 
     /** The result of [saveToCreatedDocument] for a non-null bitmap. */
     var documentResult: BitmapSaveResult.UriResult = BitmapSaveResult.Saved(SaveLocation.CUSTOM)
@@ -54,7 +57,10 @@ class FakeBitmapExporter : BitmapExporter {
         location: SaveLocation,
         bitmap: Bitmap,
         fileName: String,
-    ): BitmapSaveResult.DirectoryResult = record(Call.SaveToDirectory(location, bitmap, fileName)) { directoryResult }
+    ): BitmapSaveResult.DirectoryResult =
+        record(Call.SaveToDirectory(location, bitmap, fileName)) {
+            if (location.needsPicker) BitmapSaveResult.NeedsPicker else directoryResult ?: BitmapSaveResult.Saved(location)
+        }
 
     override suspend fun saveToCreatedDocument(
         uri: Uri,

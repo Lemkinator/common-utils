@@ -74,6 +74,14 @@ class FakeBitmapExporterTest {
         }
 
     @Test
+    fun `saveToDirectory returns the configured result for a location that needs no picker`() =
+        runTest {
+            fake.directoryResult = BitmapSaveResult.WriteFailed
+
+            fake.saveToDirectory(SaveLocation.PICTURES, pngBitmap(), "QRCode") shouldBe BitmapSaveResult.WriteFailed
+        }
+
+    @Test
     fun `saveToCreatedDocument deletes the document for a configured result that is no Saved`() =
         runTest {
             fake.documentResult = BitmapSaveResult.EncodingFailed

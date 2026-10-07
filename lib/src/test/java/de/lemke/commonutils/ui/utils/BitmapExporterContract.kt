@@ -18,6 +18,7 @@ package de.lemke.commonutils.ui.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Environment
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.RecordingDocumentsProvider
 import de.lemke.commonutils.data.SaveLocation
@@ -43,6 +44,20 @@ abstract class BitmapExporterContract {
     abstract fun createdDocument(): Uri
 
     abstract fun deletedDocuments(): List<Uri>
+
+    @Test
+    fun `saveToDirectory to a location that needs the picker returns NeedsPicker`() =
+        runTest {
+            exporter().saveToDirectory(SaveLocation.CUSTOM, pngBitmap(), "test") shouldBe BitmapSaveResult.NeedsPicker
+        }
+
+    @Test
+    fun `saveToDirectory to a public directory returns Saved to that location`() =
+        runTest {
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).mkdirs()
+
+            exporter().saveToDirectory(SaveLocation.PICTURES, pngBitmap(), "test") shouldBe BitmapSaveResult.Saved(SaveLocation.PICTURES)
+        }
 
     @Test
     fun `saveToCreatedDocument with a null bitmap returns WriteFailed and deletes the document`() =
