@@ -23,10 +23,8 @@ import android.content.Intent
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Bundle
 import android.os.Environment
 import android.os.ParcelFileDescriptor
-import androidx.core.os.BundleCompat
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.ui.utils.BitmapSaveResult
@@ -59,12 +57,6 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
 private val bitmap: Bitmap get() = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-
-private const val DOCUMENTS_AUTHORITY = "de.lemke.documents"
-
-// The hidden DocumentsContract.METHOD_DELETE_DOCUMENT and EXTRA_URI that deleteDocument sends to the provider.
-private const val METHOD_DELETE_DOCUMENT = "android:deleteDocument"
-private const val EXTRA_DOCUMENT_URI = "uri"
 
 private val timestampedPng = Regex("""test_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}\.png""")
 
@@ -440,66 +432,7 @@ class ExportUtilsRobolectricTest {
             provider.deleted shouldContainExactly listOf(provider.uri)
         }
 
-    private fun documentProvider(): DocumentRecordingProvider =
-        Robolectric
-            .buildContentProvider(DocumentRecordingProvider::class.java)
-            .create(DOCUMENTS_AUTHORITY)
-            .get()
-            .apply { file = File(ctx.cacheDir, "document.png").also { it.createNewFile() } }
-}
-
-private class DocumentRecordingProvider : ContentProvider() {
-    lateinit var file: File
-    var deleteFailure: Exception? = null
-    val deleted = mutableListOf<Uri>()
-    val uri: Uri = Uri.parse("content://$DOCUMENTS_AUTHORITY/document/1")
-
-    override fun onCreate() = true
-
-    override fun call(
-        method: String,
-        arg: String?,
-        extras: Bundle?,
-    ): Bundle? {
-        if (method == METHOD_DELETE_DOCUMENT) {
-            deleted += BundleCompat.getParcelable(extras!!, EXTRA_DOCUMENT_URI, Uri::class.java)!!
-            deleteFailure?.let { throw it }
-        }
-        return null
-    }
-
-    override fun openFile(
-        uri: Uri,
-        mode: String,
-    ): ParcelFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.parseMode(mode))
-
-    override fun query(
-        uri: Uri,
-        projection: Array<out String>?,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-        sortOrder: String?,
-    ): Cursor? = null
-
-    override fun getType(uri: Uri): String? = null
-
-    override fun insert(
-        uri: Uri,
-        values: ContentValues?,
-    ): Uri? = null
-
-    override fun delete(
-        uri: Uri,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-    ) = 0
-
-    override fun update(
-        uri: Uri,
-        values: ContentValues?,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-    ) = 0
+    private fun documentProvider(): RecordingDocumentsProvider = RecordingDocumentsProvider.create(ctx)
 }
 
 private class NoFileContentProvider : ContentProvider() {
