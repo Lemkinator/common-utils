@@ -26,7 +26,6 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
@@ -74,38 +73,41 @@ sealed interface BitmapSaveResult {
 }
 
 /**
- * Launches the document picker through [activityResultLauncher] to create a PNG named after [filename].
+ * Launches the document picker through [activityResultLauncher] to create a PNG named after [filename]; a device
+ * without a picker shows the error toast and returns [LaunchOutcome.Failed].
  *
- * The launcher's callback writes the bitmap with [saveBitmapToUri].
- * @return true if the picker was launched.
+ * The launcher's callback writes the bitmap with [saveBitmapToUri]. A launch the latch drops returns
+ * [LaunchOutcome.Dropped], so the caller keeps its save pending until the activity resumes.
  */
 fun Fragment.exportBitmap(
     filename: String,
-    activityResultLauncher: ActivityResultLauncher<Intent>,
-): Boolean = requireContext().exportBitmap(filename, activityResultLauncher)
+    activityResultLauncher: SingleLaunchResultLauncher<Intent>,
+): LaunchOutcome = requireContext().exportBitmap(filename, activityResultLauncher)
 
 /**
- * Launches the document picker through [activityResultLauncher] to create a PNG named after [filename].
+ * Launches the document picker through [activityResultLauncher] to create a PNG named after [filename]; a device
+ * without a picker shows the error toast and returns [LaunchOutcome.Failed].
  *
- * The launcher's callback writes the bitmap with [saveBitmapToUri].
- * @return true if the picker was launched.
+ * The launcher's callback writes the bitmap with [saveBitmapToUri]. A launch the latch drops returns
+ * [LaunchOutcome.Dropped], so the caller keeps its save pending until the activity resumes.
  */
 fun Context.exportBitmap(
     filename: String,
-    activityResultLauncher: ActivityResultLauncher<Intent>,
-): Boolean =
+    activityResultLauncher: SingleLaunchResultLauncher<Intent>,
+): LaunchOutcome =
     try {
-        activityResultLauncher.launch(
-            Intent(ACTION_CREATE_DOCUMENT)
-                .addCategory(CATEGORY_OPENABLE)
-                .setType(MIME_TYPE_PNG)
-                .putExtra(EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG)),
-        )
-        true
+        val launched =
+            activityResultLauncher.tryLaunch(
+                Intent(ACTION_CREATE_DOCUMENT)
+                    .addCategory(CATEGORY_OPENABLE)
+                    .setType(MIME_TYPE_PNG)
+                    .putExtra(EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG)),
+            )
+        if (launched) LaunchOutcome.Started else LaunchOutcome.Dropped
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Error launching document picker", e)
         toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
-        false
+        LaunchOutcome.Failed
     }
 
 /**

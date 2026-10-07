@@ -37,7 +37,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
 import de.lemke.commonutils.ui.utils.BitmapShareFile
 import de.lemke.commonutils.ui.utils.CacheFileKind
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.createBitmapShareFile
+import de.lemke.commonutils.ui.utils.exportBitmap
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
 import de.lemke.commonutils.ui.utils.quickShareBitmap
 import de.lemke.commonutils.ui.utils.shareBitmap
@@ -283,7 +285,7 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
         runTest {
             val activity = resumed().get()
             val shareFile = activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png")
-            activity.shareBitmap(shareFile).shouldBeTrue()
+            activity.shareBitmap(shareFile) shouldBe LaunchOutcome.Started
             val pending = activity.cacheWriteFiles("share").single()
 
             activity.createBitmapShareFile(Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888), "shared.png") shouldBe
@@ -340,9 +342,31 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
         shadowOf(activity).clearNextStartedActivities()
         val shareFile = BitmapShareFile.Written(Uri.parse("content://de.lemke.commonutils.test.fileprovider/cache_root/share/shared.png"))
 
-        activity.shareBitmap(shareFile).shouldBeFalse()
-        activity.quickShareBitmap(shareFile).shouldBeFalse()
+        activity.shareBitmap(shareFile) shouldBe LaunchOutcome.Dropped
+        activity.quickShareBitmap(shareFile) shouldBe LaunchOutcome.Dropped
 
         shadowOf(activity).nextStartedActivity.shouldBeNull()
+    }
+
+    @Test
+    fun `leaving export picker launch drops`() {
+        val activity = resumed().get()
+        activity.launchScreen()
+        shadowOf(activity).clearNextStartedActivities()
+
+        activity.exportBitmap("test", activity.launcher) shouldBe LaunchOutcome.Dropped
+
+        shadowOf(activity).nextStartedActivityForResult.shouldBeNull()
+    }
+
+    @Test
+    fun `leaving result launcher reports the dropped launch`() {
+        val activity = resumed().get()
+        activity.launchScreen()
+        shadowOf(activity).clearNextStartedActivities()
+
+        activity.launcher.tryLaunch(Intent(activity, Activity::class.java)).shouldBeFalse()
+
+        shadowOf(activity).nextStartedActivityForResult.shouldBeNull()
     }
 }

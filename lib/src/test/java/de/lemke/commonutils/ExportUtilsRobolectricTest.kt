@@ -30,6 +30,7 @@ import androidx.core.os.BundleCompat
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.ui.utils.BitmapSaveResult
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.exportBitmap
 import de.lemke.commonutils.ui.utils.saveBitmapToDirectory
 import de.lemke.commonutils.ui.utils.saveBitmapToUri
@@ -80,7 +81,7 @@ class ExportUtilsRobolectricTest {
     fun `exportBitmap launches the document picker for a timestamped PNG`() {
         val launcher = RecordingIntentLauncher()
 
-        ctx.exportBitmap("test", launcher).shouldBeTrue()
+        ctx.exportBitmap("test", launcher) shouldBe LaunchOutcome.Started
 
         val intent = launcher.launched.single()
         intent.action shouldBe Intent.ACTION_CREATE_DOCUMENT
@@ -90,13 +91,23 @@ class ExportUtilsRobolectricTest {
     }
 
     @Test
-    fun `exportBitmap without a document picker shows the not-supported toast and returns false`() {
+    fun `exportBitmap without a document picker shows the not-supported toast and returns Failed`() {
         val launcher = RecordingIntentLauncher(ActivityNotFoundException("no picker"))
 
-        ctx.exportBitmap("test", launcher).shouldBeFalse()
+        ctx.exportBitmap("test", launcher) shouldBe LaunchOutcome.Failed
 
         launcher.launched.shouldBeEmpty()
         ShadowToast.getTextOfLatestToast() shouldBe "Error: Saving content is not supported on your device."
+    }
+
+    @Test
+    fun `exportBitmap whose launch the latch drops returns Dropped without a toast`() {
+        val launcher = RecordingIntentLauncher(admits = false)
+
+        ctx.exportBitmap("test", launcher) shouldBe LaunchOutcome.Dropped
+
+        launcher.launched.shouldBeEmpty()
+        ShadowToast.getLatestToast() shouldBe null
     }
 
     // ── saveBitmapToDirectory ─────────────────────────────────────────────────

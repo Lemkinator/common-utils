@@ -22,6 +22,7 @@ import androidx.core.os.ParcelCompat
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.domain.AppStartResult
 import de.lemke.commonutils.ui.activity.CommonUtilsOOBEActivity
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.Onboarding
 import de.lemke.commonutils.ui.utils.OnboardingContext
 import de.lemke.commonutils.ui.utils.advanceOnboarding
@@ -108,7 +109,7 @@ class OnboardingUtilsRobolectricTest {
     @Test
     fun `advanceOnboarding finishes activity when no onboarding context`() {
         val a = activity()
-        a.advanceOnboarding()
+        a.advanceOnboarding() shouldBe LaunchOutcome.Started
         a.isFinishing.shouldBeTrue()
     }
 
@@ -123,7 +124,7 @@ class OnboardingUtilsRobolectricTest {
                 .setup()
                 .track(destroyActivities)
                 .get()
-        a.advanceOnboarding()
+        a.advanceOnboarding() shouldBe LaunchOutcome.Started
         a.isFinishing.shouldBeTrue()
         // No new activity started for the next step (since not in chain, we finish early)
     }
@@ -142,7 +143,7 @@ class OnboardingUtilsRobolectricTest {
                 .setup()
                 .track(destroyActivities)
                 .get()
-        a.advanceOnboarding()
+        a.advanceOnboarding() shouldBe LaunchOutcome.Started
         // Should have started the main activity and finished
         shadowOf(a).nextStartedActivity shouldNotBe null
         a.isFinishing.shouldBeTrue()
@@ -187,7 +188,7 @@ class OnboardingUtilsRobolectricTest {
                 .setup()
                 .track(destroyActivities)
                 .get()
-        a.advanceOnboarding()
+        a.advanceOnboarding() shouldBe LaunchOutcome.Started
         shadowOf(a).nextStartedActivity shouldNotBe null
         a.isFinishing.shouldBeTrue()
     }
@@ -217,7 +218,7 @@ class OnboardingUtilsRobolectricTest {
         val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
         val a = appCompatActivity(intent)
 
-        a.advanceOnboarding()
+        a.advanceOnboarding() shouldBe LaunchOutcome.Started
 
         shadowOf(a).nextStartedActivity.component?.className shouldBe Activity::class.java.name
         a.isFinishing.shouldBeTrue()
@@ -232,7 +233,7 @@ class OnboardingUtilsRobolectricTest {
         a.singleLaunchActivity(Intent(a, Activity::class.java)).shouldBeTrue()
         shadowOf(a).nextStartedActivity
 
-        a.advanceOnboarding()
+        a.advanceOnboarding() shouldBe LaunchOutcome.Dropped
 
         shadowOf(a).nextStartedActivity shouldBe null
         a.isFinishing.shouldBeFalse()

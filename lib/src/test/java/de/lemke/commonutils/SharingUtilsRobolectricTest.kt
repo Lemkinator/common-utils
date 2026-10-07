@@ -33,6 +33,7 @@ import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.BitmapShareFile
 import de.lemke.commonutils.ui.utils.CACHE_WRITE_RETENTION
 import de.lemke.commonutils.ui.utils.CacheFileKind
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.createBitmapClip
 import de.lemke.commonutils.ui.utils.createBitmapShareFile
@@ -107,8 +108,9 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `empty file list share returns false`() {
-        emptyList<File>().share(ctx).shouldBeFalse()
+    fun `empty file list share shows the share toast and returns Failed`() {
+        emptyList<File>().share(ctx) shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: Sharing content is not supported on your device."
     }
 
     @Test
@@ -122,13 +124,13 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `shareText from activity returns true`() {
-        activity().shareText("some text", "title").shouldBeTrue()
+    fun `shareText from activity returns Started`() {
+        activity().shareText("some text", "title") shouldBe LaunchOutcome.Started
     }
 
     @Test
-    fun `shareText with null title returns true`() {
-        activity().shareText("some text").shouldBeTrue()
+    fun `shareText with null title returns Started`() {
+        activity().shareText("some text") shouldBe LaunchOutcome.Started
     }
 
     @Test
@@ -142,12 +144,12 @@ class SharingUtilsRobolectricTest {
                     .get(),
             )
         every { a.startActivity(any<android.content.Intent>()) } throws ActivityNotFoundException("no share")
-        a.shareText("hello", "Test title").shouldBeFalse()
+        a.shareText("hello", "Test title") shouldBe LaunchOutcome.Failed
     }
 
     @Test
-    fun `shareApp from activity returns true`() {
-        activity().shareApp().shouldBeTrue()
+    fun `shareApp from activity returns Started`() {
+        activity().shareApp() shouldBe LaunchOutcome.Started
     }
 
     @Test
@@ -161,7 +163,7 @@ class SharingUtilsRobolectricTest {
                     .get(),
             )
         every { a.startActivity(any<android.content.Intent>()) } throws ActivityNotFoundException("no handler")
-        a.shareApp().shouldBeFalse()
+        a.shareApp() shouldBe LaunchOutcome.Failed
     }
 
     @Test
@@ -489,7 +491,7 @@ class SharingUtilsBitmapRobolectricTest {
         runTest {
             val act = activity()
             val shareFile = act.createBitmapShareFile(bitmapWriting("share"), "test.png")
-            act.shareBitmap(shareFile).shouldBeTrue()
+            act.shareBitmap(shareFile) shouldBe LaunchOutcome.Started
             val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
 
             ctx.createBitmapClip(bitmapWriting("clipboard"), "label", "test.png").shouldNotBeNull()
@@ -611,7 +613,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `createBitmapShareFile outside an input keeps a pending share's bytes`() =
         runTest {
             val act = activity()
-            act.shareBitmap(act.createBitmapShareFile(bitmapWriting("pending"), "test.png")).shouldBeTrue()
+            act.shareBitmap(act.createBitmapShareFile(bitmapWriting("pending"), "test.png")) shouldBe LaunchOutcome.Started
             val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
 
             val later = ctx.createBitmapShareFile(bitmapWriting("later"), "test.png").shouldBeInstanceOf<BitmapShareFile.Written>().uri
@@ -624,7 +626,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `createBitmapShareFile deletes writes older than the retention and keeps a pending share's file`() =
         runTest {
             val act = activity()
-            act.shareBitmap(act.createBitmapShareFile(bitmapWriting("pending"), "test.png")).shouldBeTrue()
+            act.shareBitmap(act.createBitmapShareFile(bitmapWriting("pending"), "test.png")) shouldBe LaunchOutcome.Started
             val pendingUri = Uri.parse(act.startedChooserTarget().streamUri())
             val expired = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).root
             File(expired, "test.png").writeText("expired")
@@ -713,7 +715,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `shareBitmap sends the content uri with read permission through a chooser`() {
         val act = activity()
 
-        act.shareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))).shouldBeTrue()
+        act.shareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))) shouldBe LaunchOutcome.Started
 
         val target = act.startedChooserTarget()
         target.action shouldBe Intent.ACTION_SEND
@@ -731,7 +733,8 @@ class SharingUtilsBitmapRobolectricTest {
     fun `shareBitmap with shareText includes the text extra`() {
         val act = activity()
 
-        act.shareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png")), "optional text").shouldBeTrue()
+        act.shareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png")), "optional text") shouldBe
+            LaunchOutcome.Started
 
         act.startedChooserTarget().getStringExtra(Intent.EXTRA_TEXT) shouldBe "optional text"
     }
@@ -740,7 +743,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `shareBitmap with a failed file shows the share toast and starts nothing`() {
         val act = activity()
 
-        act.shareBitmap(BitmapShareFile.Failed).shouldBeFalse()
+        act.shareBitmap(BitmapShareFile.Failed) shouldBe LaunchOutcome.Failed
 
         latestToastIsShareNotSupported()
         shadowOf(act).nextStartedActivity shouldBe null
@@ -750,17 +753,17 @@ class SharingUtilsBitmapRobolectricTest {
     fun `shareBitmap with a dropped file starts nothing and shows no toast`() {
         val act = activity()
 
-        act.shareBitmap(BitmapShareFile.Dropped).shouldBeFalse()
+        act.shareBitmap(BitmapShareFile.Dropped) shouldBe LaunchOutcome.Dropped
 
         ShadowToast.shownToastCount() shouldBe 0
         shadowOf(act).nextStartedActivity shouldBe null
     }
 
     @Test
-    fun `shareBitmap SecurityException from startActivity shows the share toast and returns false`() {
+    fun `shareBitmap SecurityException from startActivity shows the share toast and returns Failed`() {
         val failing = StartActivityFailingContext(ctx, SecurityException("chooser denied"))
 
-        failing.shareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))).shouldBeFalse()
+        failing.shareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))) shouldBe LaunchOutcome.Failed
 
         failing.startedIntents.single().action shouldBe Intent.ACTION_CHOOSER
         latestToastIsShareNotSupported()
@@ -772,7 +775,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `quickShareBitmap without Quick Share sends the content uri with read permission`() {
         val act = activity()
 
-        act.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))).shouldBeTrue()
+        act.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))) shouldBe LaunchOutcome.Started
 
         val intent = shadowOf(act).nextStartedActivity.shouldNotBeNull()
         intent.action shouldBe Intent.ACTION_SEND
@@ -787,7 +790,7 @@ class SharingUtilsBitmapRobolectricTest {
         installQuickShare()
         val act = activity()
 
-        act.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))).shouldBeTrue()
+        act.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))) shouldBe LaunchOutcome.Started
 
         val intent = shadowOf(act).nextStartedActivity.shouldNotBeNull()
         intent.`package` shouldBe "com.samsung.android.app.sharelive"
@@ -798,7 +801,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `quickShareBitmap with a failed file shows the share toast and starts nothing`() {
         val act = activity()
 
-        act.quickShareBitmap(BitmapShareFile.Failed).shouldBeFalse()
+        act.quickShareBitmap(BitmapShareFile.Failed) shouldBe LaunchOutcome.Failed
 
         latestToastIsShareNotSupported()
         shadowOf(act).nextStartedActivity shouldBe null
@@ -808,18 +811,18 @@ class SharingUtilsBitmapRobolectricTest {
     fun `quickShareBitmap with a dropped file starts nothing and shows no toast`() {
         val act = activity()
 
-        act.quickShareBitmap(BitmapShareFile.Dropped).shouldBeFalse()
+        act.quickShareBitmap(BitmapShareFile.Dropped) shouldBe LaunchOutcome.Dropped
 
         ShadowToast.shownToastCount() shouldBe 0
         shadowOf(act).nextStartedActivity shouldBe null
     }
 
     @Test
-    fun `quickShareBitmap SecurityException from the explicit Quick Share start shows the share toast and returns false`() {
+    fun `quickShareBitmap SecurityException from the explicit Quick Share start shows the share toast and returns Failed`() {
         installQuickShare()
         val failing = StartActivityFailingContext(ctx, SecurityException("Quick Share activity not exported"))
 
-        failing.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))).shouldBeFalse()
+        failing.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))) shouldBe LaunchOutcome.Failed
 
         failing.startedIntents.single().`package` shouldBe "com.samsung.android.app.sharelive"
         latestToastIsShareNotSupported()
@@ -830,7 +833,7 @@ class SharingUtilsBitmapRobolectricTest {
         installQuickShare()
         val failing = StartActivityFailingContext(ctx, ActivityNotFoundException("no handler"))
 
-        failing.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))).shouldBeFalse()
+        failing.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))) shouldBe LaunchOutcome.Failed
 
         failing.startedIntents.map { it.`package` } shouldContainExactly listOf("com.samsung.android.app.sharelive", null)
         latestToastIsShareNotSupported()
@@ -839,29 +842,29 @@ class SharingUtilsBitmapRobolectricTest {
     // ── File / List<File>.share ──────────────────────────────────────────────────
 
     @Test
-    fun `single File share - sends the file's content uri with read permission and returns true`() {
+    fun `single File share - sends the file's content uri with read permission and returns Started`() {
         val act = activity()
         val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
-        file.share(act).shouldBeTrue()
+        file.share(act) shouldBe LaunchOutcome.Started
         val target = act.startedChooserTarget()
         target.streamUri() shouldBe "$CACHE_ROOT_URI/img.png"
         target.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
 
     @Test
-    fun `single-element List share - uses ACTION_SEND and returns true`() {
+    fun `single-element List share - uses ACTION_SEND and returns Started`() {
         val act = activity()
         val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
-        listOf(file).share(act).shouldBeTrue()
+        listOf(file).share(act) shouldBe LaunchOutcome.Started
         act.startedChooserTarget().action shouldBe Intent.ACTION_SEND
     }
 
     @Test
-    fun `multi-element List share - sends every content uri with ACTION_SEND_MULTIPLE and returns true`() {
+    fun `multi-element List share - sends every content uri with ACTION_SEND_MULTIPLE and returns Started`() {
         val act = activity()
         val f1 = File(act.cacheDir, "img1.png").also { it.createNewFile() }
         val f2 = File(act.cacheDir, "img2.png").also { it.createNewFile() }
-        listOf(f1, f2).share(act).shouldBeTrue()
+        listOf(f1, f2).share(act) shouldBe LaunchOutcome.Started
         val target = act.startedChooserTarget()
         target.action shouldBe Intent.ACTION_SEND_MULTIPLE
         IntentCompat.getParcelableArrayListExtra(target, Intent.EXTRA_STREAM, Uri::class.java)?.map(Uri::toString) shouldBe
@@ -870,25 +873,25 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
-    fun `List share of a file outside every configured root - exception caught, returns false`() {
+    fun `List share of a file outside every configured root - exception caught, returns Failed`() {
         val act = activity()
         val outside = File(act.dataDir, "outside.png").also { it.createNewFile() }
-        outside.share(act).shouldBeFalse()
+        outside.share(act) shouldBe LaunchOutcome.Failed
         shadowOf(act).nextStartedActivity shouldBe null
         latestToastIsShareNotSupported()
     }
 
     @Test
-    fun `List share SecurityException from startActivity shows the share toast and returns false`() {
+    fun `List share SecurityException from startActivity shows the share toast and returns Failed`() {
         val failing = StartActivityFailingContext(ctx, SecurityException("chooser denied"))
         val file = File(ctx.cacheDir, "img.png").also { it.createNewFile() }
-        listOf(file).share(failing).shouldBeFalse()
+        listOf(file).share(failing) shouldBe LaunchOutcome.Failed
         failing.startedIntents.single().action shouldBe Intent.ACTION_CHOOSER
         latestToastIsShareNotSupported()
     }
 
     @Test
-    fun `File share ActivityNotFoundException returns false`() {
+    fun `File share ActivityNotFoundException returns Failed`() {
         val a =
             spyk(
                 Robolectric
@@ -899,7 +902,7 @@ class SharingUtilsBitmapRobolectricTest {
             )
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no handler")
         val file = File(a.cacheDir, "img.png").also { it.createNewFile() }
-        file.share(a).shouldBeFalse()
+        file.share(a) shouldBe LaunchOutcome.Failed
     }
 
     @Test
@@ -916,7 +919,7 @@ class SharingUtilsBitmapRobolectricTest {
         val intentSlot = slot<Intent>()
         every { a.startActivity(capture(intentSlot)) } just Runs
         val file = File(a.cacheDir, "img.png").also { it.createNewFile() }
-        file.share(a).shouldBeTrue()
+        file.share(a) shouldBe LaunchOutcome.Started
         intentSlot.captured.action shouldBe Intent.ACTION_CHOOSER
     }
 
@@ -948,7 +951,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `Fragment shareBitmap starts the chooser from the fragment's activity`() {
         val fragment = attachedFragment()
 
-        fragment.shareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))).shouldBeTrue()
+        fragment.shareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))) shouldBe LaunchOutcome.Started
 
         fragment.requireActivity().startedChooserTarget().streamUri() shouldBe "$CACHE_ROOT_URI/share/test.png"
     }
@@ -957,7 +960,7 @@ class SharingUtilsBitmapRobolectricTest {
     fun `Fragment quickShareBitmap starts the share from the fragment's activity`() {
         val fragment = attachedFragment()
 
-        fragment.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))).shouldBeTrue()
+        fragment.quickShareBitmap(BitmapShareFile.Written(Uri.parse("$CACHE_ROOT_URI/share/test.png"))) shouldBe LaunchOutcome.Started
 
         shadowOf(fragment.requireActivity()).nextStartedActivity.shouldNotBeNull().streamUri() shouldBe
             "$CACHE_ROOT_URI/share/test.png"
@@ -965,17 +968,17 @@ class SharingUtilsBitmapRobolectricTest {
 
     @Test
     fun `Fragment shareText delegates to Context shareText`() {
-        attachedFragment().shareText("hello from fragment", "fragment title").shouldBeTrue()
+        attachedFragment().shareText("hello from fragment", "fragment title") shouldBe LaunchOutcome.Started
     }
 
     @Test
     fun `Fragment shareText without title covers default-param synthetic`() {
-        attachedFragment().shareText("hello from fragment").shouldBeTrue()
+        attachedFragment().shareText("hello from fragment") shouldBe LaunchOutcome.Started
     }
 
     @Test
     fun `Fragment shareApp delegates to Context shareApp`() {
-        attachedFragment().shareApp().shouldBeTrue()
+        attachedFragment().shareApp() shouldBe LaunchOutcome.Started
     }
 }
 

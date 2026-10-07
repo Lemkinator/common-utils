@@ -163,7 +163,8 @@ finish-then-start-next (`OnboardingUtils.kt`):
   when it launched OOBE. `allowSkip` (gated by the app) honors `EXTRA_SKIP_ONBOARDING`
   for benchmarks.
 - `advanceOnboarding()` — a step calls this when done; starts the next step or, past the
-  last, commits `acceptedTosVersion` and starts the main activity.
+  last, commits `acceptedTosVersion` and starts the main activity. Returns a `LaunchOutcome`:
+  on `Dropped` the step stays open and restores its controls.
 - `isOnboardingStep()` — for dual-context steps (also reachable standalone).
 
 Why: each step is task root ⇒ predictive back = app exit, no main behind. Redirect

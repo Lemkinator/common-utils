@@ -30,6 +30,7 @@ import androidx.core.view.isVisible
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityOobeBinding
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.advanceOnboarding
 import de.lemke.commonutils.ui.utils.onboardingContext
 import de.lemke.commonutils.ui.utils.overrideFadeOpenTransition
@@ -94,13 +95,17 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
         binding.oobeIntroFooterButton.setOnClickListener {
             singleLaunchSuspending(
                 work = {
-                    binding.oobeIntroFooterTosText.isEnabled = false
-                    binding.oobeIntroFooterButton.isVisible = false
-                    binding.oobeIntroFooterButtonProgress.isVisible = true
+                    showProceeding(true)
                     delay(PROCEED_DELAY_MS.milliseconds)
                 },
-            ) { advanceOnboarding() }
+            ) { if (advanceOnboarding() != LaunchOutcome.Started) showProceeding(false) }
         }
+    }
+
+    private fun showProceeding(proceeding: Boolean) {
+        binding.oobeIntroFooterTosText.isEnabled = !proceeding
+        binding.oobeIntroFooterButton.isVisible = !proceeding
+        binding.oobeIntroFooterButtonProgress.isVisible = proceeding
     }
 
     companion object {
