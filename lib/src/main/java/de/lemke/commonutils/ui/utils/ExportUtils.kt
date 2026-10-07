@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils.ui.utils
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -26,6 +27,7 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.util.Log
+import androidx.activity.result.ActivityResult
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
@@ -70,6 +72,30 @@ sealed interface BitmapSaveResult {
 
     /** No failure: the user canceled the document picker, so there is nothing to save or show. */
     data object Canceled : UriResult
+}
+
+/** The result of the `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] launches; see [toDocumentPick]. */
+sealed interface DocumentPick {
+    /** The picker created the document at [uri]; pass it to [saveBitmapToUri] with `createdDocument = true`. */
+    data class Created(
+        val uri: Uri,
+    ) : DocumentPick
+
+    /** The picker reported success without a document URI, so the save fails with [BitmapSaveResult.WriteFailed]. */
+    data object MissingUri : DocumentPick
+
+    /** The user canceled the picker, so there is nothing to save or show. */
+    data object Canceled : DocumentPick
+}
+
+/** Reads this result of the picker that [exportBitmap] launches as a [DocumentPick]. */
+fun ActivityResult.toDocumentPick(): DocumentPick {
+    val uri = data?.data
+    return when {
+        resultCode != Activity.RESULT_OK -> DocumentPick.Canceled
+        uri == null -> DocumentPick.MissingUri
+        else -> DocumentPick.Created(uri)
+    }
 }
 
 /**

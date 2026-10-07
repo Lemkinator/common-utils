@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ContentProvider
 import android.content.ContentValues
@@ -25,13 +26,16 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
 import android.os.ParcelFileDescriptor
+import androidx.activity.result.ActivityResult
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.ui.utils.BitmapSaveResult
+import de.lemke.commonutils.ui.utils.DocumentPick
 import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.exportBitmap
 import de.lemke.commonutils.ui.utils.saveBitmapToDirectory
 import de.lemke.commonutils.ui.utils.saveBitmapToUri
+import de.lemke.commonutils.ui.utils.toDocumentPick
 import de.lemke.commonutils.ui.utils.toast
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -100,6 +104,32 @@ class ExportUtilsRobolectricTest {
 
         launcher.launched.shouldBeEmpty()
         ShadowToast.getLatestToast() shouldBe null
+    }
+
+    // ── toDocumentPick ────────────────────────────────────────────────────────
+
+    @Test
+    fun `toDocumentPick of an OK result with a uri is Created with that uri`() {
+        val uri = Uri.parse("content://de.lemke.commonutils.test.documents/document/1")
+
+        ActivityResult(Activity.RESULT_OK, Intent().setData(uri)).toDocumentPick() shouldBe DocumentPick.Created(uri)
+    }
+
+    @Test
+    fun `toDocumentPick of an OK result without a uri is MissingUri`() {
+        ActivityResult(Activity.RESULT_OK, Intent()).toDocumentPick() shouldBe DocumentPick.MissingUri
+    }
+
+    @Test
+    fun `toDocumentPick of an OK result without data is MissingUri`() {
+        ActivityResult(Activity.RESULT_OK, null).toDocumentPick() shouldBe DocumentPick.MissingUri
+    }
+
+    @Test
+    fun `toDocumentPick of a canceled result is Canceled even with a uri`() {
+        val uri = Uri.parse("content://de.lemke.commonutils.test.documents/document/1")
+
+        ActivityResult(Activity.RESULT_CANCELED, Intent().setData(uri)).toDocumentPick() shouldBe DocumentPick.Canceled
     }
 
     // ── saveBitmapToDirectory ─────────────────────────────────────────────────
