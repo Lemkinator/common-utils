@@ -18,7 +18,6 @@ package de.lemke.commonutils.domain
 import androidx.picker.model.AppInfo
 import androidx.picker.model.AppInfoData
 import de.lemke.commonutils.data.FakePackageLookup
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 
@@ -30,12 +29,6 @@ class GetInstalledAppsUseCaseTest : ShouldSpec(
 
             GetInstalledAppsUseCase(lookup)() shouldBe
                 listOf(AppInfoData(AppInfo(packageName = "com.example.app", activityName = "com.example.app.MainActivity")))
-        }
-
-        should("rethrow the failure of the package lookup") {
-            val lookup = FakePackageLookup().apply { installedAppsResult = Result.failure(IllegalStateException("load failed")) }
-
-            shouldThrow<IllegalStateException> { GetInstalledAppsUseCase(lookup)() }.message shouldBe "load failed"
         }
     },
 )

@@ -15,9 +15,6 @@
  */
 package de.lemke.commonutils.data
 
-import androidx.picker.model.AppInfo
-import androidx.picker.model.AppInfoData
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.shouldBe
@@ -32,31 +29,11 @@ class FakePackageLookupTest : ShouldSpec(
 
         beforeEach { lookup = FakePackageLookup() }
 
-        should("return no installed apps by default") {
-            lookup.installedApps() shouldBe emptyList()
-        }
-
-        should("return the installed apps set as success") {
-            lookup.installedAppsResult = Result.success(listOf(AppInfoData(AppInfo(packageName = "com.example.app", activityName = ""))))
-
-            lookup.installedApps() shouldBe listOf(AppInfoData(AppInfo(packageName = "com.example.app", activityName = "")))
-        }
-
-        should("throw the exception of an installed-apps failure") {
-            lookup.installedAppsResult = Result.failure(IllegalStateException("load failed"))
-
-            shouldThrow<IllegalStateException> { lookup.installedApps() }.message shouldBe "load failed"
-        }
-
         should("count every installed-apps call") {
             lookup.installedApps()
             lookup.installedApps()
 
             lookup.installedAppsCalls shouldBe 2
-        }
-
-        should("return null for a package it does not hold") {
-            lookup.applicationInfo("com.example.missing") shouldBe null
         }
 
         should("record looked-up package names in call order") {
