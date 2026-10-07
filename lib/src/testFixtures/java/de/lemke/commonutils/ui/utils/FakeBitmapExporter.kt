@@ -45,10 +45,10 @@ class FakeBitmapExporter : BitmapExporter {
     private val deletedUris = mutableListOf<Uri>()
 
     /** Every call in order, recorded before it waits for [gate]. */
-    val calls: List<Call> get() = recordedCalls
+    val calls: List<Call> get() = recordedCalls.toList()
 
     /** The documents that [saveToCreatedDocument] deleted, since its result was no [BitmapSaveResult.Saved]. */
-    val deletedDocuments: List<Uri> get() = deletedUris
+    val deletedDocuments: List<Uri> get() = deletedUris.toList()
 
     override suspend fun saveToDirectory(
         location: SaveLocation,
