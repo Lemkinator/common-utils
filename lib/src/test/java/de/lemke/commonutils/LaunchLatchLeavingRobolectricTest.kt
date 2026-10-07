@@ -369,4 +369,15 @@ class LaunchLatchLeavingRobolectricTest : LaunchLatchRobolectricTest() {
 
         shadowOf(activity).nextStartedActivityForResult.shouldBeNull()
     }
+
+    @Test
+    fun `leaving result launcher launches once the timer settles idle`() {
+        val activity = resumed().get()
+        activity.launchScreen()
+        shadowLooper.idleFor(Duration.ofSeconds(1))
+
+        activity.launcher.tryLaunch(Intent(activity, Activity::class.java)).shouldBeTrue()
+
+        shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull()
+    }
 }
