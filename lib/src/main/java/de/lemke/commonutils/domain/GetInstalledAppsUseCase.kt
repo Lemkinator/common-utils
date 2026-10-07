@@ -15,26 +15,18 @@
  */
 package de.lemke.commonutils.domain
 
-import android.content.Context
-import androidx.picker.helper.SeslAppInfoDataHelper
-import androidx.picker.model.AppData.GridAppDataBuilder
 import androidx.picker.model.AppInfoData
-import dagger.hilt.android.qualifiers.ApplicationContext
-import de.lemke.commonutils.di.IoDispatcher
+import de.lemke.commonutils.data.PackageLookup
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 
 /**
- * Returns installed apps ready for a `SeslAppPickerGridView`, as an injectable seam apps can substitute in tests.
+ * Returns installed apps ready for a `SeslAppPickerGridView`, read through [packageLookup].
  * Callers rendering through `AppPickerStrategy` get the sub-label shaping applied there, not here.
  *
- * [invoke] enumerates packages on its injected IO dispatcher, so callers may invoke it from the main thread.
+ * [invoke] is main-safe, as every [PackageLookup] is.
  */
 class GetInstalledAppsUseCase @Inject constructor(
-    @param:ApplicationContext private val context: Context,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val packageLookup: PackageLookup,
 ) {
-    suspend operator fun invoke(): List<AppInfoData> =
-        withContext(ioDispatcher) { SeslAppInfoDataHelper(context, GridAppDataBuilder::class.java).getPackages() }
+    suspend operator fun invoke(): List<AppInfoData> = packageLookup.installedApps()
 }
