@@ -145,7 +145,8 @@ bindings into consumer DI graphs uninvited. Each consumer app declares its own
 
 Releases are a manual owner step. A push to main that changes the
 `common-utils` version in `gradle/libs.versions.toml` publishes.
-Agents never bump the version or release.
+Agents never bump the version or release. Every release bumps only the patch
+number, breaking changes included.
 
 ## First-Run Flow
 
