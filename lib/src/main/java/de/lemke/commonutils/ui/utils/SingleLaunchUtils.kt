@@ -419,7 +419,7 @@ fun <I, O> Fragment.registerForSingleLaunchResult(
 
 /** A result launcher that reports whether a launch ran or the launch latch dropped it; see [registerForSingleLaunchResult]. */
 abstract class SingleLaunchResultLauncher<I> : ActivityResultLauncher<I>() {
-    override fun launch(
+    final override fun launch(
         input: I,
         options: ActivityOptionsCompat?,
     ) {
