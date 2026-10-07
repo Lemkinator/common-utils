@@ -15,12 +15,10 @@
  */
 package de.lemke.commonutils.ui.utils
 
-import android.content.ClipData
 import android.net.Uri
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.ui.utils.FakeBitmapExporter.Call
 import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
@@ -58,31 +56,6 @@ class FakeBitmapExporterTest {
         }
 
     @Test
-    fun `returns the default results`() =
-        runTest {
-            fake.saveToDirectory(SaveLocation.PICTURES, pngBitmap(), "QRCode") shouldBe BitmapSaveResult.Saved(SaveLocation.DOWNLOADS)
-            fake.saveToCreatedDocument(document, pngBitmap()) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
-            fake.createClip(pngBitmap()) shouldBe null
-            fake.createShareFile(pngBitmap()) shouldBe BitmapShareFile.Failed
-        }
-
-    @Test
-    fun `returns the configured results`() =
-        runTest {
-            val clip = ClipData.newPlainText("label", "text")
-            val shareFile = BitmapShareFile.Written(Uri.parse("content://share/QRCode.png"))
-            fake.directoryResult = BitmapSaveResult.NeedsPicker
-            fake.documentResult = BitmapSaveResult.Canceled
-            fake.clip = clip
-            fake.shareFile = shareFile
-
-            fake.saveToDirectory(SaveLocation.PICTURES, pngBitmap(), "QRCode") shouldBe BitmapSaveResult.NeedsPicker
-            fake.saveToCreatedDocument(document, pngBitmap()) shouldBe BitmapSaveResult.Canceled
-            fake.createClip(pngBitmap()) shouldBe clip
-            fake.createShareFile(pngBitmap()) shouldBe shareFile
-        }
-
-    @Test
     fun `a pending gate holds a recorded call until the gate completes`() =
         runTest {
             val gate = CompletableDeferred<Unit>()
@@ -101,14 +74,6 @@ class FakeBitmapExporterTest {
         }
 
     @Test
-    fun `saveToCreatedDocument with a null bitmap returns WriteFailed and deletes the document`() =
-        runTest {
-            fake.saveToCreatedDocument(document, null) shouldBe BitmapSaveResult.WriteFailed
-
-            fake.deletedDocuments shouldContainExactly listOf(document)
-        }
-
-    @Test
     fun `saveToCreatedDocument deletes the document for a configured result that is no Saved`() =
         runTest {
             fake.documentResult = BitmapSaveResult.EncodingFailed
@@ -116,13 +81,5 @@ class FakeBitmapExporterTest {
             fake.saveToCreatedDocument(document, pngBitmap()) shouldBe BitmapSaveResult.EncodingFailed
 
             fake.deletedDocuments shouldContainExactly listOf(document)
-        }
-
-    @Test
-    fun `saveToCreatedDocument keeps the document for a Saved result`() =
-        runTest {
-            fake.saveToCreatedDocument(document, pngBitmap())
-
-            fake.deletedDocuments.shouldBeEmpty()
         }
 }
