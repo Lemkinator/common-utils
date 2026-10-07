@@ -30,14 +30,18 @@ import java.io.File
 private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
 
-/** Shares this image file via the system share sheet. */
-fun File.share(context: Context): Boolean = listOf(this).share(context)
+/** Shares this image file via the system share sheet; a failure shows the error toast. */
+fun File.share(context: Context): LaunchOutcome = listOf(this).share(context)
 
-/** Shares all image files in this list via the system share sheet (multi-file if more than one). */
-fun List<File>.share(context: Context): Boolean {
+/**
+ * Shares all image files in this list via the system share sheet (multi-file if more than one); a failure, also an
+ * empty list, shows the error toast.
+ */
+fun List<File>.share(context: Context): LaunchOutcome {
     if (isEmpty()) {
         Log.e(TAG, "No file to share.")
-        return false
+        context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        return LaunchOutcome.Failed
     }
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
@@ -59,7 +63,7 @@ fun List<File>.share(context: Context): Boolean {
     } catch (e: Exception) {
         Log.e(TAG, "Error sharing files", e)
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        false
+        LaunchOutcome.Failed
     }
 }
 

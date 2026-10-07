@@ -20,8 +20,8 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.os.FileUriExposedException
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.openURL
-import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import org.junit.Rule
@@ -41,54 +41,53 @@ class URLUtilsRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `openURL returns false for null URL`() {
-        ctx.openURL(null).shouldBeFalse()
+    fun `openURL returns Failed for null URL`() {
+        ctx.openURL(null) shouldBe LaunchOutcome.Failed
     }
 
     @Test
-    fun `openURL returns false for blank URL`() {
-        ctx.openURL("   ").shouldBeFalse()
+    fun `openURL returns Failed for blank URL`() {
+        ctx.openURL("   ") shouldBe LaunchOutcome.Failed
     }
 
     @Test
-    fun `openURL returns false for empty URL`() {
-        ctx.openURL("").shouldBeFalse()
+    fun `openURL returns Failed for empty URL`() {
+        ctx.openURL("") shouldBe LaunchOutcome.Failed
     }
 
     @Test
-    fun `openURL returns true for valid URL from Activity context`() {
+    fun `openURL returns Started for valid URL from Activity context`() {
         Robolectric
             .buildActivity(Activity::class.java)
             .setup()
             .track(destroyActivities)
             .get()
-            .openURL("https://example.com")
-            .shouldBeTrue()
+            .openURL("https://example.com") shouldBe LaunchOutcome.Started
     }
 
     @Test
-    fun `openURL returns true for valid URL from Application context`() {
-        ctx.openURL("https://example.com").shouldBeTrue()
+    fun `openURL returns Started for valid URL from Application context`() {
+        ctx.openURL("https://example.com") shouldBe LaunchOutcome.Started
     }
 
     @Test
-    fun `openURL returns false when startActivity throws ActivityNotFoundException`() {
+    fun `openURL returns Failed when startActivity throws ActivityNotFoundException`() {
         val failing = StartActivityFailingContext(ctx, ActivityNotFoundException("no browser"))
-        failing.openURL("https://example.com").shouldBeFalse()
+        failing.openURL("https://example.com") shouldBe LaunchOutcome.Failed
         ShadowToast.getTextOfLatestToast() shouldBe "No browser app installed…"
     }
 
     @Test
-    fun `openURL returns false when startActivity throws SecurityException`() {
+    fun `openURL returns Failed when startActivity throws SecurityException`() {
         val failing = StartActivityFailingContext(ctx, SecurityException("not exported"))
-        failing.openURL("https://example.com").shouldBeFalse()
+        failing.openURL("https://example.com") shouldBe LaunchOutcome.Failed
         ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 
     @Test
     fun `openURL of a file URL shows the cant-open toast when startActivity throws FileUriExposedException`() {
         val failing = StartActivityFailingContext(ctx, FileUriExposedException("file:///sdcard/page.html exposed beyond app"))
-        failing.openURL("file:///sdcard/page.html").shouldBeFalse()
+        failing.openURL("file:///sdcard/page.html") shouldBe LaunchOutcome.Failed
         failing.startedIntents
             .single()
             .data
@@ -99,7 +98,7 @@ class URLUtilsRobolectricTest {
     @Test
     fun `openURL shows the cant-open toast when startActivity throws IllegalStateException`() {
         val failing = StartActivityFailingContext(ctx, IllegalStateException("activity manager unavailable"))
-        failing.openURL("https://example.com").shouldBeFalse()
+        failing.openURL("https://example.com") shouldBe LaunchOutcome.Failed
         ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 }

@@ -15,34 +15,20 @@
  */
 package de.lemke.commonutils.domain
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
-import de.lemke.commonutils.registerFakeLauncherApp
-import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldNotBeEmpty
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.picker.model.AppInfo
+import androidx.picker.model.AppInfoData
+import de.lemke.commonutils.data.FakePackageLookup
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
 
-@OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
-class GetInstalledAppsUseCaseTest {
-    private val context: Context get() = ApplicationProvider.getApplicationContext()
+class GetInstalledAppsUseCaseTest : ShouldSpec(
+    {
+        should("return the apps of the package lookup") {
+            val app = AppInfoData(AppInfo(packageName = "com.example.app", activityName = "com.example.app.MainActivity"))
+            val lookup = FakePackageLookup().apply { installedAppsResult = Result.success(listOf(app)) }
 
-    @Before
-    fun registerFakeLauncherApp() = registerFakeLauncherApp(context)
-
-    @Test
-    fun `invoke returns installed apps including the registered fake launcher app`() =
-        runTest {
-            val result = GetInstalledAppsUseCase(context, UnconfinedTestDispatcher())()
-            result.shouldNotBeEmpty()
-            result.map { it.packageName } shouldContain "de.lemke.commonutils.fakeapp"
+            GetInstalledAppsUseCase(lookup)() shouldBe
+                listOf(AppInfoData(AppInfo(packageName = "com.example.app", activityName = "com.example.app.MainActivity")))
         }
-}
+    },
+)

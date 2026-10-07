@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ContentProvider
 import android.content.ContentValues
@@ -23,16 +24,18 @@ import android.content.Intent
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Bundle
 import android.os.Environment
 import android.os.ParcelFileDescriptor
-import androidx.core.os.BundleCompat
+import androidx.activity.result.ActivityResult
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.ui.utils.BitmapSaveResult
+import de.lemke.commonutils.ui.utils.DocumentPick
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.exportBitmap
 import de.lemke.commonutils.ui.utils.saveBitmapToDirectory
 import de.lemke.commonutils.ui.utils.saveBitmapToUri
+import de.lemke.commonutils.ui.utils.toDocumentPick
 import de.lemke.commonutils.ui.utils.toast
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -59,12 +62,6 @@ import org.robolectric.shadows.ShadowToast
 
 private val bitmap: Bitmap get() = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
 
-private const val DOCUMENTS_AUTHORITY = "de.lemke.documents"
-
-// The hidden DocumentsContract.METHOD_DELETE_DOCUMENT and EXTRA_URI that deleteDocument sends to the provider.
-private const val METHOD_DELETE_DOCUMENT = "android:deleteDocument"
-private const val EXTRA_DOCUMENT_URI = "uri"
-
 private val timestampedPng = Regex("""test_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}\.png""")
 
 private fun publicDirectory(type: String): File = Environment.getExternalStoragePublicDirectory(type).apply { mkdirs() }
@@ -80,7 +77,7 @@ class ExportUtilsRobolectricTest {
     fun `exportBitmap launches the document picker for a timestamped PNG`() {
         val launcher = RecordingIntentLauncher()
 
-        ctx.exportBitmap("test", launcher).shouldBeTrue()
+        ctx.exportBitmap("test", launcher) shouldBe LaunchOutcome.Started
 
         val intent = launcher.launched.single()
         intent.action shouldBe Intent.ACTION_CREATE_DOCUMENT
@@ -90,13 +87,49 @@ class ExportUtilsRobolectricTest {
     }
 
     @Test
-    fun `exportBitmap without a document picker shows the not-supported toast and returns false`() {
+    fun `exportBitmap without a document picker shows the not-supported toast and returns Failed`() {
         val launcher = RecordingIntentLauncher(ActivityNotFoundException("no picker"))
 
-        ctx.exportBitmap("test", launcher).shouldBeFalse()
+        ctx.exportBitmap("test", launcher) shouldBe LaunchOutcome.Failed
 
         launcher.launched.shouldBeEmpty()
         ShadowToast.getTextOfLatestToast() shouldBe "Error: Saving content is not supported on your device."
+    }
+
+    @Test
+    fun `exportBitmap whose launch the latch drops returns Dropped without a toast`() {
+        val launcher = RecordingIntentLauncher(admits = false)
+
+        ctx.exportBitmap("test", launcher) shouldBe LaunchOutcome.Dropped
+
+        launcher.launched.shouldBeEmpty()
+        ShadowToast.getLatestToast() shouldBe null
+    }
+
+    // ── toDocumentPick ────────────────────────────────────────────────────────
+
+    @Test
+    fun `toDocumentPick of an OK result with a uri is Created with that uri`() {
+        val uri = Uri.parse("content://de.lemke.commonutils.test.documents/document/1")
+
+        ActivityResult(Activity.RESULT_OK, Intent().setData(uri)).toDocumentPick() shouldBe DocumentPick.Created(uri)
+    }
+
+    @Test
+    fun `toDocumentPick of an OK result without a uri is MissingUri`() {
+        ActivityResult(Activity.RESULT_OK, Intent()).toDocumentPick() shouldBe DocumentPick.MissingUri
+    }
+
+    @Test
+    fun `toDocumentPick of an OK result without data is MissingUri`() {
+        ActivityResult(Activity.RESULT_OK, null).toDocumentPick() shouldBe DocumentPick.MissingUri
+    }
+
+    @Test
+    fun `toDocumentPick of a canceled result is Canceled even with a uri`() {
+        val uri = Uri.parse("content://de.lemke.commonutils.test.documents/document/1")
+
+        ActivityResult(Activity.RESULT_CANCELED, Intent().setData(uri)).toDocumentPick() shouldBe DocumentPick.Canceled
     }
 
     // ── saveBitmapToDirectory ─────────────────────────────────────────────────
@@ -429,66 +462,7 @@ class ExportUtilsRobolectricTest {
             provider.deleted shouldContainExactly listOf(provider.uri)
         }
 
-    private fun documentProvider(): DocumentRecordingProvider =
-        Robolectric
-            .buildContentProvider(DocumentRecordingProvider::class.java)
-            .create(DOCUMENTS_AUTHORITY)
-            .get()
-            .apply { file = File(ctx.cacheDir, "document.png").also { it.createNewFile() } }
-}
-
-private class DocumentRecordingProvider : ContentProvider() {
-    lateinit var file: File
-    var deleteFailure: Exception? = null
-    val deleted = mutableListOf<Uri>()
-    val uri: Uri = Uri.parse("content://$DOCUMENTS_AUTHORITY/document/1")
-
-    override fun onCreate() = true
-
-    override fun call(
-        method: String,
-        arg: String?,
-        extras: Bundle?,
-    ): Bundle? {
-        if (method == METHOD_DELETE_DOCUMENT) {
-            deleted += BundleCompat.getParcelable(extras!!, EXTRA_DOCUMENT_URI, Uri::class.java)!!
-            deleteFailure?.let { throw it }
-        }
-        return null
-    }
-
-    override fun openFile(
-        uri: Uri,
-        mode: String,
-    ): ParcelFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.parseMode(mode))
-
-    override fun query(
-        uri: Uri,
-        projection: Array<out String>?,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-        sortOrder: String?,
-    ): Cursor? = null
-
-    override fun getType(uri: Uri): String? = null
-
-    override fun insert(
-        uri: Uri,
-        values: ContentValues?,
-    ): Uri? = null
-
-    override fun delete(
-        uri: Uri,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-    ) = 0
-
-    override fun update(
-        uri: Uri,
-        values: ContentValues?,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-    ) = 0
+    private fun documentProvider(): RecordingDocumentsProvider = RecordingDocumentsProvider.create(ctx)
 }
 
 private class NoFileContentProvider : ContentProvider() {

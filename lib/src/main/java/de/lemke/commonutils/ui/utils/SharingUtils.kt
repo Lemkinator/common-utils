@@ -39,11 +39,11 @@ private const val MIME_TYPE_TEXT = "text/plain"
 private const val TAG = "SharingUtils"
 private const val PNG_QUALITY = 100
 
-/** Shares the app's Play Store link via the system share sheet. */
-fun Fragment.shareApp(): Boolean = requireContext().shareApp()
+/** Shares the app's Play Store link via the system share sheet; a failure shows the error toast. */
+fun Fragment.shareApp(): LaunchOutcome = requireContext().shareApp()
 
-/** Shares the app's Play Store link via the system share sheet. */
-fun Context.shareApp(): Boolean =
+/** Shares the app's Play Store link via the system share sheet; a failure shows the error toast. */
+fun Context.shareApp(): LaunchOutcome =
     safeStartActivity(
         Intent.createChooser(
             Intent().apply {
@@ -55,17 +55,17 @@ fun Context.shareApp(): Boolean =
         ),
     )
 
-/** Shares [text] via the system share sheet with an optional chooser [title]. */
+/** Shares [text] via the system share sheet with an optional chooser [title]; a failure shows the error toast. */
 fun Fragment.shareText(
     text: String,
     title: String? = null,
-): Boolean = requireContext().shareText(text, title)
+): LaunchOutcome = requireContext().shareText(text, title)
 
-/** Shares [text] via the system share sheet with an optional chooser [title]. */
+/** Shares [text] via the system share sheet with an optional chooser [title]; a failure shows the error toast. */
 fun Context.shareText(
     text: String,
     title: String? = null,
-): Boolean {
+): LaunchOutcome {
     Intent().apply {
         action = ACTION_SEND
         putExtra(EXTRA_TEXT, text)
@@ -75,15 +75,14 @@ fun Context.shareText(
     }
 }
 
-internal fun Context.safeStartActivity(intent: Intent): Boolean {
+internal fun Context.safeStartActivity(intent: Intent): LaunchOutcome =
     try {
-        return launchGated { startActivity(intent) }
+        launchForOutcome { startActivity(intent) }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to start activity", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        return false
+        LaunchOutcome.Failed
     }
-}
 
 /** Kinds of cache file handed to other apps, each in its own [Context.getCacheDir] subdirectory so no kind overwrites another's. */
 internal enum class CacheFileKind(

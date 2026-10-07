@@ -15,80 +15,31 @@
  */
 package de.lemke.commonutils.domain
 
-import android.content.Context
-import android.content.pm.PackageInfo
-import androidx.test.core.app.ApplicationProvider
-import de.lemke.commonutils.HeldDispatcher
-import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.collections.shouldHaveSize
+import android.content.pm.ApplicationInfo
+import de.lemke.commonutils.data.FakePackageLookup
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class GetApplicationInfoUseCaseTest {
-    private val context: Context get() = ApplicationProvider.getApplicationContext()
-
-    @Before
-    fun installPackage() {
-        shadowOf(context.packageManager).installPackage(PackageInfo().also { it.packageName = INSTALLED_PACKAGE })
-    }
+    private val lookup = FakePackageLookup(ApplicationInfo().also { it.packageName = "com.example.installed" })
 
     @Test
-    fun `returns the ApplicationInfo of an installed package on API 33+`() =
+    fun `returns the ApplicationInfo the package lookup holds for the package`() =
         runTest {
-            GetApplicationInfoUseCase(context, UnconfinedTestDispatcher(testScheduler))(INSTALLED_PACKAGE)?.packageName shouldBe
-                INSTALLED_PACKAGE
+            GetApplicationInfoUseCase(lookup)("com.example.installed")?.packageName shouldBe "com.example.installed"
+            lookup.lookedUpPackages shouldBe listOf("com.example.installed")
         }
 
     @Test
-    fun `returns null for a missing package on API 33+`() =
+    fun `returns null for a package the package lookup does not hold`() =
         runTest {
-            GetApplicationInfoUseCase(context, UnconfinedTestDispatcher(testScheduler))(MISSING_PACKAGE) shouldBe null
+            GetApplicationInfoUseCase(lookup)("com.example.missing") shouldBe null
+            lookup.lookedUpPackages shouldBe listOf("com.example.missing")
         }
-
-    @Config(sdk = [32])
-    @Test
-    fun `returns the ApplicationInfo of an installed package below API 33`() =
-        runTest {
-            GetApplicationInfoUseCase(context, UnconfinedTestDispatcher(testScheduler))(INSTALLED_PACKAGE)?.packageName shouldBe
-                INSTALLED_PACKAGE
-        }
-
-    @Config(sdk = [32])
-    @Test
-    fun `returns null for a missing package below API 33`() =
-        runTest {
-            GetApplicationInfoUseCase(context, UnconfinedTestDispatcher(testScheduler))(MISSING_PACKAGE) shouldBe null
-        }
-
-    @Test
-    fun `looks the package up on the injected IO dispatcher`() =
-        runTest {
-            val io = HeldDispatcher()
-            val lookup = async { GetApplicationInfoUseCase(context, io)(INSTALLED_PACKAGE) }
-            runCurrent()
-
-            lookup.isCompleted.shouldBeFalse()
-            io.held shouldHaveSize 1
-
-            io.held.removeFirst().run()
-            lookup.await()?.packageName shouldBe INSTALLED_PACKAGE
-        }
-
-    private companion object {
-        const val INSTALLED_PACKAGE = "com.example.installed"
-        const val MISSING_PACKAGE = "com.example.missing"
-    }
 }

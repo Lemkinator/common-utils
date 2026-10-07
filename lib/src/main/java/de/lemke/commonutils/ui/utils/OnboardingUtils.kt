@@ -182,26 +182,32 @@ internal fun nextInChain(
 /**
  * Advances the onboarding chain from the current step: starts the next step (forwarding the carrier
  * unchanged), or past the last step, starts the main activity, so `onboardIfNeeded` can commit and
- * reconstruct `AppStart`. Then finishes this step, unless the launch latch dropped the start.
+ * reconstruct `AppStart`. Then finishes this step and returns [LaunchOutcome.Started].
+ *
+ * If the launch latch drops the start, this step stays open and the call returns [LaunchOutcome.Dropped]:
+ * the step restores its controls, so the user can advance again. A start that throws propagates, like
+ * [singleLaunchActivity], so the call never returns [LaunchOutcome.Failed].
  *
  * Call from a step activity when the user finishes that step. Safe to call from standalone context
  * (activity not launched as part of the chain) — just finishes the activity.
  */
-fun Activity.advanceOnboarding() {
+fun Activity.advanceOnboarding(): LaunchOutcome {
     val ctx = intent.onboardingContext
-    if (ctx == null || startNextOnboardingStep(ctx)) finishWithFade()
+    val outcome = if (ctx == null) LaunchOutcome.Started else startNextOnboardingStep(ctx)
+    if (outcome == LaunchOutcome.Started) finishWithFade()
+    return outcome
 }
 
-/** Starts the step after this one, or past the last step the main activity; true if this step may finish. */
-private fun Activity.startNextOnboardingStep(ctx: OnboardingContext): Boolean {
+/** Starts the step after this one, or past the last step the main activity; [LaunchOutcome.Started] if this step may finish. */
+private fun Activity.startNextOnboardingStep(ctx: OnboardingContext): LaunchOutcome {
     val chain = listOf(CommonUtilsOOBEActivity::class.java.name) + ctx.steps
     val current = this::class.java.name
     if (current !in chain) {
         Log.w(TAG, "advanceOnboarding: ${this::class.java.simpleName} not in chain — finishing without advancing")
-        return true
+        return LaunchOutcome.Started
     }
     val next = nextInChain(chain, current) ?: ctx.mainActivityName
-    return singleLaunchActivity(Intent().setClassName(this, next).putOnboardingContext(ctx))
+    return launchForOutcome { startActivity(Intent().setClassName(this, next).putOnboardingContext(ctx)) }
 }
 
 /** `true` if this activity was launched as a step of the onboarding chain (vs. standalone). */

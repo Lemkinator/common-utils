@@ -22,6 +22,7 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.ui.utils.BitmapSaveResult
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.createBitmapClip
 import de.lemke.commonutils.ui.utils.exportBitmap
@@ -32,7 +33,6 @@ import de.lemke.commonutils.ui.utils.sendEmailBugReport
 import de.lemke.commonutils.ui.utils.shareApp
 import de.lemke.commonutils.ui.utils.shareText
 import de.lemke.commonutils.ui.utils.toast
-import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -89,18 +89,18 @@ class FragmentExtensionsRobolectricTest {
     // ── URLUtils Fragment overload ─────────────────────────────────────────────
 
     @Test
-    fun `Fragment openURL null returns false`() {
-        fragment.openURL(null).shouldBeFalse()
+    fun `Fragment openURL null returns Failed`() {
+        fragment.openURL(null) shouldBe LaunchOutcome.Failed
     }
 
     @Test
-    fun `Fragment openURL blank returns false`() {
-        fragment.openURL("").shouldBeFalse()
+    fun `Fragment openURL blank returns Failed`() {
+        fragment.openURL("") shouldBe LaunchOutcome.Failed
     }
 
     @Test
     fun `Fragment openURL valid delegates to Context openURL`() {
-        fragment.openURL("https://example.com").shouldBeTrue()
+        fragment.openURL("https://example.com") shouldBe LaunchOutcome.Started
     }
 
     // ── EmailUtils Fragment overload ───────────────────────────────────────────
@@ -116,24 +116,24 @@ class FragmentExtensionsRobolectricTest {
 
     @Test
     fun `Fragment openApp tryLocalFirst-false fires store intent`() {
-        fragment.openApp("com.example.test", tryLocalFirst = false).shouldBeTrue()
+        fragment.openApp("com.example.test", tryLocalFirst = false) shouldBe LaunchOutcome.Started
     }
 
     @Test
     fun `Fragment openApp tryLocalFirst-true with unknown package falls back to store`() {
-        fragment.openApp("com.example.notinstalled", tryLocalFirst = true).shouldBeTrue()
+        fragment.openApp("com.example.notinstalled", tryLocalFirst = true) shouldBe LaunchOutcome.Started
     }
 
     // ── SharingUtils Fragment overloads ───────────────────────────────────────
 
     @Test
     fun `Fragment shareApp delegates to Context shareApp`() {
-        fragment.shareApp().shouldBeTrue()
+        fragment.shareApp() shouldBe LaunchOutcome.Started
     }
 
     @Test
     fun `Fragment shareText delegates to Context shareText`() {
-        fragment.shareText("hello", "title").shouldBeTrue()
+        fragment.shareText("hello", "title") shouldBe LaunchOutcome.Started
     }
 
     @Test
@@ -175,7 +175,7 @@ class FragmentExtensionsRobolectricTest {
     @Test
     fun `Fragment exportBitmap launches the document picker`() {
         val launcher = RecordingIntentLauncher()
-        fragment.exportBitmap("test", launcher).shouldBeTrue()
+        fragment.exportBitmap("test", launcher) shouldBe LaunchOutcome.Started
         launcher.launched.single().action shouldBe Intent.ACTION_CREATE_DOCUMENT
     }
 }
@@ -201,7 +201,7 @@ class OpenAppLocaleSettingsApi33Test {
             .add(fragment, "tag")
             .commitNow()
         // SDK 36 ≥ TIRAMISU → should start ACTION_APP_LOCALE_SETTINGS
-        fragment.openAppLocaleSettings().shouldBeTrue()
+        fragment.openAppLocaleSettings() shouldBe LaunchOutcome.Started
     }
 }
 
@@ -213,7 +213,7 @@ class OpenAppLocaleSettingsApi32Test {
     val destroyActivities = DestroyActivitiesRule()
 
     @Test
-    fun `Fragment openAppLocaleSettings below API 33 returns false`() {
+    fun `Fragment openAppLocaleSettings below API 33 returns Failed`() {
         val activity =
             Robolectric
                 .buildActivity(AppCompatActivity::class.java)
@@ -225,6 +225,6 @@ class OpenAppLocaleSettingsApi32Test {
             .beginTransaction()
             .add(fragment, "tag")
             .commitNow()
-        fragment.openAppLocaleSettings().shouldBeFalse()
+        fragment.openAppLocaleSettings() shouldBe LaunchOutcome.Failed
     }
 }

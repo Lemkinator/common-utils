@@ -22,12 +22,9 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import de.lemke.commonutils.ui.utils.collectEvents
 import de.lemke.commonutils.ui.utils.collectState
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -94,23 +91,5 @@ class FragmentCollectStateUpdateTest {
         flow.value = 2
         Shadows.shadowOf(Looper.getMainLooper()).idle()
         collected shouldBe listOf(1, 2)
-    }
-}
-
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
-class FragmentCollectEventsTest {
-    @get:Rule
-    val destroyActivities = DestroyActivitiesRule()
-
-    @Test
-    fun `Fragment collectEvents delivers buffered event`() {
-        val fragment = attachedFragment(destroyActivities)
-        val channel = Channel<String>(Channel.BUFFERED)
-        val collected = mutableListOf<String>()
-        channel.trySend("event-one")
-        fragment.collectEvents(channel.receiveAsFlow()) { collected.add(it) }
-        Shadows.shadowOf(Looper.getMainLooper()).idle()
-        collected shouldBe listOf("event-one")
     }
 }

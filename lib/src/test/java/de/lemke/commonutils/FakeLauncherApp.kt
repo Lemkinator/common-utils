@@ -21,11 +21,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import org.robolectric.Shadows.shadowOf
 
+/** The launcher activity of the app that [registerFakeLauncherApp] registers. */
+internal val FAKE_LAUNCHER_APP = ComponentName("de.lemke.commonutils.fakeapp", "de.lemke.commonutils.fakeapp.MainActivity")
+
 /** Registers a single fake launcher app so `getInstalledAppsForPicker()` returns a non-empty result under Robolectric. */
 internal fun registerFakeLauncherApp(context: Context) {
-    val component = ComponentName("de.lemke.commonutils.fakeapp", "de.lemke.commonutils.fakeapp.MainActivity")
     shadowOf(context.packageManager).apply {
-        addActivityIfNotPresent(component)
-        addIntentFilterForActivity(component, IntentFilter(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) })
+        addActivityIfNotPresent(FAKE_LAUNCHER_APP)
+        addIntentFilterForActivity(FAKE_LAUNCHER_APP, IntentFilter(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_LAUNCHER) })
     }
 }

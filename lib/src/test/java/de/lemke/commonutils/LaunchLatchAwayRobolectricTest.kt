@@ -263,4 +263,29 @@ class LaunchLatchAwayRobolectricTest : LaunchLatchRobolectricTest() {
 
         launches shouldContainExactly listOf(true)
     }
+
+    @Test
+    fun `away result launcher outside a result callback reports the dropped launch`() {
+        val activity = away().get()
+        shadowOf(activity).clearNextStartedActivities()
+
+        activity.launcher.tryLaunch(Intent(activity, Activity::class.java)).shouldBeFalse()
+
+        shadowOf(activity).nextStartedActivityForResult.shouldBeNull()
+    }
+
+    @Test
+    fun `away result launcher launches from a result callback`() {
+        val controller = resumed()
+        val activity = controller.get()
+        val request = activity.launchForResult()
+        controller.pause()
+        var launched: Boolean? = null
+        activity.onResult = { launched = activity.launcher.tryLaunch(Intent(activity, Activity::class.java)) }
+
+        activity.deliverResult(request)
+
+        launched shouldBe true
+        shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull()
+    }
 }

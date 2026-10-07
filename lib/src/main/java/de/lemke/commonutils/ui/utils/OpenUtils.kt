@@ -34,38 +34,44 @@ import de.lemke.commonutils.R
 
 private const val TAG = "OpenUtils"
 
-/** Opens the app with [packageName], trying the local install first if [tryLocalFirst] is `true`, otherwise opens the Play Store. */
+/**
+ * Opens the app with [packageName], trying the local install first if [tryLocalFirst] is `true`, otherwise opens the
+ * Play Store; a failure shows the error toast.
+ */
 fun Fragment.openApp(
     packageName: String,
     tryLocalFirst: Boolean,
-): Boolean = requireContext().openApp(packageName, tryLocalFirst)
+): LaunchOutcome = requireContext().openApp(packageName, tryLocalFirst)
 
-/** Opens the app with [packageName], trying the local install first if [tryLocalFirst] is `true`, otherwise opens the Play Store. */
+/**
+ * Opens the app with [packageName], trying the local install first if [tryLocalFirst] is `true`, otherwise opens the
+ * Play Store; a failure shows the error toast.
+ */
 fun Context.openApp(
     packageName: String,
     tryLocalFirst: Boolean,
-): Boolean =
+): LaunchOutcome =
     if (tryLocalFirst) {
         openAppWithPackageName(packageName)
     } else {
         openAppWithPackageNameOnStore(packageName)
     }
 
-private fun Context.openAppWithPackageName(packageName: String): Boolean =
+private fun Context.openAppWithPackageName(packageName: String): LaunchOutcome =
     try {
         val intent = packageManager.getLaunchIntentForPackage(packageName)
         if (intent != null) {
-            launchGated { startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK)) }
+            launchForOutcome { startActivity(intent.addFlags(FLAG_ACTIVITY_NEW_TASK)) }
         } else {
             openAppWithPackageNameOnStore(packageName)
         }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to open app with package name", e)
         toast(getString(R.string.commonutils_error_cant_open_app))
-        false
+        LaunchOutcome.Failed
     }
 
-private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean {
+private fun Context.openAppWithPackageNameOnStore(packageName: String): LaunchOutcome {
     val uris =
         listOf(
             (getString(R.string.commonutils_playstore_app_link) + packageName).toUri(),
@@ -74,41 +80,41 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String): Boolean 
     val intent = Intent(ACTION_VIEW).addFlags(FLAG_ACTIVITY_NEW_TASK)
     for (uri in uris) {
         try {
-            return launchGated { startActivity(intent.apply { data = uri }) }
+            return launchForOutcome { startActivity(intent.apply { data = uri }) }
         } catch (e: ActivityNotFoundException) {
             Log.e(TAG, "Failed to open Play Store: $uri", e)
         }
     }
     toast(getString(R.string.commonutils_error_cant_open_app))
-    return false
+    return LaunchOutcome.Failed
 }
 
 /** Returns `true` if per-app language settings are supported (Android 13+). */
 @ChecksSdkIntAtLeast(api = TIRAMISU)
 fun areAppLocalSettingsSupported(): Boolean = SDK_INT >= TIRAMISU
 
-/** Opens the system per-app language settings screen for this app. */
+/** Opens the system per-app language settings screen for this app; a failure shows the error toast. */
 @RequiresApi(TIRAMISU)
-fun Fragment.openAppLocaleSettings(): Boolean {
+fun Fragment.openAppLocaleSettings(): LaunchOutcome {
     if (!areAppLocalSettingsSupported()) {
         toast(getString(R.string.commonutils_change_language_not_supported_by_device))
-        return false
+        return LaunchOutcome.Failed
     }
     return try {
-        requireContext().launchGated {
+        requireContext().launchForOutcome {
             startActivity(Intent(ACTION_APP_LOCALE_SETTINGS, "package:${requireContext().packageName}".toUri()))
         }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "App locale settings not available", e)
         toast(getString(R.string.commonutils_change_language_not_supported_by_device))
-        false
+        LaunchOutcome.Failed
     }
 }
 
-/** Opens the system application settings screen for this app. */
-fun Context.openApplicationSettings(): Boolean =
+/** Opens the system application settings screen for this app; a failure shows the error toast. */
+fun Context.openApplicationSettings(): LaunchOutcome =
     try {
-        launchGated {
+        launchForOutcome {
             startActivity(
                 Intent(ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
                     .setFlags(FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK),
@@ -117,5 +123,5 @@ fun Context.openApplicationSettings(): Boolean =
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to open application settings", e)
         toast(R.string.commonutils_error_cant_open_app_settings)
-        false
+        LaunchOutcome.Failed
     }
