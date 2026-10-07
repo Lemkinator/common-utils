@@ -63,13 +63,13 @@ interface BitmapExporter {
  * which run their work on [ioDispatcher].
  *
  * The library publishes no DI bindings, so an app provides it from its own module with an application [context] and its
- * `@IoDispatcher`. Clips carry [clipLabel]; clip and share cache files are named [fileName].
+ * `@IoDispatcher`. Clips carry [clipLabel]; clip and share cache files are named [cacheFileName].
  */
 class DefaultBitmapExporter(
     private val context: Context,
     private val ioDispatcher: CoroutineDispatcher,
     private val clipLabel: String,
-    private val fileName: String,
+    private val cacheFileName: String,
 ) : BitmapExporter {
     override suspend fun saveToDirectory(
         location: SaveLocation,
@@ -82,7 +82,8 @@ class DefaultBitmapExporter(
         bitmap: Bitmap?,
     ): BitmapSaveResult.UriResult = context.saveBitmapToUri(uri, bitmap, createdDocument = true, ioDispatcher)
 
-    override suspend fun createClip(bitmap: Bitmap): ClipData? = context.createBitmapClip(bitmap, clipLabel, fileName, ioDispatcher)
+    override suspend fun createClip(bitmap: Bitmap): ClipData? = context.createBitmapClip(bitmap, clipLabel, cacheFileName, ioDispatcher)
 
-    override suspend fun createShareFile(bitmap: Bitmap): BitmapShareFile = context.createBitmapShareFile(bitmap, fileName, ioDispatcher)
+    override suspend fun createShareFile(bitmap: Bitmap): BitmapShareFile =
+        context.createBitmapShareFile(bitmap, cacheFileName, ioDispatcher)
 }

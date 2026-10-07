@@ -42,7 +42,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 private const val CLIP_LABEL = "QR Code"
-private const val FILE_NAME = "QRCode.png"
+private const val CACHE_FILE_NAME = "QRCode.png"
 
 private val timestampedPng = Regex("""QRCode_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}\.png""")
 
@@ -51,7 +51,7 @@ private val timestampedPng = Regex("""QRCode_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}
 class DefaultBitmapExporterTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
-    private fun exporter(io: CoroutineDispatcher) = DefaultBitmapExporter(ctx, io, CLIP_LABEL, FILE_NAME)
+    private fun exporter(io: CoroutineDispatcher) = DefaultBitmapExporter(ctx, io, CLIP_LABEL, CACHE_FILE_NAME)
 
     private fun TestScope.exporter() = exporter(UnconfinedTestDispatcher(testScheduler))
 
@@ -126,13 +126,13 @@ class DefaultBitmapExporterTest {
     // ── createClip ──────────────────────────────────────────────────────────────
 
     @Test
-    fun `createClip clips the PNG cache file under the clip label and file name`() =
+    fun `createClip clips the PNG cache file under the clip label and cache file name`() =
         runTest {
             val clip = exporter().createClip(pngBitmap()).shouldNotBeNull()
 
             clip.description.label shouldBe CLIP_LABEL
             clip.description.getMimeType(0) shouldBe "image/png"
-            clip.getItemAt(0).uri.lastPathSegment shouldBe FILE_NAME
+            clip.getItemAt(0).uri.lastPathSegment shouldBe CACHE_FILE_NAME
         }
 
     @Test
@@ -144,11 +144,11 @@ class DefaultBitmapExporterTest {
     // ── createShareFile ─────────────────────────────────────────────────────────
 
     @Test
-    fun `createShareFile writes the PNG cache file under the file name`() =
+    fun `createShareFile writes the PNG cache file under the cache file name`() =
         runTest {
             val file = exporter().createShareFile(pngBitmap()).shouldBeInstanceOf<BitmapShareFile.Written>()
 
-            file.uri.lastPathSegment shouldBe FILE_NAME
+            file.uri.lastPathSegment shouldBe CACHE_FILE_NAME
         }
 
     @Test
