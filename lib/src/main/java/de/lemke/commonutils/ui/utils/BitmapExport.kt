@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -86,8 +87,9 @@ sealed interface BitmapExport {
  * Runs the bitmap exports of a ViewModel through [exporter] in [scope], one at a time, and holds the [BitmapExport]
  * state of the latest one.
  *
- * A ViewModel creates it with `viewModelScope` and exposes [state]. Only in [BitmapExport.Idle] does [save], [copy],
- * [share] or [onDocumentPicked] start an export; while one runs or its result waits for [onHandled], they do nothing.
+ * A ViewModel creates it with `viewModelScope` and exposes [state]. Only [BitmapExport.Running] blocks: while an export
+ * runs, [save], [copy], [share] and [onDocumentPicked] do nothing. An export that starts while a [BitmapExport.Result]
+ * waits for [onHandled] replaces that result, so a result the launch latch dropped never strands the holder.
  * Tests drive it with `FakeBitmapExporter` from the testFixtures.
  */
 class BitmapExportStateHolder(
@@ -120,8 +122,8 @@ class BitmapExportStateHolder(
      * Writes [bitmap] into the document of [pick], the result of the picker that [BitmapExport.OpenPicker] opened.
      *
      * A canceled pick changes nothing. A pick without a document, or a null [bitmap], ends in a failed
-     * [BitmapExport.SaveFinished]; a null [bitmap] also deletes the created document. While an export runs or a result
-     * waits, the pick is ignored like any other export.
+     * [BitmapExport.SaveFinished]; a null [bitmap] also deletes the created document. While an export runs, the pick
+     * writes nothing and deletes the created document.
      */
     fun onDocumentPicked(
         pick: DocumentPick,
@@ -129,8 +131,11 @@ class BitmapExportStateHolder(
     ) {
         when (pick) {
             DocumentPick.Canceled -> Unit
-            DocumentPick.MissingUri -> publishIfIdle(BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed))
-            is DocumentPick.Created -> launchExport { exporter.saveToCreatedDocument(pick.uri, bitmap).toExport() }
+            DocumentPick.MissingUri -> publishUnlessRunning(BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed))
+            is DocumentPick.Created -> {
+                val started = launchExport { exporter.saveToCreatedDocument(pick.uri, bitmap).toExport() }
+                if (!started) scope.launch { exporter.saveToCreatedDocument(pick.uri, null) }
+            }
         }
     }
 
@@ -161,13 +166,15 @@ class BitmapExportStateHolder(
         mutableState.update { if (it == result) BitmapExport.Idle else it }
     }
 
-    private fun publishIfIdle(result: BitmapExport.Result) {
-        mutableState.compareAndSet(BitmapExport.Idle, result)
+    private fun publishUnlessRunning(result: BitmapExport.Result) {
+        mutableState.update { if (it == BitmapExport.Running) it else result }
     }
 
-    private fun launchExport(work: suspend () -> BitmapExport.Result?) {
-        if (!mutableState.compareAndSet(BitmapExport.Idle, BitmapExport.Running)) return
+    /** @return false if an export already runs, so [work] did not start. */
+    private fun launchExport(work: suspend () -> BitmapExport.Result?): Boolean {
+        if (mutableState.getAndUpdate { BitmapExport.Running } == BitmapExport.Running) return false
         scope.launch { mutableState.value = work() ?: BitmapExport.Idle }
+        return true
     }
 
     private fun BitmapSaveResult.UriResult.toExport(): BitmapExport.Result? =

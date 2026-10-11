@@ -117,7 +117,7 @@ class BitmapExportStateHolderTest {
         }
 
     @Test
-    fun `a created document while an export runs is ignored`() =
+    fun `a created document while an export runs is deleted and the export keeps running`() =
         runTest {
             val holder = holder()
             val gate = CompletableDeferred<Unit>()
@@ -129,7 +129,11 @@ class BitmapExportStateHolderTest {
             runCurrent()
 
             holder.state.value shouldBe BitmapExport.Running
-            exporter.calls shouldContainExactly listOf(Call.SaveToDirectory(SaveLocation.PICTURES, bitmap, "icon"))
+            exporter.calls shouldContainExactly
+                listOf(
+                    Call.SaveToDirectory(SaveLocation.PICTURES, bitmap, "icon"),
+                    Call.SaveToCreatedDocument(document, null),
+                )
             gate.complete(Unit)
             runCurrent()
             holder.state.value shouldBe BitmapExport.SaveFinished(BitmapSaveResult.Saved(SaveLocation.PICTURES))
@@ -150,21 +154,92 @@ class BitmapExportStateHolderTest {
         }
 
     @Test
-    fun `a result that waits for onHandled blocks the next export and pick`() =
+    fun `an export after a waiting result replaces it`() =
+        runTest {
+            val holder = holder()
+            exporter.shareFile = written
+            holder.save(bitmap, "icon", SaveLocation.CUSTOM)
+            runCurrent()
+
+            holder.share(bitmap)
+            runCurrent()
+
+            holder.state.value shouldBe BitmapExport.Share(written, ShareTarget.SHARE_SHEET)
+            exporter.calls shouldContainExactly
+                listOf(Call.SaveToDirectory(SaveLocation.CUSTOM, bitmap, "icon"), Call.CreateShareFile(bitmap))
+        }
+
+    @Test
+    fun `an export ignored while running leaves the running export and its result`() =
+        runTest {
+            val holder = holder()
+            val gate = CompletableDeferred<Unit>()
+            exporter.shareFile = written
+            exporter.gate = gate
+            holder.share(bitmap)
+            runCurrent()
+
+            holder.save(bitmap, "icon", SaveLocation.PICTURES)
+            runCurrent()
+            gate.complete(Unit)
+            runCurrent()
+
+            holder.state.value shouldBe BitmapExport.Share(written, ShareTarget.SHARE_SHEET)
+            exporter.calls shouldContainExactly listOf(Call.CreateShareFile(bitmap))
+        }
+
+    @Test
+    fun `a result the launch latch dropped does not strand the holder`() =
+        runTest {
+            val holder = holder()
+            exporter.shareFile = written
+            holder.share(bitmap)
+            runCurrent()
+            holder.state.value shouldBe BitmapExport.Share(written, ShareTarget.SHARE_SHEET)
+
+            holder.copy(bitmap)
+            runCurrent()
+
+            holder.state.value shouldBe BitmapExport.CopyFailed
+        }
+
+    @Test
+    fun `a created document after a waiting result replaces it`() =
         runTest {
             val holder = holder()
             holder.save(bitmap, "icon", SaveLocation.CUSTOM)
             runCurrent()
 
-            holder.copy(bitmap)
-            holder.share(bitmap)
-            holder.save(bitmap, "other", SaveLocation.PICTURES)
             holder.onDocumentPicked(DocumentPick.Created(document), bitmap)
-            holder.onDocumentPicked(DocumentPick.MissingUri, bitmap)
             runCurrent()
 
+            holder.state.value shouldBe BitmapExport.SaveFinished(BitmapSaveResult.Saved(SaveLocation.CUSTOM))
+            exporter.calls shouldContainExactly
+                listOf(Call.SaveToDirectory(SaveLocation.CUSTOM, bitmap, "icon"), Call.SaveToCreatedDocument(document, bitmap))
+        }
+
+    @Test
+    fun `a pick without a document after a waiting result replaces it`() =
+        runTest {
+            val holder = holder()
+            holder.save(bitmap, "icon", SaveLocation.CUSTOM)
+            runCurrent()
+
+            holder.onDocumentPicked(DocumentPick.MissingUri, bitmap)
+
+            holder.state.value shouldBe BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed)
+        }
+
+    @Test
+    fun `a canceled pick keeps a waiting result`() =
+        runTest {
+            val holder = holder()
+            holder.save(bitmap, "icon", SaveLocation.CUSTOM)
+            runCurrent()
+
+            holder.onDocumentPicked(DocumentPick.Canceled, bitmap)
+
             holder.state.value shouldBe BitmapExport.OpenPicker("icon")
-            exporter.calls shouldContainExactly listOf(Call.SaveToDirectory(SaveLocation.CUSTOM, bitmap, "icon"))
         }
 
     @Test

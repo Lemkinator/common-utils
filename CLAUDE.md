@@ -138,7 +138,8 @@ state handled when `LaunchOutcome.isSettled` is true; on `Dropped` the state sta
   delivers a `DocumentPick`.
 - `File.share(context, mimeType)` / `List<File>.share(context, mimeType)` — PNG by default.
 - `BitmapExportStateHolder(scope, exporter)` — one save, copy or share at a time, exposed
-  as `BitmapExport` state. The screen passes each `BitmapExport.Result` to
+  as `BitmapExport` state. Only `Running` blocks: a new export replaces a waiting `Result`, and a document
+  created while one runs is deleted. The screen passes each `BitmapExport.Result` to
   `launchBitmapExport(result, picker)` and calls `onHandled(result)` when that returns true.
   Tests drive the holder with the testFixtures `FakeBitmapExporter`.
 - Recent colors: `MAX_RECENT_COLORS`, `List<Int>.withRecentColor`, the
