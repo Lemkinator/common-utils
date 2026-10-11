@@ -27,7 +27,10 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
@@ -97,6 +100,25 @@ fun ActivityResult.toDocumentPick(): DocumentPick {
         else -> DocumentPick.Created(uri)
     }
 }
+
+/**
+ * Registers the launcher for the document picker of [exportBitmap]; [onPick] receives each result as a [DocumentPick].
+ *
+ * Register it like `registerForActivityResult`, before this activity is created. Its launches are gated launches; see
+ * [registerForSingleLaunchResult].
+ */
+@MainThread
+fun ComponentActivity.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaunchResultLauncher<Intent> =
+    registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toDocumentPick()) }
+
+/**
+ * Registers the launcher for the document picker of [exportBitmap] with this fragment; [onPick] receives each result
+ * as a [DocumentPick].
+ * @see ComponentActivity.registerForDocumentPick
+ */
+@MainThread
+fun Fragment.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaunchResultLauncher<Intent> =
+    registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toDocumentPick()) }
 
 /**
  * Launches the document picker through [activityResultLauncher] to create a PNG named after [filename]; a device
