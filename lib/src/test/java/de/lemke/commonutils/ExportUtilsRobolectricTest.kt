@@ -33,6 +33,7 @@ import de.lemke.commonutils.ui.utils.BitmapSaveResult
 import de.lemke.commonutils.ui.utils.DocumentPick
 import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.exportBitmap
+import de.lemke.commonutils.ui.utils.launchCreateDocument
 import de.lemke.commonutils.ui.utils.saveBitmapToDirectory
 import de.lemke.commonutils.ui.utils.saveBitmapToUri
 import de.lemke.commonutils.ui.utils.toDocumentPick
@@ -101,6 +102,40 @@ class ExportUtilsRobolectricTest {
         val launcher = RecordingIntentLauncher(admits = false)
 
         ctx.exportBitmap("test", launcher) shouldBe LaunchOutcome.Dropped
+
+        launcher.launched.shouldBeEmpty()
+        ShadowToast.getLatestToast() shouldBe null
+    }
+
+    // ── launchCreateDocument ──────────────────────────────────────────────────
+
+    @Test
+    fun `launchCreateDocument launches the document picker for a timestamped document of the given type`() {
+        val launcher = RecordingIntentLauncher()
+
+        ctx.launchCreateDocument("sudoku export", "application/json", ".json", launcher) shouldBe LaunchOutcome.Started
+
+        val intent = launcher.launched.single()
+        intent.action shouldBe Intent.ACTION_CREATE_DOCUMENT
+        intent.categories shouldContainExactly setOf(Intent.CATEGORY_OPENABLE)
+        intent.type shouldBe "application/json"
+        intent.getStringExtra(Intent.EXTRA_TITLE)!! shouldMatch Regex("""sudoku_export_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}\.json""")
+    }
+
+    @Test
+    fun `launchCreateDocument without a document picker shows the not-supported toast and returns Failed`() {
+        val launcher = RecordingIntentLauncher(ActivityNotFoundException("no picker"))
+
+        ctx.launchCreateDocument("export", "application/json", ".json", launcher) shouldBe LaunchOutcome.Failed
+
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: Saving content is not supported on your device."
+    }
+
+    @Test
+    fun `launchCreateDocument whose launch the latch drops returns Dropped without a toast`() {
+        val launcher = RecordingIntentLauncher(admits = false)
+
+        ctx.launchCreateDocument("export", "application/json", ".json", launcher) shouldBe LaunchOutcome.Dropped
 
         launcher.launched.shouldBeEmpty()
         ShadowToast.getLatestToast() shouldBe null
