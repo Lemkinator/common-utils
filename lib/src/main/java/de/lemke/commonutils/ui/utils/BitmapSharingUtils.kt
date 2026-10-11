@@ -103,23 +103,23 @@ suspend fun Context.createBitmapShareFile(
 
 /**
  * Shares the PNG of [file], from [createBitmapShareFile], via the system share sheet, optionally including [shareText].
- * A [BitmapShareFile.Failed] file shows the error toast; a [BitmapShareFile.Dropped] file starts nothing.
- * @return true if the share sheet was started.
+ * A [BitmapShareFile.Failed] file shows the error toast and returns [LaunchOutcome.Failed]; a [BitmapShareFile.Dropped]
+ * file starts nothing and returns [LaunchOutcome.Dropped].
  */
 fun Fragment.shareBitmap(
     file: BitmapShareFile,
     shareText: String? = null,
-): Boolean = requireContext().shareBitmap(file, shareText)
+): LaunchOutcome = requireContext().shareBitmap(file, shareText)
 
 /**
  * Shares the PNG of [file], from [createBitmapShareFile], via the system share sheet, optionally including [shareText].
- * A [BitmapShareFile.Failed] file shows the error toast; a [BitmapShareFile.Dropped] file starts nothing.
- * @return true if the share sheet was started.
+ * A [BitmapShareFile.Failed] file shows the error toast and returns [LaunchOutcome.Failed]; a [BitmapShareFile.Dropped]
+ * file starts nothing and returns [LaunchOutcome.Dropped].
  */
 fun Context.shareBitmap(
     file: BitmapShareFile,
     shareText: String? = null,
-): Boolean =
+): LaunchOutcome =
     sharePng(file) {
         val intent =
             Intent(ACTION_SEND).apply {
@@ -134,19 +134,17 @@ fun Context.shareBitmap(
 
 /**
  * Shares the PNG of [file], from [createBitmapShareFile], directly via Samsung Quick Share if available, falling back
- * to the system share sheet. A [BitmapShareFile.Failed] file shows the error toast; a [BitmapShareFile.Dropped] file
- * starts nothing.
- * @return true if a share target was started.
+ * to the system share sheet. A [BitmapShareFile.Failed] file shows the error toast and returns [LaunchOutcome.Failed];
+ * a [BitmapShareFile.Dropped] file starts nothing and returns [LaunchOutcome.Dropped].
  */
-fun Fragment.quickShareBitmap(file: BitmapShareFile): Boolean = requireContext().quickShareBitmap(file)
+fun Fragment.quickShareBitmap(file: BitmapShareFile): LaunchOutcome = requireContext().quickShareBitmap(file)
 
 /**
  * Shares the PNG of [file], from [createBitmapShareFile], directly via Samsung Quick Share if available, falling back
- * to the system share sheet. A [BitmapShareFile.Failed] file shows the error toast; a [BitmapShareFile.Dropped] file
- * starts nothing.
- * @return true if a share target was started.
+ * to the system share sheet. A [BitmapShareFile.Failed] file shows the error toast and returns [LaunchOutcome.Failed];
+ * a [BitmapShareFile.Dropped] file starts nothing and returns [LaunchOutcome.Dropped].
  */
-fun Context.quickShareBitmap(file: BitmapShareFile): Boolean =
+fun Context.quickShareBitmap(file: BitmapShareFile): LaunchOutcome =
     sharePng(file) {
         createBaseIntent()
             .apply {
@@ -157,15 +155,15 @@ fun Context.quickShareBitmap(file: BitmapShareFile): Boolean =
 
 private fun Context.sharePng(
     file: BitmapShareFile,
-    start: (Uri) -> Boolean,
-): Boolean =
+    start: (Uri) -> LaunchOutcome,
+): LaunchOutcome =
     when (file) {
         is BitmapShareFile.Written -> startOrToast { start(file.uri) }
-        BitmapShareFile.Dropped -> false
-        BitmapShareFile.Failed -> false.also { toast(R.string.commonutils_error_share_content_not_supported_on_device) }
+        BitmapShareFile.Dropped -> LaunchOutcome.Dropped
+        BitmapShareFile.Failed -> LaunchOutcome.Failed.also { toast(R.string.commonutils_error_share_content_not_supported_on_device) }
     }
 
-private fun Context.startOrToast(start: () -> Boolean): Boolean {
+private fun Context.startOrToast(start: () -> LaunchOutcome): LaunchOutcome {
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     return try {
@@ -173,7 +171,7 @@ private fun Context.startOrToast(start: () -> Boolean): Boolean {
     } catch (e: Exception) {
         Log.e(TAG, "Error sharing bitmap", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
-        false
+        LaunchOutcome.Failed
     }
 }
 
@@ -186,15 +184,14 @@ internal fun Context.createBaseIntent() =
         }
     }
 
-internal fun Intent.start(context: Context): Boolean {
+internal fun Intent.start(context: Context): LaunchOutcome =
     try {
-        return context.launchGated { context.startActivity(this) }
+        context.launchForOutcome { context.startActivity(this) }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to start activity with specific package: ${e.message}")
         `package` = null
-        return context.safeStartActivity(this)
+        context.safeStartActivity(this)
     }
-}
 
 /** Returns `true` if the Samsung Quick Share app is installed on this device. */
 fun Context.isSamsungQuickShareAvailable(): Boolean =

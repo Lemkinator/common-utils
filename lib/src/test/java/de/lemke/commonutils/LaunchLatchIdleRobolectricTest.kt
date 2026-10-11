@@ -34,6 +34,7 @@ import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.Preference
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.createBitmapShareFile
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
 import de.lemke.commonutils.ui.utils.shareBitmap
@@ -136,7 +137,7 @@ class LaunchLatchIdleRobolectricTest : LaunchLatchRobolectricTest() {
                 work = {
                     activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
                 },
-                then = { activity.shareBitmap(it).shouldBeTrue() },
+                then = { activity.shareBitmap(it) shouldBe LaunchOutcome.Started },
             ).shouldBeTrue()
         shadowLooper.idle()
 
@@ -314,5 +315,14 @@ class LaunchLatchIdleRobolectricTest : LaunchLatchRobolectricTest() {
         activity.deliverResult(request)
 
         launches shouldContainExactly listOf(true, false)
+    }
+
+    @Test
+    fun `idle result launcher reports the launch`() {
+        val activity = resumed().get()
+
+        activity.launcher.tryLaunch(Intent(activity, Activity::class.java)).shouldBeTrue()
+
+        shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull()
     }
 }

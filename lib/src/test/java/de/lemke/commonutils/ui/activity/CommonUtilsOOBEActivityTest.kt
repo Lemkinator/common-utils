@@ -28,6 +28,7 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.domain.AppStartResult
 import de.lemke.commonutils.track
 import de.lemke.commonutils.ui.utils.OnboardingContext
+import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.time.Duration
@@ -118,6 +119,24 @@ class CommonUtilsOOBEActivityTest {
 
         shadowOf(activity).nextStartedActivity.component?.className shouldBe Activity::class.java.name
         activity.isFinishing shouldBe true
+    }
+
+    @Test
+    fun `footer button returns and the spinner hides when the latch drops the advance`() {
+        val activity = onboardingController().get()
+        val button = activity.findViewById<View>(R.id.oobeIntroFooterButton)
+        button.performClick()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(200))
+        activity.singleLaunchActivity(Intent(activity, Activity::class.java))
+        shadowOf(activity).nextStartedActivity
+
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(300))
+
+        shadowOf(activity).nextStartedActivity shouldBe null
+        activity.isFinishing shouldBe false
+        button.isVisible shouldBe true
+        activity.findViewById<View>(R.id.oobeIntroFooterButtonProgress).isVisible shouldBe false
+        activity.findViewById<View>(R.id.oobeIntroFooterTosText).isEnabled shouldBe true
     }
 
     @Test

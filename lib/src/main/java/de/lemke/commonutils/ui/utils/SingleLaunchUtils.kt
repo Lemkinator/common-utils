@@ -405,7 +405,7 @@ fun Context.singleLaunchActivity(
 fun <I, O> ComponentActivity.registerForSingleLaunchResult(
     contract: ActivityResultContract<I, O>,
     callback: ActivityResultCallback<O>,
-): ActivityResultLauncher<I> = SingleLaunchResultLauncher(this, contract, callback) { this }
+): SingleLaunchResultLauncher<I> = GatedResultLauncher(this, contract, callback) { this }
 
 /**
  * Registers [contract] with a launcher whose launches are gated launches of this fragment's activity.
@@ -415,25 +415,43 @@ fun <I, O> ComponentActivity.registerForSingleLaunchResult(
 fun <I, O> Fragment.registerForSingleLaunchResult(
     contract: ActivityResultContract<I, O>,
     callback: ActivityResultCallback<O>,
-): ActivityResultLauncher<I> = SingleLaunchResultLauncher(this, contract, callback) { requireActivity() }
+): SingleLaunchResultLauncher<I> = GatedResultLauncher(this, contract, callback) { requireActivity() }
 
-private class SingleLaunchResultLauncher<I, O>(
+/** A result launcher that reports whether a launch ran or the launch latch dropped it; see [registerForSingleLaunchResult]. */
+abstract class SingleLaunchResultLauncher<I> : ActivityResultLauncher<I>() {
+    final override fun launch(
+        input: I,
+        options: ActivityOptionsCompat?,
+    ) {
+        tryLaunch(input, options)
+    }
+
+    /**
+     * Launches [input] as a gated launch; a launch that throws reopens the latch and rethrows.
+     * @return true if the launch ran, false if the latch dropped it.
+     */
+    @MainThread
+    abstract fun tryLaunch(
+        input: I,
+        options: ActivityOptionsCompat? = null,
+    ): Boolean
+}
+
+private class GatedResultLauncher<I, O>(
     caller: ActivityResultCaller,
     override val contract: ActivityResultContract<I, O>,
     callback: ActivityResultCallback<O>,
     private val host: () -> ComponentActivity,
-) : ActivityResultLauncher<I>() {
+) : SingleLaunchResultLauncher<I>() {
     private val registered =
         caller.registerForActivityResult(contract) { result ->
             host().liveLaunchLatch.deliverResult(owner = this) { callback.onActivityResult(result) }
         }
 
-    override fun launch(
+    override fun tryLaunch(
         input: I,
         options: ActivityOptionsCompat?,
-    ) {
-        host().launchGated(owner = this) { registered.launch(input, options) }
-    }
+    ): Boolean = host().launchGated(owner = this) { registered.launch(input, options) }
 
     override fun unregister() = registered.unregister()
 }

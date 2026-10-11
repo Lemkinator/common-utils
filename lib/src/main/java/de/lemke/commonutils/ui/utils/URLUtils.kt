@@ -41,26 +41,26 @@ fun String.urlEncodeAmpersand() = this.replace("&", "%26")
 fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
 
 /** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
-fun Fragment.openURL(url: String?): Boolean = requireContext().openURL(url)
+fun Fragment.openURL(url: String?): LaunchOutcome = requireContext().openURL(url)
 
 /** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
-fun Context.openURL(url: String?): Boolean =
+fun Context.openURL(url: String?): LaunchOutcome =
     // startActivity and the target app throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
         if (url.isNullOrBlank()) {
             Log.e(TAG, "link is null or blank")
             toast(getString(R.string.commonutils_error_cant_open_url))
-            false
+            LaunchOutcome.Failed
         } else {
-            launchGated { startActivity(Intent(ACTION_VIEW, url.toUri()).addFlags(FLAG_ACTIVITY_NEW_TASK)) }
+            launchForOutcome { startActivity(Intent(ACTION_VIEW, url.toUri()).addFlags(FLAG_ACTIVITY_NEW_TASK)) }
         }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "No browser app installed", e)
         toast(getString(R.string.commonutils_no_browser_app_installed))
-        false
+        LaunchOutcome.Failed
     } catch (e: Exception) {
         Log.e(TAG, "Failed to open URL", e)
         toast(getString(R.string.commonutils_error_cant_open_url))
-        false
+        LaunchOutcome.Failed
     }

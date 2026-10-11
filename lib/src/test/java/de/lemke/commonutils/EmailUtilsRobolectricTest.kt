@@ -20,11 +20,10 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.sendEmail
 import de.lemke.commonutils.ui.utils.sendEmailAboutMe
 import de.lemke.commonutils.ui.utils.sendEmailHelp
-import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
@@ -47,8 +46,8 @@ class EmailUtilsRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
-    fun `sendEmail returns true and fires ACTION_SENDTO intent`() {
-        ctx.sendEmail("test@example.com", "Hello", "Body text").shouldBeTrue()
+    fun `sendEmail returns Started and fires ACTION_SENDTO intent`() {
+        ctx.sendEmail("test@example.com", "Hello", "Body text") shouldBe LaunchOutcome.Started
         val intent = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
         intent shouldNotBe null
         intent.action shouldBe Intent.ACTION_SENDTO
@@ -76,14 +75,14 @@ class EmailUtilsRobolectricTest {
     }
 
     @Test
-    fun `sendEmailHelp returns true and fires intent`() {
-        ctx.sendEmailHelp("help@example.com", "Help Subject").shouldBeTrue()
+    fun `sendEmailHelp returns Started and fires intent`() {
+        ctx.sendEmailHelp("help@example.com", "Help Subject") shouldBe LaunchOutcome.Started
         shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
     }
 
     @Test
-    fun `sendEmailAboutMe returns true and fires intent`() {
-        ctx.sendEmailAboutMe("me@example.com", "About Subject").shouldBeTrue()
+    fun `sendEmailAboutMe returns Started and fires intent`() {
+        ctx.sendEmailAboutMe("me@example.com", "About Subject") shouldBe LaunchOutcome.Started
         shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
     }
 
@@ -95,12 +94,12 @@ class EmailUtilsRobolectricTest {
                 .setup()
                 .track(destroyActivities)
                 .get()
-        activity.sendEmail("a@b.com", "Sub", "Body").shouldBeTrue()
+        activity.sendEmail("a@b.com", "Sub", "Body") shouldBe LaunchOutcome.Started
         (shadowOf(activity).nextStartedActivity.flags and Intent.FLAG_ACTIVITY_NEW_TASK) shouldBe 0
     }
 
     @Test
-    fun `sendEmail returns false on ActivityNotFoundException`() {
+    fun `sendEmail returns Failed on ActivityNotFoundException`() {
         val a =
             spyk(
                 Robolectric
@@ -110,6 +109,6 @@ class EmailUtilsRobolectricTest {
                     .get(),
             )
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no email")
-        a.sendEmail("a@b.com", "Sub", "Body").shouldBeFalse()
+        a.sendEmail("a@b.com", "Sub", "Body") shouldBe LaunchOutcome.Failed
     }
 }

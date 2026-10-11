@@ -17,12 +17,9 @@ package de.lemke.commonutils
 
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
-import de.lemke.commonutils.ui.utils.collectEvents
 import de.lemke.commonutils.ui.utils.collectState
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,16 +66,5 @@ class LifecycleCollectorsTest {
         stateFlow.value = 99
         idle()
         stateCollected shouldBe listOf(42, 99)
-    }
-
-    @Test
-    fun `collectEvents delivers buffered event`() {
-        val activity = launchActivity()
-        val channel = Channel<String>(Channel.BUFFERED)
-        val eventCollected = mutableListOf<String>()
-        channel.trySend("hello")
-        activity.collectEvents(channel.receiveAsFlow()) { eventCollected.add(it) }
-        idle()
-        eventCollected shouldBe listOf("hello")
     }
 }

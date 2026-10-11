@@ -16,24 +16,26 @@
 package de.lemke.commonutils
 
 import android.content.Intent
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.app.ActivityOptionsCompat
+import de.lemke.commonutils.ui.utils.SingleLaunchResultLauncher
 
-/** Records every launched [Intent], or throws [failure] on launch instead. */
+/** Records every launched [Intent] and reports [admits], or throws [failure] on launch instead. */
 class RecordingIntentLauncher(
     private val failure: RuntimeException? = null,
-) : ActivityResultLauncher<Intent>() {
+    private val admits: Boolean = true,
+) : SingleLaunchResultLauncher<Intent>() {
     val launched = mutableListOf<Intent>()
 
     override val contract = StartActivityForResult()
 
-    override fun launch(
+    override fun tryLaunch(
         input: Intent,
         options: ActivityOptionsCompat?,
-    ) {
+    ): Boolean {
         failure?.let { throw it }
-        launched += input
+        if (admits) launched += input
+        return admits
     }
 
     override fun unregister() = Unit

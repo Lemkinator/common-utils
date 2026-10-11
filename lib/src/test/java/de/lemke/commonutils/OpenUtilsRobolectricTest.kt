@@ -23,6 +23,7 @@ import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
+import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.areAppLocalSettingsSupported
 import de.lemke.commonutils.ui.utils.openApp
 import de.lemke.commonutils.ui.utils.openAppLocaleSettings
@@ -62,7 +63,7 @@ class OpenUtilsApi36Test {
 
     @Test
     fun `openApplicationSettings fires ACTION_APPLICATION_DETAILS_SETTINGS intent`() {
-        ctx.openApplicationSettings().shouldBeTrue()
+        ctx.openApplicationSettings() shouldBe LaunchOutcome.Started
         val intent = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
         intent shouldNotBe null
         intent.action shouldBe Settings.ACTION_APPLICATION_DETAILS_SETTINGS
@@ -70,18 +71,18 @@ class OpenUtilsApi36Test {
 
     @Test
     fun `openApp with tryLocalFirst false fires Play Store intent`() {
-        ctx.openApp("com.example.nonexistent", tryLocalFirst = false).shouldBeTrue()
+        ctx.openApp("com.example.nonexistent", tryLocalFirst = false) shouldBe LaunchOutcome.Started
         shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
     }
 
     @Test
     fun `openApp with tryLocalFirst true and unknown package falls back to store`() {
-        ctx.openApp("com.example.notinstalled", tryLocalFirst = true).shouldBeTrue()
+        ctx.openApp("com.example.notinstalled", tryLocalFirst = true) shouldBe LaunchOutcome.Started
         shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity shouldNotBe null
     }
 
     @Test
-    fun `openAppWithPackageNameOnStore all URIs fail returns false`() {
+    fun `openAppWithPackageNameOnStore all URIs fail returns Failed`() {
         val a =
             spyk(
                 Robolectric
@@ -91,11 +92,11 @@ class OpenUtilsApi36Test {
                     .get(),
             )
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no store")
-        a.openApp("com.example.pkg", tryLocalFirst = false).shouldBeFalse()
+        a.openApp("com.example.pkg", tryLocalFirst = false) shouldBe LaunchOutcome.Failed
     }
 
     @Test
-    fun `openApplicationSettings ActivityNotFoundException returns false`() {
+    fun `openApplicationSettings ActivityNotFoundException returns Failed`() {
         val a =
             spyk(
                 Robolectric
@@ -105,7 +106,7 @@ class OpenUtilsApi36Test {
                     .get(),
             )
         every { a.startActivity(any<Intent>()) } throws ActivityNotFoundException("no settings")
-        a.openApplicationSettings().shouldBeFalse()
+        a.openApplicationSettings() shouldBe LaunchOutcome.Failed
     }
 
     @Test
@@ -116,22 +117,22 @@ class OpenUtilsApi36Test {
         every { spyCtx.packageManager } returns pm
         val fakeIntent = Intent("android.intent.action.MAIN").setPackage("com.example.installed")
         every { pm.getLaunchIntentForPackage("com.example.installed") } returns fakeIntent
-        spyCtx.openApp("com.example.installed", tryLocalFirst = true).shouldBeTrue()
+        spyCtx.openApp("com.example.installed", tryLocalFirst = true) shouldBe LaunchOutcome.Started
     }
 
     @Test
-    fun `openApp tryLocalFirst with installed package but startActivity throws ActivityNotFoundException returns false`() {
+    fun `openApp tryLocalFirst with installed package but startActivity throws ActivityNotFoundException returns Failed`() {
         val spyCtx = spyk(ctx)
         val pm = spyk(ctx.packageManager)
         every { spyCtx.packageManager } returns pm
         val fakeIntent = Intent("android.intent.action.MAIN").setPackage("com.example.installed")
         every { pm.getLaunchIntentForPackage("com.example.installed") } returns fakeIntent
         every { spyCtx.startActivity(any<Intent>()) } throws ActivityNotFoundException("no app")
-        spyCtx.openApp("com.example.installed", tryLocalFirst = true).shouldBeFalse()
+        spyCtx.openApp("com.example.installed", tryLocalFirst = true) shouldBe LaunchOutcome.Failed
     }
 
     @Test
-    fun `openAppLocaleSettings ActivityNotFoundException returns false`() {
+    fun `openAppLocaleSettings ActivityNotFoundException returns Failed`() {
         val a =
             Robolectric
                 .buildActivity(AppCompatActivity::class.java)
@@ -143,7 +144,7 @@ class OpenUtilsApi36Test {
             .beginTransaction()
             .add(frag, "test")
             .commitNow()
-        frag.openAppLocaleSettings().shouldBeFalse()
+        frag.openAppLocaleSettings() shouldBe LaunchOutcome.Failed
     }
 }
 

@@ -31,19 +31,19 @@ import de.lemke.commonutils.R
 
 private const val TAG = "EmailUtils"
 
-/** Opens a mail client to send an email to [email] with the given [subject] and [text]. */
+/** Opens a mail client to send an email to [email] with the given [subject] and [text]; a failure shows the error toast. */
 fun Context.sendEmail(
     email: String,
     subject: String,
     text: String,
-): Boolean = sendEmail(arrayOf(email), subject, text)
+): LaunchOutcome = sendEmail(arrayOf(email), subject, text)
 
-/** Opens a mail client to send an email to [emails] with the given [subject] and [text]. */
+/** Opens a mail client to send an email to [emails] with the given [subject] and [text]; a failure shows the error toast. */
 fun Context.sendEmail(
     emails: Array<String>,
     subject: String,
     text: String,
-): Boolean =
+): LaunchOutcome =
     try {
         val intent =
             Intent(ACTION_SENDTO).apply {
@@ -53,27 +53,27 @@ fun Context.sendEmail(
                 putExtra(EXTRA_TEXT, text)
                 if (this@sendEmail !is Activity) addFlags(FLAG_ACTIVITY_NEW_TASK)
             }
-        launchGated { startActivity(intent) }
+        launchForOutcome { startActivity(intent) }
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to send email", e)
         toast(getString(R.string.commonutils_no_email_app_installed))
-        false
+        LaunchOutcome.Failed
     }
 
 /** Sends a help request email with a pre-filled body. */
 fun Context.sendEmailHelp(
     email: String,
     subject: String,
-) = sendEmail(email, subject, getString(R.string.commonutils_help_email_text))
+): LaunchOutcome = sendEmail(email, subject, getString(R.string.commonutils_help_email_text))
 
 /** Sends an "about me" contact email with a pre-filled body. */
 fun Context.sendEmailAboutMe(
     email: String,
     subject: String,
-) = sendEmail(email, subject, getString(R.string.commonutils_about_email_text))
+): LaunchOutcome = sendEmail(email, subject, getString(R.string.commonutils_about_email_text))
 
 /** Sends a bug report email with a pre-filled body. */
 fun Fragment.sendEmailBugReport(
     email: String,
     subject: String,
-) = requireContext().sendEmail(email, subject, getString(R.string.commonutils_bug_report_email_text))
+): LaunchOutcome = requireContext().sendEmail(email, subject, getString(R.string.commonutils_bug_report_email_text))
