@@ -17,6 +17,7 @@ package de.lemke.commonutils.data
 
 import android.content.SharedPreferences
 import de.lemke.commonutils.freshTestPreferences
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -316,6 +317,12 @@ class DelegatesAdvancedTest {
         Holder().colors = emptyList()
         Holder().colors shouldBe listOf(7)
         prefs.getString("colors", null) shouldBe "7"
+    }
+
+    @Test
+    fun `recentColors rejects a maximum that is not positive`() {
+        shouldThrow<IllegalArgumentException> { prefs.delegates.recentColors(default = 0, max = 0) }
+        shouldThrow<IllegalArgumentException> { prefs.delegates.recentColors(default = 0, max = -1) }
     }
 
     @Test

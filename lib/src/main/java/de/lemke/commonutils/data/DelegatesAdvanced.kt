@@ -136,12 +136,17 @@ class SharedPreferenceDelegates(
      * with [withRecentColor].
      *
      * Reads and writes keep at most [max] colors, and an empty list reads as a list of [default] alone.
+     *
+     * @throws IllegalArgumentException if [max] is not positive.
      */
     fun recentColors(
         @ColorInt default: Int,
         max: Int = MAX_RECENT_COLORS,
         key: String? = null,
-    ): ReadWriteProperty<Any, List<Int>> = intList(listOf(default), key).sanitized { it.take(max).ifEmpty { listOf(default) } }
+    ): ReadWriteProperty<Any, List<Int>> {
+        require(max > 0) { "max must be positive, was $max" }
+        return intList(listOf(default), key).sanitized { it.take(max).ifEmpty { listOf(default) } }
+    }
 
     /** Delegate that reads/writes a dark mode flag stored as `"1"`/`"0"` for legacy HorizontalRadioPreference compatibility. */
     fun darkMode(
