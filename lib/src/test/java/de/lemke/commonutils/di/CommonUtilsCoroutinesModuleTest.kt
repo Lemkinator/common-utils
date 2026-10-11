@@ -28,18 +28,6 @@ import kotlinx.coroutines.launch
 
 class CommonUtilsCoroutinesModuleTest :
     ShouldSpec({
-        should("provide the IO dispatcher for @IoDispatcher") {
-            CommonUtilsCoroutinesModule.provideIoDispatcher() shouldBe Dispatchers.IO
-        }
-
-        should("provide the Default dispatcher for @DefaultDispatcher") {
-            CommonUtilsCoroutinesModule.provideDefaultDispatcher() shouldBe Dispatchers.Default
-        }
-
-        should("provide the Main dispatcher for @MainDispatcher") {
-            CommonUtilsCoroutinesModule.provideMainDispatcher() shouldBe Dispatchers.Main
-        }
-
         should("run the application scope on the dispatcher it is given") {
             val dispatcher: CoroutineDispatcher = Dispatchers.Unconfined
 

@@ -33,6 +33,8 @@ import kotlinx.coroutines.SupervisorJob
  * @InstallIn(SingletonComponent::class)
  * interface AppCoroutinesModule
  * ```
+ * An app that includes it must drop its own bindings for these four qualifiers, since a duplicate binding is a Dagger
+ * compile error, and its Dagger/Hilt version must be at least the library's.
  */
 @Module
 @DisableInstallInCheck

@@ -161,6 +161,10 @@ bindings; an app opts in with:
 interface AppCoroutinesModule
 ```
 
+An app that includes it must drop its own bindings for `@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher` and
+`@ApplicationScope` (a duplicate binding is a Dagger compile error), and its Dagger/Hilt version must be at least the
+library's.
+
 Hilt modules need no ProGuard/R8 keep rules.
 
 ## Configuration
