@@ -51,7 +51,7 @@ sealed interface BitmapExport {
     /** No export runs and no result waits. */
     data object Idle : BitmapExport
 
-    /** An export runs; the holder ignores new saves, copies and shares until it finishes. */
+    /** An export runs; the holder ignores new exports until it finishes. */
     data object Running : BitmapExport
 
     /** The save location needs the document picker; [launchBitmapExport] opens it for a PNG named after [fileName]. */
@@ -86,8 +86,9 @@ sealed interface BitmapExport {
  * Runs the bitmap exports of a ViewModel through [exporter] in [scope], one at a time, and holds the [BitmapExport]
  * state of the latest one.
  *
- * A ViewModel creates it with `viewModelScope` and exposes [state]. While an export is [BitmapExport.Running], [save],
- * [copy] and [share] do nothing. Tests drive it with `FakeBitmapExporter` from the testFixtures.
+ * A ViewModel creates it with `viewModelScope` and exposes [state]. Only in [BitmapExport.Idle] does [save], [copy],
+ * [share] or [onDocumentPicked] start an export; while one runs or its result waits for [onHandled], they do nothing.
+ * Tests drive it with `FakeBitmapExporter` from the testFixtures.
  */
 class BitmapExportStateHolder(
     private val scope: CoroutineScope,
@@ -107,7 +108,7 @@ class BitmapExportStateHolder(
         fileName: String,
         location: SaveLocation,
     ) {
-        start {
+        launchExport {
             when (val result = exporter.saveToDirectory(location, bitmap, fileName)) {
                 is BitmapSaveResult.Finished -> BitmapExport.SaveFinished(result)
                 BitmapSaveResult.NeedsPicker -> BitmapExport.OpenPicker(fileName)
@@ -119,7 +120,8 @@ class BitmapExportStateHolder(
      * Writes [bitmap] into the document of [pick], the result of the picker that [BitmapExport.OpenPicker] opened.
      *
      * A canceled pick changes nothing. A pick without a document, or a null [bitmap], ends in a failed
-     * [BitmapExport.SaveFinished]; a null [bitmap] also deletes the created document.
+     * [BitmapExport.SaveFinished]; a null [bitmap] also deletes the created document. While an export runs or a result
+     * waits, the pick is ignored like any other export.
      */
     fun onDocumentPicked(
         pick: DocumentPick,
@@ -127,14 +129,14 @@ class BitmapExportStateHolder(
     ) {
         when (pick) {
             DocumentPick.Canceled -> Unit
-            DocumentPick.MissingUri -> mutableState.value = BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed)
+            DocumentPick.MissingUri -> publishIfIdle(BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed))
             is DocumentPick.Created -> launchExport { exporter.saveToCreatedDocument(pick.uri, bitmap).toExport() }
         }
     }
 
     /** Writes [bitmap] for the clipboard; ends in [BitmapExport.Copy] or [BitmapExport.CopyFailed]. */
     fun copy(bitmap: Bitmap) {
-        start { exporter.createClip(bitmap)?.let(BitmapExport::Copy) ?: BitmapExport.CopyFailed }
+        launchExport { exporter.createClip(bitmap)?.let(BitmapExport::Copy) ?: BitmapExport.CopyFailed }
     }
 
     /**
@@ -145,7 +147,7 @@ class BitmapExportStateHolder(
         bitmap: Bitmap,
         target: ShareTarget = ShareTarget.SHARE_SHEET,
     ) {
-        start {
+        launchExport {
             when (val file = exporter.createShareFile(bitmap)) {
                 is BitmapShareFile.Written -> BitmapExport.Share(file, target)
                 BitmapShareFile.Failed -> BitmapExport.ShareFailed
@@ -159,12 +161,12 @@ class BitmapExportStateHolder(
         mutableState.update { if (it == result) BitmapExport.Idle else it }
     }
 
-    private fun start(work: suspend () -> BitmapExport.Result?) {
-        if (mutableState.value != BitmapExport.Running) launchExport(work)
+    private fun publishIfIdle(result: BitmapExport.Result) {
+        mutableState.compareAndSet(BitmapExport.Idle, result)
     }
 
     private fun launchExport(work: suspend () -> BitmapExport.Result?) {
-        mutableState.value = BitmapExport.Running
+        if (!mutableState.compareAndSet(BitmapExport.Idle, BitmapExport.Running)) return
         scope.launch { mutableState.value = work() ?: BitmapExport.Idle }
     }
 

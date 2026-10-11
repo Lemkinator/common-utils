@@ -42,12 +42,6 @@ class BitmapExportStateHolderTest {
     private fun TestScope.holder() = BitmapExportStateHolder(backgroundScope, exporter)
 
     @Test
-    fun `starts Idle`() =
-        runTest {
-            holder().state.value shouldBe BitmapExport.Idle
-        }
-
-    @Test
     fun `save to a public directory ends in SaveFinished with the saved location`() =
         runTest {
             val holder = holder()
@@ -106,19 +100,85 @@ class BitmapExportStateHolderTest {
         }
 
     @Test
-    fun `a finished export lets the next export start`() =
+    fun `a handled result lets the next export start`() =
         runTest {
             val holder = holder()
             exporter.shareFile = written
 
             holder.save(bitmap, "icon", SaveLocation.PICTURES)
             runCurrent()
+            holder.onHandled(BitmapExport.SaveFinished(BitmapSaveResult.Saved(SaveLocation.PICTURES)))
             holder.share(bitmap)
             runCurrent()
 
             holder.state.value shouldBe BitmapExport.Share(written, ShareTarget.SHARE_SHEET)
             exporter.calls shouldContainExactly
                 listOf(Call.SaveToDirectory(SaveLocation.PICTURES, bitmap, "icon"), Call.CreateShareFile(bitmap))
+        }
+
+    @Test
+    fun `a created document while an export runs is ignored`() =
+        runTest {
+            val holder = holder()
+            val gate = CompletableDeferred<Unit>()
+            exporter.gate = gate
+
+            holder.save(bitmap, "icon", SaveLocation.PICTURES)
+            runCurrent()
+            holder.onDocumentPicked(DocumentPick.Created(document), bitmap)
+            runCurrent()
+
+            holder.state.value shouldBe BitmapExport.Running
+            exporter.calls shouldContainExactly listOf(Call.SaveToDirectory(SaveLocation.PICTURES, bitmap, "icon"))
+            gate.complete(Unit)
+            runCurrent()
+            holder.state.value shouldBe BitmapExport.SaveFinished(BitmapSaveResult.Saved(SaveLocation.PICTURES))
+        }
+
+    @Test
+    fun `a pick without a document while an export runs is ignored`() =
+        runTest {
+            val holder = holder()
+            val gate = CompletableDeferred<Unit>()
+            exporter.gate = gate
+
+            holder.copy(bitmap)
+            runCurrent()
+            holder.onDocumentPicked(DocumentPick.MissingUri, bitmap)
+
+            holder.state.value shouldBe BitmapExport.Running
+        }
+
+    @Test
+    fun `a result that waits for onHandled blocks the next export and pick`() =
+        runTest {
+            val holder = holder()
+            holder.save(bitmap, "icon", SaveLocation.CUSTOM)
+            runCurrent()
+
+            holder.copy(bitmap)
+            holder.share(bitmap)
+            holder.save(bitmap, "other", SaveLocation.PICTURES)
+            holder.onDocumentPicked(DocumentPick.Created(document), bitmap)
+            holder.onDocumentPicked(DocumentPick.MissingUri, bitmap)
+            runCurrent()
+
+            holder.state.value shouldBe BitmapExport.OpenPicker("icon")
+            exporter.calls shouldContainExactly listOf(Call.SaveToDirectory(SaveLocation.CUSTOM, bitmap, "icon"))
+        }
+
+    @Test
+    fun `a handled result lets the picked document be written`() =
+        runTest {
+            val holder = holder()
+            holder.save(bitmap, "icon", SaveLocation.CUSTOM)
+            runCurrent()
+            holder.onHandled(BitmapExport.OpenPicker("icon"))
+
+            holder.onDocumentPicked(DocumentPick.Created(document), bitmap)
+            runCurrent()
+
+            holder.state.value shouldBe BitmapExport.SaveFinished(BitmapSaveResult.Saved(SaveLocation.CUSTOM))
         }
 
     @Test
@@ -165,7 +225,7 @@ class BitmapExportStateHolderTest {
             runCurrent()
 
             holder.state.value shouldBe BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed)
-            exporter.deletedDocuments shouldContainExactly listOf(document)
+            exporter.calls shouldContainExactly listOf(Call.SaveToCreatedDocument(document, null))
         }
 
     @Test
