@@ -130,7 +130,8 @@ this library:
 Helpers that start another screen return a `LaunchOutcome`. A RESUMED collector marks its
 state handled when `LaunchOutcome.isSettled` is true; on `Dropped` the state stays pending.
 
-- `startActivityForOutcome(intent, errorMessage)` — gated start; any start failure toasts.
+- `startActivityForOutcome(intent, errorMessage)` — gated start; any start failure toasts `errorMessage`
+  (default: the generic error). The share helpers pass the sharing-not-supported message.
 - `launchCreateDocument(fileName, mimeType, extension, launcher)` — `ACTION_CREATE_DOCUMENT`
   picker for any type; `exportBitmap` is its PNG case.
 - `registerForDocumentPick { pick -> }` (activity or fragment) — the picker launcher; it

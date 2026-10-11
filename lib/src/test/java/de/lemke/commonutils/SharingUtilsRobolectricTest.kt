@@ -179,10 +179,19 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `startActivityForOutcome without a matching activity shows the default error and returns Failed`() {
+    fun `startActivityForOutcome without a matching activity shows the generic error and returns Failed`() {
         val context = StartActivityFailingContext(ctx, ActivityNotFoundException("no settings"))
 
         context.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS)) shouldBe LaunchOutcome.Failed
+
+        ShadowToast.getTextOfLatestToast() shouldBe "Error"
+    }
+
+    @Test
+    fun `shareText on a device that cannot handle it shows the sharing-not-supported error`() {
+        val context = StartActivityFailingContext(ctx, ActivityNotFoundException("no share"))
+
+        context.shareText("hello") shouldBe LaunchOutcome.Failed
 
         ShadowToast.getTextOfLatestToast() shouldBe "Error: Sharing content is not supported on your device."
     }

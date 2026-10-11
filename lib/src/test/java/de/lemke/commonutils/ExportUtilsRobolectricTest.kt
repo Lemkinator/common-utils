@@ -132,6 +132,15 @@ class ExportUtilsRobolectricTest {
     }
 
     @Test
+    fun `launchCreateDocument whose launch throws any exception shows the not-supported toast and returns Failed`() {
+        val launcher = RecordingIntentLauncher(SecurityException("provider denied"))
+
+        ctx.launchCreateDocument("export", "application/json", ".json", launcher) shouldBe LaunchOutcome.Failed
+
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: Saving content is not supported on your device."
+    }
+
+    @Test
     fun `launchCreateDocument whose launch the latch drops returns Dropped without a toast`() {
         val launcher = RecordingIntentLauncher(admits = false)
 

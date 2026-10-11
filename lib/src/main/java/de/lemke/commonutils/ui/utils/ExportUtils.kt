@@ -16,7 +16,6 @@
 package de.lemke.commonutils.ui.utils
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_CREATE_DOCUMENT
@@ -156,12 +155,29 @@ fun Context.exportBitmap(
  * [LaunchOutcome.Dropped], so the caller keeps its export pending until the activity resumes. Register [launcher] with
  * [registerForDocumentPick]; its callback writes the document at the picked URI.
  */
+fun Fragment.launchCreateDocument(
+    fileName: String,
+    mimeType: String,
+    extension: String,
+    launcher: SingleLaunchResultLauncher<Intent>,
+): LaunchOutcome = requireContext().launchCreateDocument(fileName, mimeType, extension, launcher)
+
+/**
+ * Launches the `ACTION_CREATE_DOCUMENT` picker through [launcher] to create a [mimeType] document named after
+ * [fileName], made file-system safe and timestamped, with [extension] (including its dot, such as `".json"`).
+ *
+ * A device without a picker shows the error toast and returns [LaunchOutcome.Failed]. A launch the latch drops returns
+ * [LaunchOutcome.Dropped], so the caller keeps its export pending until the activity resumes. Register [launcher] with
+ * [registerForDocumentPick]; its callback writes the document at the picked URI.
+ */
 fun Context.launchCreateDocument(
     fileName: String,
     mimeType: String,
     extension: String,
     launcher: SingleLaunchResultLauncher<Intent>,
 ): LaunchOutcome =
+    // Document providers and system services throw an open-ended exception set; every failure must toast, not crash.
+    @Suppress("TooGenericExceptionCaught")
     try {
         val launched =
             launcher.tryLaunch(
@@ -171,7 +187,7 @@ fun Context.launchCreateDocument(
                     .putExtra(EXTRA_TITLE, fileName.toSafeFileName(extension)),
             )
         if (launched) LaunchOutcome.Started else LaunchOutcome.Dropped
-    } catch (e: ActivityNotFoundException) {
+    } catch (e: Exception) {
         Log.e(TAG, "Error launching document picker", e)
         toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
         LaunchOutcome.Failed

@@ -44,7 +44,7 @@ fun Fragment.shareApp(): LaunchOutcome = requireContext().shareApp()
 
 /** Shares the app's Play Store link via the system share sheet; a failure shows the error toast. */
 fun Context.shareApp(): LaunchOutcome =
-    startActivityForOutcome(
+    startShareActivity(
         Intent.createChooser(
             Intent().apply {
                 action = ACTION_SEND
@@ -71,7 +71,7 @@ fun Context.shareText(
         putExtra(EXTRA_TEXT, text)
         putExtra(EXTRA_TITLE, title)
         type = MIME_TYPE_TEXT
-        return startActivityForOutcome(Intent.createChooser(this, title))
+        return startShareActivity(Intent.createChooser(this, title))
     }
 }
 
@@ -82,9 +82,21 @@ fun Context.shareText(
  * [LaunchOutcome.Failed]. A launch the latch drops returns [LaunchOutcome.Dropped], so a RESUMED collector keeps its
  * state pending until the activity resumes.
  */
+fun Fragment.startActivityForOutcome(
+    intent: Intent,
+    @StringRes errorMessage: Int = R.string.commonutils_error,
+): LaunchOutcome = requireContext().startActivityForOutcome(intent, errorMessage)
+
+/**
+ * Starts [intent] as a gated launch, like [singleLaunchActivity], and reports the [LaunchOutcome].
+ *
+ * A start that throws, such as on a device without a matching activity, shows [errorMessage] as a toast and returns
+ * [LaunchOutcome.Failed]. A launch the latch drops returns [LaunchOutcome.Dropped], so a RESUMED collector keeps its
+ * state pending until the activity resumes.
+ */
 fun Context.startActivityForOutcome(
     intent: Intent,
-    @StringRes errorMessage: Int = R.string.commonutils_error_share_content_not_supported_on_device,
+    @StringRes errorMessage: Int = R.string.commonutils_error,
 ): LaunchOutcome =
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
@@ -95,6 +107,10 @@ fun Context.startActivityForOutcome(
         toast(errorMessage)
         LaunchOutcome.Failed
     }
+
+/** Starts a share [intent]; a device that cannot handle it shows the share-specific error toast. */
+internal fun Context.startShareActivity(intent: Intent): LaunchOutcome =
+    startActivityForOutcome(intent, R.string.commonutils_error_share_content_not_supported_on_device)
 
 /** Kinds of cache file handed to other apps, each in its own [Context.getCacheDir] subdirectory so no kind overwrites another's. */
 internal enum class CacheFileKind(
