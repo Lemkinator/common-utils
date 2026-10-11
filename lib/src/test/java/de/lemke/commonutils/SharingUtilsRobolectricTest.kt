@@ -900,6 +900,33 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
+    fun `single File share - shares as PNG by default`() {
+        val act = activity()
+        val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
+        file.share(act) shouldBe LaunchOutcome.Started
+        act.startedChooserTarget().type shouldBe "image/png"
+    }
+
+    @Test
+    fun `single File share - shares as the given MIME type`() {
+        val act = activity()
+        val file = File(act.cacheDir, "game.sudoku").also { it.createNewFile() }
+        file.share(act, "application/sudoku") shouldBe LaunchOutcome.Started
+        val target = act.startedChooserTarget()
+        target.type shouldBe "application/sudoku"
+        target.streamUri() shouldBe "$CACHE_ROOT_URI/game.sudoku"
+    }
+
+    @Test
+    fun `multi-element List share - shares as the given MIME type`() {
+        val act = activity()
+        val f1 = File(act.cacheDir, "a.json").also { it.createNewFile() }
+        val f2 = File(act.cacheDir, "b.json").also { it.createNewFile() }
+        listOf(f1, f2).share(act, "application/json") shouldBe LaunchOutcome.Started
+        act.startedChooserTarget().type shouldBe "application/json"
+    }
+
+    @Test
     fun `single-element List share - uses ACTION_SEND and returns Started`() {
         val act = activity()
         val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
