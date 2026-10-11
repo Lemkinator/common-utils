@@ -17,6 +17,7 @@ package de.lemke.commonutils.data
 
 import android.content.SharedPreferences
 import de.lemke.commonutils.freshTestPreferences
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -266,6 +267,62 @@ class DelegatesAdvancedTest {
             var list: List<Int> by prefs.delegates.intList(default = emptyList())
         }
         Holder().list shouldBe listOf(1, 2)
+    }
+
+    @Test
+    fun `recentColors returns a list of the default alone when key absent`() {
+        class Holder {
+            var colors: List<Int> by prefs.delegates.recentColors(default = -1)
+        }
+        Holder().colors shouldBe listOf(-1)
+    }
+
+    @Test
+    fun `recentColors round-trips a written list as comma-joined ints`() {
+        class Holder {
+            var colors: List<Int> by prefs.delegates.recentColors(default = -1)
+        }
+
+        Holder().colors = listOf(-16777216, -1)
+        Holder().colors shouldBe listOf(-16777216, -1)
+        prefs.getString("colors", null) shouldBe "-16777216,-1"
+    }
+
+    @Test
+    fun `recentColors caps a written list at six colors by default`() {
+        class Holder {
+            var colors: List<Int> by prefs.delegates.recentColors(default = 0)
+        }
+
+        Holder().colors = listOf(1, 2, 3, 4, 5, 6, 7)
+        prefs.getString("colors", null) shouldBe "1,2,3,4,5,6"
+    }
+
+    @Test
+    fun `recentColors caps a stored list at the given maximum on read`() {
+        prefs.edit().putString("recent", "1,2,3").apply()
+
+        class Holder {
+            var colors: List<Int> by prefs.delegates.recentColors(default = 0, max = 2, key = "recent")
+        }
+        Holder().colors shouldBe listOf(1, 2)
+    }
+
+    @Test
+    fun `recentColors reads a written empty list as a list of the default alone`() {
+        class Holder {
+            var colors: List<Int> by prefs.delegates.recentColors(default = 7)
+        }
+
+        Holder().colors = emptyList()
+        Holder().colors shouldBe listOf(7)
+        prefs.getString("colors", null) shouldBe "7"
+    }
+
+    @Test
+    fun `recentColors rejects a maximum that is not positive`() {
+        shouldThrow<IllegalArgumentException> { prefs.delegates.recentColors(default = 0, max = 0) }
+        shouldThrow<IllegalArgumentException> { prefs.delegates.recentColors(default = 0, max = -1) }
     }
 
     @Test

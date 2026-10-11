@@ -16,7 +16,6 @@
 package de.lemke.commonutils.ui.utils
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_CREATE_DOCUMENT
@@ -27,7 +26,10 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.annotation.MainThread
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
@@ -74,7 +76,10 @@ sealed interface BitmapSaveResult {
     data object Canceled : UriResult
 }
 
-/** The result of the `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] launches; see [toDocumentPick]. */
+/**
+ * The result of the `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] or [launchCreateDocument] launches; see
+ * [toDocumentPick].
+ */
 sealed interface DocumentPick {
     /** The picker created the document at [uri]; pass it to [saveBitmapToUri] with `createdDocument = true`. */
     data class Created(
@@ -88,7 +93,7 @@ sealed interface DocumentPick {
     data object Canceled : DocumentPick
 }
 
-/** Reads this result of the picker that [exportBitmap] launches as a [DocumentPick]. */
+/** Reads this result of the picker that [exportBitmap] or [launchCreateDocument] launches as a [DocumentPick]. */
 fun ActivityResult.toDocumentPick(): DocumentPick {
     val uri = data?.data
     return when {
@@ -97,6 +102,26 @@ fun ActivityResult.toDocumentPick(): DocumentPick {
         else -> DocumentPick.Created(uri)
     }
 }
+
+/**
+ * Registers the launcher for the picker of [exportBitmap] or [launchCreateDocument]; [onPick] receives each result as
+ * a [DocumentPick].
+ *
+ * Register it like `registerForActivityResult`, before this activity is created. Its launches are gated launches; see
+ * [registerForSingleLaunchResult].
+ */
+@MainThread
+fun ComponentActivity.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaunchResultLauncher<Intent> =
+    registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toDocumentPick()) }
+
+/**
+ * Registers the launcher for the picker of [exportBitmap] or [launchCreateDocument] with this fragment; [onPick]
+ * receives each result as a [DocumentPick].
+ * @see ComponentActivity.registerForDocumentPick
+ */
+@MainThread
+fun Fragment.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaunchResultLauncher<Intent> =
+    registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toDocumentPick()) }
 
 /**
  * Launches the document picker through [activityResultLauncher] to create a PNG named after [filename]; a device
@@ -120,17 +145,49 @@ fun Fragment.exportBitmap(
 fun Context.exportBitmap(
     filename: String,
     activityResultLauncher: SingleLaunchResultLauncher<Intent>,
+): LaunchOutcome = launchCreateDocument(filename, MIME_TYPE_PNG, EXTENSION_PNG, activityResultLauncher)
+
+/**
+ * Launches the `ACTION_CREATE_DOCUMENT` picker through [launcher] to create a [mimeType] document named after
+ * [fileName], made file-system safe and timestamped, with [extension] (including its dot, such as `".json"`).
+ *
+ * A device without a picker shows the error toast and returns [LaunchOutcome.Failed]. A launch the latch drops returns
+ * [LaunchOutcome.Dropped], so the caller keeps its export pending until the activity resumes. Register [launcher] with
+ * [registerForDocumentPick]; its callback writes the document at the picked URI.
+ */
+fun Fragment.launchCreateDocument(
+    fileName: String,
+    mimeType: String,
+    extension: String,
+    launcher: SingleLaunchResultLauncher<Intent>,
+): LaunchOutcome = requireContext().launchCreateDocument(fileName, mimeType, extension, launcher)
+
+/**
+ * Launches the `ACTION_CREATE_DOCUMENT` picker through [launcher] to create a [mimeType] document named after
+ * [fileName], made file-system safe and timestamped, with [extension] (including its dot, such as `".json"`).
+ *
+ * A device without a picker shows the error toast and returns [LaunchOutcome.Failed]. A launch the latch drops returns
+ * [LaunchOutcome.Dropped], so the caller keeps its export pending until the activity resumes. Register [launcher] with
+ * [registerForDocumentPick]; its callback writes the document at the picked URI.
+ */
+fun Context.launchCreateDocument(
+    fileName: String,
+    mimeType: String,
+    extension: String,
+    launcher: SingleLaunchResultLauncher<Intent>,
 ): LaunchOutcome =
+    // Document providers and system services throw an open-ended exception set; every failure must toast, not crash.
+    @Suppress("TooGenericExceptionCaught")
     try {
         val launched =
-            activityResultLauncher.tryLaunch(
+            launcher.tryLaunch(
                 Intent(ACTION_CREATE_DOCUMENT)
                     .addCategory(CATEGORY_OPENABLE)
-                    .setType(MIME_TYPE_PNG)
-                    .putExtra(EXTRA_TITLE, filename.toSafeFileName(EXTENSION_PNG)),
+                    .setType(mimeType)
+                    .putExtra(EXTRA_TITLE, fileName.toSafeFileName(extension)),
             )
         if (launched) LaunchOutcome.Started else LaunchOutcome.Dropped
-    } catch (e: ActivityNotFoundException) {
+    } catch (e: Exception) {
         Log.e(TAG, "Error launching document picker", e)
         toast(R.string.commonutils_error_saving_content_is_not_supported_on_device)
         LaunchOutcome.Failed
@@ -222,7 +279,7 @@ private fun Context.writePng(
 
 // Providers and system services throw an open-ended exception set; a failed cleanup must not crash.
 @Suppress("TooGenericExceptionCaught")
-private fun Context.deleteDocument(uri: Uri) {
+internal fun Context.deleteDocument(uri: Uri) {
     try {
         DocumentsContract.deleteDocument(contentResolver, uri)
     } catch (e: Exception) {

@@ -129,7 +129,7 @@ fun Context.shareBitmap(
                 type = MIME_TYPE_PNG
                 addFlags(FLAG_GRANT_READ_URI_PERMISSION)
             }
-        safeStartActivity(Intent.createChooser(intent, null))
+        startShareActivity(Intent.createChooser(intent, null))
     }
 
 /**
@@ -190,7 +190,7 @@ internal fun Intent.start(context: Context): LaunchOutcome =
     } catch (e: ActivityNotFoundException) {
         Log.e(TAG, "Failed to start activity with specific package: ${e.message}")
         `package` = null
-        context.safeStartActivity(this)
+        context.startShareActivity(this)
     }
 
 /** Returns `true` if the Samsung Quick Share app is installed on this device. */

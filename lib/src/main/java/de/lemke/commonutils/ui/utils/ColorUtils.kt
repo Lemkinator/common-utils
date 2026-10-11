@@ -21,8 +21,10 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.widget.Button
 import androidx.annotation.ColorInt
+import androidx.annotation.MainThread
 import androidx.appcompat.R.color.sesl_show_button_shapes_color_disabled
 import androidx.core.graphics.toColor
+import androidx.picker3.app.SeslColorPickerDialog
 import de.lemke.commonutils.R
 import kotlin.math.roundToInt
 
@@ -93,3 +95,23 @@ fun Button.bindColorSwatch(
         setTextColor(context.getColor(R.color.commonutils_secondary_text_icon_color))
     }
 }
+
+/**
+ * Shows the OneUI color picker, with its transparency control, under [tag] unless the picker last shown under [tag]
+ * in this context's activity still shows; see [android.app.Dialog.showOnce].
+ *
+ * The picker starts at [currentColor] and offers [recentColors] in its recent row; keep them with
+ * [de.lemke.commonutils.data.SharedPreferenceDelegates.recentColors]. [onColorPicked] receives the color the user
+ * confirms.
+ * @return true if the picker was shown, false if the one under [tag] still shows.
+ */
+@MainThread
+fun Context.showColorPickerOnce(
+    tag: String,
+    @ColorInt currentColor: Int,
+    recentColors: List<Int>,
+    onColorPicked: (Int) -> Unit,
+): Boolean =
+    SeslColorPickerDialog(this, onColorPicked, currentColor, recentColors.toIntArray(), true)
+        .apply { setTransparencyControlEnabled(true) }
+        .showOnce(tag)

@@ -25,6 +25,7 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
 import android.net.Uri
+import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
@@ -47,6 +48,7 @@ import de.lemke.commonutils.ui.utils.share
 import de.lemke.commonutils.ui.utils.shareApp
 import de.lemke.commonutils.ui.utils.shareBitmap
 import de.lemke.commonutils.ui.utils.shareText
+import de.lemke.commonutils.ui.utils.startActivityForOutcome
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -153,7 +155,7 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `shareApp ActivityNotFoundException covers safeStartActivity catch branch`() {
+    fun `shareApp ActivityNotFoundException covers startActivityForOutcome catch branch`() {
         val a =
             spyk(
                 Robolectric
@@ -164,6 +166,61 @@ class SharingUtilsRobolectricTest {
             )
         every { a.startActivity(any<android.content.Intent>()) } throws ActivityNotFoundException("no handler")
         a.shareApp() shouldBe LaunchOutcome.Failed
+    }
+
+    @Test
+    fun `startActivityForOutcome starts the intent and returns Started`() {
+        val activity = activity()
+        val intent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
+
+        activity.startActivityForOutcome(intent) shouldBe LaunchOutcome.Started
+
+        shadowOf(activity).nextStartedActivity.action shouldBe Settings.ACTION_WIRELESS_SETTINGS
+    }
+
+    @Test
+    fun `startActivityForOutcome without a matching activity shows the generic error and returns Failed`() {
+        val context = StartActivityFailingContext(ctx, ActivityNotFoundException("no settings"))
+
+        context.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS)) shouldBe LaunchOutcome.Failed
+
+        ShadowToast.getTextOfLatestToast() shouldBe "Error"
+    }
+
+    @Test
+    fun `shareText on a device that cannot handle it shows the sharing-not-supported error`() {
+        val context = StartActivityFailingContext(ctx, ActivityNotFoundException("no share"))
+
+        context.shareText("hello") shouldBe LaunchOutcome.Failed
+
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: Sharing content is not supported on your device."
+    }
+
+    @Test
+    fun `startActivityForOutcome shows the given error message for any start failure`() {
+        val context = StartActivityFailingContext(ctx, SecurityException("not exported"))
+
+        context.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS), R.string.commonutils_error) shouldBe
+            LaunchOutcome.Failed
+
+        ShadowToast.getTextOfLatestToast() shouldBe "Error"
+    }
+
+    @Test
+    fun `startActivityForOutcome while the latch holds an earlier launch returns Dropped and starts nothing`() {
+        val activity =
+            Robolectric
+                .buildActivity(LatchTestActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
+        activity.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS)) shouldBe LaunchOutcome.Started
+        shadowOf(activity).clearNextStartedActivities()
+
+        activity.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS)) shouldBe LaunchOutcome.Dropped
+
+        shadowOf(activity).nextStartedActivity shouldBe null
+        ShadowToast.shownToastCount() shouldBe 0
     }
 
     @Test
@@ -849,6 +906,33 @@ class SharingUtilsBitmapRobolectricTest {
         val target = act.startedChooserTarget()
         target.streamUri() shouldBe "$CACHE_ROOT_URI/img.png"
         target.readGrantFlag() shouldBe Intent.FLAG_GRANT_READ_URI_PERMISSION
+    }
+
+    @Test
+    fun `single File share - shares as PNG by default`() {
+        val act = activity()
+        val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
+        file.share(act) shouldBe LaunchOutcome.Started
+        act.startedChooserTarget().type shouldBe "image/png"
+    }
+
+    @Test
+    fun `single File share - shares as the given MIME type`() {
+        val act = activity()
+        val file = File(act.cacheDir, "game.sudoku").also { it.createNewFile() }
+        file.share(act, "application/sudoku") shouldBe LaunchOutcome.Started
+        val target = act.startedChooserTarget()
+        target.type shouldBe "application/sudoku"
+        target.streamUri() shouldBe "$CACHE_ROOT_URI/game.sudoku"
+    }
+
+    @Test
+    fun `multi-element List share - shares as the given MIME type`() {
+        val act = activity()
+        val f1 = File(act.cacheDir, "a.json").also { it.createNewFile() }
+        val f2 = File(act.cacheDir, "b.json").also { it.createNewFile() }
+        listOf(f1, f2).share(act, "application/json") shouldBe LaunchOutcome.Started
+        act.startedChooserTarget().type shouldBe "application/json"
     }
 
     @Test

@@ -19,6 +19,7 @@ import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Looper
+import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.ui.utils.BitmapSaveResult
@@ -26,12 +27,14 @@ import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.copyToClipboard
 import de.lemke.commonutils.ui.utils.createBitmapClip
 import de.lemke.commonutils.ui.utils.exportBitmap
+import de.lemke.commonutils.ui.utils.launchCreateDocument
 import de.lemke.commonutils.ui.utils.openApp
 import de.lemke.commonutils.ui.utils.openAppLocaleSettings
 import de.lemke.commonutils.ui.utils.openURL
 import de.lemke.commonutils.ui.utils.sendEmailBugReport
 import de.lemke.commonutils.ui.utils.shareApp
 import de.lemke.commonutils.ui.utils.shareText
+import de.lemke.commonutils.ui.utils.startActivityForOutcome
 import de.lemke.commonutils.ui.utils.toast
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -177,6 +180,22 @@ class FragmentExtensionsRobolectricTest {
         val launcher = RecordingIntentLauncher()
         fragment.exportBitmap("test", launcher) shouldBe LaunchOutcome.Started
         launcher.launched.single().action shouldBe Intent.ACTION_CREATE_DOCUMENT
+    }
+
+    @Test
+    fun `Fragment launchCreateDocument launches the picker for the given type`() {
+        val launcher = RecordingIntentLauncher()
+
+        fragment.launchCreateDocument("backup", "application/json", ".json", launcher) shouldBe LaunchOutcome.Started
+
+        launcher.launched.single().type shouldBe "application/json"
+    }
+
+    @Test
+    fun `Fragment startActivityForOutcome starts the intent`() {
+        fragment.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS)) shouldBe LaunchOutcome.Started
+
+        shadowOf(fragment.requireActivity()).nextStartedActivity.action shouldBe Settings.ACTION_WIRELESS_SETTINGS
     }
 }
 

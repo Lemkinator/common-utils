@@ -44,13 +44,16 @@ class FakeBitmapExporter : BitmapExporter {
     /** While set and not completed, every call suspends after it records its [Call]. */
     var gate: CompletableDeferred<Unit>? = null
 
+    /** While set, every call throws it after it records its [Call] and passes [gate]; it models a broken exporter. */
+    var exception: Exception? = null
+
     private val recordedCalls = mutableListOf<Call>()
     private val deletedUris = mutableListOf<Uri>()
 
     /** Every call in order, recorded before it waits for [gate]. */
     val calls: List<Call> get() = recordedCalls.toList()
 
-    /** The documents that [saveToCreatedDocument] deleted, since its result was no [BitmapSaveResult.Saved]. */
+    /** The documents that [saveToCreatedDocument] or [deleteCreatedDocument] deleted. */
     val deletedDocuments: List<Uri> get() = deletedUris.toList()
 
     override suspend fun saveToDirectory(
@@ -72,6 +75,10 @@ class FakeBitmapExporter : BitmapExporter {
             result
         }
 
+    override suspend fun deleteCreatedDocument(uri: Uri) {
+        record(Call.DeleteCreatedDocument(uri)) { deletedUris += uri }
+    }
+
     override suspend fun createClip(bitmap: Bitmap): ClipData? = record(Call.CreateClip(bitmap)) { clip }
 
     override suspend fun createShareFile(bitmap: Bitmap): BitmapShareFile = record(Call.CreateShareFile(bitmap)) { shareFile }
@@ -82,6 +89,7 @@ class FakeBitmapExporter : BitmapExporter {
     ): T {
         recordedCalls += call
         gate?.await()
+        exception?.let { throw it }
         return result()
     }
 
@@ -98,6 +106,11 @@ class FakeBitmapExporter : BitmapExporter {
         data class SaveToCreatedDocument(
             val uri: Uri,
             val bitmap: Bitmap?,
+        ) : Call
+
+        /** A [FakeBitmapExporter.deleteCreatedDocument] call. */
+        data class DeleteCreatedDocument(
+            val uri: Uri,
         ) : Call
 
         /** A [FakeBitmapExporter.createClip] call. */

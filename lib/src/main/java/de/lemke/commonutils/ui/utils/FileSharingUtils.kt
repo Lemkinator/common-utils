@@ -30,14 +30,22 @@ import java.io.File
 private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
 
-/** Shares this image file via the system share sheet; a failure shows the error toast. */
-fun File.share(context: Context): LaunchOutcome = listOf(this).share(context)
+/** Shares this file as [mimeType] via the system share sheet; a failure shows the error toast. */
+@JvmOverloads
+fun File.share(
+    context: Context,
+    mimeType: String = MIME_TYPE_PNG,
+): LaunchOutcome = listOf(this).share(context, mimeType)
 
 /**
- * Shares all image files in this list via the system share sheet (multi-file if more than one); a failure, also an
- * empty list, shows the error toast.
+ * Shares all files in this list as [mimeType] via the system share sheet (multi-file if more than one); a failure,
+ * also an empty list, shows the error toast.
  */
-fun List<File>.share(context: Context): LaunchOutcome {
+@JvmOverloads
+fun List<File>.share(
+    context: Context,
+    mimeType: String = MIME_TYPE_PNG,
+): LaunchOutcome {
     if (isEmpty()) {
         Log.e(TAG, "No file to share.")
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
@@ -49,7 +57,7 @@ fun List<File>.share(context: Context): LaunchOutcome {
         val contentUris = map { f -> f.getFileUri(context) }
         val intent =
             Intent().apply {
-                type = MIME_TYPE_PNG
+                type = mimeType
                 addFlags(FLAG_GRANT_READ_URI_PERMISSION)
                 if (contentUris.size == 1) {
                     action = ACTION_SEND
@@ -59,7 +67,7 @@ fun List<File>.share(context: Context): LaunchOutcome {
                     putExtra(EXTRA_STREAM, ArrayList(contentUris))
                 }
             }
-        context.safeStartActivity(Intent.createChooser(intent, null))
+        context.startShareActivity(Intent.createChooser(intent, null))
     } catch (e: Exception) {
         Log.e(TAG, "Error sharing files", e)
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
