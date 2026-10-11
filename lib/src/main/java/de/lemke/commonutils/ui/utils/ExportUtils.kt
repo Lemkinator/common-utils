@@ -279,7 +279,7 @@ private fun Context.writePng(
 
 // Providers and system services throw an open-ended exception set; a failed cleanup must not crash.
 @Suppress("TooGenericExceptionCaught")
-private fun Context.deleteDocument(uri: Uri) {
+internal fun Context.deleteDocument(uri: Uri) {
     try {
         DocumentsContract.deleteDocument(contentResolver, uri)
     } catch (e: Exception) {

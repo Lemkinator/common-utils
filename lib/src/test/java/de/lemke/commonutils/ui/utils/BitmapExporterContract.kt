@@ -25,6 +25,7 @@ import de.lemke.commonutils.data.SaveLocation
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -70,6 +71,16 @@ abstract class BitmapExporterContract {
         }
 
     @Test
+    fun `deleteCreatedDocument deletes the document`() =
+        runTest {
+            val document = createdDocument()
+
+            exporter().deleteCreatedDocument(document)
+
+            deletedDocuments() shouldContainExactly listOf(document)
+        }
+
+    @Test
     fun `saveToCreatedDocument that writes the bitmap returns Saved to CUSTOM and keeps the document`() =
         runTest {
             exporter().saveToCreatedDocument(createdDocument(), pngBitmap()) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
@@ -100,4 +111,48 @@ class FakeBitmapExporterContractTest : BitmapExporterContract() {
     override fun createdDocument(): Uri = Uri.parse("content://${RecordingDocumentsProvider.AUTHORITY}/document/1")
 
     override fun deletedDocuments(): List<Uri> = fake.deletedDocuments
+}
+
+/** An implementation that overrides only the abstract members and keeps the default [BitmapExporter.deleteCreatedDocument]. */
+private class SaveOnlyExporter(
+    private val fake: FakeBitmapExporter,
+) : BitmapExporter {
+    override suspend fun saveToDirectory(
+        location: SaveLocation,
+        bitmap: Bitmap,
+        fileName: String,
+    ) = fake.saveToDirectory(location, bitmap, fileName)
+
+    override suspend fun saveToCreatedDocument(
+        uri: Uri,
+        bitmap: Bitmap?,
+    ) = fake.saveToCreatedDocument(uri, bitmap)
+
+    override suspend fun createClip(bitmap: Bitmap) = fake.createClip(bitmap)
+
+    override suspend fun createShareFile(bitmap: Bitmap) = fake.createShareFile(bitmap)
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36])
+class DefaultDeleteBitmapExporterContractTest : BitmapExporterContract() {
+    private val fake = FakeBitmapExporter()
+
+    override fun exporter(): BitmapExporter = SaveOnlyExporter(fake)
+
+    override fun createdDocument(): Uri = Uri.parse("content://${RecordingDocumentsProvider.AUTHORITY}/document/1")
+
+    override fun deletedDocuments(): List<Uri> = fake.deletedDocuments
+
+    @Test
+    fun `deleteCreatedDocument through the compatibility stub deletes the document`() =
+        runTest {
+            val document = createdDocument()
+
+            suspendCoroutineUninterceptedOrReturn { continuation ->
+                BitmapExporterDefaultImplsCaller.deleteCreatedDocument(exporter(), document, continuation)
+            }
+
+            deletedDocuments() shouldContainExactly listOf(document)
+        }
 }

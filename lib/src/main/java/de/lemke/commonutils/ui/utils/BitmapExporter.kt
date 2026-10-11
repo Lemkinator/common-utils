@@ -21,12 +21,17 @@ import android.graphics.Bitmap
 import android.net.Uri
 import de.lemke.commonutils.data.SaveLocation
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 
 /**
  * Exports a bitmap: saves it to a public directory or a picked document, and writes it for the clipboard or a share.
  *
  * A ViewModel runs these main-safe calls in `viewModelScope` and exposes each result as UI state. Tests replace it with
  * `FakeBitmapExporter` from the testFixtures.
+ *
+ * Contract: an implementation returns a failure result ([BitmapSaveResult.WriteFailed], a null clip,
+ * [BitmapShareFile.Failed]) and never throws, except [kotlinx.coroutines.CancellationException]. If a call throws anyway,
+ * [BitmapExportStateHolder] ends in the failure [BitmapExport.Result] of that export kind.
  */
 interface BitmapExporter {
     /**
@@ -50,6 +55,15 @@ interface BitmapExporter {
         uri: Uri,
         bitmap: Bitmap?,
     ): BitmapSaveResult.UriResult
+
+    /**
+     * Deletes [uri], a document the `ACTION_CREATE_DOCUMENT` picker created that no export writes to.
+     *
+     * The default body calls [saveToCreatedDocument] without a bitmap, which deletes the document.
+     */
+    suspend fun deleteCreatedDocument(uri: Uri) {
+        saveToCreatedDocument(uri, null)
+    }
 
     /** Writes [bitmap] as a PNG cache file and returns a clip of its content URI, or null if writing fails. */
     suspend fun createClip(bitmap: Bitmap): ClipData?
@@ -81,6 +95,10 @@ class DefaultBitmapExporter(
         uri: Uri,
         bitmap: Bitmap?,
     ): BitmapSaveResult.UriResult = context.saveBitmapToUri(uri, bitmap, createdDocument = true, ioDispatcher)
+
+    override suspend fun deleteCreatedDocument(uri: Uri) {
+        withContext(ioDispatcher) { context.deleteDocument(uri) }
+    }
 
     override suspend fun createClip(bitmap: Bitmap): ClipData? = context.createBitmapClip(bitmap, clipLabel, cacheFileName, ioDispatcher)
 

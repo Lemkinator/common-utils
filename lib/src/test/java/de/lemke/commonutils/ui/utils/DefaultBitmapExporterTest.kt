@@ -123,6 +123,18 @@ class DefaultBitmapExporterTest {
             shouldRunOnIo { saveToCreatedDocument(provider.uri, pngBitmap()) }
         }
 
+    // ── deleteCreatedDocument ───────────────────────────────────────────────────
+
+    @Test
+    fun `deleteCreatedDocument deletes on the IO dispatcher`() =
+        runTest {
+            val provider = RecordingDocumentsProvider.create(ctx)
+
+            shouldRunOnIo { deleteCreatedDocument(provider.uri) }
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
     // ── createClip ──────────────────────────────────────────────────────────────
 
     @Test

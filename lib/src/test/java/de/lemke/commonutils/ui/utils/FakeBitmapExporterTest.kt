@@ -18,6 +18,7 @@ package de.lemke.commonutils.ui.utils
 import android.net.Uri
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.ui.utils.FakeBitmapExporter.Call
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -43,6 +44,7 @@ class FakeBitmapExporterTest {
 
             fake.saveToDirectory(SaveLocation.PICTURES, bitmap, "QRCode")
             fake.saveToCreatedDocument(document, null)
+            fake.deleteCreatedDocument(document)
             fake.createClip(bitmap)
             fake.createShareFile(bitmap)
 
@@ -50,6 +52,7 @@ class FakeBitmapExporterTest {
                 listOf(
                     Call.SaveToDirectory(SaveLocation.PICTURES, bitmap, "QRCode"),
                     Call.SaveToCreatedDocument(document, null),
+                    Call.DeleteCreatedDocument(document),
                     Call.CreateClip(bitmap),
                     Call.CreateShareFile(bitmap),
                 )
@@ -89,5 +92,16 @@ class FakeBitmapExporterTest {
             fake.saveToCreatedDocument(document, pngBitmap()) shouldBe BitmapSaveResult.EncodingFailed
 
             fake.deletedDocuments shouldContainExactly listOf(document)
+        }
+
+    @Test
+    fun `a configured exception is thrown after the call is recorded`() =
+        runTest {
+            val bitmap = pngBitmap()
+            fake.exception = IllegalStateException("broken")
+
+            shouldThrow<IllegalStateException> { fake.createClip(bitmap) }.message shouldBe "broken"
+
+            fake.calls shouldContainExactly listOf(Call.CreateClip(bitmap))
         }
 }
