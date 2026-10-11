@@ -125,13 +125,31 @@ this library:
 2. **Hilt version** — must match consumer apps to avoid duplicate-class errors. Renovate's `hilt`
    group bumps both repos together.
 
+## Launches and Exports
+
+Helpers that start another screen return a `LaunchOutcome`. A RESUMED collector marks its
+state handled when `LaunchOutcome.isSettled` is true; on `Dropped` the state stays pending.
+
+- `startActivityForOutcome(intent, errorMessage)` — gated start; any start failure toasts.
+- `launchCreateDocument(fileName, mimeType, extension, launcher)` — `ACTION_CREATE_DOCUMENT`
+  picker for any type; `exportBitmap` is its PNG case.
+- `registerForDocumentPick { pick -> }` (activity or fragment) — the picker launcher; it
+  delivers a `DocumentPick`.
+- `File.share(context, mimeType)` / `List<File>.share(context, mimeType)` — PNG by default.
+- `BitmapExportStateHolder(scope, exporter)` — one save, copy or share at a time, exposed
+  as `BitmapExport` state. The screen passes each `BitmapExport.Result` to
+  `launchBitmapExport(result, picker)` and calls `onHandled(result)` when that returns true.
+  Tests drive the holder with the testFixtures `FakeBitmapExporter`.
+- Recent colors: `MAX_RECENT_COLORS`, `List<Int>.withRecentColor`, the
+  `delegates.recentColors(default)` delegate, and `showColorPickerOnce(tag, color, recent)`.
+
 ## Hilt
 
 Hilt is added as a same-module `implementation` dep. Qualifier annotations
-(`@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher`) ship compiled into
-the published AAR. No Hilt module is published: libraries must not install
+(`@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher`, `@ApplicationScope`) ship
+compiled into the published AAR. No Hilt module is published: libraries must not install
 bindings into consumer DI graphs uninvited. Each consumer app declares its own
-`DispatchersModule`.
+`DispatchersModule` and provides its `@ApplicationScope` `CoroutineScope`.
 
 ## Configuration
 
