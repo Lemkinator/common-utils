@@ -16,24 +16,48 @@
 package de.lemke.commonutils
 
 import android.content.Context
+import android.content.DialogInterface
 import android.graphics.Color
+import android.os.Looper
 import android.view.ContextThemeWrapper
 import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.picker3.app.SeslColorPickerDialog
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.bindColorSwatch
 import de.lemke.commonutils.ui.utils.contrastingTextColor
+import de.lemke.commonutils.ui.utils.showColorPickerOnce
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowDialog
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class ColorUtilsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
+    @get:Rule
+    val drainMainLooper = DrainMainLooperRule()
+
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+
+    private fun activity(): AppCompatActivity =
+        Robolectric
+            .buildActivity(AppCompatActivity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
 
     @Test
     fun `contrastingTextColor just below the luminance threshold returns WHITE`() {
@@ -111,5 +135,39 @@ class ColorUtilsRobolectricTest {
         button.backgroundTintList?.defaultColor shouldBe 0x66FFFFFF.toInt()
         // commonutils_secondary_text_icon_color (light theme value; values-night overrides it)
         button.currentTextColor shouldBe 0xFF8C8C8C.toInt()
+    }
+
+    @Test
+    fun `showColorPickerOnce shows the color picker at the current color`() {
+        val activity = activity()
+
+        activity.showColorPickerOnce("picker", Color.RED, listOf(Color.RED, Color.BLUE)) {}.shouldBeTrue()
+
+        val dialog = ShadowDialog.getLatestDialog().shouldBeInstanceOf<SeslColorPickerDialog>()
+        dialog.isShowing.shouldBeTrue()
+        dialog.colorPicker.recentColorInfo.currentColor shouldBe Color.RED
+    }
+
+    @Test
+    fun `showColorPickerOnce passes the confirmed color to onColorPicked`() {
+        val activity = activity()
+        val picked = mutableListOf<Int>()
+        activity.showColorPickerOnce("picker", Color.GREEN, listOf(Color.GREEN)) { picked += it }
+
+        (ShadowDialog.getLatestDialog() as SeslColorPickerDialog).getButton(DialogInterface.BUTTON_POSITIVE).performClick()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        picked shouldContainExactly listOf(Color.GREEN)
+    }
+
+    @Test
+    fun `showColorPickerOnce skips a second picker under the same tag while the first shows`() {
+        val activity = activity()
+
+        activity.showColorPickerOnce("picker", Color.RED, emptyList()) {}.shouldBeTrue()
+        activity.showColorPickerOnce("picker", Color.BLUE, emptyList()) {}.shouldBeFalse()
+        activity.showColorPickerOnce("otherPicker", Color.BLUE, emptyList()) {}.shouldBeTrue()
+
+        ShadowDialog.getShownDialogs().size shouldBe 2
     }
 }

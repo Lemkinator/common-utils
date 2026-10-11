@@ -18,6 +18,7 @@ package de.lemke.commonutils.data
 import android.content.SharedPreferences
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
+import androidx.annotation.ColorInt
 import androidx.core.content.edit
 import de.lemke.commonutils.NoCoverage
 import kotlin.properties.ReadWriteProperty
@@ -129,6 +130,18 @@ class SharedPreferenceDelegates(
             { k, d -> parseIntList(prefs.getString(k, null)) ?: d },
             { k, v -> prefs.edit { putString(k, v.joinToString(",")) } },
         )
+
+    /**
+     * Delegate that reads/writes a recent-colors list, most recent first, stored like [intList]; push a picked color
+     * with [withRecentColor].
+     *
+     * Reads and writes keep at most [max] colors, and an empty list reads as a list of [default] alone.
+     */
+    fun recentColors(
+        @ColorInt default: Int,
+        max: Int = MAX_RECENT_COLORS,
+        key: String? = null,
+    ): ReadWriteProperty<Any, List<Int>> = intList(listOf(default), key).sanitized { it.take(max).ifEmpty { listOf(default) } }
 
     /** Delegate that reads/writes a dark mode flag stored as `"1"`/`"0"` for legacy HorizontalRadioPreference compatibility. */
     fun darkMode(
