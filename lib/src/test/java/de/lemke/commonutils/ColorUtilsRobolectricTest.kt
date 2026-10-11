@@ -20,8 +20,12 @@ import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Looper
 import android.view.ContextThemeWrapper
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
+import androidx.picker.R
 import androidx.picker3.app.SeslColorPickerDialog
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.bindColorSwatch
@@ -146,6 +150,29 @@ class ColorUtilsRobolectricTest {
         val dialog = ShadowDialog.getLatestDialog().shouldBeInstanceOf<SeslColorPickerDialog>()
         dialog.isShowing.shouldBeTrue()
         dialog.colorPicker.recentColorInfo.currentColor shouldBe Color.RED
+    }
+
+    @Test
+    fun `showColorPickerOnce offers the recent colors in the recent row`() {
+        activity().showColorPickerOnce("picker", Color.RED, listOf(Color.RED, Color.BLUE, Color.GREEN)) {}
+
+        val slots = ShadowDialog.getLatestDialog().findViewById<ViewGroup>(R.id.sesl_color_picker_used_color_item_list_layout)
+        slots.children.count { !it.contentDescription.isNullOrEmpty() } shouldBe 3
+    }
+
+    @Test
+    fun `showColorPickerOnce without recent colors leaves the recent row empty`() {
+        activity().showColorPickerOnce("picker", Color.RED, emptyList()) {}
+
+        val slots = ShadowDialog.getLatestDialog().findViewById<ViewGroup>(R.id.sesl_color_picker_used_color_item_list_layout)
+        slots.children.count { !it.contentDescription.isNullOrEmpty() } shouldBe 0
+    }
+
+    @Test
+    fun `showColorPickerOnce shows the transparency control`() {
+        activity().showColorPickerOnce("picker", Color.RED, emptyList()) {}
+
+        ShadowDialog.getLatestDialog().findViewById<View>(R.id.sesl_color_picker_opacity_seekbar).visibility shouldBe View.VISIBLE
     }
 
     @Test
