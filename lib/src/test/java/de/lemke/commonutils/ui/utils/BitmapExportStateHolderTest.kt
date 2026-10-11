@@ -410,6 +410,7 @@ class BitmapExportStateHolderTest {
     fun `a throwing delete of a created document keeps the export running`() =
         runTest {
             val (holder, gate) = runningHolder()
+            exporter.gate = null
             exporter.exception = broken
 
             holder.onDocumentPicked(DocumentPick.Created(document), bitmap)

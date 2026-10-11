@@ -143,7 +143,7 @@ class BitmapExportStateHolder(
             DocumentPick.MissingUri -> publishUnlessRunning(saveFailed)
             is DocumentPick.Created -> {
                 val started = launchExport(saveFailed) { exporter.saveToCreatedDocument(pick.uri, bitmap).toExport() }
-                if (!started) scope.launch { runContained(Unit) { exporter.deleteCreatedDocument(pick.uri) } }
+                if (!started) scope.launch { runContained("Created document delete", Unit) { exporter.deleteCreatedDocument(pick.uri) } }
             }
         }
     }
@@ -188,15 +188,16 @@ class BitmapExportStateHolder(
         work: suspend () -> BitmapExport.Result?,
     ): Boolean {
         if (mutableState.getAndUpdate { BitmapExport.Running } == BitmapExport.Running) return false
-        scope.launch { mutableState.value = runContained(failure, work) ?: BitmapExport.Idle }
+        scope.launch { mutableState.value = runContained("Bitmap export", failure, work) ?: BitmapExport.Idle }
         return true
     }
 
-    // An exporter breaks its contract by throwing; the holder must not stay Running. A CancellationException that
-    // leaves the scope alive (e.g. a withTimeout inside the exporter) is such a failure; ensureActive rethrows one that
-    // cancels the scope.
+    // An exporter call breaks its contract by throwing; the holder must not stay Running or crash the scope. A
+    // CancellationException that leaves the scope alive (e.g. a withTimeout inside the exporter) is such a failure;
+    // ensureActive rethrows one that cancels the scope.
     @Suppress("TooGenericExceptionCaught")
     private suspend fun <T> runContained(
+        what: String,
         failure: T,
         work: suspend () -> T,
     ): T =
@@ -204,10 +205,10 @@ class BitmapExportStateHolder(
             work()
         } catch (e: CancellationException) {
             currentCoroutineContext().ensureActive()
-            Log.e(TAG, "Bitmap export canceled", e)
+            Log.e(TAG, "$what canceled", e)
             failure
         } catch (e: Exception) {
-            Log.e(TAG, "Bitmap export failed", e)
+            Log.e(TAG, "$what failed", e)
             failure
         }
 
