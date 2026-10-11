@@ -54,23 +54,23 @@ class CommonUtilsCoroutinesModuleHiltTest {
     val settings: SettingsRepository = SettingsRepository(freshTestPreferences())
 
     @Inject
-    @field:IoDispatcher
+    @IoDispatcher
     lateinit var io: CoroutineDispatcher
 
     @Inject
-    @field:DefaultDispatcher
+    @DefaultDispatcher
     lateinit var defaultDispatcher: CoroutineDispatcher
 
     @Inject
-    @field:MainDispatcher
+    @MainDispatcher
     lateinit var main: CoroutineDispatcher
 
     @Inject
-    @field:ApplicationScope
+    @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
     @Inject
-    @field:ApplicationScope
+    @ApplicationScope
     lateinit var sameApplicationScope: CoroutineScope
 
     @Before
