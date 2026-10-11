@@ -19,9 +19,11 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.annotation.MainThread
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +31,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+private const val TAG = "BitmapExport"
+
+private val saveFailed = BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed)
 
 /** Where [launchBitmapExport] shares a [BitmapExport.Share]. */
 enum class ShareTarget {
@@ -110,7 +116,7 @@ class BitmapExportStateHolder(
         fileName: String,
         location: SaveLocation,
     ) {
-        launchExport {
+        launchExport(saveFailed) {
             when (val result = exporter.saveToDirectory(location, bitmap, fileName)) {
                 is BitmapSaveResult.Finished -> BitmapExport.SaveFinished(result)
                 BitmapSaveResult.NeedsPicker -> BitmapExport.OpenPicker(fileName)
@@ -122,8 +128,8 @@ class BitmapExportStateHolder(
      * Writes [bitmap] into the document of [pick], the result of the picker that [BitmapExport.OpenPicker] opened.
      *
      * A canceled pick changes nothing. A pick without a document, or a null [bitmap], ends in a failed
-     * [BitmapExport.SaveFinished]; a null [bitmap] also deletes the created document. While an export runs, the pick
-     * writes nothing and deletes the created document.
+     * [BitmapExport.SaveFinished]; a null [bitmap] also deletes the created document. While an export runs, a pick
+     * without a document is ignored and a created document is deleted.
      */
     fun onDocumentPicked(
         pick: DocumentPick,
@@ -131,17 +137,17 @@ class BitmapExportStateHolder(
     ) {
         when (pick) {
             DocumentPick.Canceled -> Unit
-            DocumentPick.MissingUri -> publishUnlessRunning(BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed))
+            DocumentPick.MissingUri -> publishUnlessRunning(saveFailed)
             is DocumentPick.Created -> {
-                val started = launchExport { exporter.saveToCreatedDocument(pick.uri, bitmap).toExport() }
-                if (!started) scope.launch { exporter.saveToCreatedDocument(pick.uri, null) }
+                val started = launchExport(saveFailed) { exporter.saveToCreatedDocument(pick.uri, bitmap).toExport() }
+                if (!started) scope.launch { exporter.deleteCreatedDocument(pick.uri) }
             }
         }
     }
 
     /** Writes [bitmap] for the clipboard; ends in [BitmapExport.Copy] or [BitmapExport.CopyFailed]. */
     fun copy(bitmap: Bitmap) {
-        launchExport { exporter.createClip(bitmap)?.let(BitmapExport::Copy) ?: BitmapExport.CopyFailed }
+        launchExport(BitmapExport.CopyFailed) { exporter.createClip(bitmap)?.let(BitmapExport::Copy) ?: BitmapExport.CopyFailed }
     }
 
     /**
@@ -152,7 +158,7 @@ class BitmapExportStateHolder(
         bitmap: Bitmap,
         target: ShareTarget = ShareTarget.SHARE_SHEET,
     ) {
-        launchExport {
+        launchExport(BitmapExport.ShareFailed) {
             when (val file = exporter.createShareFile(bitmap)) {
                 is BitmapShareFile.Written -> BitmapExport.Share(file, target)
                 BitmapShareFile.Failed -> BitmapExport.ShareFailed
@@ -170,12 +176,33 @@ class BitmapExportStateHolder(
         mutableState.update { if (it == BitmapExport.Running) it else result }
     }
 
-    /** @return false if an export already runs, so [work] did not start. */
-    private fun launchExport(work: suspend () -> BitmapExport.Result?): Boolean {
+    /**
+     * Runs [work] as the running export; a null result ends in [BitmapExport.Idle] and a throw ends in [failure].
+     * @return false if an export already runs, so [work] did not start.
+     */
+    private fun launchExport(
+        failure: BitmapExport.Result,
+        work: suspend () -> BitmapExport.Result?,
+    ): Boolean {
         if (mutableState.getAndUpdate { BitmapExport.Running } == BitmapExport.Running) return false
-        scope.launch { mutableState.value = work() ?: BitmapExport.Idle }
+        scope.launch { mutableState.value = runExport(failure, work) ?: BitmapExport.Idle }
         return true
     }
+
+    // An exporter breaks its contract by throwing; the holder must not stay Running.
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun runExport(
+        failure: BitmapExport.Result,
+        work: suspend () -> BitmapExport.Result?,
+    ): BitmapExport.Result? =
+        try {
+            work()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Bitmap export failed", e)
+            failure
+        }
 
     private fun BitmapSaveResult.UriResult.toExport(): BitmapExport.Result? =
         when (this) {
