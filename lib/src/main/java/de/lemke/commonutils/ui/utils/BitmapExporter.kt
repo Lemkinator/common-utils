@@ -33,6 +33,7 @@ import kotlinx.coroutines.withContext
  * [BitmapShareFile.Failed]) and never throws, except [kotlinx.coroutines.CancellationException]. If a call throws anyway,
  * [BitmapExportStateHolder] ends in the failure [BitmapExport.Result] of that export kind.
  */
+@JvmDefaultWithoutCompatibility
 interface BitmapExporter {
     /**
      * Writes [bitmap] as a PNG named after [fileName] to the public directory of [location].
@@ -76,7 +77,7 @@ interface BitmapExporter {
  * The [BitmapExporter] over [saveBitmapToDirectory], [saveBitmapToUri], [createBitmapClip] and [createBitmapShareFile],
  * which run their work on [ioDispatcher].
  *
- * The library publishes no DI bindings, so an app provides it from its own module with an application [context] and its
+ * The library binds no `BitmapExporter`, so an app provides it from its own module with an application [context] and its
  * `@IoDispatcher`. Clips carry [clipLabel]; clip and share cache files are named [cacheFileName].
  */
 class DefaultBitmapExporter(

@@ -25,7 +25,6 @@ import de.lemke.commonutils.data.SaveLocation
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -143,16 +142,4 @@ class DefaultDeleteBitmapExporterContractTest : BitmapExporterContract() {
     override fun createdDocument(): Uri = Uri.parse("content://${RecordingDocumentsProvider.AUTHORITY}/document/1")
 
     override fun deletedDocuments(): List<Uri> = fake.deletedDocuments
-
-    @Test
-    fun `deleteCreatedDocument through the compatibility stub deletes the document`() =
-        runTest {
-            val document = createdDocument()
-
-            suspendCoroutineUninterceptedOrReturn { continuation ->
-                BitmapExporterDefaultImplsCaller.deleteCreatedDocument(exporter(), document, continuation)
-            }
-
-            deletedDocuments() shouldContainExactly listOf(document)
-        }
 }
