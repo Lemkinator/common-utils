@@ -22,6 +22,7 @@ import de.lemke.commonutils.ui.utils.FakeBitmapExporter.Call
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -100,10 +101,23 @@ class BitmapExportStateHolderTest {
 
             holder.share(bitmap)
             runCurrent()
-
             holder.state.value shouldBe BitmapExport.Share(written, ShareTarget.SHARE_SHEET)
+
+            holder.copy(bitmap)
+            runCurrent()
+            holder.state.value shouldBe BitmapExport.CopyFailed
+
+            holder.save(bitmap, "icon", SaveLocation.PICTURES)
+            runCurrent()
+            holder.state.value shouldBe BitmapExport.SaveFinished(BitmapSaveResult.Saved(SaveLocation.PICTURES))
+
             exporter.calls shouldContainExactly
-                listOf(Call.SaveToDirectory(SaveLocation.CUSTOM, bitmap, "icon"), Call.CreateShareFile(bitmap))
+                listOf(
+                    Call.SaveToDirectory(SaveLocation.CUSTOM, bitmap, "icon"),
+                    Call.CreateShareFile(bitmap),
+                    Call.CreateClip(bitmap),
+                    Call.SaveToDirectory(SaveLocation.PICTURES, bitmap, "icon"),
+                )
         }
 
     @Test
@@ -378,6 +392,35 @@ class BitmapExportStateHolderTest {
             runCurrent()
 
             holder.state.value shouldBe BitmapExport.ShareFailed
+        }
+
+    @Test
+    fun `an exporter that throws a CancellationException while the scope lives ends in the failure Result`() =
+        runTest {
+            val holder = holder()
+            exporter.exception = CancellationException("timeout")
+
+            holder.share(bitmap)
+            runCurrent()
+
+            holder.state.value shouldBe BitmapExport.ShareFailed
+        }
+
+    @Test
+    fun `a throwing delete of a created document keeps the export running`() =
+        runTest {
+            val (holder, gate) = runningHolder()
+            exporter.exception = broken
+
+            holder.onDocumentPicked(DocumentPick.Created(document), bitmap)
+            runCurrent()
+
+            holder.state.value shouldBe BitmapExport.Running
+            exporter.calls shouldContainExactly listOf(Call.CreateClip(bitmap), Call.DeleteCreatedDocument(document))
+            exporter.deletedDocuments.shouldBeEmpty()
+            gate.complete(Unit)
+            runCurrent()
+            holder.state.value shouldBe BitmapExport.CopyFailed
         }
 
     @Test

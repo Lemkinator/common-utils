@@ -25,6 +25,8 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -96,7 +98,8 @@ sealed interface BitmapExport {
  * A ViewModel creates it with `viewModelScope` and exposes [state]. Only [BitmapExport.Running] blocks: while an export
  * runs, [save], [copy], [share] and [onDocumentPicked] do nothing. An export that starts while a [BitmapExport.Result]
  * waits for [onHandled] replaces that result, so a result the launch latch dropped never strands the holder.
- * Tests drive it with `FakeBitmapExporter` from the testFixtures.
+ * After [scope] is cancelled the state stays [BitmapExport.Running]. Tests drive it with `FakeBitmapExporter` from the
+ * testFixtures.
  */
 class BitmapExportStateHolder(
     private val scope: CoroutineScope,
@@ -140,7 +143,7 @@ class BitmapExportStateHolder(
             DocumentPick.MissingUri -> publishUnlessRunning(saveFailed)
             is DocumentPick.Created -> {
                 val started = launchExport(saveFailed) { exporter.saveToCreatedDocument(pick.uri, bitmap).toExport() }
-                if (!started) scope.launch { exporter.deleteCreatedDocument(pick.uri) }
+                if (!started) scope.launch { runContained(Unit) { exporter.deleteCreatedDocument(pick.uri) } }
             }
         }
     }
@@ -185,20 +188,24 @@ class BitmapExportStateHolder(
         work: suspend () -> BitmapExport.Result?,
     ): Boolean {
         if (mutableState.getAndUpdate { BitmapExport.Running } == BitmapExport.Running) return false
-        scope.launch { mutableState.value = runExport(failure, work) ?: BitmapExport.Idle }
+        scope.launch { mutableState.value = runContained(failure, work) ?: BitmapExport.Idle }
         return true
     }
 
-    // An exporter breaks its contract by throwing; the holder must not stay Running.
+    // An exporter breaks its contract by throwing; the holder must not stay Running. A CancellationException that
+    // leaves the scope alive (e.g. a withTimeout inside the exporter) is such a failure; ensureActive rethrows one that
+    // cancels the scope.
     @Suppress("TooGenericExceptionCaught")
-    private suspend fun runExport(
-        failure: BitmapExport.Result,
-        work: suspend () -> BitmapExport.Result?,
-    ): BitmapExport.Result? =
+    private suspend fun <T> runContained(
+        failure: T,
+        work: suspend () -> T,
+    ): T =
         try {
             work()
         } catch (e: CancellationException) {
-            throw e
+            currentCoroutineContext().ensureActive()
+            Log.e(TAG, "Bitmap export canceled", e)
+            failure
         } catch (e: Exception) {
             Log.e(TAG, "Bitmap export failed", e)
             failure
