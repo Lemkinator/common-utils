@@ -87,7 +87,7 @@ class LaunchLatchConventionsTest : ShouldSpec() {
         should("accept the launch latch helpers") {
             val source =
                 """
-                safeStartActivity(intent)
+                startActivityForOutcome(intent)
                 singleLaunchActivity(intent)
                 private val picker = registerForSingleLaunchResult(GetContent()) { }
                 """.trimIndent()
@@ -428,7 +428,7 @@ class LaunchLatchConventionsTest : ShouldSpec() {
         should("list every hit of a scope as project path, line and match") {
             val dir = createTempDirectory(Path("build", "tmp").toAbsolutePath(), "launch-latch")
             try {
-                dir.resolve("Clean.kt").writeText("package demo\n\nfun clean() = safeStartActivity(intent)\n")
+                dir.resolve("Clean.kt").writeText("package demo\n\nfun clean() = startActivityForOutcome(intent)\n")
                 dir.resolve("Hits.kt").writeText("package demo\n\nfun open() {\n    startActivity(intent)\n    dialog.show()\n}\n")
                 val scope = Konsist.scopeFromExternalDirectories(listOf(dir.toString()))
                 val hitsPath = "/lib/build/tmp/${dir.name}/Hits.kt"
@@ -449,7 +449,7 @@ class LaunchLatchConventionsTest : ShouldSpec() {
         should("pass a scope of clean files") {
             val dir = createTempDirectory("launch-latch")
             try {
-                dir.resolve("Clean.kt").writeText("package demo\n\nfun clean() = safeStartActivity(intent)\n")
+                dir.resolve("Clean.kt").writeText("package demo\n\nfun clean() = startActivityForOutcome(intent)\n")
                 dir.resolve("Toasts.kt").writeText("package demo\n\nfun done() = Toast.makeText(this, R.string.x, 0).show()\n")
                 val scope = Konsist.scopeFromExternalDirectories(listOf(dir.toString()))
 

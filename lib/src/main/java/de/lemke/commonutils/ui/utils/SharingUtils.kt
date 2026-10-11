@@ -15,7 +15,6 @@
  */
 package de.lemke.commonutils.ui.utils
 
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
@@ -24,6 +23,7 @@ import android.content.Intent.EXTRA_TITLE
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
@@ -44,7 +44,7 @@ fun Fragment.shareApp(): LaunchOutcome = requireContext().shareApp()
 
 /** Shares the app's Play Store link via the system share sheet; a failure shows the error toast. */
 fun Context.shareApp(): LaunchOutcome =
-    safeStartActivity(
+    startActivityForOutcome(
         Intent.createChooser(
             Intent().apply {
                 action = ACTION_SEND
@@ -71,16 +71,28 @@ fun Context.shareText(
         putExtra(EXTRA_TEXT, text)
         putExtra(EXTRA_TITLE, title)
         type = MIME_TYPE_TEXT
-        return safeStartActivity(Intent.createChooser(this, title))
+        return startActivityForOutcome(Intent.createChooser(this, title))
     }
 }
 
-internal fun Context.safeStartActivity(intent: Intent): LaunchOutcome =
+/**
+ * Starts [intent] as a gated launch, like [singleLaunchActivity], and reports the [LaunchOutcome].
+ *
+ * A start that throws, such as on a device without a matching activity, shows [errorMessage] as a toast and returns
+ * [LaunchOutcome.Failed]. A launch the latch drops returns [LaunchOutcome.Dropped], so a RESUMED collector keeps its
+ * state pending until the activity resumes.
+ */
+fun Context.startActivityForOutcome(
+    intent: Intent,
+    @StringRes errorMessage: Int = R.string.commonutils_error_share_content_not_supported_on_device,
+): LaunchOutcome =
+    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
+    @Suppress("TooGenericExceptionCaught")
     try {
         launchForOutcome { startActivity(intent) }
-    } catch (e: ActivityNotFoundException) {
+    } catch (e: Exception) {
         Log.e(TAG, "Failed to start activity", e)
-        toast(R.string.commonutils_error_share_content_not_supported_on_device)
+        toast(errorMessage)
         LaunchOutcome.Failed
     }
 

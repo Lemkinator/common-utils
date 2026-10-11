@@ -59,7 +59,7 @@ fun List<File>.share(context: Context): LaunchOutcome {
                     putExtra(EXTRA_STREAM, ArrayList(contentUris))
                 }
             }
-        context.safeStartActivity(Intent.createChooser(intent, null))
+        context.startActivityForOutcome(Intent.createChooser(intent, null))
     } catch (e: Exception) {
         Log.e(TAG, "Error sharing files", e)
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)

@@ -25,6 +25,7 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.graphics.Bitmap
 import android.net.Uri
+import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
@@ -47,6 +48,7 @@ import de.lemke.commonutils.ui.utils.share
 import de.lemke.commonutils.ui.utils.shareApp
 import de.lemke.commonutils.ui.utils.shareBitmap
 import de.lemke.commonutils.ui.utils.shareText
+import de.lemke.commonutils.ui.utils.startActivityForOutcome
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -153,7 +155,7 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
-    fun `shareApp ActivityNotFoundException covers safeStartActivity catch branch`() {
+    fun `shareApp ActivityNotFoundException covers startActivityForOutcome catch branch`() {
         val a =
             spyk(
                 Robolectric
@@ -164,6 +166,52 @@ class SharingUtilsRobolectricTest {
             )
         every { a.startActivity(any<android.content.Intent>()) } throws ActivityNotFoundException("no handler")
         a.shareApp() shouldBe LaunchOutcome.Failed
+    }
+
+    @Test
+    fun `startActivityForOutcome starts the intent and returns Started`() {
+        val activity = activity()
+        val intent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
+
+        activity.startActivityForOutcome(intent) shouldBe LaunchOutcome.Started
+
+        shadowOf(activity).nextStartedActivity.action shouldBe Settings.ACTION_WIRELESS_SETTINGS
+    }
+
+    @Test
+    fun `startActivityForOutcome without a matching activity shows the default error and returns Failed`() {
+        val context = StartActivityFailingContext(ctx, ActivityNotFoundException("no settings"))
+
+        context.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS)) shouldBe LaunchOutcome.Failed
+
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: Sharing content is not supported on your device."
+    }
+
+    @Test
+    fun `startActivityForOutcome shows the given error message for any start failure`() {
+        val context = StartActivityFailingContext(ctx, SecurityException("not exported"))
+
+        context.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS), R.string.commonutils_error) shouldBe
+            LaunchOutcome.Failed
+
+        ShadowToast.getTextOfLatestToast() shouldBe "Error"
+    }
+
+    @Test
+    fun `startActivityForOutcome while the latch holds an earlier launch returns Dropped and starts nothing`() {
+        val activity =
+            Robolectric
+                .buildActivity(LatchTestActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
+        activity.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS)) shouldBe LaunchOutcome.Started
+        shadowOf(activity).clearNextStartedActivities()
+
+        activity.startActivityForOutcome(Intent(Settings.ACTION_WIRELESS_SETTINGS)) shouldBe LaunchOutcome.Dropped
+
+        shadowOf(activity).nextStartedActivity shouldBe null
+        ShadowToast.shownToastCount() shouldBe 0
     }
 
     @Test
