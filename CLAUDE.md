@@ -85,7 +85,7 @@ git config core.hooksPath .githooks
 
 ## Architecture
 
-**Single-module utility library** — no DI framework, no ViewModel layer.
+**Single-module utility library** — ships an opt-in Hilt module and no ViewModel layer.
 Code is organized into:
 
 - **Root utilities** (`lib/src/main/java/de/lemke/commonutils/`):
