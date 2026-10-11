@@ -31,3 +31,14 @@ annotation class DefaultDispatcher
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class MainDispatcher
+
+/**
+ * Hilt qualifier for the application-wide `CoroutineScope`, for work that outlives every screen, such as a write that
+ * must finish after the user leaves.
+ *
+ * The library publishes no Hilt module, so an app provides the scope from its own module, typically as a `@Singleton`
+ * `CoroutineScope(SupervisorJob() + dispatcher)` over its `@DefaultDispatcher`.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ApplicationScope
