@@ -28,6 +28,19 @@ This lib consists of common utils that I use in my Android Apps.
 
 <br><br>
 
+## Hilt coroutine bindings
+
+The library ships the qualifiers `@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher` and `@ApplicationScope`.
+`CommonUtilsCoroutinesModule` provides them and installs itself nowhere. An app opts in by including it:
+
+```kotlin
+@Module(includes = [CommonUtilsCoroutinesModule::class])
+@InstallIn(SingletonComponent::class)
+interface AppCoroutinesModule
+```
+
+<br><br>
+
 ## Apps using Common utils
 
 <div>

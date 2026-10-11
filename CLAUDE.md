@@ -146,11 +146,21 @@ state handled when `LaunchOutcome.isSettled` is true; on `Dropped` the state sta
 
 ## Hilt
 
-Hilt is added as a same-module `implementation` dep. Qualifier annotations
-(`@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher`, `@ApplicationScope`) ship
-compiled into the published AAR. No Hilt module is published: libraries must not install
-bindings into consumer DI graphs uninvited. Each consumer app declares its own
-`DispatchersModule` and provides its `@ApplicationScope` `CoroutineScope`.
+Hilt is a same-module `implementation` dep: apps that include a module apply Hilt themselves, so the library
+does not leak its Hilt version onto their compile classpath. Qualifier annotations (`@IoDispatcher`,
+`@DefaultDispatcher`, `@MainDispatcher`, `@ApplicationScope`) ship compiled into the published AAR.
+
+No module installs itself into a consumer DI graph: a library module carries no `@InstallIn`. An opt-in module
+carries `@DisableInstallInCheck` and apps include it. `CommonUtilsCoroutinesModule` provides the four qualified
+bindings; an app opts in with:
+
+```kotlin
+@Module(includes = [CommonUtilsCoroutinesModule::class])
+@InstallIn(SingletonComponent::class)
+interface AppCoroutinesModule
+```
+
+Hilt modules need no ProGuard/R8 keep rules.
 
 ## Configuration
 
