@@ -26,6 +26,7 @@ import android.content.Context
  * resumes. If the launch that closed the latch never pauses the activity, the latch reopens after 1 s. No resume follows
  * then, so the pending launch waits until the activity pauses and resumes.
  */
+@JvmDefaultWithoutCompatibility
 sealed interface LaunchOutcome {
     /**
      * True once the launch needs no retry: it started, or it failed for good and the helper showed its error toast.
