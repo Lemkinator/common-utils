@@ -43,6 +43,23 @@ activity launches, raw result registration and every `show`/`showNow` whose
 receiver is no allowlisted non-dialog type. An app passes its own non-dialog
 types as `extraShowReceivers`.
 
+**Published testFixtures** (all `compileOnly` for kotest, coroutines-test, JUnit 4 and Hilt testing, so a consumer
+keeps its own versions):
+
+- `MainDispatcherExtension(dispatcher)` — Kotest extension; sets a fresh test `Dispatchers.Main` around each root test.
+- `PausableDispatcher(delegate)` — runs blocks in place while resumed; blocks dispatched between `pause()` and
+  `resume()` wait and go to the delegate on `resume()`.
+- `HiltTestRule(this)` and `assertHiltTestRuleConventions()` — the one Hilt rule of a `@HiltAndroidTest`; it closes
+  everything registered with `closeAfterTest` after the test.
+- `assertClassBodyOrder()`, `assertArchitecture(rootPackage)` and `assertNoCommonUtilsTypeExtensions()` — Konsist rules
+  that each app's `CodingConventionsTest` and `ArchitectureTest` call on `Konsist.scopeFromProduction()`.
+- `RecordingDocumentsProvider`, `Activity.receivePickerResult`, `File.hasPngSignature`, `RecordingIntentLauncher` —
+  export and launcher fakes.
+- `Context.cacheWriteUriPattern` and `Context.cacheFileOf` — the content URI layout of a cache write.
+- `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
+  `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
+- `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.
+
 **Robolectric + JUnit 5**: See the shared Robolectric/JUnit 5 policy in
 `A:\repo\android\CLAUDE.md`. This repo previously bridged Robolectric onto JUnit 5 via the
 experimental `tech.apter.junit5.jupiter:robolectric-extension`; it was reverted because
@@ -136,7 +153,10 @@ state handled when `LaunchOutcome.isSettled` is true; on `Dropped` the state sta
   picker for any type; `exportBitmap` is its PNG case.
 - `registerForDocumentPick { pick -> }` (activity or fragment) — the picker launcher; it
   delivers a `DocumentPick`.
-- `File.share(context, mimeType)` / `List<File>.share(context, mimeType)` — PNG by default.
+- `registerForOpenDocument { uri -> }` (activity or fragment) and `launchOpenDocument(mimeType, launcher)` — the gated
+  picker for an existing document; `uri` is null when the user cancels. A device without a picker shows the error toast.
+- `File.share(context, mimeType, title)` / `List<File>.share(context, mimeType, title)` — PNG and no chooser title by
+  default.
 - `BitmapExportStateHolder(scope, exporter)` — one save, copy or share at a time, exposed
   as `BitmapExport` state. Only `Running` blocks: a new export replaces a waiting `Result`, and a document
   created while one runs is deleted. The screen passes each `BitmapExport.Result` to
