@@ -125,6 +125,30 @@ class AssertArchitectureTest : ShouldSpec() {
                 ),
             )
         }
+        should("accept a ViewModel that extends a chain of two base classes in the same file") {
+            val source =
+                "package demo.ui\n\nabstract class BaseModel : ViewModel()\n\nabstract class MidModel : BaseModel()\n\n" +
+                    "class LeafViewModel : MidModel()\n"
+
+            withSourceScope(mapOf("Leaf.kt" to source)) { scope, _ -> shouldNotThrowAny { scope.assertArchitecture("demo") } }
+        }
+        should("fail on an event stream in a ViewModel two base classes deep in the same file") {
+            shouldFailWith(
+                stateOnlyRule,
+                mapOf(
+                    "Leaf.kt" to
+                        "package demo.ui\n\nabstract class BaseModel : ViewModel()\n\nabstract class MidModel : BaseModel()\n\n" +
+                        "class LeafModel : MidModel() {\n    val events = Channel<Int>()\n}\n",
+                ),
+            )
+        }
+        should("allow a Channel in a chain of classes that never reaches ViewModel") {
+            val source =
+                "package demo.data\n\nabstract class BasePipe\n\nabstract class MidPipe : BasePipe()\n\n" +
+                    "class LeafPipe : MidPipe() {\n    val events = Channel<Int>()\n}\n"
+
+            withSourceScope(mapOf("Pipe.kt" to source)) { scope, _ -> shouldNotThrowAny { scope.assertArchitecture("demo") } }
+        }
         should("fail on every Channel and SharedFlow declaration or call in a ViewModel") {
             listOf(
                 "val events = kotlinx.coroutines.channels.Channel<Int>()",
