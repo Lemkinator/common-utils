@@ -26,69 +26,129 @@ import kotlinx.coroutines.launch
 
 class PausableDispatcherTest : ShouldSpec(
     {
-        should("run a launched block in place while resumed") {
-            val delegate = HeldDispatcher()
-            val ran = mutableListOf<String>()
+        context("by default") {
+            should("hand a launched block to the delegate instead of running it") {
+                val delegate = HeldDispatcher()
+                val dispatcher = PausableDispatcher(delegate)
+                val ran = mutableListOf<String>()
 
-            CoroutineScope(PausableDispatcher(delegate) + Job()).launch { ran += "block" }
+                CoroutineScope(dispatcher + Job()).launch { ran += "block" }
 
-            ran shouldBe listOf("block")
-            delegate.held.shouldBeEmpty()
+                ran.shouldBeEmpty()
+                delegate.held shouldHaveSize 1
+                delegate.held.single().run()
+                ran shouldBe listOf("block")
+                dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
+            }
         }
 
-        should("hold blocks while paused and hand them to the delegate in order on resume") {
-            val delegate = HeldDispatcher()
-            val dispatcher = PausableDispatcher(delegate)
-            val ran = mutableListOf<String>()
-            val scope = CoroutineScope(dispatcher + Job())
+        WhileResumed.entries.forEach { mode ->
+            context("while resumed with $mode") {
+                should("hold blocks while paused and hand them to the delegate in order on resume") {
+                    val delegate = HeldDispatcher()
+                    val dispatcher = PausableDispatcher(delegate, mode)
+                    val ran = mutableListOf<String>()
+                    val scope = CoroutineScope(dispatcher + Job())
 
-            dispatcher.pause()
-            scope.launch { ran += "first" }
-            scope.launch { ran += "second" }
+                    dispatcher.pause()
+                    scope.launch { ran += "first" }
+                    scope.launch { ran += "second" }
 
-            ran.shouldBeEmpty()
-            delegate.held.shouldBeEmpty()
+                    ran.shouldBeEmpty()
+                    delegate.held.shouldBeEmpty()
+                    dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
 
-            dispatcher.resume()
+                    dispatcher.resume()
 
-            ran.shouldBeEmpty()
-            delegate.held shouldHaveSize 2
-            delegate.held.forEach(Runnable::run)
-            ran shouldBe listOf("first", "second")
+                    ran.shouldBeEmpty()
+                    delegate.held shouldHaveSize 2
+                    delegate.held.forEach(Runnable::run)
+                    ran shouldBe listOf("first", "second")
+                }
+
+                should("queue a block dispatched after resume behind the released blocks") {
+                    val delegate = HeldDispatcher()
+                    val dispatcher = PausableDispatcher(delegate, mode)
+                    val ran = mutableListOf<String>()
+                    val scope = CoroutineScope(dispatcher + Job())
+
+                    dispatcher.pause()
+                    scope.launch { ran += "first" }
+                    scope.launch { ran += "second" }
+                    dispatcher.resume()
+                    scope.launch { ran += "third" }
+
+                    ran.shouldBeEmpty()
+                    dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
+                    delegate.held shouldHaveSize 3
+                    delegate.held.forEach(Runnable::run)
+                    ran shouldBe listOf("first", "second", "third")
+                }
+
+                should("forward a block dispatched directly while resumed to the delegate") {
+                    val delegate = HeldDispatcher()
+                    val ran = mutableListOf<String>()
+
+                    PausableDispatcher(delegate, mode).dispatch(EmptyCoroutineContext) { ran += "block" }
+
+                    ran.shouldBeEmpty()
+                    delegate.held shouldHaveSize 1
+                    delegate.held.single().run()
+                    ran shouldBe listOf("block")
+                }
+
+                should("need a dispatch while paused and again after resume only if the mode dispatches") {
+                    val dispatcher = PausableDispatcher(HeldDispatcher(), mode)
+
+                    dispatcher.pause()
+                    dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
+                    dispatcher.resume()
+
+                    dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe (mode == WhileResumed.Dispatch)
+                }
+            }
         }
 
-        should("run in place again after resume") {
-            val delegate = HeldDispatcher()
-            val dispatcher = PausableDispatcher(delegate)
-            val ran = mutableListOf<String>()
+        context("while resumed with RunInPlace") {
+            should("run a launched block in place") {
+                val delegate = HeldDispatcher()
+                val ran = mutableListOf<String>()
 
-            dispatcher.pause()
-            dispatcher.resume()
-            CoroutineScope(dispatcher + Job()).launch { ran += "block" }
+                CoroutineScope(PausableDispatcher(delegate, WhileResumed.RunInPlace) + Job()).launch { ran += "block" }
 
-            ran shouldBe listOf("block")
-        }
+                ran shouldBe listOf("block")
+                delegate.held.shouldBeEmpty()
+            }
 
-        should("need a dispatch only while paused") {
-            val dispatcher = PausableDispatcher(HeldDispatcher())
+            should("run in place again once the delegate has run the released blocks") {
+                val delegate = HeldDispatcher()
+                val dispatcher = PausableDispatcher(delegate, WhileResumed.RunInPlace)
+                val ran = mutableListOf<String>()
+                val scope = CoroutineScope(dispatcher + Job())
 
-            dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe false
-            dispatcher.pause()
-            dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
-            dispatcher.resume()
-            dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe false
-        }
+                dispatcher.pause()
+                scope.launch { ran += "held" }
+                dispatcher.resume()
+                dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
+                delegate.held.forEach(Runnable::run)
+                delegate.held.clear()
+                scope.launch { ran += "in place" }
 
-        should("forward a block dispatched directly while resumed to the delegate") {
-            val delegate = HeldDispatcher()
-            val ran = mutableListOf<String>()
+                ran shouldBe listOf("held", "in place")
+                dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe false
+            }
 
-            PausableDispatcher(delegate).dispatch(EmptyCoroutineContext) { ran += "block" }
+            should("run in place again after a released block failed") {
+                val delegate = HeldDispatcher()
+                val dispatcher = PausableDispatcher(delegate, WhileResumed.RunInPlace)
 
-            ran.shouldBeEmpty()
-            delegate.held shouldHaveSize 1
-            delegate.held.single().run()
-            ran shouldBe listOf("block")
+                dispatcher.pause()
+                dispatcher.dispatch(EmptyCoroutineContext) { error("boom") }
+                dispatcher.resume()
+                runCatching { delegate.held.single().run() }
+
+                dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe false
+            }
         }
     },
 )

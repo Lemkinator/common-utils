@@ -15,31 +15,52 @@
  */
 package de.lemke.commonutils
 
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Runnable
 
+/** What a [PausableDispatcher] does with a block dispatched while it is resumed. */
+enum class WhileResumed {
+    /** Hands the block to the delegate, so no block runs inside the call that dispatches it. */
+    Dispatch,
+
+    /**
+     * Runs the block in place like [kotlinx.coroutines.Dispatchers.Unconfined], unless the delegate still holds an
+     * earlier block: the block then waits behind it.
+     */
+    RunInPlace,
+}
+
 /**
- * Runs blocks in place like [kotlinx.coroutines.Dispatchers.Unconfined], except that blocks dispatched between [pause]
- * and [resume] wait, and [resume] hands them to [delegate] in dispatch order.
+ * A dispatcher that can hold work back: blocks dispatched between [pause] and [resume] wait, and [resume] hands them
+ * to [delegate] in dispatch order. A block dispatched after [resume] never overtakes them. While resumed, [whileResumed]
+ * decides how a block runs.
  */
 class PausableDispatcher(
     private val delegate: CoroutineDispatcher,
+    private val whileResumed: WhileResumed = WhileResumed.Dispatch,
 ) : CoroutineDispatcher() {
     private val lock = Any()
     private val held = ArrayDeque<Pair<CoroutineContext, Runnable>>()
+    private val pendingInDelegate = AtomicInteger()
 
     @Volatile
     private var paused = false
 
-    override fun isDispatchNeeded(context: CoroutineContext): Boolean = paused
+    override fun isDispatchNeeded(context: CoroutineContext): Boolean =
+        when (whileResumed) {
+            WhileResumed.Dispatch -> true
+            WhileResumed.RunInPlace -> paused || pendingInDelegate.get() > 0
+        }
 
     override fun dispatch(
         context: CoroutineContext,
         block: Runnable,
     ) {
-        val hold = synchronized(lock) { paused.also { if (it) held.addLast(context to block) } }
-        if (!hold) delegate.dispatch(context, block)
+        synchronized(lock) {
+            if (paused) held.addLast(context to block) else forward(context, block)
+        }
     }
 
     /** Holds every block dispatched from now on until [resume]. */
@@ -47,13 +68,28 @@ class PausableDispatcher(
         paused = true
     }
 
-    /** Dispatches the held blocks to the delegate in order and runs later blocks in place again. */
+    /** Hands the held blocks to the delegate in order; later blocks follow [whileResumed] again. */
     fun resume() {
-        val released =
-            synchronized(lock) {
-                paused = false
-                held.toList().also { held.clear() }
+        synchronized(lock) {
+            paused = false
+            while (held.isNotEmpty()) {
+                val (context, block) = held.removeFirst()
+                forward(context, block)
             }
-        released.forEach { (context, block) -> delegate.dispatch(context, block) }
+        }
+    }
+
+    private fun forward(
+        context: CoroutineContext,
+        block: Runnable,
+    ) {
+        pendingInDelegate.incrementAndGet()
+        delegate.dispatch(context) {
+            try {
+                block.run()
+            } finally {
+                pendingInDelegate.decrementAndGet()
+            }
+        }
     }
 }
