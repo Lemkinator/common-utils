@@ -29,7 +29,8 @@ import java.io.FileNotFoundException
 import org.robolectric.Robolectric
 
 /**
- * A documents provider whose single document is a cache file; it records each document it is asked to delete.
+ * A documents provider whose single document is a cache file. It records each document it is asked to delete in
+ * [deleted] and deletes the file, unless [deleteFailure] is set: then it throws that failure and keeps the file.
  * While [readOnly] is true it refuses every write to the document.
  */
 class RecordingDocumentsProvider : ContentProvider() {
@@ -50,6 +51,7 @@ class RecordingDocumentsProvider : ContentProvider() {
         if (method == METHOD_DELETE_DOCUMENT) {
             deleted += BundleCompat.getParcelable(extras!!, EXTRA_DOCUMENT_URI, Uri::class.java)!!
             deleteFailure?.let { throw it }
+            file.delete()
         }
         return null
     }
