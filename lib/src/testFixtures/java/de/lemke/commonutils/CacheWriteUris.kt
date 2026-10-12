@@ -17,21 +17,20 @@ package de.lemke.commonutils
 
 import android.content.Context
 import android.net.Uri
-import de.lemke.commonutils.ui.utils.CacheFileKind
-import de.lemke.commonutils.ui.utils.fileProviderAuthority
 import java.io.File
 
 /**
- * Matches the content URI of the file [fileName] in a cache write of [kind]: the app's FileProvider authority,
- * the FileProvider path name [pathName] of the cache directory, the kind's directory and one write directory.
+ * Matches the content URI of the file [fileName] in a cache write: the app's FileProvider authority
+ * (`<package>.fileprovider`), the FileProvider path name [pathName] of the cache directory, the cache subdirectory
+ * [directoryName] of the write's kind (`share` or `clipboard`) and one write directory.
  */
 fun Context.cacheWriteUriPattern(
     pathName: String,
-    kind: CacheFileKind,
+    directoryName: String,
     fileName: String,
 ): Regex =
     Regex(
-        Regex.escape("content://$fileProviderAuthority/$pathName/${kind.directoryName}/commonutils-") +
+        Regex.escape("content://$packageName.fileprovider/$pathName/$directoryName/commonutils-") +
             """\d+/""" +
             Regex.escape(fileName),
     )

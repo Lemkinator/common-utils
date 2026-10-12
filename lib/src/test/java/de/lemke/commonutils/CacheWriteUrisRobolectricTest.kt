@@ -37,7 +37,7 @@ class CacheWriteUrisRobolectricTest {
     fun `cacheWriteUriPattern matches the URI of a file in a cache write of that kind`() {
         val file = ctx.createCacheWriteDirectory(CacheFileKind.SHARE).resolve("icon.png").apply { writeText("x") }
 
-        file.getFileUri(ctx).toString() shouldMatch ctx.cacheWriteUriPattern("cache_root", CacheFileKind.SHARE, "icon.png")
+        file.getFileUri(ctx).toString() shouldMatch ctx.cacheWriteUriPattern("cache_root", "share", "icon.png")
     }
 
     @Test
@@ -50,9 +50,9 @@ class CacheWriteUrisRobolectricTest {
                 .getFileUri(ctx)
                 .toString()
 
-        uri shouldNotMatch ctx.cacheWriteUriPattern("cache_root", CacheFileKind.CLIPBOARD, "icon.png")
-        uri shouldNotMatch ctx.cacheWriteUriPattern("cache_root", CacheFileKind.SHARE, "other.png")
-        uri shouldNotMatch ctx.cacheWriteUriPattern("elsewhere", CacheFileKind.SHARE, "icon.png")
+        uri shouldNotMatch ctx.cacheWriteUriPattern("cache_root", "clipboard", "icon.png")
+        uri shouldNotMatch ctx.cacheWriteUriPattern("cache_root", "share", "other.png")
+        uri shouldNotMatch ctx.cacheWriteUriPattern("elsewhere", "share", "icon.png")
     }
 
     @Test
