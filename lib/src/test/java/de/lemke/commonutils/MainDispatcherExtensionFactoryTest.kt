@@ -15,9 +15,11 @@
  */
 package de.lemke.commonutils
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -50,7 +52,9 @@ class MainDispatcherExtensionFactoryTest : ShouldSpec(
             created shouldBe installed
 
             var ranOnTestDispatcher = false
-            runCatching { CoroutineScope(Dispatchers.Main).launch { ranOnTestDispatcher = true } }
+            shouldThrow<IllegalStateException> {
+                CoroutineScope(Dispatchers.Main).launch { ranOnTestDispatcher = true }
+            }.message shouldContain "Dispatchers.Main was accessed"
             created.forEach { it.scheduler.runCurrent() }
             ranOnTestDispatcher shouldBe false
         }
