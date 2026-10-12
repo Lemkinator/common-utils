@@ -927,6 +927,31 @@ class SharingUtilsBitmapRobolectricTest {
     }
 
     @Test
+    fun `single File share - sets no chooser title by default`() {
+        val act = activity()
+        val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
+        file.share(act) shouldBe LaunchOutcome.Started
+        shadowOf(act).nextStartedActivity.getStringExtra(Intent.EXTRA_TITLE) shouldBe null
+    }
+
+    @Test
+    fun `single File share - sets the given chooser title`() {
+        val act = activity()
+        val file = File(act.cacheDir, "img.png").also { it.createNewFile() }
+        file.share(act, title = "Share icon") shouldBe LaunchOutcome.Started
+        shadowOf(act).nextStartedActivity.getStringExtra(Intent.EXTRA_TITLE) shouldBe "Share icon"
+    }
+
+    @Test
+    fun `multi-element List share - sets the given chooser title`() {
+        val act = activity()
+        val f1 = File(act.cacheDir, "a.png").also { it.createNewFile() }
+        val f2 = File(act.cacheDir, "b.png").also { it.createNewFile() }
+        listOf(f1, f2).share(act, title = "Share icons") shouldBe LaunchOutcome.Started
+        shadowOf(act).nextStartedActivity.getStringExtra(Intent.EXTRA_TITLE) shouldBe "Share icons"
+    }
+
+    @Test
     fun `multi-element List share - shares as the given MIME type`() {
         val act = activity()
         val f1 = File(act.cacheDir, "a.json").also { it.createNewFile() }

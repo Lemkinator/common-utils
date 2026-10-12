@@ -30,21 +30,23 @@ import java.io.File
 private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
 
-/** Shares this file as [mimeType] via the system share sheet; a failure shows the error toast. */
+/** Shares this file as [mimeType] via the system share sheet with an optional chooser [title]; a failure shows the error toast. */
 @JvmOverloads
 fun File.share(
     context: Context,
     mimeType: String = MIME_TYPE_PNG,
-): LaunchOutcome = listOf(this).share(context, mimeType)
+    title: String? = null,
+): LaunchOutcome = listOf(this).share(context, mimeType, title)
 
 /**
- * Shares all files in this list as [mimeType] via the system share sheet (multi-file if more than one); a failure,
- * also an empty list, shows the error toast.
+ * Shares all files in this list as [mimeType] via the system share sheet (multi-file if more than one) with an optional
+ * chooser [title]; a failure, also an empty list, shows the error toast.
  */
 @JvmOverloads
 fun List<File>.share(
     context: Context,
     mimeType: String = MIME_TYPE_PNG,
+    title: String? = null,
 ): LaunchOutcome {
     if (isEmpty()) {
         Log.e(TAG, "No file to share.")
@@ -67,7 +69,7 @@ fun List<File>.share(
                     putExtra(EXTRA_STREAM, ArrayList(contentUris))
                 }
             }
-        context.startShareActivity(Intent.createChooser(intent, null))
+        context.startShareActivity(Intent.createChooser(intent, title))
     } catch (e: Exception) {
         Log.e(TAG, "Error sharing files", e)
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
