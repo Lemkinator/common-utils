@@ -43,19 +43,25 @@ activity launches, raw result registration and every `show`/`showNow` whose
 receiver is no allowlisted non-dialog type. An app passes its own non-dialog
 types as `extraShowReceivers`.
 
-**Published testFixtures** (all `compileOnly` for kotest, coroutines-test, JUnit 4 and Hilt testing, so a consumer
-keeps its own versions):
+**Published testFixtures** declare kotest, coroutines-test, JUnit 4, Hilt testing, Konsist and Robolectric as
+`compileOnly`, so a consumer keeps its own versions and adds the ones its fixture groups need to its own test classpath:
 
 - `MainDispatcherExtension(dispatcher)` — Kotest extension; sets a fresh test `Dispatchers.Main` around each root test.
-- `PausableDispatcher(delegate)` — runs blocks in place while resumed; blocks dispatched between `pause()` and
-  `resume()` wait and go to the delegate on `resume()`.
+  Needs kotest and coroutines-test.
+- `PausableDispatcher(delegate, whileResumed)` — holds blocks dispatched between `pause()` and `resume()`; `resume()`
+  hands them to the delegate in dispatch order and no later block overtakes them. `WhileResumed.Dispatch` (default)
+  hands every other block to the delegate; `WhileResumed.RunInPlace` runs it in place like `Dispatchers.Unconfined`.
+  Needs only kotlinx-coroutines.
 - `HiltTestRule(this)` and `assertHiltTestRuleConventions()` — the one Hilt rule of a `@HiltAndroidTest`; it closes
-  everything registered with `closeAfterTest` after the test.
-- `assertClassBodyOrder()`, `assertArchitecture(rootPackage)` and `assertNoCommonUtilsTypeExtensions()` — Konsist rules
-  that each app's `CodingConventionsTest` and `ArchitectureTest` call on `Konsist.scopeFromProduction()`.
-- `RecordingDocumentsProvider`, `Activity.receivePickerResult`, `File.hasPngSignature`, `RecordingIntentLauncher` —
-  export and launcher fakes.
-- `Context.cacheWriteUriPattern` and `Context.cacheFileOf` — the content URI layout of a cache write.
+  everything registered with `closeAfterTest` after the test. The rule needs hilt-android-testing and JUnit 4; the
+  convention check also needs Konsist and Robolectric.
+- `assertClassBodyOrder()`, `assertArchitecture(rootPackage)`, `assertNoCommonUtilsTypeExtensions()` and
+  `assertLaunchLatchConventions()` — Konsist rules that each app's `CodingConventionsTest` and `ArchitectureTest`
+  call on `Konsist.scopeFromProduction()`. Need Konsist.
+- `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`,
+  `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
+- `Context.cacheWriteUriPattern(pathName, directoryName, fileName)` and `Context.cacheFileOf` — the content URI layout of a
+  cache write; `directoryName` is `share` or `clipboard`.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
 - `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.
