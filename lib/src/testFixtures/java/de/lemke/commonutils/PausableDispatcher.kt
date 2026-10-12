@@ -36,6 +36,9 @@ enum class WhileResumed {
  * A dispatcher that can hold work back: blocks dispatched between [pause] and [resume] wait, and [resume] hands them
  * to [delegate] in dispatch order. A block dispatched after [resume] never overtakes them. While resumed, [whileResumed]
  * decides how a block runs.
+ *
+ * Use a fresh instance per test: in [WhileResumed.RunInPlace] mode, a block the delegate never runs keeps the
+ * dispatcher dispatching for good.
  */
 class PausableDispatcher(
     private val delegate: CoroutineDispatcher,
@@ -43,7 +46,9 @@ class PausableDispatcher(
 ) : CoroutineDispatcher() {
     private val lock = Any()
     private val held = ArrayDeque<Pair<CoroutineContext, Runnable>>()
-    private val pendingInDelegate = AtomicInteger()
+
+    /** Blocks held or handed to the delegate that have not finished yet; counted from the moment of dispatch. */
+    private val outstanding = AtomicInteger()
 
     @Volatile
     private var paused = false
@@ -51,7 +56,7 @@ class PausableDispatcher(
     override fun isDispatchNeeded(context: CoroutineContext): Boolean =
         when (whileResumed) {
             WhileResumed.Dispatch -> true
-            WhileResumed.RunInPlace -> paused || pendingInDelegate.get() > 0
+            WhileResumed.RunInPlace -> paused || outstanding.get() > 0
         }
 
     override fun dispatch(
@@ -59,7 +64,8 @@ class PausableDispatcher(
         block: Runnable,
     ) {
         synchronized(lock) {
-            if (paused) held.addLast(context to block) else forward(context, block)
+            val task = if (whileResumed == WhileResumed.RunInPlace) counted(block) else block
+            if (paused) held.addLast(context to task) else delegate.dispatch(context, task)
         }
     }
 
@@ -73,22 +79,19 @@ class PausableDispatcher(
         synchronized(lock) {
             paused = false
             while (held.isNotEmpty()) {
-                val (context, block) = held.removeFirst()
-                forward(context, block)
+                val (context, task) = held.removeFirst()
+                delegate.dispatch(context, task)
             }
         }
     }
 
-    private fun forward(
-        context: CoroutineContext,
-        block: Runnable,
-    ) {
-        pendingInDelegate.incrementAndGet()
-        delegate.dispatch(context) {
+    private fun counted(block: Runnable): Runnable {
+        outstanding.incrementAndGet()
+        return Runnable {
             try {
                 block.run()
             } finally {
-                pendingInDelegate.decrementAndGet()
+                outstanding.decrementAndGet()
             }
         }
     }

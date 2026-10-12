@@ -19,10 +19,19 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+
+private const val WAIT_SECONDS = 10L
+private const val CYCLES = 20_000
 
 class PausableDispatcherTest : ShouldSpec(
     {
@@ -97,19 +106,46 @@ class PausableDispatcherTest : ShouldSpec(
                     ran shouldBe listOf("block")
                 }
 
-                should("need a dispatch while paused and again after resume only if the mode dispatches") {
+                should("need a dispatch while paused") {
                     val dispatcher = PausableDispatcher(HeldDispatcher(), mode)
 
                     dispatcher.pause()
-                    dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
-                    dispatcher.resume()
 
-                    dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe (mode == WhileResumed.Dispatch)
+                    dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
                 }
             }
         }
 
+        context("while resumed with Dispatch") {
+            should("still need a dispatch after resume") {
+                val dispatcher = PausableDispatcher(HeldDispatcher(), WhileResumed.Dispatch)
+
+                dispatcher.pause()
+                dispatcher.resume()
+
+                dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe true
+            }
+
+            should("hand the original block to the delegate unwrapped") {
+                val delegate = HeldDispatcher()
+                val block = Runnable { }
+
+                PausableDispatcher(delegate, WhileResumed.Dispatch).dispatch(EmptyCoroutineContext, block)
+
+                delegate.held.single() shouldBeSameInstanceAs block
+            }
+        }
+
         context("while resumed with RunInPlace") {
+            should("need no dispatch after resume") {
+                val dispatcher = PausableDispatcher(HeldDispatcher(), WhileResumed.RunInPlace)
+
+                dispatcher.pause()
+                dispatcher.resume()
+
+                dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe false
+            }
+
             should("run a launched block in place") {
                 val delegate = HeldDispatcher()
                 val ran = mutableListOf<String>()
@@ -148,6 +184,46 @@ class PausableDispatcherTest : ShouldSpec(
                 runCatching { delegate.held.single().run() }
 
                 dispatcher.isDispatchNeeded(EmptyCoroutineContext) shouldBe false
+            }
+
+            should("never let a concurrent coroutine overtake blocks released by resume") {
+                val delegate = HeldDispatcher()
+                val dispatcher = PausableDispatcher(delegate, WhileResumed.RunInPlace)
+                val scope = CoroutineScope(dispatcher + Job())
+                val ran = mutableListOf<String>()
+                val phase = AtomicInteger()
+                val stop = AtomicBoolean()
+                val overtook = AtomicInteger()
+                val started = CountDownLatch(1)
+                val observer =
+                    thread {
+                        started.countDown()
+                        while (!stop.get()) {
+                            val before = phase.get()
+                            val needed = dispatcher.isDispatchNeeded(EmptyCoroutineContext)
+                            if (before % 2 == 1 && !needed && phase.get() == before) overtook.incrementAndGet()
+                        }
+                    }
+
+                started.await(WAIT_SECONDS, TimeUnit.SECONDS) shouldBe true
+                repeat(CYCLES) {
+                    ran.clear()
+                    dispatcher.pause()
+                    scope.launch { ran += "first" }
+                    scope.launch { ran += "second" }
+                    phase.incrementAndGet()
+                    dispatcher.resume()
+                    scope.launch { ran += "third" }
+                    phase.incrementAndGet()
+                    delegate.held.forEach(Runnable::run)
+                    delegate.held.clear()
+                    ran shouldBe listOf("first", "second", "third")
+                }
+                stop.set(true)
+                observer.join(TimeUnit.SECONDS.toMillis(WAIT_SECONDS))
+
+                observer.isAlive shouldBe false
+                overtook.get() shouldBe 0
             }
         }
     },
