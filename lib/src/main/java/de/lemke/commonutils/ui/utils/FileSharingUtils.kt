@@ -75,5 +75,8 @@ fun List<File>.share(
     }
 }
 
+/** The authority that the app's FileProvider declares: its package name followed by `.fileprovider`. */
+val Context.fileProviderAuthority: String get() = "$packageName.fileprovider"
+
 /** Returns a content URI for this file via the app's FileProvider, usable in share intents. */
-fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", this)
+fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, context.fileProviderAuthority, this)

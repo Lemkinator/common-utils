@@ -113,7 +113,7 @@ internal fun Context.startShareActivity(intent: Intent): LaunchOutcome =
     startActivityForOutcome(intent, R.string.commonutils_error_share_content_not_supported_on_device)
 
 /** Kinds of cache file handed to other apps, each in its own [Context.getCacheDir] subdirectory so no kind overwrites another's. */
-internal enum class CacheFileKind(
+enum class CacheFileKind(
     val directoryName: String,
 ) {
     SHARE("share"),
