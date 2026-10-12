@@ -29,19 +29,30 @@ import kotlinx.coroutines.test.TestDispatcher
 class MainDispatcherExtensionFactoryTest : ShouldSpec(
     {
         val created = mutableListOf<TestDispatcher>()
+        val installed = mutableListOf<TestDispatcher>()
         extension(MainDispatcherExtension { StandardTestDispatcher().also(created::add) })
 
-        should("install the dispatcher the factory returns") {
-            var launched = false
-            CoroutineScope(Dispatchers.Main).launch { launched = true }
-            launched shouldBe false
-            created.single().scheduler.runCurrent()
-            launched shouldBe true
+        repeat(2) { index ->
+            should("install a fresh dispatcher the factory returns in root test $index") {
+                var launched = false
+                CoroutineScope(Dispatchers.Main).launch { launched = true }
+                launched shouldBe false
+                val dispatcher = created.last()
+                dispatcher.scheduler.runCurrent()
+                launched shouldBe true
+                installed += dispatcher
+            }
         }
 
-        should("create a fresh dispatcher for every root test") {
-            created.size shouldBe 2
-            created[0] shouldNotBe created[1]
+        afterSpec {
+            installed.size shouldBe 2
+            installed[0] shouldNotBe installed[1]
+            created shouldBe installed
+
+            var ranOnTestDispatcher = false
+            runCatching { CoroutineScope(Dispatchers.Main).launch { ranOnTestDispatcher = true } }
+            created.forEach { it.scheduler.runCurrent() }
+            ranOnTestDispatcher shouldBe false
         }
     },
 )
