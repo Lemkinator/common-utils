@@ -111,6 +111,63 @@ class InstrumentedWaitsRobolectricTest {
         }
     }
 
+    @Test
+    fun `a recycler view in a scroll animation that is no smooth scroll is not settled`() {
+        ActivityScenario.launch(LatchTestActivity::class.java).use { scenario ->
+            val state =
+                scenario.read { activity ->
+                    val list =
+                        RecyclerView(activity)
+                            .apply {
+                                layoutManager = LinearLayoutManager(activity)
+                                adapter = StubAdapter()
+                            }.laidOut()
+                    val beforeScroll = list.isSettled
+                    list.smoothScrollBy(0, SCROLL_DISTANCE)
+                    listOf(
+                        beforeScroll,
+                        list.layoutManager!!.isSmoothScrolling,
+                        list.scrollState == RecyclerView.SCROLL_STATE_SETTLING,
+                        list.isLayoutRequested,
+                        list.isSettled,
+                    )
+                }
+
+            state shouldBe listOf(true, false, true, false, false)
+        }
+    }
+
+    @Test
+    fun `a recycler view with an adapter update that no layout pass has processed is not settled`() {
+        ActivityScenario.launch(LatchTestActivity::class.java).use { scenario ->
+            val state =
+                scenario.read { activity ->
+                    val adapter = StubAdapter()
+                    val list =
+                        RecyclerView(activity).apply {
+                            layoutManager = LinearLayoutManager(activity)
+                            setHasFixedSize(true)
+                            this.adapter = adapter
+                        }
+                    activity.addContentView(list, ViewGroup.LayoutParams(LAYOUT_SIZE, LAYOUT_SIZE))
+                    list.laidOut()
+                    val beforeInsert = list.isSettled
+                    adapter.items += 1
+                    adapter.notifyItemInserted(0)
+                    listOf(
+                        beforeInsert,
+                        list.layoutManager!!.isSmoothScrolling,
+                        list.scrollState == RecyclerView.SCROLL_STATE_IDLE,
+                        list.isLayoutRequested,
+                        list.hasPendingAdapterUpdates(),
+                        list.isSettled,
+                    )
+                }
+
+            state shouldBe listOf(true, false, true, false, true, false)
+        }
+    }
+
     private fun <V : View> V.laidOut(): V {
         val exactly = MeasureSpec.makeMeasureSpec(LAYOUT_SIZE, MeasureSpec.EXACTLY)
         measure(exactly, exactly)
@@ -118,7 +175,9 @@ class InstrumentedWaitsRobolectricTest {
         return this
     }
 
-    private class StubAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private class StubAdapter(
+        var items: Int = ITEMS,
+    ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(
             parent: ViewGroup,
             viewType: Int,
@@ -129,12 +188,13 @@ class InstrumentedWaitsRobolectricTest {
             position: Int,
         ) = Unit
 
-        override fun getItemCount() = ITEMS
+        override fun getItemCount() = items
     }
 
     private companion object {
         const val LAYOUT_SIZE = 100
         const val ITEMS = 10
         const val SCROLL_TARGET = 5
+        const val SCROLL_DISTANCE = 50
     }
 }
