@@ -20,12 +20,16 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.core.app.ActivityOptionsCompat
 import de.lemke.commonutils.ui.utils.SingleLaunchResultLauncher
 
-/** Records every launched [Intent] and reports [admits], or throws [failure] on launch instead. */
+/**
+ * Records every admitted [Intent] instead of starting an activity. While [admits] is false the launch latch refuses
+ * each launch; while [failure] is set every launch throws it, as the system does when no activity can handle the intent.
+ */
 class RecordingIntentLauncher(
-    private val failure: RuntimeException? = null,
-    private val admits: Boolean = true,
+    var failure: RuntimeException? = null,
+    var admits: Boolean = true,
 ) : SingleLaunchResultLauncher<Intent>() {
-    val launched = mutableListOf<Intent>()
+    private val recorded = mutableListOf<Intent>()
+    val launched: List<Intent> get() = recorded
 
     override val contract = StartActivityForResult()
 
@@ -34,7 +38,7 @@ class RecordingIntentLauncher(
         options: ActivityOptionsCompat?,
     ): Boolean {
         failure?.let { throw it }
-        if (admits) launched += input
+        if (admits) recorded += input
         return admits
     }
 
