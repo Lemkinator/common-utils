@@ -22,6 +22,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
+import androidx.core.net.toUri
 import androidx.core.os.BundleCompat
 import java.io.File
 import java.io.FileNotFoundException
@@ -37,7 +38,7 @@ class RecordingDocumentsProvider : ContentProvider() {
     var deleteFailure: Exception? = null
     var readOnly = false
     val deleted = mutableListOf<Uri>()
-    val uri: Uri = Uri.parse("content://$AUTHORITY/document/1")
+    val uri: Uri = "content://$AUTHORITY/document/1".toUri()
 
     override fun onCreate() = true
 

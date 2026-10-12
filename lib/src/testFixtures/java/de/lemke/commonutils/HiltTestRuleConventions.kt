@@ -30,7 +30,7 @@ import org.robolectric.annotation.Config
 
 private val ruleQualifiedName = HiltTestRule::class.java.name
 private val ruleName = ruleQualifiedName.substringAfterLast('.')
-private val rulePackage = HiltTestRule::class.java.packageName
+private val rulePackage = ruleQualifiedName.substringBeforeLast('.')
 private val applicationQualifiedName = HiltTestApplication::class.java.name
 private val applicationName = applicationQualifiedName.substringAfterLast('.')
 private val rawRuleTypes = setOf(HiltAndroidRule::class.java.name, RuleChain::class.java.name)

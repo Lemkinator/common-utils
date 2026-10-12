@@ -21,6 +21,7 @@ import java.io.File
 import org.robolectric.Shadows.shadowOf
 
 private val PNG_SIGNATURE = byteArrayOf(-119, 80, 78, 71, 13, 10, 26, 10)
+private const val BYTE_MASK = 0xFF
 
 /** Delivers [resultCode] and [data] to the picker that this activity started last. */
 fun Activity.receivePickerResult(
@@ -32,4 +33,5 @@ fun Activity.receivePickerResult(
 }
 
 /** Whether this file starts with the eight bytes of the PNG signature. */
-fun File.hasPngSignature(): Boolean = inputStream().use { it.readNBytes(PNG_SIGNATURE.size) }.contentEquals(PNG_SIGNATURE)
+fun File.hasPngSignature(): Boolean =
+    inputStream().buffered().use { stream -> PNG_SIGNATURE.all { expected -> stream.read() == expected.toInt() and BYTE_MASK } }
