@@ -22,6 +22,7 @@ import de.lemke.commonutils.HeldDispatcher
 import de.lemke.commonutils.RecordingDocumentsProvider
 import de.lemke.commonutils.ShadowFileProvider
 import de.lemke.commonutils.data.SaveLocation
+import de.lemke.commonutils.hasPngSignature
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -100,8 +101,7 @@ class DefaultBitmapExporterTest {
 
             exporter().saveToCreatedDocument(provider.uri, pngBitmap()) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
 
-            provider.file.readBytes().take(4) shouldContainExactly
-                listOf(0x89.toByte(), 'P'.code.toByte(), 'N'.code.toByte(), 'G'.code.toByte())
+            provider.file.hasPngSignature().shouldBeTrue()
             provider.deleted.shouldBeEmpty()
         }
 

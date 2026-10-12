@@ -506,6 +506,17 @@ class ExportUtilsRobolectricTest {
             provider.deleted shouldContainExactly listOf(provider.uri)
         }
 
+    @Test
+    fun `saveBitmapToUri reports WriteFailed and deletes a created document that refuses writes`() =
+        runTest {
+            val provider = documentProvider().apply { readOnly = true }
+
+            ctx.saveBitmapToUri(provider.uri, bitmap, createdDocument = true) shouldBe BitmapSaveResult.WriteFailed
+
+            provider.deleted shouldContainExactly listOf(provider.uri)
+            provider.file.length() shouldBe 0L
+        }
+
     private fun documentProvider(): RecordingDocumentsProvider = RecordingDocumentsProvider.create(ctx)
 }
 
