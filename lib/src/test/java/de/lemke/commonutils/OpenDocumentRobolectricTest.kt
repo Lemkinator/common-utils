@@ -165,6 +165,16 @@ class OpenDocumentRobolectricTest {
     }
 
     @Test
+    fun `activity launcher reports a result whose intent carries no URI as null`() {
+        val activity = activity()
+        activity.picker.tryLaunch(Intent(Intent.ACTION_OPEN_DOCUMENT))
+
+        activity.receivePickerResult(RESULT_OK, Intent())
+
+        activity.picks shouldContainExactly listOf(null)
+    }
+
+    @Test
     fun `fragment launcher reports the picked document URI`() {
         val activity = activity()
         val fragment = activity.addFragment()
