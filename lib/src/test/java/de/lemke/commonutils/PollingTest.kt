@@ -108,7 +108,7 @@ class PollingTest : ShouldSpec(
 
                 run.sleeps shouldBe listOf(5.milliseconds)
                 run.settleBudgets shouldBe listOf(30.milliseconds)
-                run.probeBudgets shouldBe listOf(5.milliseconds, 10.milliseconds)
+                run.probeBudgets shouldBe listOf(5.milliseconds, STALL_GRACE)
             }
 
             should("sleep sub-millisecond remainders without truncating them (4)") {
@@ -126,7 +126,7 @@ class PollingTest : ShouldSpec(
 
                 run.sleeps shouldBe listOf(10.milliseconds)
                 run.settleBudgets shouldBe listOf(10.milliseconds)
-                run.probeBudgets shouldBe listOf(10.milliseconds, 10.milliseconds)
+                run.probeBudgets shouldBe listOf(10.milliseconds, STALL_GRACE)
             }
 
             should("fail with the condition message when the final probe is not met (6)") {
@@ -135,7 +135,7 @@ class PollingTest : ShouldSpec(
                 run.shouldFailWith("condition not met within 50ms", timeout = 50.milliseconds, poll = 20.milliseconds)
 
                 run.sleeps shouldBe listOf(20.milliseconds, 20.milliseconds, 10.milliseconds)
-                run.probeBudgets.last() shouldBe 20.milliseconds
+                run.probeBudgets.last() shouldBe STALL_GRACE
             }
 
             should("check once without settling at timeout zero and return when it holds (7)") {
@@ -144,7 +144,7 @@ class PollingTest : ShouldSpec(
                 run.poll(timeout = Duration.ZERO)
 
                 run.settleBudgets shouldBe emptyList()
-                run.probeBudgets shouldBe listOf(10.milliseconds)
+                run.probeBudgets shouldBe listOf(STALL_GRACE)
             }
 
             should("fail at timeout zero when the one check is not met (8)") {
@@ -156,12 +156,13 @@ class PollingTest : ShouldSpec(
                 run.sleeps shouldBe emptyList()
             }
 
-            should("give every step the whole poll when the timeout is infinite (9)") {
+            should("give settle and the probe the infinite budget and sleep a poll when the timeout is infinite (9)") {
                 val run = PollingRun(probes = listOf(Answer(Probe.NotMet), Answer(Probe.NotMet), Answer(Probe.Met)))
 
                 run.poll(timeout = Duration.INFINITE)
 
                 run.settleBudgets shouldBe List(3) { Duration.INFINITE }
+                run.probeBudgets shouldBe List(3) { Duration.INFINITE }
                 run.sleeps shouldBe listOf(10.milliseconds, 10.milliseconds)
             }
 
@@ -170,7 +171,7 @@ class PollingTest : ShouldSpec(
 
                 run.shouldFailWith("condition not met within 100ms", timeout = 100.milliseconds)
 
-                run.probeBudgets shouldBe listOf(10.milliseconds)
+                run.probeBudgets shouldBe listOf(STALL_GRACE)
             }
 
             should("return when settle runs out and the final probe is met (11)") {
@@ -178,36 +179,62 @@ class PollingTest : ShouldSpec(
 
                 run.poll(timeout = 100.milliseconds)
 
-                run.probeBudgets shouldBe listOf(10.milliseconds)
+                run.probeBudgets shouldBe listOf(STALL_GRACE)
             }
 
             should("name the stalled main thread when settle runs out and the final probe gets no answer (12)") {
-                val run = PollingRun(settleCost = 1.seconds, probes = listOf(Answer(Probe.NotMet, cost = 1.seconds)))
+                val run = PollingRun(settleCost = 1.seconds, probes = listOf(Answer(Probe.NotMet, cost = 2.seconds)))
 
                 run.shouldFailWith("$STALLED within 100ms", timeout = 100.milliseconds)
             }
 
             should("fail with the condition message when a probe runs out in the loop and the final probe is not met (13a)") {
-                val run = PollingRun(probes = listOf(Answer(Probe.NotMet, cost = 1.seconds), Answer(Probe.NotMet)))
+                val run = PollingRun(probes = listOf(Answer(Probe.NotMet, cost = 2.seconds), Answer(Probe.NotMet)))
 
                 run.shouldFailWith("condition not met within 100ms", timeout = 100.milliseconds)
 
-                run.probeBudgets shouldBe listOf(100.milliseconds, 10.milliseconds)
+                run.probeBudgets shouldBe listOf(100.milliseconds, STALL_GRACE)
             }
 
             should("return when a probe runs out in the loop and the final probe is met (13b)") {
-                val run = PollingRun(probes = listOf(Answer(Probe.NotMet, cost = 1.seconds), Answer(Probe.Met)))
+                val run = PollingRun(probes = listOf(Answer(Probe.NotMet, cost = 2.seconds), Answer(Probe.Met)))
 
                 run.poll(timeout = 100.milliseconds)
 
-                run.probeBudgets shouldBe listOf(100.milliseconds, 10.milliseconds)
+                run.probeBudgets shouldBe listOf(100.milliseconds, STALL_GRACE)
             }
 
             should("name the stalled main thread when a probe runs out in the loop and the final probe gets no answer (13c)") {
                 val run =
-                    PollingRun(probes = listOf(Answer(Probe.NotMet, cost = 1.seconds), Answer(Probe.NotMet, cost = 1.seconds)))
+                    PollingRun(probes = listOf(Answer(Probe.NotMet, cost = 2.seconds), Answer(Probe.NotMet, cost = 2.seconds)))
 
                 run.shouldFailWith("$STALLED within 100ms", timeout = 100.milliseconds)
+            }
+
+            should("skip the in-loop probe when settle used the whole budget and let the final probe decide (21)") {
+                val run = PollingRun(settleCost = 100.milliseconds, probes = listOf(Answer(Probe.Met)))
+
+                run.poll(timeout = 100.milliseconds)
+
+                run.settleBudgets shouldBe listOf(100.milliseconds)
+                run.probeBudgets shouldBe listOf(STALL_GRACE)
+                run.sleeps shouldBe emptyList()
+            }
+
+            should("fail with the condition message when settle used the whole budget and the final probe is not met (21)") {
+                val run = PollingRun(settleCost = 100.milliseconds)
+
+                run.shouldFailWith("condition not met within 100ms", timeout = 100.milliseconds)
+
+                run.probeBudgets shouldBe listOf(STALL_GRACE)
+            }
+
+            should("give the final probe the poll when it is longer than the grace (22)") {
+                val run = PollingRun()
+
+                run.shouldFailWith("condition not met within 100ms", timeout = 100.milliseconds, poll = 5.seconds)
+
+                run.probeBudgets.last() shouldBe 5.seconds
             }
 
             should("rethrow the exception of the condition unchanged (14)") {

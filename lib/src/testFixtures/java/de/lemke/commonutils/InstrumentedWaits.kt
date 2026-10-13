@@ -32,7 +32,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Waits for the instrumentation to go idle and checks [condition] on the activity every [poll] until it holds. Throws
  * [IllegalStateException] "condition not met" once [timeout] has passed. When the main thread stays silent for a whole
- * [poll] after that, it throws "main thread not idle" instead. A condition that throws reaches the caller unchanged. On
+ * [STALL_GRACE] (at least [poll]) after that, it throws "main thread not idle" instead. A condition that throws reaches the caller unchanged. On
  * a device, call it from the instrumentation thread: the main thread fails at once. On the main looper thread
  * (Robolectric) every step runs directly and the main thread is never reported silent.
  */
@@ -65,26 +65,35 @@ private fun <A : Activity> ActivityScenario<A>.probeOnMainThread(
     timeout: Duration,
     condition: A.() -> Boolean,
 ): Probe {
-    if (onMainThread) return read { it.condition() }.toProbe()
+    if (onMainThread) return if (read { it.condition() }) Probe.Met else Probe.NotMet
+    val task = ProbeTask { read { it.condition() } }
     val handler = Handler(Looper.getMainLooper())
-    val outcome = AtomicReference<Result<Boolean>>()
-    val done = CountDownLatch(1)
-    val cancelled = AtomicBoolean(false)
-    val task =
-        Runnable {
-            if (!cancelled.get()) outcome.set(runCatching { read { it.condition() } })
-            done.countDown()
-        }
     handler.post(task)
-    if (!done.await(timeout.inWholeNanoseconds, TimeUnit.NANOSECONDS)) {
-        cancelled.set(true)
-        handler.removeCallbacks(task)
-        return Probe.TimedOut
-    }
-    return outcome.get().getOrThrow().toProbe()
+    return task.await(timeout).also { if (it == Probe.TimedOut) handler.removeCallbacks(task) }
 }
 
-private fun Boolean.toProbe() = if (this) Probe.Met else Probe.NotMet
+/** A condition check posted to the main thread; a task that has not started when its caller gives up skips the check. */
+internal class ProbeTask(
+    private val check: () -> Boolean,
+) : Runnable {
+    private val outcome = AtomicReference<Result<Boolean>>()
+    private val done = CountDownLatch(1)
+    private val cancelled = AtomicBoolean(false)
+
+    override fun run() {
+        if (!cancelled.get()) outcome.set(runCatching(check))
+        done.countDown()
+    }
+
+    /** Waits up to [timeout] for the check; on [Probe.TimedOut] the task is cancelled. A check that threw rethrows here. */
+    fun await(timeout: Duration): Probe {
+        if (!done.await(timeout.inWholeNanoseconds, TimeUnit.NANOSECONDS)) {
+            cancelled.set(true)
+            return Probe.TimedOut
+        }
+        return if (outcome.get().getOrThrow()) Probe.Met else Probe.NotMet
+    }
+}
 
 /** True when no smooth scroll, scroll, layout request or adapter update is pending. */
 val RecyclerView.isSettled: Boolean

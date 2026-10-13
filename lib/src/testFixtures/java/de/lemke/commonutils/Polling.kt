@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /** How a [pollUntil] condition check ended. */
@@ -28,12 +29,15 @@ internal enum class Probe {
     TimedOut,
 }
 
+/** How long the main thread gets to answer the final probe before it counts as stalled. */
+internal val STALL_GRACE = 1.seconds
+
 /**
  * Settles, then probes [condition], every [poll] until it is [Probe.Met]. [settle] returns false when it did not finish
- * in the time it is given. Once no time is left, or a step runs out of time, one final probe bounded by [poll] decides:
- * [Probe.Met] returns, [Probe.NotMet] throws "condition not met", and [Probe.TimedOut] throws a message naming [stalled].
- * Every call probes at least once. A step must return within the time it is given. [timeSource] and [sleep] are
- * replaced by tests.
+ * in the time it is given. Once no time is left, or a step runs out of time, one final probe decides. It gets the
+ * larger of [poll] and [stallGrace] to answer: [Probe.Met] returns, [Probe.NotMet] throws "condition not met", and
+ * [Probe.TimedOut] throws a message naming [stalled]. Every call probes at least once. A step must return within the
+ * time it is given. [timeSource] and [sleep] are replaced by tests.
  */
 internal fun pollUntil(
     timeout: Duration,
@@ -41,6 +45,7 @@ internal fun pollUntil(
     stalled: String,
     settle: (budget: Duration) -> Boolean,
     condition: (budget: Duration) -> Probe,
+    stallGrace: Duration = STALL_GRACE,
     timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
     sleep: (Duration) -> Unit = { TimeUnit.NANOSECONDS.sleep(it.inWholeNanoseconds) },
 ) {
@@ -50,7 +55,9 @@ internal fun pollUntil(
     while (true) {
         val toSettle = remaining()
         if (toSettle == Duration.ZERO || !settle(toSettle)) break
-        when (condition(remaining())) {
+        val toProbe = remaining()
+        if (toProbe == Duration.ZERO) break
+        when (condition(toProbe)) {
             Probe.Met -> return
             Probe.NotMet -> Unit
             Probe.TimedOut -> break
@@ -58,7 +65,7 @@ internal fun pollUntil(
         val toSleep = minOf(poll, remaining())
         if (toSleep > Duration.ZERO) sleep(toSleep)
     }
-    when (condition(poll)) {
+    when (condition(maxOf(poll, stallGrace))) {
         Probe.Met -> Unit
         Probe.NotMet -> error("condition not met within $timeout")
         Probe.TimedOut -> error("$stalled within $timeout")
