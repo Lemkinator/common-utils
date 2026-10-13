@@ -27,23 +27,39 @@ internal enum class Settle {
     TimedOut,
 }
 
+/** How a [pollUntil] condition check ended. */
+internal enum class Probe {
+    Met,
+    NotMet,
+
+    /** The time given to run the check ran out first. */
+    TimedOut,
+}
+
 /**
- * Runs [settle] with the time left before the deadline while any is left, then checks [condition], every [poll] until it
- * holds. Throws once [timeout] has passed, or at once when [settle] times out. [settle] must return within the time it
- * is given.
+ * Runs [settle], then [condition], each with the time left before the deadline, every [poll] until the condition is
+ * [Probe.Met]. Throws once [timeout] has passed, or at once when a step times out: the message then names [stalled]. A
+ * step must return within the time it is given. Waits with [sleep], which tests replace together with [timeSource].
  */
 internal fun pollUntil(
     timeout: Duration,
     poll: Duration,
+    stalled: String,
     settle: (remaining: Duration) -> Settle,
-    condition: () -> Boolean,
+    condition: (remaining: Duration) -> Probe,
+    timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
+    sleep: (Duration) -> Unit = { Thread.sleep(it.inWholeMilliseconds) },
 ) {
-    val deadline = TimeSource.Monotonic.markNow() + timeout
+    val deadline = timeSource.markNow() + timeout
+
+    fun remaining() = (-deadline.elapsedNow()).coerceAtLeast(Duration.ZERO)
     while (true) {
-        val remaining = (-deadline.elapsedNow()).coerceAtLeast(Duration.ZERO)
-        check(remaining == Duration.ZERO || settle(remaining) == Settle.Settled) { "main thread not idle within $timeout" }
-        if (condition()) return
-        check(!deadline.hasPassedNow()) { "condition not met within $timeout" }
-        Thread.sleep(minOf(poll, remaining).inWholeMilliseconds)
+        check(remaining() > Duration.ZERO) { "condition not met within $timeout" }
+        check(settle(remaining()) == Settle.Settled) { "$stalled within $timeout" }
+        when (condition(remaining())) {
+            Probe.Met -> return
+            Probe.NotMet -> sleep(minOf(poll, remaining()))
+            Probe.TimedOut -> error("$stalled within $timeout")
+        }
     }
 }

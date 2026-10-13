@@ -16,20 +16,23 @@
 package de.lemke.commonutils
 
 import android.app.Activity
+import android.os.Handler
 import android.os.Looper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
  * Waits for the instrumentation to go idle and checks [condition] on the activity every [poll] until it holds. Throws
- * [IllegalStateException] when the main thread is not idle or the condition does not hold within [timeout]. On a device,
- * call it from the instrumentation thread: the main thread fails at once.
+ * [IllegalStateException] when the condition does not hold within [timeout]. On a device, call it from the
+ * instrumentation thread: the main thread fails at once, and it also throws when the main thread is not idle within
+ * [timeout]. On the main looper thread (Robolectric) the waits run directly and the main thread bound does not apply.
  */
 fun <A : Activity> ActivityScenario<A>.waitUntil(
     timeout: Duration = 5.seconds,
@@ -38,13 +41,16 @@ fun <A : Activity> ActivityScenario<A>.waitUntil(
 ) = pollUntil(
     timeout,
     poll,
+    stalled = "main thread not idle",
     settle = { remaining -> awaitInstrumentationIdle(remaining) },
-    condition = { read { it.condition() } },
+    condition = { remaining -> probeOnMainThread(remaining, condition) },
 )
+
+private val onMainThread get() = Looper.myLooper() == Looper.getMainLooper()
 
 private fun awaitInstrumentationIdle(timeout: Duration): Settle {
     val instrumentation = InstrumentationRegistry.getInstrumentation()
-    if (Looper.myLooper() == Looper.getMainLooper()) {
+    if (onMainThread) {
         instrumentation.waitForIdleSync()
         return Settle.Settled
     }
@@ -52,6 +58,29 @@ private fun awaitInstrumentationIdle(timeout: Duration): Settle {
     instrumentation.waitForIdle { idle.countDown() }
     return if (idle.await(timeout.inWholeNanoseconds, TimeUnit.NANOSECONDS)) Settle.Settled else Settle.TimedOut
 }
+
+private fun <A : Activity> ActivityScenario<A>.probeOnMainThread(
+    timeout: Duration,
+    condition: A.() -> Boolean,
+): Probe {
+    if (onMainThread) return read { it.condition() }.toProbe()
+    val handler = Handler(Looper.getMainLooper())
+    val outcome = AtomicReference<Result<Boolean>>()
+    val done = CountDownLatch(1)
+    val task =
+        Runnable {
+            outcome.set(runCatching { read { it.condition() } })
+            done.countDown()
+        }
+    handler.post(task)
+    if (!done.await(timeout.inWholeNanoseconds, TimeUnit.NANOSECONDS)) {
+        handler.removeCallbacks(task)
+        return Probe.TimedOut
+    }
+    return outcome.get().getOrThrow().toProbe()
+}
+
+private fun Boolean.toProbe() = if (this) Probe.Met else Probe.NotMet
 
 /** True when no smooth scroll, scroll, layout request or adapter update is pending. */
 val RecyclerView.isSettled: Boolean

@@ -17,92 +17,112 @@ package de.lemke.commonutils
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
-import io.kotest.matchers.collections.shouldBeMonotonicallyDecreasing
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
-import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TestTimeSource
+
+private const val STALLED = "main thread not idle"
+
+private class PollingRun(
+    private val settleCost: Duration = Duration.ZERO,
+    private val settleResult: Settle = Settle.Settled,
+    private val probes: Iterator<Probe> = generateSequence { Probe.NotMet }.iterator(),
+) {
+    val clock = TestTimeSource()
+    val remainings = mutableListOf<Duration>()
+    val conditionRemainings = mutableListOf<Duration>()
+    val sleeps = mutableListOf<Duration>()
+
+    fun poll(
+        timeout: Duration,
+        poll: Duration,
+    ) = pollUntil(
+        timeout,
+        poll,
+        STALLED,
+        settle = {
+            remainings += it
+            clock += settleCost
+            settleResult
+        },
+        condition = {
+            conditionRemainings += it
+            probes.next()
+        },
+        timeSource = clock,
+        sleep = {
+            sleeps += it
+            clock += it
+        },
+    )
+}
 
 class PollingTest : ShouldSpec(
     {
         context("pollUntil") {
-            should("give settle a shrinking, non-negative time that never exceeds the timeout") {
-                val timeout = 60.milliseconds
-                val remainings = mutableListOf<Duration>()
+            should("give settle the shrinking time left and sleep no longer than what is left") {
+                val run = PollingRun(settleCost = 5.milliseconds)
 
-                shouldThrow<IllegalStateException> {
-                    pollUntil(
-                        timeout,
-                        poll = 10.milliseconds,
-                        settle = {
-                            remainings += it
-                            Settle.Settled
-                        },
-                        condition = { false },
-                    )
-                }
+                val error = shouldThrow<IllegalStateException> { run.poll(timeout = 100.milliseconds, poll = 30.milliseconds) }
 
-                remainings shouldHaveAtLeastSize 2
-                remainings.shouldBeMonotonicallyDecreasing()
-                remainings.forEach {
-                    it shouldBeGreaterThanOrEqualTo Duration.ZERO
-                    it shouldBeLessThanOrEqualTo timeout
-                }
+                error.message shouldBe "condition not met within 100ms"
+                run.remainings shouldBe listOf(100.milliseconds, 65.milliseconds, 30.milliseconds)
+                run.sleeps shouldBe listOf(30.milliseconds, 30.milliseconds, 25.milliseconds)
             }
 
-            should("check the condition without settling when no time is left") {
-                var settles = 0
-                var checks = 0
+            should("cap the sleep at the time left when settle used up most of it") {
+                val run = PollingRun(settleCost = 90.milliseconds)
 
-                val error =
-                    shouldThrow<IllegalStateException> {
-                        pollUntil(
-                            Duration.ZERO,
-                            poll = 10.milliseconds,
-                            settle = {
-                                settles++
-                                Settle.Settled
-                            },
-                            condition = {
-                                checks++
-                                false
-                            },
-                        )
-                    }
+                shouldThrow<IllegalStateException> { run.poll(timeout = 100.milliseconds, poll = 10.seconds) }
 
-                settles shouldBe 0
-                checks shouldBe 1
+                run.sleeps shouldBe listOf(10.milliseconds)
+            }
+
+            should("fail without settling or checking when no time is left") {
+                val run = PollingRun()
+
+                val error = shouldThrow<IllegalStateException> { run.poll(timeout = Duration.ZERO, poll = 10.milliseconds) }
+
                 error.message shouldBe "condition not met within 0s"
+                run.remainings shouldBe emptyList()
+                run.conditionRemainings shouldBe emptyList()
             }
 
-            should("return once the condition holds") {
-                var checks = 0
+            should("return once the condition is met") {
+                val run = PollingRun(probes = listOf(Probe.NotMet, Probe.NotMet, Probe.Met).iterator())
 
-                pollUntil(1000.milliseconds, poll = 1.milliseconds, settle = { Settle.Settled }, condition = { ++checks == 3 })
+                run.poll(timeout = 1.seconds, poll = 1.milliseconds)
 
-                checks shouldBe 3
+                run.conditionRemainings.size shouldBe 3
+                run.sleeps shouldBe listOf(1.milliseconds, 1.milliseconds)
             }
 
             should("throw at once when settle times out") {
-                var checks = 0
+                val run = PollingRun(settleResult = Settle.TimedOut)
 
-                val error =
-                    shouldThrow<IllegalStateException> {
-                        pollUntil(
-                            1000.milliseconds,
-                            poll = 1.milliseconds,
-                            settle = { Settle.TimedOut },
-                            condition = {
-                                checks++
-                                true
-                            },
-                        )
-                    }
+                val error = shouldThrow<IllegalStateException> { run.poll(timeout = 1.seconds, poll = 1.milliseconds) }
 
                 error.message shouldBe "main thread not idle within 1s"
-                checks shouldBe 0
+                run.conditionRemainings shouldBe emptyList()
+            }
+
+            should("throw at once when the condition check times out") {
+                val run = PollingRun(probes = listOf(Probe.TimedOut).iterator())
+
+                val error = shouldThrow<IllegalStateException> { run.poll(timeout = 1.seconds, poll = 1.milliseconds) }
+
+                error.message shouldBe "main thread not idle within 1s"
+                run.sleeps shouldBe emptyList()
+            }
+
+            should("give the condition the time left after settle") {
+                val run = PollingRun(settleCost = 40.milliseconds, probes = listOf(Probe.Met).iterator())
+
+                run.poll(timeout = 100.milliseconds, poll = 10.milliseconds)
+
+                run.conditionRemainings shouldBe listOf(60.milliseconds)
             }
         }
     },
