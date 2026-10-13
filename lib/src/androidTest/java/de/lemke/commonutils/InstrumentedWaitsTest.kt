@@ -140,16 +140,18 @@ class InstrumentedWaitsTest {
     private class BusyMainThread {
         private val handler = Handler(Looper.getMainLooper())
         private val running = AtomicBoolean(true)
+        private var giveUp = TimeSource.Monotonic.markNow()
         private val spin =
             object : Runnable {
                 override fun run() {
                     val end = TimeSource.Monotonic.markNow() + SPIN
                     while (!end.hasPassedNow()) Thread.onSpinWait()
-                    if (running.get()) handler.post(this)
+                    if (running.get() && !giveUp.hasPassedNow()) handler.post(this)
                 }
             }
 
         fun start() {
+            giveUp = TimeSource.Monotonic.markNow() + TEST_TIMEOUT_SECONDS.seconds
             handler.post(spin)
         }
 
