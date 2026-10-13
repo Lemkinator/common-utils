@@ -102,7 +102,7 @@ class InstrumentedWaitsTest {
                 try {
                     busy.start()
                     shouldThrow<IllegalStateException> {
-                        scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 5.milliseconds) { false }
+                        scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 50.milliseconds) { false }
                     }
                 } finally {
                     busy.stop()
