@@ -35,8 +35,10 @@ import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
@@ -92,7 +94,7 @@ class InstrumentedWaitsTest {
     }
 
     @Test
-    fun waitUntil_throwsWithinTheTimeoutWhileTheMainThreadStaysBusy() {
+    fun waitUntil_reportsTheConditionWhileTheMainThreadNeverGoesIdle() {
         val busy = BusyMainThread()
         ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
             val start = TimeSource.Monotonic.markNow()
@@ -100,14 +102,40 @@ class InstrumentedWaitsTest {
                 try {
                     busy.start()
                     shouldThrow<IllegalStateException> {
-                        scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 5.milliseconds) { true }
+                        scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 5.milliseconds) { false }
                     }
                 } finally {
                     busy.stop()
                 }
 
-            error.message shouldBe "main thread not idle within 200ms"
+            error.message shouldBe "condition not met within 200ms"
             start.elapsedNow() shouldBeLessThan BUSY_TIMEOUT + BUSY_MARGIN
+        }
+    }
+
+    @Test
+    fun waitUntil_reportsTheStalledMainThreadAndSkipsTheConditionOnceItWakes() {
+        ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
+            val instrumentation = InstrumentationRegistry.getInstrumentation()
+            val woke = CountDownLatch(1)
+            val conditionCalls = AtomicInteger()
+            Handler(Looper.getMainLooper()).post {
+                Thread.sleep(BLOCK.inWholeMilliseconds)
+                woke.countDown()
+            }
+            val start = TimeSource.Monotonic.markNow()
+
+            val error =
+                shouldThrow<IllegalStateException> {
+                    scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 5.milliseconds) { conditionCalls.incrementAndGet() > 0 }
+                }
+            val elapsed = start.elapsedNow()
+            woke.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            instrumentation.waitForIdleSync()
+
+            error.message shouldBe "main thread not idle within 200ms"
+            elapsed shouldBeLessThan BUSY_TIMEOUT + BUSY_MARGIN
+            conditionCalls.get() shouldBe 0
         }
     }
 
@@ -200,8 +228,9 @@ class InstrumentedWaitsTest {
 
     private companion object {
         val BUSY_TIMEOUT = 200.milliseconds
-        val BUSY_MARGIN = 2.seconds
+        val BUSY_MARGIN = 1.seconds
         val SPIN = 5.milliseconds
+        val BLOCK = 1500.milliseconds
         const val TEST_TIMEOUT_SECONDS = 30L
         const val LAYOUT_SIZE = 100
         const val ITEMS = 10
