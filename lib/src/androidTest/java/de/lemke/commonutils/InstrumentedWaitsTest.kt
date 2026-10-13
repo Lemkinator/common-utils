@@ -15,6 +15,8 @@
  */
 package de.lemke.commonutils
 
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
@@ -30,12 +32,18 @@ import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
 import org.junit.runner.RunWith
 
 @HiltAndroidTest
@@ -44,6 +52,9 @@ import org.junit.runner.RunWith
 class InstrumentedWaitsTest {
     @get:Rule(order = 0)
     val hiltRule = HiltTestRule(this)
+
+    @get:Rule(order = 1)
+    val timeout: Timeout = Timeout(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
 
     @BindValue
     @JvmField
@@ -80,6 +91,26 @@ class InstrumentedWaitsTest {
     }
 
     @Test
+    fun waitUntil_throwsWithinTheTimeoutWhileTheMainThreadStaysBusy() {
+        val busy = BusyMainThread()
+        ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
+            val start = TimeSource.Monotonic.markNow()
+            val error =
+                try {
+                    busy.start()
+                    shouldThrow<IllegalStateException> {
+                        scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 5.milliseconds) { true }
+                    }
+                } finally {
+                    busy.stop()
+                }
+
+            error.message shouldBe "main thread not idle within 200ms"
+            start.elapsedNow() shouldBeLessThan BUSY_TIMEOUT + BUSY_MARGIN
+        }
+    }
+
+    @Test
     fun isSettled_isTrueForALaidOutListAndFalseWhileItSmoothScrolls() {
         ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
             val settled =
@@ -106,6 +137,28 @@ class InstrumentedWaitsTest {
         return this
     }
 
+    private class BusyMainThread {
+        private val handler = Handler(Looper.getMainLooper())
+        private val running = AtomicBoolean(true)
+        private val spin =
+            object : Runnable {
+                override fun run() {
+                    val end = TimeSource.Monotonic.markNow() + SPIN
+                    while (!end.hasPassedNow()) Thread.onSpinWait()
+                    if (running.get()) handler.post(this)
+                }
+            }
+
+        fun start() {
+            handler.post(spin)
+        }
+
+        fun stop() {
+            running.set(false)
+            handler.removeCallbacks(spin)
+        }
+    }
+
     private class StubAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(
             parent: ViewGroup,
@@ -121,6 +174,10 @@ class InstrumentedWaitsTest {
     }
 
     private companion object {
+        val BUSY_TIMEOUT = 200.milliseconds
+        val BUSY_MARGIN = 2.seconds
+        val SPIN = 5.milliseconds
+        const val TEST_TIMEOUT_SECONDS = 30L
         const val LAYOUT_SIZE = 100
         const val ITEMS = 10
         const val SCROLL_TARGET = 5
