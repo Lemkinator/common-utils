@@ -18,21 +18,32 @@ package de.lemke.commonutils
 import kotlin.time.Duration
 import kotlin.time.TimeSource
 
+/** How a [pollUntil] settle step ended. */
+internal enum class Settle {
+    /** The thing waited on is idle. */
+    Settled,
+
+    /** The time given to settle ran out first. */
+    TimedOut,
+}
+
 /**
- * Runs [settle] with the time left before the deadline, then checks [condition], every [poll] until it holds; throws once
- * [timeout] has passed. [settle] must return within the time it is given.
+ * Runs [settle] with the time left before the deadline while any is left, then checks [condition], every [poll] until it
+ * holds. Throws once [timeout] has passed, or at once when [settle] times out. [settle] must return within the time it
+ * is given.
  */
 internal fun pollUntil(
     timeout: Duration,
     poll: Duration,
-    settle: (remaining: Duration) -> Unit,
+    settle: (remaining: Duration) -> Settle,
     condition: () -> Boolean,
 ) {
     val deadline = TimeSource.Monotonic.markNow() + timeout
     while (true) {
-        settle((-deadline.elapsedNow()).coerceAtLeast(Duration.ZERO))
+        val remaining = (-deadline.elapsedNow()).coerceAtLeast(Duration.ZERO)
+        check(remaining == Duration.ZERO || settle(remaining) == Settle.Settled) { "main thread not idle within $timeout" }
         if (condition()) return
         check(!deadline.hasPassedNow()) { "condition not met within $timeout" }
-        Thread.sleep(poll.inWholeMilliseconds)
+        Thread.sleep(minOf(poll, remaining).inWholeMilliseconds)
     }
 }
