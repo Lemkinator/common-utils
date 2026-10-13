@@ -21,19 +21,26 @@ import io.kotest.core.test.isRootTest
 import io.kotest.engine.test.TestResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 
-/** Spec bodies, beforeSpec and afterSpec run outside every TestCaseExtension, so Main is not set there. */
+/**
+ * Sets `Dispatchers.Main` to a fresh [dispatcher] around every root test and resets it afterwards.
+ *
+ * Spec bodies, beforeSpec and afterSpec run outside every TestCaseExtension, so Main is not set there.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
-class MainDispatcherExtension : TestCaseExtension {
+class MainDispatcherExtension(
+    private val dispatcher: () -> TestDispatcher = { UnconfinedTestDispatcher() },
+) : TestCaseExtension {
     override suspend fun intercept(
         testCase: TestCase,
         execute: suspend (TestCase) -> TestResult,
     ): TestResult {
         if (!testCase.isRootTest()) return execute(testCase)
-        Dispatchers.setMain(UnconfinedTestDispatcher())
+        Dispatchers.setMain(dispatcher())
         return try {
             execute(testCase)
         } finally {

@@ -91,6 +91,7 @@
     <string name="commonutils_error_creating_file">Fehler beim Erstellen der Datei</string>
     <string name="commonutils_error_share_content_not_supported_on_device">Fehler: Das Teilen von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
     <string name="commonutils_error_saving_content_is_not_supported_on_device">Fehler: Das Speichern von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
+    <string name="commonutils_error_opening_content_is_not_supported_on_device">Fehler: Das Öffnen von Inhalten wird auf deinem Gerät nicht unterstützt.</string>
     <string name="commonutils_error_no_valid_file_selected">Keine gültige Datei ausgewählt</string>
     <string name="commonutils_error_loading_apps">Fehler beim Laden der Apps</string>
     <string name="commonutils_error_app_not_found">App nicht gefunden</string>

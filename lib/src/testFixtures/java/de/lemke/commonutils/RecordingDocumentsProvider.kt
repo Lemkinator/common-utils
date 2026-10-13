@@ -22,17 +22,24 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
+import androidx.core.net.toUri
 import androidx.core.os.BundleCompat
 import java.io.File
+import java.io.FileNotFoundException
 import org.robolectric.Robolectric
 
-/** A documents provider whose single document is a cache file; it records each document it is asked to delete. */
+/**
+ * A documents provider whose single document is a cache file. It records each document it is asked to delete in
+ * [deleted] and deletes the file, unless [deleteFailure] is set: then it throws that failure and keeps the file.
+ * While [readOnly] is true it refuses every write to the document.
+ */
 class RecordingDocumentsProvider : ContentProvider() {
     lateinit var file: File
         private set
     var deleteFailure: Exception? = null
+    var readOnly = false
     val deleted = mutableListOf<Uri>()
-    val uri: Uri = Uri.parse("content://$AUTHORITY/document/1")
+    val uri: Uri = "content://$AUTHORITY/document/1".toUri()
 
     override fun onCreate() = true
 
@@ -44,6 +51,7 @@ class RecordingDocumentsProvider : ContentProvider() {
         if (method == METHOD_DELETE_DOCUMENT) {
             deleted += BundleCompat.getParcelable(extras!!, EXTRA_DOCUMENT_URI, Uri::class.java)!!
             deleteFailure?.let { throw it }
+            file.delete()
         }
         return null
     }
@@ -51,7 +59,10 @@ class RecordingDocumentsProvider : ContentProvider() {
     override fun openFile(
         uri: Uri,
         mode: String,
-    ): ParcelFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.parseMode(mode))
+    ): ParcelFileDescriptor {
+        if (readOnly && mode != "r") throw FileNotFoundException("$uri is read-only")
+        return ParcelFileDescriptor.open(file, ParcelFileDescriptor.parseMode(mode))
+    }
 
     override fun query(
         uri: Uri,

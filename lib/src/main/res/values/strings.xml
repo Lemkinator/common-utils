@@ -125,6 +125,7 @@
     <string name="commonutils_error_creating_file">Error creating file</string>
     <string name="commonutils_error_share_content_not_supported_on_device">Error: Sharing content is not supported on your device.</string>
     <string name="commonutils_error_saving_content_is_not_supported_on_device">Error: Saving content is not supported on your device.</string>
+    <string name="commonutils_error_opening_content_is_not_supported_on_device">Error: Opening content is not supported on your device.</string>
     <string name="commonutils_error_no_valid_file_selected">No valid file selected</string>
     <string name="commonutils_error_loading_apps">Error loading apps</string>
     <string name="commonutils_error_app_not_found">App not found</string>
