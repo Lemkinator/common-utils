@@ -23,13 +23,15 @@ import org.robolectric.Shadows.shadowOf
 private val PNG_SIGNATURE = byteArrayOf(-119, 80, 78, 71, 13, 10, 26, 10)
 private const val BYTE_MASK = 0xFF
 
-/** Delivers [resultCode] and [data] to the picker that this activity started last. */
+/** Delivers [resultCode] and [data] to the picker that this activity started last and returns the intent that started it. */
 fun Activity.receivePickerResult(
     resultCode: Int,
     data: Intent?,
-) {
+): Intent {
     val shadowActivity = shadowOf(this)
-    shadowActivity.receiveResult(shadowActivity.nextStartedActivityForResult.intent, resultCode, data)
+    val pickerIntent = shadowActivity.nextStartedActivityForResult.intent
+    shadowActivity.receiveResult(pickerIntent, resultCode, data)
+    return pickerIntent
 }
 
 /** Whether this file starts with the eight bytes of the PNG signature. */

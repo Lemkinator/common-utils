@@ -23,6 +23,7 @@ import de.lemke.commonutils.ui.utils.DocumentPick
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import java.io.File
 import org.junit.Rule
 import org.junit.Test
@@ -57,8 +58,9 @@ class ExportTestSupportRobolectricTest {
         val uri = Uri.parse("content://de.lemke.commonutils.test.documents/document/1")
         activity.picker.tryLaunch(Intent(Intent.ACTION_CREATE_DOCUMENT)).shouldBeTrue()
 
-        activity.receivePickerResult(RESULT_OK, Intent().setData(uri))
+        val pickerIntent = activity.receivePickerResult(RESULT_OK, Intent().setData(uri))
 
+        pickerIntent.action shouldBe Intent.ACTION_CREATE_DOCUMENT
         activity.picks shouldContainExactly listOf(DocumentPick.Created(uri))
     }
 
