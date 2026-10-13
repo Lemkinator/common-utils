@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidTest
 import de.lemke.commonutils.data.SettingsRepository
@@ -83,10 +84,10 @@ class InstrumentedWaitsTest {
         ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
             val error =
                 shouldThrow<IllegalStateException> {
-                    scenario.waitUntil(timeout = 500.milliseconds, poll = 5.milliseconds) { false }
+                    scenario.waitUntil(timeout = 30.milliseconds, poll = 50.milliseconds) { false }
                 }
 
-            error.message shouldBe "condition not met within 500ms"
+            error.message shouldBe "condition not met within 30ms"
         }
     }
 
@@ -107,6 +108,28 @@ class InstrumentedWaitsTest {
 
             error.message shouldBe "main thread not idle within 200ms"
             start.elapsedNow() shouldBeLessThan BUSY_TIMEOUT + BUSY_MARGIN
+        }
+    }
+
+    @Test
+    fun waitUntil_rethrowsTheExceptionOfTheConditionUnchanged() {
+        ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
+            val error = shouldThrow<UnsupportedOperationException> { scenario.waitUntil { throw UnsupportedOperationException("boom") } }
+
+            error.message shouldBe "boom"
+        }
+    }
+
+    @Test
+    fun waitUntil_failsAtOnceWhenCalledOnTheMainThread() {
+        ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
+            var thrown: Throwable? = null
+
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                thrown = runCatching { scenario.waitUntil { true } }.exceptionOrNull()
+            }
+
+            (thrown is RuntimeException) shouldBe true
         }
     }
 
