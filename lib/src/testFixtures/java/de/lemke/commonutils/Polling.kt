@@ -18,16 +18,19 @@ package de.lemke.commonutils
 import kotlin.time.Duration
 import kotlin.time.TimeSource
 
-/** Runs [settle], then checks [condition], every [poll] until it holds; throws once [timeout] has passed. */
+/**
+ * Runs [settle] with the time left before the deadline, then checks [condition], every [poll] until it holds; throws once
+ * [timeout] has passed. [settle] must return within the time it is given.
+ */
 internal fun pollUntil(
     timeout: Duration,
     poll: Duration,
-    settle: () -> Unit,
+    settle: (remaining: Duration) -> Unit,
     condition: () -> Boolean,
 ) {
     val deadline = TimeSource.Monotonic.markNow() + timeout
     while (true) {
-        settle()
+        settle((-deadline.elapsedNow()).coerceAtLeast(Duration.ZERO))
         if (condition()) return
         check(!deadline.hasPassedNow()) { "condition not met within $timeout" }
         Thread.sleep(poll.inWholeMilliseconds)

@@ -19,13 +19,14 @@ import android.app.Activity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlin.concurrent.thread
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Waits for the instrumentation to go idle and checks [condition] on the activity every [poll] until it holds. Throws
- * [IllegalStateException] once [timeout] has passed.
+ * Waits for the instrumentation to go idle and checks [condition] on the activity every [poll] until it holds. The
+ * idle wait never outlasts [timeout]. Throws [IllegalStateException] once [timeout] has passed.
  */
 fun <A : Activity> ActivityScenario<A>.waitUntil(
     timeout: Duration = 5.seconds,
@@ -34,9 +35,14 @@ fun <A : Activity> ActivityScenario<A>.waitUntil(
 ) = pollUntil(
     timeout,
     poll,
-    settle = { InstrumentationRegistry.getInstrumentation().waitForIdleSync() },
+    settle = { remaining -> awaitInstrumentationIdle(remaining) },
     condition = { read { it.condition() } },
 )
+
+private fun awaitInstrumentationIdle(timeout: Duration) {
+    val idle = thread(isDaemon = true) { InstrumentationRegistry.getInstrumentation().waitForIdleSync() }
+    idle.join(timeout.inWholeMilliseconds)
+}
 
 /** True when no smooth scroll, scroll, layout request or adapter update is pending. */
 val RecyclerView.isSettled: Boolean

@@ -34,4 +34,4 @@ fun awaitMainLooperUntil(
     timeout: Duration = 5.seconds,
     poll: Duration = 10.milliseconds,
     condition: () -> Boolean,
-) = pollUntil(timeout, poll, ::idleMainLooper, condition)
+) = pollUntil(timeout, poll, settle = { idleMainLooper() }, condition = condition)

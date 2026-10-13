@@ -47,5 +47,19 @@ class ViewModelTestSupportTest : ShouldSpec(
 
             viewModel.viewModelScope.isActive shouldBe false
         }
+
+        should("clear an anonymous view model") {
+            var cleared = false
+            val viewModel =
+                object : ViewModel() {
+                    override fun onCleared() {
+                        cleared = true
+                    }
+                }
+
+            viewModel.clearForTest()
+
+            cleared shouldBe true
+        }
     },
 )

@@ -27,6 +27,6 @@ fun ViewModel.clearForTest() {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T = modelClass.cast(viewModel)!!
         }
-    ViewModelProvider.create(store, factory)[viewModel.javaClass]
+    ViewModelProvider.create(store, factory)[ViewModel::class.java]
     store.clear()
 }
