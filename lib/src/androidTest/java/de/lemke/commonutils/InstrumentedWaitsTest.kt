@@ -83,10 +83,10 @@ class InstrumentedWaitsTest {
         ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
             val error =
                 shouldThrow<IllegalStateException> {
-                    scenario.waitUntil(timeout = 30.milliseconds, poll = 5.milliseconds) { false }
+                    scenario.waitUntil(timeout = 500.milliseconds, poll = 5.milliseconds) { false }
                 }
 
-            error.message shouldBe "condition not met within 30ms"
+            error.message shouldBe "condition not met within 500ms"
         }
     }
 
