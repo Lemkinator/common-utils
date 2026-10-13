@@ -32,9 +32,9 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Waits for the instrumentation to go idle and checks [condition] on the activity every [poll] until it holds. Throws
  * [IllegalStateException] "condition not met" once [timeout] has passed. When the main thread stays silent for a whole
- * [STALL_GRACE] (at least [poll]) after that, it throws "main thread not idle" instead. A condition that throws reaches the caller unchanged. On
- * a device, call it from the instrumentation thread: the main thread fails at once. On the main looper thread
- * (Robolectric) every step runs directly and the main thread is never reported silent.
+ * [STALL_GRACE] (at least [poll]) after that, it throws "main thread not idle" instead. A condition that throws reaches
+ * the caller unchanged. On a device, call it from the instrumentation thread: the main thread fails at once. On the
+ * main looper thread (Robolectric) every step runs directly and the main thread is never reported silent.
  */
 fun <A : Activity> ActivityScenario<A>.waitUntil(
     timeout: Duration = 5.seconds,
