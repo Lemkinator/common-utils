@@ -115,6 +115,17 @@ class AssertArchitectureTest : ShouldSpec() {
 
             withSourceScope(mapOf("Main.kt" to source)) { scope, _ -> shouldNotThrowAny { scope.assertArchitecture("demo") } }
         }
+        should("accept a nested class named like its supertype") {
+            val source = "package demo.ui\n\nclass TabStatistics {\n    class ViewHolder : RecyclerView.ViewHolder()\n}\n"
+
+            withSourceScope(mapOf("TabStatistics.kt" to source)) { scope, _ -> shouldNotThrowAny { scope.assertArchitecture("demo") } }
+        }
+        should("fail on a nested ViewModel that names itself as its supertype") {
+            shouldFailWith(
+                "classes named ViewModel extend ViewModel",
+                mapOf("Screen.kt" to "package demo.ui\n\nclass Screen {\n    class DetailViewModel : DetailViewModel()\n}\n"),
+            )
+        }
         should("fail on an event stream in a ViewModel behind a base class in the same file") {
             shouldFailWith(
                 stateOnlyRule,

@@ -78,9 +78,17 @@ fun KoScope.assertArchitecture(rootPackage: String) {
 
 private val VIEW_MODEL_BASE_CLASSES = setOf("ViewModel", "AndroidViewModel")
 
-private fun KoParentProvider.extendsAnyNamed(names: Set<String>): Boolean =
+private fun KoParentProvider.extendsAnyNamed(names: Set<String>): Boolean = extendsAnyNamed(names, mutableSetOf(this))
+
+private fun KoParentProvider.extendsAnyNamed(
+    names: Set<String>,
+    visited: MutableSet<KoParentProvider>,
+): Boolean =
     parents(false).any { parent ->
-        parent.name in names || (parent.sourceDeclaration as? KoParentProvider)?.extendsAnyNamed(names) == true
+        parent.name in names ||
+            (parent.sourceDeclaration as? KoParentProvider)?.let { source ->
+                visited.add(source) && source.extendsAnyNamed(names, visited)
+            } == true
     }
 
 private val BANNED_EVENT_IMPORTS =
