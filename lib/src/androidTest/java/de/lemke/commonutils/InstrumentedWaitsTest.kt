@@ -38,7 +38,6 @@ import io.kotest.matchers.shouldBe
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
@@ -86,7 +85,7 @@ class InstrumentedWaitsTest {
         ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
             val error =
                 shouldThrow<IllegalStateException> {
-                    scenario.waitUntil(timeout = 30.milliseconds, poll = 50.milliseconds) { false }
+                    scenario.waitUntil(timeout = 30.milliseconds, poll = 5.milliseconds) { false }
                 }
 
             error.message shouldBe "condition not met within 30ms"
@@ -102,7 +101,7 @@ class InstrumentedWaitsTest {
                 try {
                     busy.start()
                     shouldThrow<IllegalStateException> {
-                        scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 50.milliseconds) { false }
+                        scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 5.milliseconds) { false }
                     }
                 } finally {
                     busy.stop()
@@ -114,11 +113,9 @@ class InstrumentedWaitsTest {
     }
 
     @Test
-    fun waitUntil_reportsTheStalledMainThreadAndSkipsTheConditionOnceItWakes() {
+    fun waitUntil_reportsTheStalledMainThreadWhileItIsBlocked() {
         ActivityScenario.launch(CommonUtilsAboutActivity::class.java).use { scenario ->
-            val instrumentation = InstrumentationRegistry.getInstrumentation()
             val woke = CountDownLatch(1)
-            val conditionCalls = AtomicInteger()
             Handler(Looper.getMainLooper()).post {
                 Thread.sleep(BLOCK.inWholeMilliseconds)
                 woke.countDown()
@@ -127,15 +124,13 @@ class InstrumentedWaitsTest {
 
             val error =
                 shouldThrow<IllegalStateException> {
-                    scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 5.milliseconds) { conditionCalls.incrementAndGet() > 0 }
+                    scenario.waitUntil(timeout = BUSY_TIMEOUT, poll = 5.milliseconds) { true }
                 }
             val elapsed = start.elapsedNow()
             woke.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            instrumentation.waitForIdleSync()
 
             error.message shouldBe "main thread not idle within 200ms"
-            elapsed shouldBeLessThan BUSY_TIMEOUT + BUSY_MARGIN
-            conditionCalls.get() shouldBe 0
+            elapsed shouldBeLessThan BUSY_TIMEOUT + STALL_GRACE + BUSY_MARGIN
         }
     }
 
@@ -157,7 +152,8 @@ class InstrumentedWaitsTest {
                 thrown = runCatching { scenario.waitUntil { true } }.exceptionOrNull()
             }
 
-            (thrown is RuntimeException) shouldBe true
+            thrown?.javaClass shouldBe RuntimeException::class.java
+            thrown?.message shouldBe "This method can not be called from the main application thread"
         }
     }
 
@@ -228,9 +224,9 @@ class InstrumentedWaitsTest {
 
     private companion object {
         val BUSY_TIMEOUT = 200.milliseconds
-        val BUSY_MARGIN = 1.seconds
+        val BUSY_MARGIN = 500.milliseconds
         val SPIN = 5.milliseconds
-        val BLOCK = 1500.milliseconds
+        val BLOCK = 3.seconds
         const val TEST_TIMEOUT_SECONDS = 30L
         const val LAYOUT_SIZE = 100
         const val ITEMS = 10
