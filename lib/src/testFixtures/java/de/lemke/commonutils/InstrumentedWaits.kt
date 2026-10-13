@@ -23,6 +23,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -30,9 +31,10 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Waits for the instrumentation to go idle and checks [condition] on the activity every [poll] until it holds. Throws
- * [IllegalStateException] when the condition does not hold within [timeout]. On a device, call it from the
- * instrumentation thread: the main thread fails at once, and it also throws when the main thread is not idle within
- * [timeout]. On the main looper thread (Robolectric) the waits run directly and the main thread bound does not apply.
+ * [IllegalStateException] "condition not met" once [timeout] has passed. When the main thread stays silent for a whole
+ * [poll] after that, it throws "main thread not idle" instead. A condition that throws reaches the caller unchanged. On
+ * a device, call it from the instrumentation thread: the main thread fails at once. On the main looper thread
+ * (Robolectric) every step runs directly and the main thread is never reported silent.
  */
 fun <A : Activity> ActivityScenario<A>.waitUntil(
     timeout: Duration = 5.seconds,
@@ -48,15 +50,15 @@ fun <A : Activity> ActivityScenario<A>.waitUntil(
 
 private val onMainThread get() = Looper.myLooper() == Looper.getMainLooper()
 
-private fun awaitInstrumentationIdle(timeout: Duration): Settle {
+private fun awaitInstrumentationIdle(timeout: Duration): Boolean {
     val instrumentation = InstrumentationRegistry.getInstrumentation()
     if (onMainThread) {
         instrumentation.waitForIdleSync()
-        return Settle.Settled
+        return true
     }
     val idle = CountDownLatch(1)
     instrumentation.waitForIdle { idle.countDown() }
-    return if (idle.await(timeout.inWholeNanoseconds, TimeUnit.NANOSECONDS)) Settle.Settled else Settle.TimedOut
+    return idle.await(timeout.inWholeNanoseconds, TimeUnit.NANOSECONDS)
 }
 
 private fun <A : Activity> ActivityScenario<A>.probeOnMainThread(
@@ -67,13 +69,15 @@ private fun <A : Activity> ActivityScenario<A>.probeOnMainThread(
     val handler = Handler(Looper.getMainLooper())
     val outcome = AtomicReference<Result<Boolean>>()
     val done = CountDownLatch(1)
+    val cancelled = AtomicBoolean(false)
     val task =
         Runnable {
-            outcome.set(runCatching { read { it.condition() } })
+            if (!cancelled.get()) outcome.set(runCatching { read { it.condition() } })
             done.countDown()
         }
     handler.post(task)
     if (!done.await(timeout.inWholeNanoseconds, TimeUnit.NANOSECONDS)) {
+        cancelled.set(true)
         handler.removeCallbacks(task)
         return Probe.TimedOut
     }

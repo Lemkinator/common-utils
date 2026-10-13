@@ -22,6 +22,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -64,6 +65,28 @@ class RobolectricWaitsRobolectricTest {
         }
 
         awaitMainLooperUntil { ran.get() }
+    }
+
+    @Test
+    fun `awaitMainLooperUntil checks once at timeout zero and returns when it holds`() {
+        val ran = AtomicBoolean(false)
+        Handler(Looper.getMainLooper()).post { ran.set(true) }
+
+        awaitMainLooperUntil(timeout = Duration.ZERO) { ran.get() }
+    }
+
+    @Test
+    fun `awaitMainLooperUntil fails at timeout zero when the condition does not hold`() {
+        val error = shouldThrow<IllegalStateException> { awaitMainLooperUntil(timeout = Duration.ZERO) { false } }
+
+        error.message shouldBe "condition not met within 0s"
+    }
+
+    @Test
+    fun `awaitMainLooperUntil rethrows the exception of the condition unchanged`() {
+        val error = shouldThrow<UnsupportedOperationException> { awaitMainLooperUntil { throw UnsupportedOperationException("boom") } }
+
+        error.message shouldBe "boom"
     }
 
     @Test

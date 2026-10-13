@@ -25,6 +25,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,6 +56,25 @@ class InstrumentedWaitsRobolectricTest {
             }
 
             scenario.waitUntil { done.get() }
+        }
+    }
+
+    @Test
+    fun `waitUntil rethrows the exception of the condition unchanged`() {
+        ActivityScenario.launch(LatchTestActivity::class.java).use { scenario ->
+            val error = shouldThrow<UnsupportedOperationException> { scenario.waitUntil { throw UnsupportedOperationException("boom") } }
+
+            error.message shouldBe "boom"
+        }
+    }
+
+    @Test
+    fun `waitUntil checks once at timeout zero`() {
+        ActivityScenario.launch(LatchTestActivity::class.java).use { scenario ->
+            scenario.waitUntil(timeout = Duration.ZERO) { true }
+            val error = shouldThrow<IllegalStateException> { scenario.waitUntil(timeout = Duration.ZERO) { false } }
+
+            error.message shouldBe "condition not met within 0s"
         }
     }
 

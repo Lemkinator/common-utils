@@ -38,9 +38,9 @@ fun awaitMainLooperUntil(
     timeout,
     poll,
     stalled = "main looper not idle",
-    settle = {
+    settle = { true },
+    condition = {
         idleMainLooper()
-        Settle.Settled
+        if (condition()) Probe.Met else Probe.NotMet
     },
-    condition = { if (condition()) Probe.Met else Probe.NotMet },
 )

@@ -15,51 +15,52 @@
  */
 package de.lemke.commonutils
 
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.TimeSource
-
-/** How a [pollUntil] settle step ended. */
-internal enum class Settle {
-    /** The thing waited on is idle. */
-    Settled,
-
-    /** The time given to settle ran out first. */
-    TimedOut,
-}
 
 /** How a [pollUntil] condition check ended. */
 internal enum class Probe {
     Met,
     NotMet,
 
-    /** The time given to run the check ran out first. */
+    /** The check got no answer within the time it was given. */
     TimedOut,
 }
 
 /**
- * Runs [settle], then [condition], each with the time left before the deadline, every [poll] until the condition is
- * [Probe.Met]. Throws once [timeout] has passed, or at once when a step times out: the message then names [stalled]. A
- * step must return within the time it is given. Waits with [sleep], which tests replace together with [timeSource].
+ * Settles, then probes [condition], every [poll] until it is [Probe.Met]. [settle] returns false when it did not finish
+ * in the time it is given. Once no time is left, or a step runs out of time, one final probe bounded by [poll] decides:
+ * [Probe.Met] returns, [Probe.NotMet] throws "condition not met", and [Probe.TimedOut] throws a message naming [stalled].
+ * Every call probes at least once. A step must return within the time it is given. [timeSource] and [sleep] are
+ * replaced by tests.
  */
 internal fun pollUntil(
     timeout: Duration,
     poll: Duration,
     stalled: String,
-    settle: (remaining: Duration) -> Settle,
-    condition: (remaining: Duration) -> Probe,
+    settle: (budget: Duration) -> Boolean,
+    condition: (budget: Duration) -> Probe,
     timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
-    sleep: (Duration) -> Unit = { Thread.sleep(it.inWholeMilliseconds) },
+    sleep: (Duration) -> Unit = { TimeUnit.NANOSECONDS.sleep(it.inWholeNanoseconds) },
 ) {
     val deadline = timeSource.markNow() + timeout
 
     fun remaining() = (-deadline.elapsedNow()).coerceAtLeast(Duration.ZERO)
     while (true) {
-        check(remaining() > Duration.ZERO) { "condition not met within $timeout" }
-        check(settle(remaining()) == Settle.Settled) { "$stalled within $timeout" }
+        val toSettle = remaining()
+        if (toSettle == Duration.ZERO || !settle(toSettle)) break
         when (condition(remaining())) {
             Probe.Met -> return
-            Probe.NotMet -> sleep(minOf(poll, remaining()))
-            Probe.TimedOut -> error("$stalled within $timeout")
+            Probe.NotMet -> Unit
+            Probe.TimedOut -> break
         }
+        val toSleep = minOf(poll, remaining())
+        if (toSleep > Duration.ZERO) sleep(toSleep)
+    }
+    when (condition(poll)) {
+        Probe.Met -> Unit
+        Probe.NotMet -> error("condition not met within $timeout")
+        Probe.TimedOut -> error("$stalled within $timeout")
     }
 }
