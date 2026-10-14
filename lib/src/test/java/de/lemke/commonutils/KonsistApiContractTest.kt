@@ -19,6 +19,7 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import java.io.DataInputStream
 import java.io.InputStream
@@ -48,6 +49,7 @@ class KonsistApiContractTest : ShouldSpec() {
             val references = fixtureClassFiles().flatMap { it.konsistReferences() }.toSet()
             val jars = supportedJars()
 
+            references.shouldNotBeEmpty()
             jars.size shouldBe 2
             jars.forEach { (version, jar) ->
                 KonsistJar(jar).use { konsist -> references.filterNot(konsist::resolves).map { "$version: $it" }.shouldBeEmpty() }
@@ -125,15 +127,17 @@ class KonsistApiContractTest : ShouldSpec() {
             }
             index += if (tag == TAG_LONG || tag == TAG_DOUBLE) 2 else 1
         }
-        val classes = classNameIndex.filter { it != 0 }.map { ClassReference(utf8[it]!!) }
+        val classes = classNameIndex.filter { it != 0 }.map { ClassReference(utf8[it]!!.removeArrayWrapper()) }
         val members =
             memberRefs.map { (tag, classIndex, nameAndTypeIndex) ->
-                val owner = utf8[classNameIndex[classIndex]]!!
+                val owner = utf8[classNameIndex[classIndex]]!!.removeArrayWrapper()
                 val (name, descriptor) = nameAndType[nameAndTypeIndex].map { utf8[it]!! }
                 if (tag == TAG_FIELD_REF) FieldReference(owner, name, descriptor) else MethodReference(owner, name, descriptor)
             }
         return (classes + members).filter { it.owner.startsWith(KONSIST_PACKAGE) }
     }
+
+    private fun String.removeArrayWrapper(): String = if (startsWith('[')) trimStart('[').removePrefix("L").removeSuffix(";") else this
 
     private fun constantSize(tag: Int): Int =
         when (tag) {
@@ -187,7 +191,10 @@ class KonsistApiContractTest : ShouldSpec() {
         override fun close() = loader.close()
 
         private fun Class<*>.hierarchy(): Sequence<Class<*>> =
-            sequenceOf(this) + (listOfNotNull(superclass) + interfaces).asSequence().flatMap { it.hierarchy() }
+            sequenceOf(this) +
+                (listOfNotNull(superclass) + interfaces + listOfNotNull(Any::class.java.takeIf { isInterface })).asSequence().flatMap {
+                    it.hierarchy()
+                }
 
         private fun java.lang.reflect.Method.descriptor(): String =
             MethodType.methodType(returnType, parameterTypes).toMethodDescriptorString()
