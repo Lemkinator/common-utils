@@ -204,9 +204,14 @@ class KonsistApiContractTest : ShouldSpec() {
 
     private class KonsistClassLoader(
         jar: URL,
-        parent: ClassLoader,
+        parent: ClassLoader?,
     ) : URLClassLoader(arrayOf(jar), parent) {
-        fun findKonsistClass(name: String): Class<*>? = runCatching { loadClass(name) }.getOrNull()
+        fun findKonsistClass(name: String): Class<*>? =
+            try {
+                loadClass(name)
+            } catch (_: ClassNotFoundException) {
+                null
+            }
 
         override fun loadClass(
             name: String,
