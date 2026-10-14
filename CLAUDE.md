@@ -58,7 +58,8 @@ types as `extraShowReceivers`.
 - `assertClassBodyOrder()`, `assertArchitecture(rootPackage)`, `assertNoCommonUtilsTypeExtensions()` and
   `assertLaunchLatchConventions()` — Konsist rules that each app's `CodingConventionsTest` and `ArchitectureTest`
   call on `Konsist.scopeFromProduction()`. Need Konsist.
-- `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`,
+- `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
+  (returns the picker intent it answered),
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
 - `Context.cacheWriteUriPattern(pathName, directoryName, fileName)` and `Context.cacheFileOf` — the content URI layout of a
   cache write; `directoryName` is `share` or `clipboard`.

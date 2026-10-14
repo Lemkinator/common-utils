@@ -19,6 +19,7 @@ import com.lemonappdev.konsist.api.KoModifier
 import com.lemonappdev.konsist.api.container.KoScope
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.ext.list.withPackage
+import com.lemonappdev.konsist.api.provider.KoParentProvider
 import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
 
@@ -63,7 +64,7 @@ fun KoScope.assertArchitecture(rootPackage: String) {
     classes()
         .filter { it.name.endsWith("ViewModel") }
         .assertTrue(testName = "classes named ViewModel extend ViewModel") {
-            it.hasParentWithName("ViewModel", "AndroidViewModel", indirectParents = true)
+            it.extendsAnyNamed(VIEW_MODEL_BASE_CLASSES)
         }
     files
         .filter { it.declaresViewModel() }
@@ -76,6 +77,19 @@ fun KoScope.assertArchitecture(rootPackage: String) {
 }
 
 private val VIEW_MODEL_BASE_CLASSES = setOf("ViewModel", "AndroidViewModel")
+
+private fun KoParentProvider.extendsAnyNamed(names: Set<String>): Boolean = extendsAnyNamed(names, mutableSetOf(this))
+
+private fun KoParentProvider.extendsAnyNamed(
+    names: Set<String>,
+    visited: MutableSet<KoParentProvider>,
+): Boolean =
+    parents(false).any { parent ->
+        parent.name in names ||
+            (parent.sourceDeclaration as? KoParentProvider)?.let { source ->
+                visited.add(source) && source.extendsAnyNamed(names, visited)
+            } == true
+    }
 
 private val BANNED_EVENT_IMPORTS =
     setOf(
@@ -100,8 +114,7 @@ private val TYPE_NAME = Regex("""[\w.]+""")
 
 private val COMMENT_OR_STRING = Regex(""""{3}.*?"{3}|"(?:\\.|[^"\\\n])*"|/\*.*?\*/|//[^\n]*""", RegexOption.DOT_MATCHES_ALL)
 
-private fun KoFileDeclaration.declaresViewModel(): Boolean =
-    classes().any { koClass -> koClass.hasParentWithName(VIEW_MODEL_BASE_CLASSES, indirectParents = true) }
+private fun KoFileDeclaration.declaresViewModel(): Boolean = classes().any { koClass -> koClass.extendsAnyNamed(VIEW_MODEL_BASE_CLASSES) }
 
 private fun KoFileDeclaration.usesEventStreams(): Boolean =
     hasImport { import ->
