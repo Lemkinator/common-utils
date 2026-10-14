@@ -160,6 +160,12 @@ class AssertArchitectureTest : ShouldSpec() {
 
             withSourceScope(mapOf("Pipe.kt" to source)) { scope, _ -> shouldNotThrowAny { scope.assertArchitecture("demo") } }
         }
+        should("fail on two ViewModel classes that extend each other") {
+            shouldFailWith(
+                "classes named ViewModel extend ViewModel",
+                mapOf("Loop.kt" to "package demo.ui\n\nclass AViewModel : BViewModel()\n\nclass BViewModel : AViewModel()\n"),
+            )
+        }
         should("fail on every Channel and SharedFlow declaration or call in a ViewModel") {
             listOf(
                 "val events = kotlinx.coroutines.channels.Channel<Int>()",
