@@ -28,10 +28,12 @@ class AssertArchitectureTest : ShouldSpec() {
     private fun shouldFailWith(
         rule: String,
         sources: Map<String, String>,
+        classes: List<String> = emptyList(),
     ) = withSourceScope(sources) { scope, _ ->
         withClue(sources.values.joinToString("\n---\n")) {
             val error = shouldThrow<KoAssertionFailedException> { scope.assertArchitecture("demo") }
             error.message shouldContain rule
+            classes.forEach { error.message shouldContain it }
         }
     }
 
@@ -164,7 +166,13 @@ class AssertArchitectureTest : ShouldSpec() {
             shouldFailWith(
                 "classes named ViewModel extend ViewModel",
                 mapOf("Loop.kt" to "package demo.ui\n\nclass AViewModel : BViewModel()\n\nclass BViewModel : AViewModel()\n"),
+                classes = listOf("AViewModel", "BViewModel"),
             )
+        }
+        should("accept a ViewModel cycle that also reaches ViewModel") {
+            val source = "package demo.ui\n\nclass AViewModel : BViewModel()\n\nclass BViewModel : AViewModel(), ViewModel\n"
+
+            withSourceScope(mapOf("Loop.kt" to source)) { scope, _ -> shouldNotThrowAny { scope.assertArchitecture("demo") } }
         }
         should("fail on every Channel and SharedFlow declaration or call in a ViewModel") {
             listOf(
