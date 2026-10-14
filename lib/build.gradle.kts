@@ -17,6 +17,17 @@
 @file:OptIn(ExperimentalRoborazziApi::class)
 
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import org.gradle.process.CommandLineArgumentProvider
+
+abstract class KonsistContractJar : CommandLineArgumentProvider {
+    @get:Input
+    abstract val version: Property<String>
+
+    @get:Classpath
+    abstract val jar: ConfigurableFileCollection
+
+    override fun asArguments(): Iterable<String> = listOf("-Dkonsist.contract.jar.${version.get()}=${jar.singleFile.absolutePath}")
+}
 
 plugins {
     alias(libs.plugins.android.library)
@@ -147,6 +158,27 @@ roborazzi {
 // the release-variant generation task to keep the published release AAR byte-equivalent to before
 // this plugin was applied.
 tasks.matching { it.name == "prepareLibraryDefinitionsRelease" }.configureEach { enabled = false }
+
+val konsistContractJars =
+    listOf(libs.versions.oldest.konsist, libs.versions.konsist).map { it.get() }.map { konsistVersion ->
+        val resolvable =
+            configurations.create("konsistContract${konsistVersion.replace('.', '_')}") {
+                isCanBeConsumed = false
+                isCanBeResolved = true
+                isTransitive = false
+                attributes {
+                    attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+                    attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+                }
+                dependencies.add(project.dependencies.create("com.lemonappdev:konsist:$konsistVersion"))
+            }
+        objects.newInstance<KonsistContractJar>().apply {
+            version.set(konsistVersion)
+            jar.from(resolvable)
+        }
+    }
+
+android.testOptions.unitTests.all { test -> konsistContractJars.forEach { test.jvmArgumentProviders.add(it) } }
 
 dependencies {
     implementation(libs.oneui.design)
