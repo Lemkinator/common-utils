@@ -10,7 +10,7 @@ compileSdkMinor = "1"
 #noinspection UnusedVersionCatalogEntry
 jvmTarget = "21"
 
-aboutlibraries = "15.2.0"
+aboutlibraries = "15.3.0"
 activity-compose = "1.13.0"
 agp = "9.4.1"
 androidx-navigation = "2.10.2"
