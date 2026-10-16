@@ -54,10 +54,10 @@ types as `extraShowReceivers`.
   Needs only kotlinx-coroutines.
 - `HiltTestRule(this)` and `assertHiltTestRuleConventions()` — the one Hilt rule of a `@HiltAndroidTest`; it closes
   everything registered with `closeAfterTest` after the test. The rule needs hilt-android-testing and JUnit 4; the
-  convention check also needs Konsist and Robolectric.
+  convention check also needs Robolectric and Konsist, built and tested against the version in `gradle/libs.versions.toml` only.
 - `assertClassBodyOrder()`, `assertArchitecture(rootPackage)`, `assertNoCommonUtilsTypeExtensions()` and
   `assertLaunchLatchConventions()` — Konsist rules that each app's `CodingConventionsTest` and `ArchitectureTest`
-  call on `Konsist.scopeFromProduction()`. Need Konsist.
+  call on `Konsist.scopeFromProduction()`. Need Konsist; built and tested against the version in `gradle/libs.versions.toml` only.
 - `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
   (returns the picker intent it answered),
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
