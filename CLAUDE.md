@@ -57,7 +57,7 @@ types as `extraShowReceivers`.
   convention check also needs Konsist and Robolectric.
 - `assertClassBodyOrder()`, `assertArchitecture(rootPackage)`, `assertNoCommonUtilsTypeExtensions()` and
   `assertLaunchLatchConventions()` — Konsist rules that each app's `CodingConventionsTest` and `ArchitectureTest`
-  call on `Konsist.scopeFromProduction()`. Need Konsist.
+  call on `Konsist.scopeFromProduction()`. Need Konsist, at the version in `gradle/libs.versions.toml` or newer.
 - `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
   (returns the picker intent it answered),
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
