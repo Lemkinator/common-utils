@@ -49,7 +49,7 @@ library's.
 
 The testFixtures Konsist rules (`assertArchitecture`, `assertClassBodyOrder`, `assertNoCommonUtilsTypeExtensions`,
 `assertLaunchLatchConventions`, `assertHiltTestRuleConventions`) are built and tested against the Konsist version in
-`gradle/libs.versions.toml`. A consuming app must use that Konsist version or newer.
+`gradle/libs.versions.toml` only. A consuming app must use that Konsist version.
 
 <br><br>
 
