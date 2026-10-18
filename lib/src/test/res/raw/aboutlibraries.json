@@ -1,0 +1,178 @@
+{
+  "libraries": [
+    {
+      "uniqueId": "org.example.fixture:a-long-name",
+      "artifactVersion": "10.20.30-beta.4",
+      "name": "Fixture Library With An Exceptionally Long Display Name That Wraps Across Multiple Lines",
+      "description": "Long name entry for the fixture library list.",
+      "website": "https://example.com/fixture-long-name",
+      "developers": [
+        {
+          "name": "Example Developers"
+        }
+      ],
+      "organization": {
+        "name": "Example Developers"
+      },
+      "licenses": [
+        "Apache-2.0"
+      ],
+      "funding": []
+    },
+    {
+      "uniqueId": "org.example.fixture:b-dual",
+      "artifactVersion": "1.5.0",
+      "name": "Fixture Dual Licensed",
+      "description": "Dual licensed entry for the fixture library list.",
+      "website": "https://example.com/fixture-dual",
+      "developers": [
+        {
+          "name": "Sample Labs"
+        }
+      ],
+      "organization": {
+        "name": "Sample Labs"
+      },
+      "licenses": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "funding": [
+        {
+          "platform": "GITHUB",
+          "url": "https://github.com/sponsors/example"
+        }
+      ]
+    },
+    {
+      "uniqueId": "org.example.fixture:c-bare",
+      "artifactVersion": "0.1.0",
+      "name": "Fixture Bare",
+      "licenses": [
+        "MIT"
+      ],
+      "funding": []
+    },
+    {
+      "uniqueId": "org.example.fixture:annotations",
+      "artifactVersion": "1.0.0",
+      "name": "Fixture Annotations",
+      "description": "Annotation types for the fixture library list.",
+      "website": "https://example.com/fixture-annotations",
+      "developers": [
+        {
+          "name": "Example Developers"
+        }
+      ],
+      "organization": {
+        "name": "Example Developers"
+      },
+      "licenses": [
+        "Apache-2.0"
+      ],
+      "funding": []
+    },
+    {
+      "uniqueId": "org.example.fixture:charts",
+      "artifactVersion": "2.4.1",
+      "name": "Fixture Charts",
+      "description": "Chart rendering for the fixture library list.",
+      "website": "https://example.com/fixture-charts",
+      "developers": [
+        {
+          "name": "Example Developers"
+        }
+      ],
+      "organization": {
+        "name": "Example Developers"
+      },
+      "licenses": [
+        "Apache-2.0"
+      ],
+      "funding": []
+    },
+    {
+      "uniqueId": "org.example.fixture:codec",
+      "artifactVersion": "0.9.3",
+      "name": "Fixture Codec",
+      "description": "Encoding and decoding helpers for the fixture library list.",
+      "website": "https://example.com/fixture-codec",
+      "developers": [
+        {
+          "name": "Sample Labs"
+        }
+      ],
+      "organization": {
+        "name": "Sample Labs"
+      },
+      "licenses": [
+        "MIT"
+      ],
+      "funding": []
+    },
+    {
+      "uniqueId": "org.example.fixture:http",
+      "artifactVersion": "3.1.0",
+      "name": "Fixture HTTP",
+      "description": "HTTP client for the fixture library list.",
+      "website": "https://example.com/fixture-http",
+      "developers": [
+        {
+          "name": "Sample Labs"
+        }
+      ],
+      "organization": {
+        "name": "Sample Labs"
+      },
+      "licenses": [
+        "MIT"
+      ],
+      "funding": []
+    },
+    {
+      "uniqueId": "org.example.fixture:imaging",
+      "artifactVersion": "1.2.0",
+      "name": "Fixture Imaging",
+      "description": "Image loading for the fixture library list.",
+      "website": "https://example.com/fixture-imaging",
+      "developers": [
+        {
+          "name": "Placeholder Group"
+        }
+      ],
+      "organization": {
+        "name": "Placeholder Group"
+      },
+      "licenses": [
+        "BSD-3-Clause"
+      ],
+      "funding": []
+    }
+  ],
+  "licenses": {
+    "Apache-2.0": {
+      "name": "Apache License 2.0",
+      "url": "https://spdx.org/licenses/Apache-2.0.html",
+      "content": "Apache License 2.0 fixture text.",
+      "internalHash": "Apache-2.0",
+      "spdxId": "Apache-2.0",
+      "hash": "Apache-2.0"
+    },
+    "MIT": {
+      "name": "MIT License",
+      "url": "https://spdx.org/licenses/MIT.html",
+      "content": "MIT License fixture text.",
+      "internalHash": "MIT",
+      "spdxId": "MIT",
+      "hash": "MIT"
+    },
+    "BSD-3-Clause": {
+      "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+      "url": "https://spdx.org/licenses/BSD-3-Clause.html",
+      "content": "BSD 3-Clause fixture text.",
+      "internalHash": "BSD-3-Clause",
+      "spdxId": "BSD-3-Clause",
+      "hash": "BSD-3-Clause"
+    }
+  }
+}
