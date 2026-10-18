@@ -108,8 +108,8 @@ android {
         }
     }
     sourceSets {
-        getByName("test").res.srcDir("src/sharedTestRes")
-        getByName("androidTest").res.srcDir("src/sharedTestRes")
+        getByName("test").res.directories += "src/testShared/res"
+        getByName("androidTest").res.directories += "src/testShared/res"
     }
     @Suppress("UnstableApiUsage")
     testFixtures {
