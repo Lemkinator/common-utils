@@ -30,7 +30,6 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.roborazzi)
-    alias(libs.plugins.aboutlibraries)
     id("kotlin-parcelize")
 }
 
@@ -108,6 +107,10 @@ android {
             excludes += "META-INF/licenses/**"
         }
     }
+    sourceSets {
+        getByName("test").res.directories += "src/testShared/res"
+        getByName("androidTest").res.directories += "src/testShared/res"
+    }
     @Suppress("UnstableApiUsage")
     testFixtures {
         enable = true
@@ -138,14 +141,6 @@ roborazzi {
         outputDir.set(layout.buildDirectory.dir("reports/roborazzi"))
     }
 }
-
-// AboutLibrariesPlugin.apply() unconditionally wires a generated aboutlibraries.json into every
-// variant's resources (no supported config scopes this to specific variants - `filterVariants`
-// only controls which variant's dependency graph feeds the merged library list, not which variant
-// gets the generated resource). Only androidTest needs it, via the debug variant's merged
-// resources, so disable the release-variant generation task to keep the published release AAR
-// byte-equivalent to before this plugin was applied.
-tasks.matching { it.name == "prepareLibraryDefinitionsRelease" }.configureEach { enabled = false }
 
 dependencies {
     implementation(libs.oneui.design)
