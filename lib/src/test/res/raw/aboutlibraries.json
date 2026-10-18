@@ -1,6 +1,59 @@
 {
   "libraries": [
     {
+      "uniqueId": "org.example.fixture:a-long-name",
+      "artifactVersion": "10.20.30-beta.4",
+      "name": "Fixture Library With An Exceptionally Long Display Name That Wraps Across Multiple Lines",
+      "description": "Long name entry for the fixture library list.",
+      "website": "https://example.com/fixture-long-name",
+      "developers": [
+        {
+          "name": "Example Developers"
+        }
+      ],
+      "organization": {
+        "name": "Example Developers"
+      },
+      "licenses": [
+        "Apache-2.0"
+      ],
+      "funding": []
+    },
+    {
+      "uniqueId": "org.example.fixture:b-dual",
+      "artifactVersion": "1.5.0",
+      "name": "Fixture Dual Licensed",
+      "description": "Dual licensed entry for the fixture library list.",
+      "website": "https://example.com/fixture-dual",
+      "developers": [
+        {
+          "name": "Sample Labs"
+        }
+      ],
+      "organization": {
+        "name": "Sample Labs"
+      },
+      "licenses": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "funding": [
+        {
+          "platform": "GITHUB",
+          "url": "https://github.com/sponsors/example"
+        }
+      ]
+    },
+    {
+      "uniqueId": "org.example.fixture:c-bare",
+      "artifactVersion": "0.1.0",
+      "name": "Fixture Bare",
+      "licenses": [
+        "MIT"
+      ],
+      "funding": []
+    },
+    {
       "uniqueId": "org.example.fixture:annotations",
       "artifactVersion": "1.0.0",
       "name": "Fixture Annotations",
