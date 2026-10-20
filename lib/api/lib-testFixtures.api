@@ -1,0 +1,377 @@
+public final class de/lemke/commonutils/ActivityScenarioReadKt {
+	public static final fun read (Landroidx/test/core/app/ActivityScenario;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+}
+
+public final class de/lemke/commonutils/ArchitectureKt {
+	public static final fun assertArchitecture (Lcom/lemonappdev/konsist/api/container/KoScope;Ljava/lang/String;)V
+}
+
+public final class de/lemke/commonutils/CacheWriteUrisKt {
+	public static final fun cacheFileOf (Landroid/content/Context;Landroid/net/Uri;)Ljava/io/File;
+	public static final fun cacheWriteUriPattern (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lkotlin/text/Regex;
+}
+
+public final class de/lemke/commonutils/ClassBodyOrderKt {
+	public static final fun assertClassBodyOrder (Lcom/lemonappdev/konsist/api/container/KoScope;)V
+}
+
+public final class de/lemke/commonutils/CommonUtilsTypeExtensionsKt {
+	public static final fun assertNoCommonUtilsTypeExtensions (Lcom/lemonappdev/konsist/api/container/KoScope;)V
+}
+
+public final class de/lemke/commonutils/ExportTestSupportKt {
+	public static final fun hasPngSignature (Ljava/io/File;)Z
+	public static final fun receivePickerResult (Landroid/app/Activity;ILandroid/content/Intent;)Landroid/content/Intent;
+}
+
+public final class de/lemke/commonutils/FileProviderTestSupportKt {
+	public static final fun resetFileProviderCache ()V
+}
+
+public final class de/lemke/commonutils/HiltTestRule : org/junit/rules/TestRule {
+	public static final field $stable I
+	public static final field Companion Lde/lemke/commonutils/HiltTestRule$Companion;
+	public fun <init> (Ljava/lang/Object;)V
+	public fun apply (Lorg/junit/runners/model/Statement;Lorg/junit/runner/Description;)Lorg/junit/runners/model/Statement;
+	public final fun inject ()V
+}
+
+public final class de/lemke/commonutils/HiltTestRule$Companion {
+	public final fun closeAfterTest (Ljava/lang/AutoCloseable;)Ljava/lang/AutoCloseable;
+	public final fun closeAfterTest (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public final fun closeResourcesRule ()Lorg/junit/rules/TestRule;
+	public final fun getRegistrations ()I
+}
+
+public final class de/lemke/commonutils/HiltTestRuleConventionsKt {
+	public static final fun assertHiltTestRuleConventions (Lcom/lemonappdev/konsist/api/container/KoScope;Z)V
+	public static synthetic fun assertHiltTestRuleConventions$default (Lcom/lemonappdev/konsist/api/container/KoScope;ZILjava/lang/Object;)V
+}
+
+public final class de/lemke/commonutils/InstrumentedWaitsKt {
+	public static final fun isSettled (Landroidx/recyclerview/widget/RecyclerView;)Z
+	public static final fun waitUntil-vLdBGDU (Landroidx/test/core/app/ActivityScenario;JJLkotlin/jvm/functions/Function1;)V
+	public static synthetic fun waitUntil-vLdBGDU$default (Landroidx/test/core/app/ActivityScenario;JJLkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class de/lemke/commonutils/LaunchLatchConventions {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/LaunchLatchConventions;
+	public final fun getDefaultShowReceivers ()Ljava/util/Set;
+	public final fun violations (Ljava/lang/String;Ljava/util/Set;)Ljava/util/List;
+	public static synthetic fun violations$default (Lde/lemke/commonutils/LaunchLatchConventions;Ljava/lang/String;Ljava/util/Set;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class de/lemke/commonutils/LaunchLatchConventionsKt {
+	public static final fun assertLaunchLatchConventions (Lcom/lemonappdev/konsist/api/container/KoScope;Ljava/util/Set;)V
+	public static synthetic fun assertLaunchLatchConventions$default (Lcom/lemonappdev/konsist/api/container/KoScope;Ljava/util/Set;ILjava/lang/Object;)V
+}
+
+public final class de/lemke/commonutils/LaunchLatchScenarioKt {
+	public static final fun returnFromLaunchedScreen (Landroidx/test/core/app/ActivityScenario;)V
+}
+
+public final class de/lemke/commonutils/LaunchLatchViolation {
+	public static final field $stable I
+	public fun <init> (ILjava/lang/String;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (ILjava/lang/String;)Lde/lemke/commonutils/LaunchLatchViolation;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/LaunchLatchViolation;ILjava/lang/String;ILjava/lang/Object;)Lde/lemke/commonutils/LaunchLatchViolation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLine ()I
+	public final fun getMatch ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/MainDispatcherExtension : io/kotest/core/extensions/TestCaseExtension {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun intercept (Lio/kotest/core/test/TestCase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class de/lemke/commonutils/MockingConventionsKt {
+	public static final fun assertNoMockedOwnTypes (Lcom/lemonappdev/konsist/api/container/KoScope;Lcom/lemonappdev/konsist/api/container/KoScope;)V
+	public static synthetic fun assertNoMockedOwnTypes$default (Lcom/lemonappdev/konsist/api/container/KoScope;Lcom/lemonappdev/konsist/api/container/KoScope;ILjava/lang/Object;)V
+}
+
+public final class de/lemke/commonutils/PausableDispatcher : kotlinx/coroutines/CoroutineDispatcher {
+	public static final field $stable I
+	public fun <init> (Lkotlinx/coroutines/CoroutineDispatcher;Lde/lemke/commonutils/WhileResumed;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineDispatcher;Lde/lemke/commonutils/WhileResumed;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun dispatch (Lkotlin/coroutines/CoroutineContext;Ljava/lang/Runnable;)V
+	public fun isDispatchNeeded (Lkotlin/coroutines/CoroutineContext;)Z
+	public final fun pause ()V
+	public final fun resume ()V
+}
+
+public final class de/lemke/commonutils/RecordingDocumentsProvider : android/content/ContentProvider {
+	public static final field $stable I
+	public static final field AUTHORITY Ljava/lang/String;
+	public static final field Companion Lde/lemke/commonutils/RecordingDocumentsProvider$Companion;
+	public fun <init> ()V
+	public fun call (Ljava/lang/String;Ljava/lang/String;Landroid/os/Bundle;)Landroid/os/Bundle;
+	public fun delete (Landroid/net/Uri;Ljava/lang/String;[Ljava/lang/String;)I
+	public final fun getDeleteFailure ()Ljava/lang/Exception;
+	public final fun getDeleted ()Ljava/util/List;
+	public final fun getFile ()Ljava/io/File;
+	public final fun getReadOnly ()Z
+	public fun getType (Landroid/net/Uri;)Ljava/lang/String;
+	public final fun getUri ()Landroid/net/Uri;
+	public fun insert (Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;
+	public fun onCreate ()Z
+	public fun openFile (Landroid/net/Uri;Ljava/lang/String;)Landroid/os/ParcelFileDescriptor;
+	public fun query (Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
+	public final fun setDeleteFailure (Ljava/lang/Exception;)V
+	public final fun setReadOnly (Z)V
+	public fun update (Landroid/net/Uri;Landroid/content/ContentValues;Ljava/lang/String;[Ljava/lang/String;)I
+}
+
+public final class de/lemke/commonutils/RecordingDocumentsProvider$Companion {
+	public final fun create (Landroid/content/Context;)Lde/lemke/commonutils/RecordingDocumentsProvider;
+}
+
+public final class de/lemke/commonutils/RecordingIntentLauncher : de/lemke/commonutils/ui/utils/SingleLaunchResultLauncher {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/RuntimeException;Z)V
+	public synthetic fun <init> (Ljava/lang/RuntimeException;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAdmits ()Z
+	public synthetic fun getContract ()Landroidx/activity/result/contract/ActivityResultContract;
+	public fun getContract ()Landroidx/activity/result/contract/ActivityResultContracts$StartActivityForResult;
+	public final fun getFailure ()Ljava/lang/RuntimeException;
+	public final fun getLaunched ()Ljava/util/List;
+	public final fun setAdmits (Z)V
+	public final fun setFailure (Ljava/lang/RuntimeException;)V
+	public fun tryLaunch (Landroid/content/Intent;Landroidx/core/app/ActivityOptionsCompat;)Z
+	public synthetic fun tryLaunch (Ljava/lang/Object;Landroidx/core/app/ActivityOptionsCompat;)Z
+	public fun unregister ()V
+}
+
+public final class de/lemke/commonutils/RobolectricWaitsKt {
+	public static final fun awaitMainLooperUntil-NqJ4yvY (JJLkotlin/jvm/functions/Function0;)V
+	public static synthetic fun awaitMainLooperUntil-NqJ4yvY$default (JJLkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static final fun idleMainLooper ()V
+}
+
+public class de/lemke/commonutils/ShadowFileProvider {
+	public static final field $stable I
+	public static final field Companion Lde/lemke/commonutils/ShadowFileProvider$Companion;
+	public fun <init> ()V
+	protected final fun delete (Landroid/net/Uri;Ljava/lang/String;[Ljava/lang/String;)I
+	protected final fun getType (Landroid/net/Uri;)Ljava/lang/String;
+	public static final fun getUriForFile (Landroid/content/Context;Ljava/lang/String;Ljava/io/File;)Landroid/net/Uri;
+	public static final fun getUriForFile (Landroid/content/Context;Ljava/lang/String;Ljava/io/File;Ljava/lang/String;)Landroid/net/Uri;
+	protected final fun openFile (Landroid/net/Uri;Ljava/lang/String;)Landroid/os/ParcelFileDescriptor;
+	protected final fun query (Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
+}
+
+public final class de/lemke/commonutils/ShadowFileProvider$Companion {
+	public final fun getUriForFile (Landroid/content/Context;Ljava/lang/String;Ljava/io/File;)Landroid/net/Uri;
+	public final fun getUriForFile (Landroid/content/Context;Ljava/lang/String;Ljava/io/File;Ljava/lang/String;)Landroid/net/Uri;
+}
+
+public final class de/lemke/commonutils/TestOnboardingKt {
+	public static final fun bypassOobe (Lde/lemke/commonutils/data/SettingsRepository;)V
+}
+
+public final class de/lemke/commonutils/TestPreferencesKt {
+	public static final fun freshTestPreferences (Landroid/content/Context;)Landroid/content/SharedPreferences;
+	public static synthetic fun freshTestPreferences$default (Landroid/content/Context;ILjava/lang/Object;)Landroid/content/SharedPreferences;
+}
+
+public final class de/lemke/commonutils/ViewModelTestSupportKt {
+	public static final fun clearForTest (Landroidx/lifecycle/ViewModel;)V
+}
+
+public final class de/lemke/commonutils/WhileResumed : java/lang/Enum {
+	public static final field Dispatch Lde/lemke/commonutils/WhileResumed;
+	public static final field RunInPlace Lde/lemke/commonutils/WhileResumed;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lde/lemke/commonutils/WhileResumed;
+	public static fun values ()[Lde/lemke/commonutils/WhileResumed;
+}
+
+public final class de/lemke/commonutils/data/FakePackageLookup : de/lemke/commonutils/data/PackageLookup {
+	public static final field $stable I
+	public fun <init> ([Landroid/content/pm/ApplicationInfo;)V
+	public fun applicationInfo (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getApplicationInfos ()Ljava/util/Map;
+	public final fun getGate ()Lkotlinx/coroutines/CompletableDeferred;
+	public final fun getInstalledAppsCalls ()I
+	public final fun getInstalledAppsResult-d1pmJ48 ()Ljava/lang/Object;
+	public final fun getLookedUpPackages ()Ljava/util/List;
+	public fun installedApps (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setGate (Lkotlinx/coroutines/CompletableDeferred;)V
+	public final fun setInstalledAppsResult (Ljava/lang/Object;)V
+}
+
+public final class de/lemke/commonutils/data/FakeSharedPreferences : android/content/SharedPreferences {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun contains (Ljava/lang/String;)Z
+	public fun edit ()Landroid/content/SharedPreferences$Editor;
+	public fun getAll ()Ljava/util/Map;
+	public fun getBoolean (Ljava/lang/String;Z)Z
+	public fun getFloat (Ljava/lang/String;F)F
+	public fun getInt (Ljava/lang/String;I)I
+	public fun getLong (Ljava/lang/String;J)J
+	public fun getString (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public fun getStringSet (Ljava/lang/String;Ljava/util/Set;)Ljava/util/Set;
+	public fun registerOnSharedPreferenceChangeListener (Landroid/content/SharedPreferences$OnSharedPreferenceChangeListener;)V
+	public fun unregisterOnSharedPreferenceChangeListener (Landroid/content/SharedPreferences$OnSharedPreferenceChangeListener;)V
+}
+
+public final class de/lemke/commonutils/data/PreferenceXmlParityFragment : androidx/preference/PreferenceFragmentCompat {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun getDataStore ()Landroidx/preference/PreferenceDataStore;
+	public final fun getXmlRes ()I
+	public fun onCreatePreferences (Landroid/os/Bundle;Ljava/lang/String;)V
+	public final fun setDataStore (Landroidx/preference/PreferenceDataStore;)V
+	public final fun setXmlRes (I)V
+}
+
+public final class de/lemke/commonutils/data/PreferenceXmlParityKt {
+	public static final fun assertPreferenceXmlBoundToSettings ([ILkotlin/jvm/functions/Function1;)V
+}
+
+public final class de/lemke/commonutils/data/SettingsKeysKt {
+	public static final fun assertDelegatedKeys (Ljava/lang/Class;Ljava/util/Set;)V
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeBitmapExporter : de/lemke/commonutils/ui/utils/BitmapExporter {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun createClip (Landroid/graphics/Bitmap;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createShareFile (Landroid/graphics/Bitmap;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deleteCreatedDocument (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getCalls ()Ljava/util/List;
+	public final fun getClip ()Landroid/content/ClipData;
+	public final fun getDeletedDocuments ()Ljava/util/List;
+	public final fun getDirectoryResult ()Lde/lemke/commonutils/ui/utils/BitmapSaveResult$DirectoryResult;
+	public final fun getDocumentResult ()Lde/lemke/commonutils/ui/utils/BitmapSaveResult$UriResult;
+	public final fun getException ()Ljava/lang/Exception;
+	public final fun getGate ()Lkotlinx/coroutines/CompletableDeferred;
+	public final fun getShareFile ()Lde/lemke/commonutils/ui/utils/BitmapShareFile;
+	public fun saveToCreatedDocument (Landroid/net/Uri;Landroid/graphics/Bitmap;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun saveToDirectory (Lde/lemke/commonutils/data/SaveLocation;Landroid/graphics/Bitmap;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setClip (Landroid/content/ClipData;)V
+	public final fun setDirectoryResult (Lde/lemke/commonutils/ui/utils/BitmapSaveResult$DirectoryResult;)V
+	public final fun setDocumentResult (Lde/lemke/commonutils/ui/utils/BitmapSaveResult$UriResult;)V
+	public final fun setException (Ljava/lang/Exception;)V
+	public final fun setGate (Lkotlinx/coroutines/CompletableDeferred;)V
+	public final fun setShareFile (Lde/lemke/commonutils/ui/utils/BitmapShareFile;)V
+}
+
+public abstract interface class de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call {
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$CreateClip : de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call {
+	public static final field $stable I
+	public fun <init> (Landroid/graphics/Bitmap;)V
+	public final fun component1 ()Landroid/graphics/Bitmap;
+	public final fun copy (Landroid/graphics/Bitmap;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$CreateClip;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$CreateClip;Landroid/graphics/Bitmap;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$CreateClip;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBitmap ()Landroid/graphics/Bitmap;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$CreateShareFile : de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call {
+	public static final field $stable I
+	public fun <init> (Landroid/graphics/Bitmap;)V
+	public final fun component1 ()Landroid/graphics/Bitmap;
+	public final fun copy (Landroid/graphics/Bitmap;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$CreateShareFile;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$CreateShareFile;Landroid/graphics/Bitmap;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$CreateShareFile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBitmap ()Landroid/graphics/Bitmap;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$DeleteCreatedDocument : de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call {
+	public static final field $stable I
+	public fun <init> (Landroid/net/Uri;)V
+	public final fun component1 ()Landroid/net/Uri;
+	public final fun copy (Landroid/net/Uri;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$DeleteCreatedDocument;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$DeleteCreatedDocument;Landroid/net/Uri;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$DeleteCreatedDocument;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getUri ()Landroid/net/Uri;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$SaveToCreatedDocument : de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call {
+	public static final field $stable I
+	public fun <init> (Landroid/net/Uri;Landroid/graphics/Bitmap;)V
+	public final fun component1 ()Landroid/net/Uri;
+	public final fun component2 ()Landroid/graphics/Bitmap;
+	public final fun copy (Landroid/net/Uri;Landroid/graphics/Bitmap;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$SaveToCreatedDocument;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$SaveToCreatedDocument;Landroid/net/Uri;Landroid/graphics/Bitmap;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$SaveToCreatedDocument;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBitmap ()Landroid/graphics/Bitmap;
+	public final fun getUri ()Landroid/net/Uri;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$SaveToDirectory : de/lemke/commonutils/ui/utils/FakeBitmapExporter$Call {
+	public static final field $stable I
+	public fun <init> (Lde/lemke/commonutils/data/SaveLocation;Landroid/graphics/Bitmap;Ljava/lang/String;)V
+	public final fun component1 ()Lde/lemke/commonutils/data/SaveLocation;
+	public final fun component2 ()Landroid/graphics/Bitmap;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lde/lemke/commonutils/data/SaveLocation;Landroid/graphics/Bitmap;Ljava/lang/String;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$SaveToDirectory;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$SaveToDirectory;Lde/lemke/commonutils/data/SaveLocation;Landroid/graphics/Bitmap;Ljava/lang/String;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/FakeBitmapExporter$Call$SaveToDirectory;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBitmap ()Landroid/graphics/Bitmap;
+	public final fun getFileName ()Ljava/lang/String;
+	public final fun getLocation ()Lde/lemke/commonutils/data/SaveLocation;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeInAppReview : de/lemke/commonutils/ui/utils/InAppReview {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun canShow ()Z
+	public final fun getCalls ()Ljava/util/List;
+	public fun showIfPossible (Landroidx/appcompat/app/AppCompatActivity;)V
+	public fun showOrFinish (Landroidx/appcompat/app/AppCompatActivity;)V
+}
+
+public abstract interface class de/lemke/commonutils/ui/utils/FakeInAppReview$Call {
+	public abstract fun getActivity ()Landroidx/appcompat/app/AppCompatActivity;
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeInAppReview$Call$ShowIfPossible : de/lemke/commonutils/ui/utils/FakeInAppReview$Call {
+	public static final field $stable I
+	public fun <init> (Landroidx/appcompat/app/AppCompatActivity;)V
+	public final fun component1 ()Landroidx/appcompat/app/AppCompatActivity;
+	public final fun copy (Landroidx/appcompat/app/AppCompatActivity;)Lde/lemke/commonutils/ui/utils/FakeInAppReview$Call$ShowIfPossible;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/ui/utils/FakeInAppReview$Call$ShowIfPossible;Landroidx/appcompat/app/AppCompatActivity;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/FakeInAppReview$Call$ShowIfPossible;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getActivity ()Landroidx/appcompat/app/AppCompatActivity;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/ui/utils/FakeInAppReview$Call$ShowOrFinish : de/lemke/commonutils/ui/utils/FakeInAppReview$Call {
+	public static final field $stable I
+	public fun <init> (Landroidx/appcompat/app/AppCompatActivity;)V
+	public final fun component1 ()Landroidx/appcompat/app/AppCompatActivity;
+	public final fun copy (Landroidx/appcompat/app/AppCompatActivity;)Lde/lemke/commonutils/ui/utils/FakeInAppReview$Call$ShowOrFinish;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/ui/utils/FakeInAppReview$Call$ShowOrFinish;Landroidx/appcompat/app/AppCompatActivity;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/FakeInAppReview$Call$ShowOrFinish;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getActivity ()Landroidx/appcompat/app/AppCompatActivity;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

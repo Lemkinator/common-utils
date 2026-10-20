@@ -41,7 +41,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 
 /** Pre-built onboarding (OOBE) screen that presents feature tips and a TOS acceptance flow. */
-class CommonUtilsOOBEActivity : AppCompatActivity() {
+public class CommonUtilsOOBEActivity : AppCompatActivity() {
     private lateinit var binding: ActivityOobeBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,7 +108,7 @@ class CommonUtilsOOBEActivity : AppCompatActivity() {
         binding.oobeIntroFooterButtonProgress.isVisible = proceeding
     }
 
-    companion object {
+    public companion object {
         private const val PROCEED_DELAY_MS = 500L
         private const val MIN_FULL_BUTTON_WIDTH_DP = 360
     }

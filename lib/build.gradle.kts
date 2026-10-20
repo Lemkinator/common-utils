@@ -17,6 +17,10 @@
 @file:OptIn(ExperimentalRoborazziApi::class)
 
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import kotlinx.validation.KotlinApiBuildTask
+import kotlinx.validation.KotlinApiCompareTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.android.library)
@@ -108,8 +112,10 @@ android {
         }
     }
     sourceSets {
-        getByName("test").res.directories += "src/testShared/res"
-        getByName("androidTest").res.directories += "src/testShared/res"
+        listOf("test", "androidTest").forEach { name ->
+            getByName(name).res.directories += "src/testShared/res"
+            getByName(name).kotlin.directories += "src/testShared/java"
+        }
     }
     @Suppress("UnstableApiUsage")
     testFixtures {
@@ -222,6 +228,11 @@ detekt {
     buildUponDefaultConfig = true
     parallel = true
     autoCorrect = false
+    source.setFrom(
+        listOf("main", "test", "testFixtures", "androidTest", "testShared").flatMap { sourceSet ->
+            listOf("java", "kotlin").map { "src/$sourceSet/$it" }
+        },
+    )
 }
 
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
@@ -289,3 +300,75 @@ kover {
         }
     }
 }
+
+kotlin {
+    explicitApi()
+}
+
+// Neither the Kotlin Gradle plugin's ABI validation nor the kotlinx plugin registers tasks for an Android
+// library on built-in Kotlin, so the kotlinx task types run against the release compilation.
+val abiValidationRuntime: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+dependencies {
+    abiValidationRuntime(libs.abi.asm)
+    abiValidationRuntime(libs.abi.asm.tree)
+    abiValidationRuntime(libs.abi.kotlin.metadata.jvm)
+}
+
+fun registerApiBuild(
+    taskName: String,
+    compilationName: String,
+    dumpName: String,
+    configure: KotlinApiBuildTask.() -> Unit = {},
+): TaskProvider<KotlinApiBuildTask> {
+    val build =
+        tasks.register<KotlinApiBuildTask>(taskName) {
+            description = "Builds the public ABI dump of the $compilationName compilation."
+            runtimeClasspath.from(abiValidationRuntime)
+            outputApiFile.set(layout.buildDirectory.file("api/$dumpName.api"))
+            configure()
+        }
+    extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
+        if (name == compilationName) {
+            build.configure {
+                inputClassesDirs.from(compileTaskProvider.flatMap { (it as KotlinJvmCompile).destinationDirectory })
+            }
+        }
+    }
+    return build
+}
+
+fun registerApiCompare(
+    taskName: String,
+    dumpName: String,
+    build: TaskProvider<KotlinApiBuildTask>,
+): TaskProvider<KotlinApiCompareTask> =
+    tasks.register<KotlinApiCompareTask>(taskName) {
+        group = "verification"
+        description = "Checks the public ABI against the committed api/$dumpName.api dump."
+        projectApiFile.set(layout.projectDirectory.file("api/$dumpName.api"))
+        generatedApiFile.set(build.flatMap { it.outputApiFile })
+    }
+
+val apiBuild =
+    registerApiBuild("apiBuild", "release", project.name) {
+        ignoredClasses.add("de.lemke.commonutils.ui.activity.ComposableSingletons\$CommonUtilsLibsActivityKt")
+    }
+val apiBuildTestFixtures = registerApiBuild("apiBuildTestFixtures", "releaseTestFixtures", "${project.name}-testFixtures")
+
+val apiCheck = registerApiCompare("apiCheck", project.name, apiBuild)
+val apiCheckTestFixtures = registerApiCompare("apiCheckTestFixtures", "${project.name}-testFixtures", apiBuildTestFixtures)
+apiCheck.configure { dependsOn(apiCheckTestFixtures) }
+
+tasks.register<Copy>("apiDump") {
+    group = "other"
+    description = "Overwrites api/${project.name}.api and api/${project.name}-testFixtures.api with the current public ABI."
+    from(apiBuild.flatMap { it.outputApiFile })
+    from(apiBuildTestFixtures.flatMap { it.outputApiFile })
+    into(layout.projectDirectory.dir("api"))
+}
+
+tasks.named("check") { dependsOn(apiCheck) }

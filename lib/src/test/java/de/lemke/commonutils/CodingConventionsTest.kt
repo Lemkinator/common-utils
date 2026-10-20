@@ -23,5 +23,8 @@ class CodingConventionsTest : ShouldSpec() {
         should("class bodies follow the declaration order") {
             Konsist.scopeFromProduction().assertClassBodyOrder()
         }
+        should("tests mock no type this project declares") {
+            Konsist.scopeFromTest().assertNoMockedOwnTypes()
+        }
     }
 }

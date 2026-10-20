@@ -26,14 +26,14 @@ import dev.oneuiproject.oneui.widget.TipPopup
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Shows a tip popup anchored to this view with a full-screen touch-blocking overlay. */
-fun View.showTouchBlockingTipPopup(
+public fun View.showTouchBlockingTipPopup(
     @StringRes messageResId: Int,
     @StringRes actionTextResId: Int? = null,
     action: () -> Unit = {},
-) = showTouchBlockingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
+): Unit = showTouchBlockingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
 /** Shows a tip popup anchored to this view with a full-screen touch-blocking overlay. */
-fun View.showTouchBlockingTipPopup(
+public fun View.showTouchBlockingTipPopup(
     message: String,
     actionText: String? = null,
     action: () -> Unit = {},
@@ -42,14 +42,14 @@ fun View.showTouchBlockingTipPopup(
 }
 
 /** Shows a tip popup anchored to this view with a semi-transparent dimming overlay. */
-fun View.showDimmingTipPopup(
+public fun View.showDimmingTipPopup(
     @StringRes messageResId: Int,
     @StringRes actionTextResId: Int? = null,
     action: () -> Unit = {},
-) = showDimmingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
+): Unit = showDimmingTipPopup(context.getString(messageResId), actionTextResId?.let { context.getString(it) }, action)
 
 /** Shows a tip popup anchored to this view with a semi-transparent dimming overlay. */
-fun View.showDimmingTipPopup(
+public fun View.showDimmingTipPopup(
     message: String,
     actionText: String? = null,
     action: () -> Unit = {},

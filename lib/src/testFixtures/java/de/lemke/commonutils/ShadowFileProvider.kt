@@ -43,8 +43,7 @@ import org.xmlpull.v1.XmlPullParserException
  * `File.getCanonicalPath()` strings, which are backslash-separated on Windows, so the real
  * implementation throws for every file there. Apply with
  * `@Config(shadows = [ShadowFileProvider::class])` on any Robolectric test that reaches
- * `FileProvider` for real (i.e. not `mockkStatic`'d). An unshadowed test that calls the
- * stock `getUriForFile` must call [resetFileProviderCache] in `@Before` and `@After` instead.
+ * `FileProvider` for real (i.e. not `mockkStatic`'d).
  *
  * Shadowed entry points: both static `getUriForFile` overloads, and the provider's `query`, `getType`,
  * `openFile` and `delete`. The provider entry points take the authority from the URI, not from the
@@ -57,7 +56,7 @@ import org.xmlpull.v1.XmlPullParserException
  * constructor without that `<meta-data>`.
  */
 @Implements(FileProvider::class, isInAndroidSdk = false)
-class ShadowFileProvider {
+public open class ShadowFileProvider {
     @RealObject
     private lateinit var realProvider: FileProvider
 
@@ -109,35 +108,24 @@ class ShadowFileProvider {
         val root =
             roots[Uri.decode(path.substring(1, splitIndex))]
                 ?: throw IllegalArgumentException("Unable to find configured root for $uri")
-        val unresolved = File(root, Uri.decode(path.substring(splitIndex + 1)))
-        val file =
-            try {
-                unresolved.canonicalFile
-            } catch (e: IOException) {
-                throw IllegalArgumentException("Failed to resolve canonical path for $unresolved", e)
-            }
+        val file = File(root, Uri.decode(path.substring(splitIndex + 1))).resolvedCanonical()
         if (!belongsToRoot(file.path.toUnixPath(), root.path.toUnixPath())) {
             throw SecurityException("Resolved path jumped beyond configured root")
         }
         return file
     }
 
-    companion object {
+    public companion object {
         private const val DISPLAY_NAME_PARAMETER = "displayName"
 
         @Implementation
         @JvmStatic
-        fun getUriForFile(
+        public fun getUriForFile(
             context: Context,
             authority: String,
             file: File,
         ): Uri {
-            val path =
-                try {
-                    file.canonicalPath.toUnixPath()
-                } catch (e: IOException) {
-                    throw IllegalArgumentException("Failed to resolve canonical path for $file", e)
-                }
+            val path = file.resolvedCanonical().path.toUnixPath()
             val (name, rootPath) =
                 pathStrategyRoots(context, authority)
                     .map { (name, root) -> name to root.path.toUnixPath() }
@@ -156,7 +144,7 @@ class ShadowFileProvider {
 
         @Implementation
         @JvmStatic
-        fun getUriForFile(
+        public fun getUriForFile(
             context: Context,
             authority: String,
             file: File,
@@ -167,6 +155,13 @@ class ShadowFileProvider {
             filePath: String,
             rootPath: String,
         ): Boolean = filePath.trimEnd('/').startsWith("${rootPath.trimEnd('/')}/")
+
+        private fun File.resolvedCanonical(): File =
+            try {
+                canonicalFile
+            } catch (e: IOException) {
+                throw IllegalArgumentException("Failed to resolve canonical path for $this", e)
+            }
 
         private fun String.toUnixPath(): String = replace(File.separatorChar, '/')
 

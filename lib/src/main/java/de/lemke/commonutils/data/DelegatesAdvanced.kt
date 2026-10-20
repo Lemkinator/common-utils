@@ -30,14 +30,14 @@ import kotlin.reflect.KProperty
  */
 
 /** Returns a [SharedPreferenceDelegates] factory backed by this [SharedPreferences] instance. */
-val SharedPreferences.delegates get() = SharedPreferenceDelegates(this)
+public val SharedPreferences.delegates: SharedPreferenceDelegates get() = SharedPreferenceDelegates(this)
 
 /**
  * Wraps this delegate so [sanitize] is applied to every value on both read and write — e.g., clamping a size to a
  * valid range, or capping a list to a max length. Sanitizing on writing as well as reading keeps the stored value itself
  * valid, so every future read is inexpensive, and every consumer (not just this property) sees an already-sanitized value.
  */
-fun <R, T> ReadWriteProperty<R, T>.sanitized(sanitize: (T) -> T): ReadWriteProperty<R, T> =
+public fun <R, T> ReadWriteProperty<R, T>.sanitized(sanitize: (T) -> T): ReadWriteProperty<R, T> =
     object : ReadWriteProperty<R, T> {
         override fun getValue(
             thisRef: R,
@@ -56,7 +56,7 @@ fun <R, T> ReadWriteProperty<R, T>.sanitized(sanitize: (T) -> T): ReadWritePrope
  * backed by a String delegate. [to] converts the stored value on read, [from] converts back on write. Unlike
  * [sanitized] (same type in, same type out — for clamping/validating), [mapped] changes the exposed type entirely.
  */
-fun <R, T, S> ReadWriteProperty<R, T>.mapped(
+public fun <R, T, S> ReadWriteProperty<R, T>.mapped(
     to: (T) -> S,
     from: (S) -> T,
 ): ReadWriteProperty<R, S> =
@@ -78,49 +78,49 @@ fun <R, T, S> ReadWriteProperty<R, T>.mapped(
 private fun parseIntList(raw: String?): List<Int>? = raw?.split(",")?.mapNotNull { it.toIntOrNull() }?.takeIf { it.isNotEmpty() }
 
 /** Factory for type-safe [ReadWriteProperty] delegates backed by [SharedPreferences]. */
-class SharedPreferenceDelegates(
+public class SharedPreferenceDelegates(
     private val prefs: SharedPreferences,
 ) {
     /** Delegate that reads/writes a [Boolean] preference. */
-    fun boolean(
+    public fun boolean(
         default: Boolean = false,
         key: String? = null,
     ): ReadWriteProperty<Any, Boolean> = create(default, key, prefs::getBoolean) { k, v -> prefs.edit { putBoolean(k, v) } }
 
     /** Delegate that reads/writes an [Int] preference. */
-    fun int(
+    public fun int(
         default: Int = 0,
         key: String? = null,
     ): ReadWriteProperty<Any, Int> = create(default, key, prefs::getInt) { k, v -> prefs.edit { putInt(k, v) } }
 
     /** Delegate that reads/writes a [Float] preference. */
-    fun float(
+    public fun float(
         default: Float = 0f,
         key: String? = null,
     ): ReadWriteProperty<Any, Float> = create(default, key, prefs::getFloat) { k, v -> prefs.edit { putFloat(k, v) } }
 
     /** Delegate that reads/writes a [Long] preference. */
-    fun long(
+    public fun long(
         default: Long = 0L,
         key: String? = null,
     ): ReadWriteProperty<Any, Long> = create(default, key, prefs::getLong) { k, v -> prefs.edit { putLong(k, v) } }
 
     /** Delegate that reads/writes a [String] preference. */
-    fun string(
+    public fun string(
         default: String = "",
         key: String? = null,
     ): ReadWriteProperty<Any, String> =
         create(default, key, { k, d -> prefs.getString(k, null) ?: d }, { k, v -> prefs.edit { putString(k, v) } })
 
     /** Delegate that reads/writes a [Set]<[String]> preference. */
-    fun stringSet(
+    public fun stringSet(
         default: Set<String> = emptySet(),
         key: String? = null,
     ): ReadWriteProperty<Any, Set<String>> =
         create(default, key, { k, d -> prefs.getStringSet(k, null) ?: d }, { k, v -> prefs.edit { putStringSet(k, v) } })
 
     /** Delegate that reads/writes a [List]<[Int]> preference, stored as a comma-joined string. */
-    fun intList(
+    public fun intList(
         default: List<Int> = emptyList(),
         key: String? = null,
     ): ReadWriteProperty<Any, List<Int>> =
@@ -139,7 +139,7 @@ class SharedPreferenceDelegates(
      *
      * @throws IllegalArgumentException if [max] is not positive.
      */
-    fun recentColors(
+    public fun recentColors(
         @ColorInt default: Int,
         max: Int = MAX_RECENT_COLORS,
         key: String? = null,
@@ -149,13 +149,13 @@ class SharedPreferenceDelegates(
     }
 
     /** Delegate that reads/writes a dark mode flag stored as `"1"`/`"0"` for legacy HorizontalRadioPreference compatibility. */
-    fun darkMode(
+    public fun darkMode(
         default: Boolean = false,
         key: String? = null,
     ): ReadWriteProperty<Any, Boolean> = string(if (default) "1" else "0", key).mapped(to = { it == "1" }, from = { if (it) "1" else "0" })
 
     /** Delegate that reads/writes a [SaveLocation] preference, forcing [SaveLocation.CUSTOM] on API ≤29. */
-    fun saveLocation(
+    public fun saveLocation(
         default: SaveLocation = SaveLocation.default,
         key: String? = null,
     ): ReadWriteProperty<Any, SaveLocation> =

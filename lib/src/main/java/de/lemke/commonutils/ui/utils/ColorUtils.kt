@@ -59,7 +59,7 @@ private fun Int.compositeOver(
  * [over]'s own alpha is ignored - it is always treated as opaque.
  */
 @ColorInt
-fun contrastingTextColor(
+public fun contrastingTextColor(
     @ColorInt background: Int,
     @ColorInt over: Int = Color.WHITE,
 ): Int {
@@ -80,7 +80,7 @@ private fun Context.resolveWindowBackground(): Int {
  * readable text color. When [enabled] is `false`, the tint and text color are replaced by the OneUI disabled
  * button-shape presentation instead of [color].
  */
-fun Button.bindColorSwatch(
+public fun Button.bindColorSwatch(
     @ColorInt color: Int,
     enabled: Boolean = true,
 ) {
@@ -106,7 +106,7 @@ fun Button.bindColorSwatch(
  * @return true if the picker was shown, false if the one under [tag] still shows.
  */
 @MainThread
-fun Context.showColorPickerOnce(
+public fun Context.showColorPickerOnce(
     tag: String,
     @ColorInt currentColor: Int,
     recentColors: List<Int>,

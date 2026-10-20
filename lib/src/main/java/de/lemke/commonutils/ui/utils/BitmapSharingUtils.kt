@@ -38,17 +38,17 @@ private const val MIME_TYPE_PNG = "image/png"
 private const val TAG = "SharingUtils"
 
 /** Outcome of [createBitmapShareFile], passed to [shareBitmap] or [quickShareBitmap]. */
-sealed interface BitmapShareFile {
+public sealed interface BitmapShareFile {
     /** The PNG cache file was written; [uri] is its content URI. */
-    data class Written(
+    public data class Written(
         val uri: Uri,
     ) : BitmapShareFile
 
     /** The activity's launch latch drops launches, so nothing was written and the share drops silently. */
-    data object Dropped : BitmapShareFile
+    public data object Dropped : BitmapShareFile
 
     /** Writing the PNG cache file failed. */
-    data object Failed : BitmapShareFile
+    public data object Failed : BitmapShareFile
 }
 
 /**
@@ -64,7 +64,7 @@ sealed interface BitmapShareFile {
  * While the launch latch of this fragment's activity drops launches, it returns [BitmapShareFile.Dropped] without
  * writing, unless it runs as the work of a `singleLaunchSuspending` input.
  */
-suspend fun Fragment.createBitmapShareFile(
+public suspend fun Fragment.createBitmapShareFile(
     bitmap: Bitmap,
     fileName: String,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -83,7 +83,7 @@ suspend fun Fragment.createBitmapShareFile(
  * its value on each resume. With an activity context, while its launch latch drops launches, it returns
  * [BitmapShareFile.Dropped] without writing, unless it runs as the work of a `singleLaunchSuspending` input.
  */
-suspend fun Context.createBitmapShareFile(
+public suspend fun Context.createBitmapShareFile(
     bitmap: Bitmap,
     fileName: String,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -106,7 +106,7 @@ suspend fun Context.createBitmapShareFile(
  * A [BitmapShareFile.Failed] file shows the error toast and returns [LaunchOutcome.Failed]; a [BitmapShareFile.Dropped]
  * file starts nothing and returns [LaunchOutcome.Dropped].
  */
-fun Fragment.shareBitmap(
+public fun Fragment.shareBitmap(
     file: BitmapShareFile,
     shareText: String? = null,
 ): LaunchOutcome = requireContext().shareBitmap(file, shareText)
@@ -116,7 +116,7 @@ fun Fragment.shareBitmap(
  * A [BitmapShareFile.Failed] file shows the error toast and returns [LaunchOutcome.Failed]; a [BitmapShareFile.Dropped]
  * file starts nothing and returns [LaunchOutcome.Dropped].
  */
-fun Context.shareBitmap(
+public fun Context.shareBitmap(
     file: BitmapShareFile,
     shareText: String? = null,
 ): LaunchOutcome =
@@ -137,14 +137,14 @@ fun Context.shareBitmap(
  * to the system share sheet. A [BitmapShareFile.Failed] file shows the error toast and returns [LaunchOutcome.Failed];
  * a [BitmapShareFile.Dropped] file starts nothing and returns [LaunchOutcome.Dropped].
  */
-fun Fragment.quickShareBitmap(file: BitmapShareFile): LaunchOutcome = requireContext().quickShareBitmap(file)
+public fun Fragment.quickShareBitmap(file: BitmapShareFile): LaunchOutcome = requireContext().quickShareBitmap(file)
 
 /**
  * Shares the PNG of [file], from [createBitmapShareFile], directly via Samsung Quick Share if available, falling back
  * to the system share sheet. A [BitmapShareFile.Failed] file shows the error toast and returns [LaunchOutcome.Failed];
  * a [BitmapShareFile.Dropped] file starts nothing and returns [LaunchOutcome.Dropped].
  */
-fun Context.quickShareBitmap(file: BitmapShareFile): LaunchOutcome =
+public fun Context.quickShareBitmap(file: BitmapShareFile): LaunchOutcome =
     sharePng(file) {
         createBaseIntent()
             .apply {
@@ -194,7 +194,7 @@ internal fun Intent.start(context: Context): LaunchOutcome =
     }
 
 /** Returns `true` if the Samsung Quick Share app is installed on this device. */
-fun Context.isSamsungQuickShareAvailable(): Boolean =
+public fun Context.isSamsungQuickShareAvailable(): Boolean =
     try {
         packageManager.getPackageInfo(SAMSUNG_QUICK_SHARE_PACKAGE, 0)
         true

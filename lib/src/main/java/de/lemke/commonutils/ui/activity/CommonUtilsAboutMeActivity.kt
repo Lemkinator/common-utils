@@ -60,7 +60,7 @@ import kotlinx.coroutines.launch
 import dev.oneuiproject.oneui.design.R as designR
 
 /** Pre-built About Me screen that presents developer info and an optional share-app action. */
-class CommonUtilsAboutMeActivity : AppCompatActivity() {
+public class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutMeBinding
     private val appBarListener: AboutAppBarListener = AboutAppBarListener()
     private val callbackIsActive = MutableStateFlow(false)
@@ -234,7 +234,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         crossActivityCallbackIsActive.value = !callbackIsActive.value
     }
 
-    companion object {
+    public companion object {
         private const val PLAY_STORE_DIALOG_TAG = "commonutils_play_store_redirect"
         private const val BACK_COLLAPSE_THRESHOLD = 0.3f
         private const val BACK_EXPAND_THRESHOLD = 0.5f
@@ -246,7 +246,7 @@ class CommonUtilsAboutMeActivity : AppCompatActivity() {
         private const val MAX_ALPHA = 255f
 
         /** Optional callback invoked when the user taps the share button; defaults to a no-op. */
-        var onShareApp: (activity: Activity) -> Unit = {}
+        public var onShareApp: (activity: Activity) -> Unit = {}
     }
 
     /** Drives the app bar's expand/collapse animation in response to predictive-back gesture progress. */

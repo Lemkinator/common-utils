@@ -18,6 +18,8 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 ./gradlew assembleRelease
 ./gradlew test           # Run unit tests
 ./gradlew koverVerifyDebug    # Check coverage floor (debug variant only)
+./gradlew apiCheck       # Compare the public ABI with lib/api/lib.api
+./gradlew apiDump        # Rewrite lib/api/lib.api after an intended API change
 ```
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/`.
@@ -32,9 +34,11 @@ for architecture rules.
 `@Config(shadows = [ShadowFileProvider::class])` instead of `mockkStatic(FileProvider::class)`
 whenever a test needs a real (not stubbed) URI or reads one back through a `ContentResolver`, since
 the stock implementation compares raw `getCanonicalPath()` strings and throws on Windows. The shadow
-resolves roots per call. An unshadowed
-test that calls the stock `getUriForFile` calls the published `resetFileProviderCache()` in `@Before`
-and `@After`.
+resolves roots per call and keeps no strategy cache. A test on the stock `FileProvider` calls
+`resetFileProviderCache()` in `@After`: stock `getUriForFile` reads `sCache` before Robolectric attaches the provider
+to the next test, so a root cached by the previous test makes it throw.
+`FileProviderContentContract` (`src/testShared`) holds the stock-provider tests; the Robolectric shadow test and
+`StockFileProviderInstrumentedTest` (stock `FileProvider` on a device) both run it.
 
 **`assertLaunchLatchConventions`** (published testFixtures,
 `LaunchLatchConventions.kt`): each app's Konsist `CodingConventionsTest` calls
@@ -42,6 +46,12 @@ and `@After`.
 activity launches, raw result registration and every `show`/`showNow` whose
 receiver is no allowlisted non-dialog type. An app passes its own non-dialog
 types as `extraShowReceivers`.
+
+**`assertNoMockedOwnTypes`** (published testFixtures, `MockingConventions.kt`): each app's Konsist
+`CodingConventionsTest` calls `Konsist.scopeFromTest().assertNoMockedOwnTypes()`. It fails on
+a `mockk`, `spyk`, `mockkClass`, `mockkStatic`, `mockkObject` or `mockkConstructor` call and on a `@MockK`,
+`@RelaxedMockK` or `@SpyK` property whose type the project declares: own types get a fake, MockK stays at external
+boundaries. The KDoc lists the forms it detects and the inferred-type cases it misses.
 
 **Published testFixtures** declare kotest, coroutines-test, JUnit 4, Hilt testing, Konsist and Robolectric as
 `compileOnly`, so a consumer keeps its own versions and adds the ones its fixture groups need to its own test classpath:
@@ -58,11 +68,14 @@ types as `extraShowReceivers`.
 - `assertClassBodyOrder()`, `assertArchitecture(rootPackage)`, `assertNoCommonUtilsTypeExtensions()` and
   `assertLaunchLatchConventions()` — Konsist rules that each app's `CodingConventionsTest` and `ArchitectureTest`
   call on `Konsist.scopeFromProduction()`. Need Konsist; built and tested against the version in `gradle/libs.versions.toml` only.
+- `assertNoMockedOwnTypes()` — Konsist rule that each app's `CodingConventionsTest` calls on `Konsist.scopeFromTest()`.
+  Needs Konsist; built and tested against the version in `gradle/libs.versions.toml` only.
 - `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
   (returns the picker intent it answered),
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
 - `Context.cacheWriteUriPattern(pathName, directoryName, fileName)` and `Context.cacheFileOf` — the content URI layout of a
   cache write; `directoryName` is `share` or `clipboard`.
+- `FakeInAppReview(available)` (`canShow()` returns `available`; records `showIfPossible`/`showOrFinish` calls; `showOrFinish` finishes the activity) — the fake of the `InAppReview` interface that `PlayInAppReview(settings)` implements.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
 - `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.

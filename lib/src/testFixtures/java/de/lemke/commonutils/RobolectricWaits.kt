@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.seconds
 import org.robolectric.Shadows.shadowOf
 
 /** Runs every task that is due on the Robolectric main looper. */
-fun idleMainLooper() {
+public fun idleMainLooper() {
     shadowOf(Looper.getMainLooper()).idle()
 }
 
@@ -30,17 +30,18 @@ fun idleMainLooper() {
  * Idles the main looper and checks [condition] every [poll] until it holds, for work on a background thread that posts
  * back to the main looper. Throws [IllegalStateException] once [timeout] has passed.
  */
-fun awaitMainLooperUntil(
+public fun awaitMainLooperUntil(
     timeout: Duration = 5.seconds,
     poll: Duration = 10.milliseconds,
     condition: () -> Boolean,
-) = pollUntil(
-    timeout,
-    poll,
-    stalled = "main looper not idle",
-    settle = { true },
-    condition = {
-        idleMainLooper()
-        if (condition()) Probe.Met else Probe.NotMet
-    },
-)
+): Unit =
+    pollUntil(
+        timeout,
+        poll,
+        stalled = "main looper not idle",
+        settle = { true },
+        condition = {
+            idleMainLooper()
+            if (condition()) Probe.Met else Probe.NotMet
+        },
+    )

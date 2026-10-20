@@ -23,38 +23,38 @@ import androidx.preference.PreferenceDataStore
  * Routes `Preference` widget persistence into [prefs] instead of `PreferenceManager`'s default file. Set it via
  * `preferenceManager.preferenceDataStore = …` before inflating any preference XML.
  */
-class SharedPreferencesDataStore(
+public class SharedPreferencesDataStore(
     private val prefs: SharedPreferences,
 ) : PreferenceDataStore() {
     override fun putString(
         key: String,
         value: String?,
-    ) = prefs.edit { putString(key, value) }
+    ): Unit = prefs.edit { putString(key, value) }
 
     override fun putStringSet(
         key: String,
         values: Set<String>?,
-    ) = prefs.edit { putStringSet(key, values) }
+    ): Unit = prefs.edit { putStringSet(key, values) }
 
     override fun putInt(
         key: String,
         value: Int,
-    ) = prefs.edit { putInt(key, value) }
+    ): Unit = prefs.edit { putInt(key, value) }
 
     override fun putLong(
         key: String,
         value: Long,
-    ) = prefs.edit { putLong(key, value) }
+    ): Unit = prefs.edit { putLong(key, value) }
 
     override fun putFloat(
         key: String,
         value: Float,
-    ) = prefs.edit { putFloat(key, value) }
+    ): Unit = prefs.edit { putFloat(key, value) }
 
     override fun putBoolean(
         key: String,
         value: Boolean,
-    ) = prefs.edit { putBoolean(key, value) }
+    ): Unit = prefs.edit { putBoolean(key, value) }
 
     override fun getString(
         key: String,

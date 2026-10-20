@@ -32,14 +32,14 @@ import de.lemke.commonutils.R
 private const val TAG = "EmailUtils"
 
 /** Opens a mail client to send an email to [email] with the given [subject] and [text]; a failure shows the error toast. */
-fun Context.sendEmail(
+public fun Context.sendEmail(
     email: String,
     subject: String,
     text: String,
 ): LaunchOutcome = sendEmail(arrayOf(email), subject, text)
 
 /** Opens a mail client to send an email to [emails] with the given [subject] and [text]; a failure shows the error toast. */
-fun Context.sendEmail(
+public fun Context.sendEmail(
     emails: Array<String>,
     subject: String,
     text: String,
@@ -61,19 +61,19 @@ fun Context.sendEmail(
     }
 
 /** Sends a help request email with a pre-filled body. */
-fun Context.sendEmailHelp(
+public fun Context.sendEmailHelp(
     email: String,
     subject: String,
 ): LaunchOutcome = sendEmail(email, subject, getString(R.string.commonutils_help_email_text))
 
 /** Sends an "about me" contact email with a pre-filled body. */
-fun Context.sendEmailAboutMe(
+public fun Context.sendEmailAboutMe(
     email: String,
     subject: String,
 ): LaunchOutcome = sendEmail(email, subject, getString(R.string.commonutils_about_email_text))
 
 /** Sends a bug report email with a pre-filled body. */
-fun Fragment.sendEmailBugReport(
+public fun Fragment.sendEmailBugReport(
     email: String,
     subject: String,
 ): LaunchOutcome = requireContext().sendEmail(email, subject, getString(R.string.commonutils_bug_report_email_text))

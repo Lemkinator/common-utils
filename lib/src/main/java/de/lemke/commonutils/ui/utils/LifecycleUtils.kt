@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 
 /** Launches [block] in the lifecycle scope, repeating it whenever the lifecycle reaches [minActiveState]. */
 @NoCoverage
-inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
+public inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
     minActiveState: State = STARTED,
     crossinline block: suspend CoroutineScope.() -> Unit,
 ) {
@@ -40,7 +40,7 @@ inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
 
 /** Launches [block] in the view lifecycle scope, repeating it whenever the view lifecycle reaches [minActiveState]. */
 @NoCoverage
-inline fun Fragment.launchAndRepeatWithViewLifecycle(
+public inline fun Fragment.launchAndRepeatWithViewLifecycle(
     minActiveState: State = STARTED,
     crossinline block: suspend CoroutineScope.() -> Unit,
 ) {
@@ -49,23 +49,25 @@ inline fun Fragment.launchAndRepeatWithViewLifecycle(
 
 /** Collects [flow] emissions and delivers each value to [onEach] while the activity is at least [minActiveState]. */
 @NoCoverage
-inline fun <T> AppCompatActivity.collectState(
+public inline fun <T> AppCompatActivity.collectState(
     flow: StateFlow<T>,
     minActiveState: State = STARTED,
     crossinline onEach: (T) -> Unit,
-) = launchAndRepeatWithLifecycle(minActiveState) {
-    flow.collect { onEach(it) }
-}
+): Unit =
+    launchAndRepeatWithLifecycle(minActiveState) {
+        flow.collect { onEach(it) }
+    }
 
 /** Collects [flow] emissions and delivers each value to [onEach] while the fragment view is at least [minActiveState]. */
 @NoCoverage
-inline fun <T> Fragment.collectState(
+public inline fun <T> Fragment.collectState(
     flow: StateFlow<T>,
     minActiveState: State = STARTED,
     crossinline onEach: (T) -> Unit,
-) = launchAndRepeatWithViewLifecycle(minActiveState) {
-    flow.collect { onEach(it) }
-}
+): Unit =
+    launchAndRepeatWithViewLifecycle(minActiveState) {
+        flow.collect { onEach(it) }
+    }
 
 private const val FLOW_STOP_TIMEOUT_MS = 5_000L
 
@@ -73,7 +75,7 @@ private const val FLOW_STOP_TIMEOUT_MS = 5_000L
  * Returns a [StateFlow] backed by this flow, using [SharingStarted.WhileSubscribed] with a
  * 5-second timeout. Intended for ViewModel state derived from a repository flow.
  */
-fun <T> Flow<T>.stateInViewModel(
+public fun <T> Flow<T>.stateInViewModel(
     scope: CoroutineScope,
     initialValue: T,
 ): StateFlow<T> =

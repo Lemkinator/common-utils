@@ -19,7 +19,7 @@ import com.lemonappdev.konsist.api.container.KoScope
 import java.io.File
 
 /** One raw launch or dialog show that bypasses the launch latch. */
-data class LaunchLatchViolation(
+public data class LaunchLatchViolation(
     val line: Int,
     val match: String,
 )
@@ -30,16 +30,18 @@ data class LaunchLatchViolation(
  * Konsist has no type resolution, so both rules match names: a launch by its function name, a show by the
  * names in its receiver chain. Comments, string literals and char literals never match.
  */
-object LaunchLatchConventions {
+public object LaunchLatchConventions {
     /** Receiver types whose `show` is no dialog: Snackbar, Toast, PopupMenu, TipPopup. */
-    val defaultShowReceivers: Set<String> = setOf("Snackbar", "Toast", "PopupMenu", "TipPopup")
+    public val defaultShowReceivers: Set<String> = setOf("Snackbar", "Toast", "PopupMenu", "TipPopup")
 
     private const val RAW_QUOTE = "\"\"\""
     private const val TEMPLATE_START = "\${"
     private const val REFERENCE = "::"
-    private const val TYPE_ARGUMENT_SYMBOLS = "_.,?*<>@"
+    private const val FUNCTION_ARROW = "->"
+    private const val TYPE_ARGUMENT_SYMBOLS = "_.,?*<>@():"
     private const val BACKTICK_BLANKED = "`'\""
     private const val DECLARATION_KEYWORD = "fun"
+    private const val LINE_BREAKS = "\r\n"
 
     private val launchName =
         Regex(
@@ -51,7 +53,7 @@ object LaunchLatchConventions {
     private val openingBrackets = closingBrackets.entries.associate { (close, open) -> open to close }
 
     /** The violations in [source], in source order. */
-    fun violations(
+    public fun violations(
         source: String,
         extraShowReceivers: Set<String> = emptySet(),
     ): List<LaunchLatchViolation> {
@@ -63,6 +65,20 @@ object LaunchLatchConventions {
             .sortedBy { it.first }
             .map { (index, match) -> LaunchLatchViolation(stripped.code.lineAt(index), match) }
             .toList()
+    }
+
+    /** [source] with every comment blanked to spaces; strings, chars and backtick identifiers stay. Line breaks stay. */
+    internal fun withoutComments(source: String): String {
+        val code = StringBuilder(source)
+        var index = 0
+        while (index < source.length) {
+            val end = source.literalEnd(index)
+            if (source.startsWith("//", index) || source.startsWith("/*", index)) {
+                for (blanked in index until end) if (code[blanked] !in LINE_BREAKS) code[blanked] = ' '
+            }
+            index = maxOf(end, index + 1)
+        }
+        return code.toString()
     }
 
     private fun StrippedSource.launchViolation(
@@ -182,11 +198,17 @@ object LaunchLatchConventions {
         }
     }
 
-    /** Whether the text from [start] to [end] can be type arguments, so a comparison as in `show < a && b > (c)` is none. */
+    /**
+     * Whether the text from [start] to [end] can be type arguments, including function types as in `() -> Unit`, so a
+     * comparison as in `show < a && b > (c)` is none.
+     */
     private fun String.isTypeArgumentList(
         start: Int,
         end: Int,
-    ): Boolean = substring(start, minOf(end, length)).all { it.isLetterOrDigit() || it.isWhitespace() || it in TYPE_ARGUMENT_SYMBOLS }
+    ): Boolean =
+        substring(start, minOf(end, length))
+            .replace(FUNCTION_ARROW, "")
+            .all { it.isLetterOrDigit() || it.isWhitespace() || it in TYPE_ARGUMENT_SYMBOLS }
 
     private fun String.closingBracketIndex(openIndex: Int): Int {
         val open = this[openIndex]
@@ -196,7 +218,7 @@ object LaunchLatchConventions {
         while (index < length) {
             when (this[index]) {
                 open -> depth++
-                close -> if (--depth == 0) return index
+                close -> if (!isArrowHead(index) && --depth == 0) return index
             }
             index++
         }
@@ -404,7 +426,7 @@ object LaunchLatchConventions {
  * Fails with one message that lists every violation in this scope's files as `projectPath:line: match`, one per line,
  * with `/` as the path separator on every platform.
  */
-fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = emptySet()) {
+public fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = emptySet()) {
     val hits =
         files
             .map { portableProjectPath(it.projectPath) to it.text }

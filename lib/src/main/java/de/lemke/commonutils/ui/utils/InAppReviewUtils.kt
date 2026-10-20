@@ -28,7 +28,7 @@ import de.lemke.commonutils.data.markInAppReviewRequested
 private const val TAG = "InAppReviewUtils"
 
 /** Attempts to show the in-app review flow; finishes the activity whether the review is shown or skipped. */
-fun AppCompatActivity.showInAppReviewOrFinish(settings: SettingsRepository) =
+public fun AppCompatActivity.showInAppReviewOrFinish(settings: SettingsRepository): Unit =
     showInAppReview(
         settings,
         onNotAllowed = { finishAfterTransition() },
@@ -36,7 +36,7 @@ fun AppCompatActivity.showInAppReviewOrFinish(settings: SettingsRepository) =
     )
 
 /** Requests the in-app review flow if the cooldown period has elapsed; silently skips otherwise. */
-fun AppCompatActivity.showInAppReviewIfPossible(settings: SettingsRepository) = showInAppReview(settings)
+public fun AppCompatActivity.showInAppReviewIfPossible(settings: SettingsRepository): Unit = showInAppReview(settings)
 
 @Suppress("TooGenericExceptionCaught")
 private fun AppCompatActivity.showInAppReview(

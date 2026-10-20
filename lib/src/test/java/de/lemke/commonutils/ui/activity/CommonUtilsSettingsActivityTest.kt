@@ -31,16 +31,11 @@ import de.lemke.commonutils.DrainMainLooperRule
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
-import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
+import dev.oneuiproject.oneui.ktx.getRelativeLinksCard
 import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockkStatic
-import io.mockk.runs
-import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -48,6 +43,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import de.lemke.commonutils.test.R as TestR
 
 /**
  * JUnit4 (not JUnit5/Kotest like the rest of this module): `HiltAndroidRule`/`@HiltAndroidTest`
@@ -71,26 +67,22 @@ class CommonUtilsSettingsActivityTest {
     @Before
     fun setUp() {
         hiltRule.inject()
-        // addRelativeLinksCard requires a ListView not available under Robolectric.
-        // mockkStatic intercepts the Kt-file static; any<> matches any receiver.
-        mockkStatic("de.lemke.commonutils.ui.utils.PreferenceUtilsKt")
-        every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
     }
 
     @After
     fun tearDown() {
-        unmockkAll()
         // AppCompatDelegate.setDefaultNightMode() is a real static singleton, not a Robolectric
         // shadow — the dark-mode tests below leave it set to whatever they last triggered, which
         // would otherwise leak into whichever test runs next.
         setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        CommonUtilsSettingsActivity.relativeLinksCard = true
     }
 
     private fun launchWithEmptyPrefs(block: (CommonUtilsSettingsActivity) -> Unit) {
-        // Empty preferences list → onCreatePreferences iterates nothing,
+        // A screen without a known preference → onCreatePreferences inflates it,
         // then initCommonUtilsPreferences runs with all findPreference calls returning null
         // - covers all the Log.w else paths.
-        setupCommonUtilsSettingsActivity(emptyList())
+        setupCommonUtilsSettingsActivity(listOf(TestR.xml.preferences_empty))
         ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use { it.onActivity(block) }
     }
 
@@ -130,6 +122,30 @@ class CommonUtilsSettingsActivityTest {
     // Mirrors HorizontalRadioPreference's real onClickListener.
     private fun HorizontalRadioPreference.triggerRadioClick(newValue: String) {
         if (triggerChange(newValue)) value = newValue
+    }
+
+    @Test
+    fun `activity launches without any preference resource and shows no card`() {
+        setupCommonUtilsSettingsActivity(emptyList())
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            it.onActivity { activity -> getSettingsFragment(activity).preferenceScreen shouldBe null }
+        }
+    }
+
+    @Test
+    fun `activity launches with the card switched off and shows no relative links card`() {
+        setupCommonUtilsSettingsActivity(listOf(TestR.xml.preferences_empty), relativeLinksCard = false)
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            it.onActivity { activity -> getSettingsFragment(activity).getRelativeLinksCard() shouldBe null }
+        }
+    }
+
+    @Test
+    fun `activity launches with the default card setting and shows the relative links card`() {
+        setupCommonUtilsSettingsActivity(listOf(TestR.xml.preferences_empty))
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            it.onActivity { activity -> getSettingsFragment(activity).getRelativeLinksCard() shouldNotBe null }
+        }
     }
 
     @Test
@@ -354,13 +370,10 @@ class CommonUtilsSettingsActivitySdk29Test {
     @Before
     fun setUp() {
         hiltRule.inject()
-        mockkStatic("de.lemke.commonutils.ui.utils.PreferenceUtilsKt")
-        every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
     }
 
     @After
     fun tearDown() {
-        unmockkAll()
         // See CommonUtilsSettingsActivityTest's tearDown doc — this class's test also exercises
         // initDarkMode via preferences_design.xml, so the same static-singleton reset applies here.
         setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)

@@ -19,7 +19,7 @@ import android.app.Activity
 import androidx.test.core.app.ActivityScenario
 
 /** Reads a value from the activity on the main thread. */
-fun <A : Activity, T> ActivityScenario<A>.read(block: (A) -> T): T {
+public fun <A : Activity, T> ActivityScenario<A>.read(block: (A) -> T): T {
     val result = mutableListOf<T>()
     onActivity { result += block(it) }
     return result.single()

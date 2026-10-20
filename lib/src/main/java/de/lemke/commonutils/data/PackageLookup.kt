@@ -37,16 +37,16 @@ import kotlinx.coroutines.withContext
  * An app binds this to [DefaultPackageLookup] in its own Hilt module, e.g.
  * `@Binds abstract fun bindPackageLookup(lookup: DefaultPackageLookup): PackageLookup`.
  */
-interface PackageLookup {
+public interface PackageLookup {
     /** Returns the installed launcher apps ready for a `SeslAppPickerGridView`. */
-    suspend fun installedApps(): List<AppInfoData>
+    public suspend fun installedApps(): List<AppInfoData>
 
     /** Returns the [ApplicationInfo] of [packageName], or null if no such package is installed. */
-    suspend fun applicationInfo(packageName: String): ApplicationInfo?
+    public suspend fun applicationInfo(packageName: String): ApplicationInfo?
 }
 
 /** [PackageLookup] over the app's `PackageManager`, querying it on [ioDispatcher]. */
-class DefaultPackageLookup @Inject constructor(
+public class DefaultPackageLookup @Inject constructor(
     @param:ApplicationContext private val context: Context,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : PackageLookup {

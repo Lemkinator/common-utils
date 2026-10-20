@@ -24,12 +24,9 @@ import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.test.R
-import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
@@ -48,160 +45,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.xmlpull.v1.XmlPullParserException
-
-private const val TEST_AUTHORITY = "de.lemke.commonutils.test.fileprovider"
-
-abstract class FileProviderContentContract {
-    protected abstract val resolvesOnThisPlatform: Boolean
-
-    protected val ctx: Context get() = ApplicationProvider.getApplicationContext()
-
-    @Before
-    fun assumeResolvesOnThisPlatform() = assumeTrue(resolvesOnThisPlatform)
-
-    protected fun cacheUri(name: String): Uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, name))
-
-    private fun writeThroughDescriptor(
-        uri: Uri,
-        mode: String,
-        bytes: ByteArray,
-    ) = ParcelFileDescriptor
-        .AutoCloseOutputStream(ctx.contentResolver.openFileDescriptor(uri, mode).shouldNotBeNull())
-        .use { it.write(bytes) }
-
-    @Test
-    fun `openOutputStream then openInputStream round-trips the bytes through the file`() {
-        val uri = cacheUri("roundtrip.bin")
-
-        ctx.contentResolver
-            .openOutputStream(uri)
-            .shouldNotBeNull()
-            .use { it.write(byteArrayOf(1, 2, 3)) }
-
-        File(ctx.cacheDir, "roundtrip.bin").readBytes() shouldBe byteArrayOf(1, 2, 3)
-        ctx.contentResolver
-            .openInputStream(uri)
-            .shouldNotBeNull()
-            .use { it.readBytes() } shouldBe byteArrayOf(1, 2, 3)
-    }
-
-    @Test
-    fun `openOutputStream truncates the existing file`() {
-        val file = File(ctx.cacheDir, "truncate.bin").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
-
-        ctx.contentResolver
-            .openOutputStream(cacheUri("truncate.bin"))
-            .shouldNotBeNull()
-            .use { it.write(byteArrayOf(9, 8)) }
-
-        file.readBytes() shouldBe byteArrayOf(9, 8)
-    }
-
-    @Test
-    fun `openOutputStream in wt mode truncates the existing file`() {
-        val file = File(ctx.cacheDir, "truncate.bin").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
-
-        ctx.contentResolver
-            .openOutputStream(cacheUri("truncate.bin"), "wt")
-            .shouldNotBeNull()
-            .use { it.write(byteArrayOf(9, 8)) }
-
-        file.readBytes() shouldBe byteArrayOf(9, 8)
-    }
-
-    @Test
-    fun `openFileDescriptor in rwt mode truncates the existing file`() {
-        val file = File(ctx.cacheDir, "truncate.bin").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
-
-        writeThroughDescriptor(cacheUri("truncate.bin"), "rwt", byteArrayOf(9, 8))
-
-        file.readBytes() shouldBe byteArrayOf(9, 8)
-    }
-
-    @Test
-    fun `openOutputStream in wa mode appends to the existing file`() {
-        val file = File(ctx.cacheDir, "append.bin").apply { writeBytes(byteArrayOf(1, 2, 3)) }
-
-        ctx.contentResolver
-            .openOutputStream(cacheUri("append.bin"), "wa")
-            .shouldNotBeNull()
-            .use { it.write(byteArrayOf(4, 5)) }
-
-        file.readBytes() shouldBe byteArrayOf(1, 2, 3, 4, 5)
-    }
-
-    @Test
-    fun `openFileDescriptor in rw mode overwrites in place without truncating`() {
-        val file = File(ctx.cacheDir, "overwrite.bin").apply { writeBytes(byteArrayOf(1, 2, 3, 4, 5)) }
-
-        writeThroughDescriptor(cacheUri("overwrite.bin"), "rw", byteArrayOf(9, 8))
-
-        file.readBytes() shouldBe byteArrayOf(9, 8, 3, 4, 5)
-    }
-
-    @Test
-    fun `openFileDescriptor in rw mode creates a missing file`() {
-        val file = File(ctx.cacheDir, "created.bin")
-        file.exists().shouldBeFalse()
-
-        writeThroughDescriptor(cacheUri("created.bin"), "rw", byteArrayOf(7))
-
-        file.readBytes() shouldBe byteArrayOf(7)
-    }
-
-    @Test
-    fun `openInputStream reads a file under a nested root`() {
-        val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
-        file.parentFile.shouldNotBeNull().mkdirs()
-        file.writeText("nested")
-        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
-
-        ctx.contentResolver
-            .openInputStream(uri)
-            .shouldNotBeNull()
-            .use { it.readBytes().decodeToString() } shouldBe "nested"
-    }
-
-    @Test
-    fun `openFileDescriptor with an unknown mode throws IllegalArgumentException like stock`() {
-        val e = shouldThrow<IllegalArgumentException> { ctx.contentResolver.openFileDescriptor(cacheUri("photo.png"), "x") }
-        e.message shouldBe "Invalid mode: x"
-    }
-
-    @Test
-    fun `getType derives the mime type from the file extension`() {
-        ctx.contentResolver.getType(cacheUri("photo.png")) shouldBe "image/png"
-    }
-
-    @Test
-    fun `getType falls back to application octet-stream without an extension`() {
-        ctx.contentResolver.getType(cacheUri("README")) shouldBe "application/octet-stream"
-    }
-
-    @Test
-    fun `query reports the display name and size of the file`() {
-        File(ctx.cacheDir, "photo.png").writeBytes(ByteArray(5))
-
-        ctx.contentResolver.query(cacheUri("photo.png"), null, null, null, null).shouldNotBeNull().use { cursor ->
-            cursor.columnNames.toList() shouldBe listOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
-            cursor.moveToFirst().shouldBeTrue()
-            cursor.getString(0) shouldBe "photo.png"
-            cursor.getLong(1) shouldBe 5L
-        }
-    }
-
-    @Test
-    fun `query reports the displayName parameter and drops unknown projection columns`() {
-        val file = File(ctx.cacheDir, "photo.png")
-        val uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file, "shared.png")
-
-        ctx.contentResolver.query(uri, arrayOf("_data", OpenableColumns.DISPLAY_NAME), null, null, null).shouldNotBeNull().use { cursor ->
-            cursor.columnNames.toList() shouldBe listOf(OpenableColumns.DISPLAY_NAME)
-            cursor.moveToFirst().shouldBeTrue()
-            cursor.getString(0) shouldBe "shared.png"
-        }
-    }
-}
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], shadows = [ShadowFileProvider::class])
@@ -360,7 +203,6 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
 class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
     override val resolvesOnThisPlatform = File.separatorChar == '/'
 
-    @Before
     @After
     fun clearFileProviderCache() = resetFileProviderCache()
 
@@ -371,39 +213,5 @@ class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
         val shadowed = ShadowFileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
 
         shadowed shouldBe real
-    }
-}
-
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
-class ResetFileProviderCacheRobolectricTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-
-    private fun cachedAuthorities(): Set<Any?> {
-        val sCache = FileProvider::class.java.getDeclaredField("sCache")
-        sCache.isAccessible = true
-        return (sCache.get(null) as Map<*, *>).keys
-    }
-
-    @After
-    fun tearDown() = resetFileProviderCache()
-
-    @Test
-    fun `resetFileProviderCache drops the strategy cached for an authority`() {
-        // The stock call throws on Windows, after it has cached the strategy.
-        runCatching { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "photo.png")) }
-        cachedAuthorities() shouldContain TEST_AUTHORITY
-
-        resetFileProviderCache()
-
-        cachedAuthorities().shouldBeEmpty()
-    }
-
-    @Test
-    fun `resetFileProviderCache on an empty cache leaves it empty`() {
-        resetFileProviderCache()
-
-        shouldNotThrowAny { resetFileProviderCache() }
-        cachedAuthorities().shouldBeEmpty()
     }
 }

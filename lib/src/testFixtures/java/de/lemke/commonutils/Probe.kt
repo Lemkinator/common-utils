@@ -16,6 +16,7 @@
 package de.lemke.commonutils
 
 import java.util.concurrent.TimeUnit
+import kotlin.time.ComparableTimeMark
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
@@ -49,25 +50,36 @@ internal fun pollUntil(
     timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
     sleep: (Duration) -> Unit = { TimeUnit.NANOSECONDS.sleep(it.inWholeNanoseconds) },
 ) {
-    val deadline = timeSource.markNow() + timeout
-
-    fun remaining() = (-deadline.elapsedNow()).coerceAtLeast(Duration.ZERO)
-    while (true) {
-        val toSettle = remaining()
-        if (toSettle == Duration.ZERO || !settle(toSettle)) break
-        val toProbe = remaining()
-        if (toProbe == Duration.ZERO) break
-        when (condition(toProbe)) {
-            Probe.Met -> return
-            Probe.NotMet -> Unit
-            Probe.TimedOut -> break
-        }
-        val toSleep = minOf(poll, remaining())
-        if (toSleep > Duration.ZERO) sleep(toSleep)
-    }
+    val round = PollRound(timeSource.markNow() + timeout, poll, settle, condition, sleep)
+    var probe = Probe.NotMet
+    while (probe == Probe.NotMet) probe = round.run()
+    if (probe == Probe.Met) return
     when (condition(maxOf(poll, stallGrace))) {
         Probe.Met -> Unit
         Probe.NotMet -> error("condition not met within $timeout")
         Probe.TimedOut -> error("$stalled within $timeout")
+    }
+}
+
+/** One settle-and-probe round of [pollUntil]: [Probe.TimedOut] when no time is left to run it. */
+private class PollRound(
+    private val deadline: ComparableTimeMark,
+    private val poll: Duration,
+    private val settle: (budget: Duration) -> Boolean,
+    private val condition: (budget: Duration) -> Probe,
+    private val sleep: (Duration) -> Unit,
+) {
+    fun run(): Probe {
+        val toSettle = remaining()
+        val toProbe = if (toSettle > Duration.ZERO && settle(toSettle)) remaining() else Duration.ZERO
+        if (toProbe == Duration.ZERO) return Probe.TimedOut
+        return condition(toProbe).also { if (it == Probe.NotMet) sleepUntilNextPoll() }
+    }
+
+    private fun remaining() = (-deadline.elapsedNow()).coerceAtLeast(Duration.ZERO)
+
+    private fun sleepUntilNextPoll() {
+        val toSleep = minOf(poll, remaining())
+        if (toSleep > Duration.ZERO) sleep(toSleep)
     }
 }

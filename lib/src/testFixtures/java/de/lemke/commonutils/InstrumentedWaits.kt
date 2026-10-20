@@ -36,17 +36,18 @@ import kotlin.time.Duration.Companion.seconds
  * the caller unchanged. On a device, call it from the instrumentation thread: the main thread fails at once. On the
  * main looper thread (Robolectric) every step runs directly and the main thread is never reported silent.
  */
-fun <A : Activity> ActivityScenario<A>.waitUntil(
+public fun <A : Activity> ActivityScenario<A>.waitUntil(
     timeout: Duration = 5.seconds,
     poll: Duration = 10.milliseconds,
     condition: A.() -> Boolean,
-) = pollUntil(
-    timeout,
-    poll,
-    stalled = "main thread not idle",
-    settle = { remaining -> awaitInstrumentationIdle(remaining) },
-    condition = { remaining -> probeOnMainThread(remaining, condition) },
-)
+): Unit =
+    pollUntil(
+        timeout,
+        poll,
+        stalled = "main thread not idle",
+        settle = { remaining -> awaitInstrumentationIdle(remaining) },
+        condition = { remaining -> probeOnMainThread(remaining, condition) },
+    )
 
 private val onMainThread get() = Looper.myLooper() == Looper.getMainLooper()
 
@@ -96,7 +97,7 @@ internal class ProbeTask(
 }
 
 /** True when no smooth scroll, scroll, layout request or adapter update is pending. */
-val RecyclerView.isSettled: Boolean
+public val RecyclerView.isSettled: Boolean
     get() =
         layoutManager?.isSmoothScrolling != true &&
             scrollState == RecyclerView.SCROLL_STATE_IDLE &&

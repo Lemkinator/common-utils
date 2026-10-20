@@ -31,7 +31,7 @@ import javax.inject.Inject
 
 /** Pre-built settings screen backed by a [PreferenceFragmentCompat] with common-utils defaults. */
 @AndroidEntryPoint
-class CommonUtilsSettingsActivity : AppCompatActivity() {
+public class CommonUtilsSettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsCommonUtilsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,22 +43,25 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
         if (savedInstanceState == null) supportFragmentManager.beginTransaction().replace(R.id.settingsLayout, SettingsFragment()).commit()
     }
 
-    companion object {
+    public companion object {
         /** Preference XML resource IDs inflated in order; configure via [setupCommonUtilsSettingsActivity]. */
-        var preferences =
+        public var preferences: List<Int> =
             listOf(
                 R.xml.preferences_design,
                 R.xml.preferences_general_language,
                 R.xml.preferences_dev_options_delete_app_data,
                 R.xml.preferences_more_info,
             )
+
+        /** Whether the share and rate card is added; configure via [setupCommonUtilsSettingsActivity]. */
+        public var relativeLinksCard: Boolean = true
     }
 
     /** [PreferenceFragmentCompat] that inflates the configured preference XML resources. */
     @AndroidEntryPoint
-    class SettingsFragment : PreferenceFragmentCompat() {
+    public class SettingsFragment : PreferenceFragmentCompat() {
         @Inject
-        lateinit var settings: SettingsRepository
+        public lateinit var settings: SettingsRepository
 
         override fun onCreatePreferences(
             bundle: Bundle?,
@@ -78,7 +81,7 @@ class CommonUtilsSettingsActivity : AppCompatActivity() {
             savedInstanceState: Bundle?,
         ) {
             super.onViewCreated(view, savedInstanceState)
-            addShareAppAndRateRelativeLinksCard()
+            if (relativeLinksCard && preferenceScreen != null) addShareAppAndRateRelativeLinksCard()
         }
     }
 }

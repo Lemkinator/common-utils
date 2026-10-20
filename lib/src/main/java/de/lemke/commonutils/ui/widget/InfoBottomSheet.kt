@@ -33,7 +33,7 @@ import de.lemke.commonutils.ui.utils.showOnce
 import dev.oneuiproject.oneui.app.SemBottomSheetDialogFragment
 
 /** Bottom sheet dialog that displays a title and a message, used for informational overlays. */
-class InfoBottomSheet : SemBottomSheetDialogFragment() {
+public class InfoBottomSheet : SemBottomSheetDialogFragment() {
     private lateinit var binding: WidgetInfoBottomsheetBinding
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -47,7 +47,7 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
         savedInstanceState: Bundle?,
     ): View = WidgetInfoBottomsheetBinding.inflate(inflater, container, false).also { binding = it }.root
 
-    override fun onCreateDialog(savedInstanceState: Bundle?) =
+    override fun onCreateDialog(savedInstanceState: Bundle?): BottomSheetDialog =
         (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply {
             behavior.skipCollapsed = true
             setOnShowListener { behavior.state = STATE_EXPANDED }
@@ -78,46 +78,46 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
         }
     }
 
-    companion object {
+    public companion object {
         /** Shows an [InfoBottomSheet] with string-resource [titleResId] and [messageResId]. */
-        fun FragmentActivity.showInfoBottomSheet(
+        public fun FragmentActivity.showInfoBottomSheet(
             @StringRes titleResId: Int,
             @StringRes messageResId: Int,
             textGravity: Int? = null,
-        ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
+        ): Boolean = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
         /** Shows an [InfoBottomSheet] with the given [title] and [message]. */
-        fun FragmentActivity.showInfoBottomSheet(
+        public fun FragmentActivity.showInfoBottomSheet(
             title: String,
             message: String,
             textGravity: Int? = null,
-        ) = showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
+        ): Boolean = showInfoBottomSheet(supportFragmentManager, title, message, textGravity)
 
         /** Shows an [InfoBottomSheet] with string-resource [titleResId] and [messageResId]. */
-        fun Fragment.showInfoBottomSheet(
+        public fun Fragment.showInfoBottomSheet(
             @StringRes titleResId: Int,
             @StringRes messageResId: Int,
             textGravity: Int? = null,
-        ) = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
+        ): Boolean = showInfoBottomSheet(getString(titleResId), getString(messageResId), textGravity)
 
         /** Shows an [InfoBottomSheet] with the given [title] and [message]. */
-        fun Fragment.showInfoBottomSheet(
+        public fun Fragment.showInfoBottomSheet(
             title: String,
             message: String,
             textGravity: Int? = null,
-        ) = showInfoBottomSheet(childFragmentManager, title, message, textGravity)
+        ): Boolean = showInfoBottomSheet(childFragmentManager, title, message, textGravity)
 
         /**
          * Shows an [InfoBottomSheet] using the given [fragmentManager], [title], [message], and optional [textGravity],
          * unless one already shows there.
          * @return true if the sheet was shown; see [showOnce].
          */
-        fun showInfoBottomSheet(
+        public fun showInfoBottomSheet(
             fragmentManager: FragmentManager,
             title: String,
             message: String,
             textGravity: Int? = null,
-        ) = newInstance(title, message, textGravity ?: CENTER).showOnce(fragmentManager, InfoBottomSheet::class.java.simpleName)
+        ): Boolean = newInstance(title, message, textGravity ?: CENTER).showOnce(fragmentManager, InfoBottomSheet::class.java.simpleName)
 
         private fun newInstance(
             title: String,
@@ -133,12 +133,12 @@ class InfoBottomSheet : SemBottomSheetDialogFragment() {
         }
 
         /** Bundle argument key for the sheet title. */
-        const val KEY_TITLE = "key_title"
+        public const val KEY_TITLE: String = "key_title"
 
         /** Bundle argument key for the sheet message. */
-        const val KEY_MESSAGE = "key_message"
+        public const val KEY_MESSAGE: String = "key_message"
 
         /** Bundle argument key for the text gravity applied to title and message. */
-        const val KEY_TEXT_GRAVITY = "key_text_gravity"
+        public const val KEY_TEXT_GRAVITY: String = "key_text_gravity"
     }
 }

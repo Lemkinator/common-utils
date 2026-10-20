@@ -49,6 +49,18 @@ class ActivityUtilsRobolectricTest {
     }
 
     @Test
+    fun `setupCommonUtilsSettingsActivity stores the relative links card flag`() {
+        setupCommonUtilsSettingsActivity(listOf(10), relativeLinksCard = false)
+        CommonUtilsSettingsActivity.relativeLinksCard shouldBe false
+        setupCommonUtilsSettingsActivity(1, 2)
+        CommonUtilsSettingsActivity.relativeLinksCard shouldBe true
+        setupCommonUtilsSettingsActivity(3, relativeLinksCard = false)
+        CommonUtilsSettingsActivity.relativeLinksCard shouldBe false
+        setupCommonUtilsSettingsActivity(listOf(10))
+        CommonUtilsSettingsActivity.relativeLinksCard shouldBe true
+    }
+
+    @Test
     fun `setupCommonUtilsAboutActivity sets appVersion`() {
         setupCommonUtilsAboutActivity("1.2.3")
         CommonUtilsAboutActivity.appVersion shouldBe "1.2.3"

@@ -29,22 +29,22 @@ import java.net.URLEncoder
 private const val TAG = "URLUtils"
 
 /** Returns this string with an `https://` prefix, unless it already starts with `http://` or `https://`. */
-fun String.withHttps() = if (this.startsWith("http://") || this.startsWith("https://")) this else "https://$this"
+public fun String.withHttps(): String = if (this.startsWith("http://") || this.startsWith("https://")) this else "https://$this"
 
 /** Removes `https://`, `http://`, and a trailing `/` from this string. */
-fun String.withoutHttps() = this.removePrefix("https://").removePrefix("http://").removeSuffix("/")
+public fun String.withoutHttps(): String = this.removePrefix("https://").removePrefix("http://").removeSuffix("/")
 
 /** Replaces `&` with its percent-encoded form `%26` to prevent URL parameter splitting. */
-fun String.urlEncodeAmpersand() = this.replace("&", "%26")
+public fun String.urlEncodeAmpersand(): String = this.replace("&", "%26")
 
 /** Percent-encodes this string using UTF-8. */
-fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
+public fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
 
 /** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
-fun Fragment.openURL(url: String?): LaunchOutcome = requireContext().openURL(url)
+public fun Fragment.openURL(url: String?): LaunchOutcome = requireContext().openURL(url)
 
 /** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
-fun Context.openURL(url: String?): LaunchOutcome =
+public fun Context.openURL(url: String?): LaunchOutcome =
     // startActivity and the target app throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {

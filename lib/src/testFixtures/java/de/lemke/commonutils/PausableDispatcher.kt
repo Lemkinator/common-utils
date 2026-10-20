@@ -21,7 +21,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Runnable
 
 /** What a [PausableDispatcher] does with a block dispatched while it is resumed. */
-enum class WhileResumed {
+public enum class WhileResumed {
     /** Hands the block to the delegate, so no block runs inside the call that dispatches it. */
     Dispatch,
 
@@ -40,7 +40,7 @@ enum class WhileResumed {
  * Use a fresh instance per test: in [WhileResumed.RunInPlace] mode, a block the delegate never runs keeps the
  * dispatcher dispatching for good.
  */
-class PausableDispatcher(
+public class PausableDispatcher(
     private val delegate: CoroutineDispatcher,
     private val whileResumed: WhileResumed = WhileResumed.Dispatch,
 ) : CoroutineDispatcher() {
@@ -70,12 +70,12 @@ class PausableDispatcher(
     }
 
     /** Holds every block dispatched from now on until [resume]. */
-    fun pause() {
+    public fun pause() {
         paused = true
     }
 
     /** Hands the held blocks to the delegate in order; later blocks follow [whileResumed] again. */
-    fun resume() {
+    public fun resume() {
         synchronized(lock) {
             paused = false
             while (held.isNotEmpty()) {

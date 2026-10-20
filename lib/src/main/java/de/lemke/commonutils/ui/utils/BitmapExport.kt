@@ -39,7 +39,7 @@ private const val TAG = "BitmapExport"
 private val saveFailed = BitmapExport.SaveFinished(BitmapSaveResult.WriteFailed)
 
 /** Where [launchBitmapExport] shares a [BitmapExport.Share]. */
-enum class ShareTarget {
+public enum class ShareTarget {
     /** The system share sheet; see [shareBitmap]. */
     SHARE_SHEET,
 
@@ -53,42 +53,42 @@ enum class ShareTarget {
  * A RESUMED collector passes each [Result] to [launchBitmapExport] and reports it to [BitmapExportStateHolder.onHandled]
  * once that returns true.
  */
-sealed interface BitmapExport {
+public sealed interface BitmapExport {
     /** A finished export that the screen acts on and then reports handled. */
-    sealed interface Result : BitmapExport
+    public sealed interface Result : BitmapExport
 
     /** No export runs and no result waits. */
-    data object Idle : BitmapExport
+    public data object Idle : BitmapExport
 
     /** An export runs; the holder ignores new exports until it finishes. */
-    data object Running : BitmapExport
+    public data object Running : BitmapExport
 
     /** The save location needs the document picker; [launchBitmapExport] opens it for a PNG named after [fileName]. */
-    data class OpenPicker(
+    public data class OpenPicker(
         val fileName: String,
     ) : Result
 
     /** A save ended with [result]; [launchBitmapExport] shows its message. */
-    data class SaveFinished(
+    public data class SaveFinished(
         val result: BitmapSaveResult.Finished,
     ) : Result
 
     /** The bitmap was written for the clipboard; [launchBitmapExport] copies [clip]. */
-    data class Copy(
+    public data class Copy(
         val clip: ClipData,
     ) : Result
 
     /** Writing the bitmap for the clipboard failed; [launchBitmapExport] shows the error toast. */
-    data object CopyFailed : Result
+    public data object CopyFailed : Result
 
     /** The bitmap was written for a share; [launchBitmapExport] shares [file] through [target]. */
-    data class Share(
+    public data class Share(
         val file: BitmapShareFile.Written,
         val target: ShareTarget = ShareTarget.SHARE_SHEET,
     ) : Result
 
     /** Writing the bitmap for a share failed; [launchBitmapExport] shows the error toast. */
-    data object ShareFailed : Result
+    public data object ShareFailed : Result
 }
 
 /**
@@ -101,20 +101,20 @@ sealed interface BitmapExport {
  * After [scope] is cancelled the state stays [BitmapExport.Running]. Tests drive it with `FakeBitmapExporter` from the
  * testFixtures.
  */
-class BitmapExportStateHolder(
+public class BitmapExportStateHolder(
     private val scope: CoroutineScope,
     private val exporter: BitmapExporter,
 ) {
     private val mutableState = MutableStateFlow<BitmapExport>(BitmapExport.Idle)
 
     /** The state of the latest export. */
-    val state: StateFlow<BitmapExport> = mutableState.asStateFlow()
+    public val state: StateFlow<BitmapExport> = mutableState.asStateFlow()
 
     /**
      * Saves [bitmap] as a PNG named after [fileName] to [location]; a location that needs the document picker ends in
      * [BitmapExport.OpenPicker].
      */
-    fun save(
+    public fun save(
         bitmap: Bitmap,
         fileName: String,
         location: SaveLocation,
@@ -134,7 +134,7 @@ class BitmapExportStateHolder(
      * [BitmapExport.SaveFinished]; a null [bitmap] also deletes the created document. While an export runs, a pick
      * without a document is ignored and a created document is deleted.
      */
-    fun onDocumentPicked(
+    public fun onDocumentPicked(
         pick: DocumentPick,
         bitmap: Bitmap?,
     ) {
@@ -149,7 +149,7 @@ class BitmapExportStateHolder(
     }
 
     /** Writes [bitmap] for the clipboard; ends in [BitmapExport.Copy] or [BitmapExport.CopyFailed]. */
-    fun copy(bitmap: Bitmap) {
+    public fun copy(bitmap: Bitmap) {
         launchExport(BitmapExport.CopyFailed) { exporter.createClip(bitmap)?.let(BitmapExport::Copy) ?: BitmapExport.CopyFailed }
     }
 
@@ -157,7 +157,7 @@ class BitmapExportStateHolder(
      * Writes [bitmap] for a share through [target]; ends in [BitmapExport.Share] or [BitmapExport.ShareFailed], or in
      * [BitmapExport.Idle] if the launch latch dropped the write.
      */
-    fun share(
+    public fun share(
         bitmap: Bitmap,
         target: ShareTarget = ShareTarget.SHARE_SHEET,
     ) {
@@ -171,7 +171,7 @@ class BitmapExportStateHolder(
     }
 
     /** Resets the state to [BitmapExport.Idle] if it still holds [result]. */
-    fun onHandled(result: BitmapExport.Result) {
+    public fun onHandled(result: BitmapExport.Result) {
         mutableState.update { if (it == result) BitmapExport.Idle else it }
     }
 
@@ -229,7 +229,7 @@ class BitmapExportStateHolder(
  * until the activity resumes.
  */
 @MainThread
-fun Context.launchBitmapExport(
+public fun Context.launchBitmapExport(
     result: BitmapExport.Result,
     picker: SingleLaunchResultLauncher<Intent>,
 ): Boolean =

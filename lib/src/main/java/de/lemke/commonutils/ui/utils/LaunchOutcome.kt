@@ -27,12 +27,12 @@ import android.content.Context
  * then, so the pending launch waits until the activity pauses and resumes.
  */
 @JvmDefaultWithoutCompatibility
-sealed interface LaunchOutcome {
+public sealed interface LaunchOutcome {
     /**
      * True once the launch needs no retry: it started, or it failed for good and the helper showed its error toast.
      * False when the latch dropped it, so a RESUMED collector keeps its state pending.
      */
-    val isSettled: Boolean
+    public val isSettled: Boolean
         get() =
             when (this) {
                 Started, Failed -> true
@@ -40,13 +40,13 @@ sealed interface LaunchOutcome {
             }
 
     /** The activity, share sheet or picker was started. */
-    data object Started : LaunchOutcome
+    public data object Started : LaunchOutcome
 
     /** The activity's launch latch dropped the launch, so nothing started and nothing was shown. */
-    data object Dropped : LaunchOutcome
+    public data object Dropped : LaunchOutcome
 
     /** Nothing could be started; the helper showed its error toast. */
-    data object Failed : LaunchOutcome
+    public data object Failed : LaunchOutcome
 }
 
 /** Runs [start] as a gated launch of this context's activity; a throwing [start] propagates. See [launchGated]. */

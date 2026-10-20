@@ -20,17 +20,17 @@ import javax.inject.Qualifier
 /** Hilt qualifier for [kotlinx.coroutines.Dispatchers.IO]. */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class IoDispatcher
+public annotation class IoDispatcher
 
 /** Hilt qualifier for [kotlinx.coroutines.Dispatchers.Default]. */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class DefaultDispatcher
+public annotation class DefaultDispatcher
 
 /** Hilt qualifier for [kotlinx.coroutines.Dispatchers.Main]. */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class MainDispatcher
+public annotation class MainDispatcher
 
 /**
  * Hilt qualifier for the application-wide `CoroutineScope`, for work that outlives every screen, such as a write that
@@ -41,4 +41,4 @@ annotation class MainDispatcher
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class ApplicationScope
+public annotation class ApplicationScope

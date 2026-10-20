@@ -16,7 +16,7 @@
 package de.lemke.commonutils.domain
 
 /** Result category of an app launch relative to the previously recorded version. */
-enum class AppStartResult {
+public enum class AppStartResult {
     /** No previous installation was recorded (version code -1). */
     FIRST_TIME,
 
@@ -38,26 +38,26 @@ enum class AppStartResult {
  * @property tosVersion The TOS version required by the current build.
  * @property acceptedTosVersion The highest TOS version the user has accepted, or -1 if never set.
  */
-class AppStart(
-    val result: AppStartResult,
-    val versionCode: Int,
-    val versionName: String,
-    val lastVersionCode: Int,
-    val lastVersionName: String,
-    val tosVersion: Int,
-    val acceptedTosVersion: Int,
+public class AppStart(
+    public val result: AppStartResult,
+    public val versionCode: Int,
+    public val versionName: String,
+    public val lastVersionCode: Int,
+    public val lastVersionName: String,
+    public val tosVersion: Int,
+    public val acceptedTosVersion: Int,
 ) {
     /** `true` if no previous installation was recorded. */
-    val isFirstTime get() = lastVersionCode == -1
+    public val isFirstTime: Boolean get() = lastVersionCode == -1
 
     /** `true` if the app was upgraded since the last launch. */
-    val isFirstTimeVersion get() = lastVersionCode in 0..<versionCode
+    public val isFirstTimeVersion: Boolean get() = lastVersionCode in 0..<versionCode
 
     /** `true` if the user has accepted the current TOS version. */
-    val tosAccepted get() = acceptedTosVersion >= tosVersion
+    public val tosAccepted: Boolean get() = acceptedTosVersion >= tosVersion
 
     /** `true` if OOBE should be shown (first install or TOS not accepted). */
-    val shouldShowOOBE get() = isFirstTime || !tosAccepted
+    public val shouldShowOOBE: Boolean get() = isFirstTime || !tosAccepted
 
     override fun toString(): String =
         "AppStart(result=$result, versionCode=$versionCode, versionName='$versionName', " +
@@ -65,5 +65,5 @@ class AppStart(
             "tosVersion=$tosVersion, acceptedTosVersion=$acceptedTosVersion)"
 
     /** `true` if [threshold] falls within the range of version codes updated across on this launch. */
-    fun versionThresholdPassed(threshold: Int) = lastVersionCode >= 0 && threshold in lastVersionCode..<versionCode
+    public fun versionThresholdPassed(threshold: Int): Boolean = lastVersionCode >= 0 && threshold in lastVersionCode..<versionCode
 }

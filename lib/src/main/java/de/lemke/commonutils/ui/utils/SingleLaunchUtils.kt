@@ -331,11 +331,11 @@ internal fun Context?.launchGated(
  * @return true if [action] ran, false if the latch dropped it.
  */
 @MainThread
-fun Context.singleLaunch(action: () -> Unit): Boolean = singleLaunchOrNull(action) != null
+public fun Context.singleLaunch(action: () -> Unit): Boolean = singleLaunchOrNull(action) != null
 
 /** Runs an input's [action] through the launch latch of this fragment's activity; see [Context.singleLaunch]. */
 @MainThread
-fun Fragment.singleLaunch(action: () -> Unit): Boolean = context.singleLaunchOrNull(action) != null
+public fun Fragment.singleLaunch(action: () -> Unit): Boolean = context.singleLaunchOrNull(action) != null
 
 /**
  * Runs an input that does async [work] in [lifecycleScope], then passes its result to [then] once this activity is
@@ -353,7 +353,7 @@ fun Fragment.singleLaunch(action: () -> Unit): Boolean = context.singleLaunchOrN
  * @return true if [work] was launched, false if the latch dropped it.
  */
 @MainThread
-fun <T> ComponentActivity.singleLaunchSuspending(
+public fun <T> ComponentActivity.singleLaunchSuspending(
     work: suspend CoroutineScope.() -> T,
     then: (T) -> Unit,
 ): Boolean = launchInput(lifecycleScope, work, then)
@@ -367,7 +367,7 @@ fun <T> ComponentActivity.singleLaunchSuspending(
  * @see ComponentActivity.singleLaunchSuspending
  */
 @MainThread
-fun <T> Fragment.singleLaunchSuspending(
+public fun <T> Fragment.singleLaunchSuspending(
     work: suspend CoroutineScope.() -> T,
     then: (T) -> Unit,
 ): Boolean = requireActivity().launchInput(viewLifecycleOwner.lifecycleScope, work, then)
@@ -389,7 +389,7 @@ private fun <T> ComponentActivity.launchInput(
  * @return true if the activity was started, false if the latch dropped it.
  */
 @MainThread
-fun Context.singleLaunchActivity(
+public fun Context.singleLaunchActivity(
     intent: Intent,
     options: Bundle? = null,
 ): Boolean = launchGated { startActivity(intent, options) }
@@ -402,7 +402,7 @@ fun Context.singleLaunchActivity(
  * @see singleLaunchActivity
  */
 @MainThread
-fun <I, O> ComponentActivity.registerForSingleLaunchResult(
+public fun <I, O> ComponentActivity.registerForSingleLaunchResult(
     contract: ActivityResultContract<I, O>,
     callback: ActivityResultCallback<O>,
 ): SingleLaunchResultLauncher<I> = GatedResultLauncher(this, contract, callback) { this }
@@ -412,13 +412,13 @@ fun <I, O> ComponentActivity.registerForSingleLaunchResult(
  * @see ComponentActivity.registerForSingleLaunchResult
  */
 @MainThread
-fun <I, O> Fragment.registerForSingleLaunchResult(
+public fun <I, O> Fragment.registerForSingleLaunchResult(
     contract: ActivityResultContract<I, O>,
     callback: ActivityResultCallback<O>,
 ): SingleLaunchResultLauncher<I> = GatedResultLauncher(this, contract, callback) { requireActivity() }
 
 /** A result launcher that reports whether a launch ran or the launch latch dropped it; see [registerForSingleLaunchResult]. */
-abstract class SingleLaunchResultLauncher<I> : ActivityResultLauncher<I>() {
+public abstract class SingleLaunchResultLauncher<I> : ActivityResultLauncher<I>() {
     final override fun launch(
         input: I,
         options: ActivityOptionsCompat?,
@@ -431,7 +431,7 @@ abstract class SingleLaunchResultLauncher<I> : ActivityResultLauncher<I>() {
      * @return true if the launch ran, false if the latch dropped it.
      */
     @MainThread
-    abstract fun tryLaunch(
+    public abstract fun tryLaunch(
         input: I,
         options: ActivityOptionsCompat? = null,
     ): Boolean
@@ -457,12 +457,13 @@ private class GatedResultLauncher<I, O>(
 }
 
 /** Sets a click listener that runs [action] as an input, for buttons and adapter rows; see [Context.singleLaunch]. */
-fun View.onSingleLaunchClick(action: (View) -> Unit) {
+public fun View.onSingleLaunchClick(action: (View) -> Unit) {
     setOnClickListener { view -> view.context.singleLaunch { action(view) } }
 }
 
 /** Sets a click listener that runs [action] as an input; a dropped click stays consumed. See [Context.singleLaunch]. */
-fun <P : Preference> P.onSingleLaunchClick(action: (P) -> Unit): P = apply { onClick<Preference> { context.singleLaunch { action(this) } } }
+public fun <P : Preference> P.onSingleLaunchClick(action: (P) -> Unit): P =
+    apply { onClick<Preference> { context.singleLaunch { action(this) } } }
 
 /**
  * Runs a menu item's [action] as an input, for `onOptionsItemSelected` and `onMenuItemSelected`.
@@ -479,4 +480,4 @@ fun <P : Preference> P.onSingleLaunchClick(action: (P) -> Unit): P = apply { onC
  * @see Context.singleLaunch
  */
 @MainThread
-fun Context.singleLaunchMenuItem(action: () -> Unit): Boolean = true.also { singleLaunch(action) }
+public fun Context.singleLaunchMenuItem(action: () -> Unit): Boolean = true.also { singleLaunch(action) }

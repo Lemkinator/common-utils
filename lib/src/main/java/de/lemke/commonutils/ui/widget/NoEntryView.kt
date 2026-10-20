@@ -28,17 +28,17 @@ import de.lemke.commonutils.ui.utils.play
 import dev.oneuiproject.oneui.widget.RoundedLinearLayout
 
 /** Empty-state view that shows a Lottie animation and a label when a list has no entries. */
-class NoEntryView @JvmOverloads constructor(
+public class NoEntryView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
     defStyleRes: Int = 0,
 ) : RoundedLinearLayout(context, attrs, defStyleAttr, defStyleRes) {
     /** The Lottie animation view displayed in the center of this widget. */
-    val lottieAnimationView: LottieAnimationView by lazy { findViewById(R.id.noEntryLottie) }
+    public val lottieAnimationView: LottieAnimationView by lazy { findViewById(R.id.noEntryLottie) }
 
     /** The label displayed below the animation. */
-    val textView: TextView by lazy { findViewById(R.id.noEntryText) }
+    public val textView: TextView by lazy { findViewById(R.id.noEntryText) }
 
     init {
         inflate(context, R.layout.widget_no_entry_view, this)
@@ -51,41 +51,42 @@ class NoEntryView @JvmOverloads constructor(
     }
 
     /** The label text shown below the animation. */
-    var text: String
+    public var text: String
         get() = textView.text.toString()
         set(value) {
             textView.text = value
         }
 
     /** Toggles visibility; if shown, hides [otherView], and vice versa. */
-    fun toggle(otherView: View? = null) = updateVisibility(!isVisible, otherView)
+    public fun toggle(otherView: View? = null): Unit = updateVisibility(!isVisible, otherView)
 
     /** Shows this view when [list] is empty, hides it (and shows [otherView]) otherwise. */
-    fun updateVisibilityWith(
+    public fun updateVisibilityWith(
         list: List<*>,
         otherView: View? = null,
-    ) = updateVisibility(list.isEmpty(), otherView)
+    ): Unit = updateVisibility(list.isEmpty(), otherView)
 
     /** Sets this view visible or hidden; when shown hides [otherView], when hidden shows [otherView]. */
-    fun updateVisibility(
+    public fun updateVisibility(
         visible: Boolean,
         otherView: View? = null,
-    ) = if (visible) {
-        otherView?.isVisible = false
-        show()
-    } else {
-        hide()
-        otherView?.isVisible = true
-    }
+    ): Unit =
+        if (visible) {
+            otherView?.isVisible = false
+            show()
+        } else {
+            hide()
+            otherView?.isVisible = true
+        }
 
     /** Makes this view visible and starts the Lottie animation after a short delay. */
-    fun show() {
+    public fun show() {
         isVisible = true
         lottieAnimationView.play(delay = DEFAULT_LOTTIE_DELAY)
     }
 
     /** Hides this view. */
-    fun hide() {
+    public fun hide() {
         isVisible = false
     }
 }

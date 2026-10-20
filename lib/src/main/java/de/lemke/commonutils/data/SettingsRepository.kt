@@ -30,42 +30,42 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 
 /** SharedPreferences-backed repository for common-utils app settings; open so apps can add their own fields via subclassing. */
-open class SettingsRepository(
+public open class SettingsRepository(
     protected val preferences: SharedPreferences,
 ) {
     /** Whether dark mode is explicitly enabled (stored as `"1"`/`"0"` for legacy `HorizontalRadioPreference` compatibility). */
-    var darkMode: Boolean by preferences.delegates.darkMode(false)
+    public var darkMode: Boolean by preferences.delegates.darkMode(false)
 
     /** Whether to follow the system dark mode setting instead of the explicit [darkMode] value. */
-    var autoDarkMode: Boolean by preferences.delegates.boolean(true)
+    public var autoDarkMode: Boolean by preferences.delegates.boolean(true)
 
     /** The version code recorded on the previous app launch, or -1 if never set. */
-    var lastVersionCode: Int by preferences.delegates.int(-1)
+    public var lastVersionCode: Int by preferences.delegates.int(-1)
 
     /** The version name recorded on the previous app launch. */
-    var lastVersionName: String by preferences.delegates.string("0.0.0")
+    public var lastVersionName: String by preferences.delegates.string("0.0.0")
 
     /** The highest TOS version the user has accepted, or -1 if the user has never accepted. */
-    var acceptedTosVersion: Int by preferences.delegates.int(-1)
+    public var acceptedTosVersion: Int by preferences.delegates.int(-1)
 
     /** Whether developer mode is currently enabled. */
-    var devModeEnabled: Boolean by preferences.delegates.boolean(false)
+    public var devModeEnabled: Boolean by preferences.delegates.boolean(false)
 
     /** The last search query entered by the user. */
-    var search: String by preferences.delegates.string("")
+    public var search: String by preferences.delegates.string("")
 
     /** The preferred location for exported images. */
-    var imageSaveLocation: SaveLocation by preferences.delegates.saveLocation(SaveLocation.default)
+    public var imageSaveLocation: SaveLocation by preferences.delegates.saveLocation(SaveLocation.default)
 
     /** Epoch millis of the last in-app review request; `0` until [canShowInAppReview] seeds it on first launch. */
-    var lastInAppReview: Long by preferences.delegates.long(0L)
+    public var lastInAppReview: Long by preferences.delegates.long(0L)
 
     /**
      * Binds a `PreferenceFragmentCompat` to this repository's store — assign it to
      * `preferenceManager.preferenceDataStore` before inflating any preference XML, so widgets persist where the
      * delegates read.
      */
-    fun preferenceDataStore(): PreferenceDataStore = SharedPreferencesDataStore(preferences)
+    public fun preferenceDataStore(): PreferenceDataStore = SharedPreferencesDataStore(preferences)
 
     /**
      * Builds a StateFlow snapshot, backed by one OnSharedPreferenceChangeListener scoped to [scope] — use an
@@ -85,7 +85,7 @@ open class SettingsRepository(
 }
 
 /** Applies this [SettingsRepository]'s dark mode setting to the app's default night mode. */
-fun SettingsRepository.applyDarkMode() {
+public fun SettingsRepository.applyDarkMode() {
     when {
         autoDarkMode -> setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM)
         darkMode -> setDefaultNightMode(MODE_NIGHT_YES)

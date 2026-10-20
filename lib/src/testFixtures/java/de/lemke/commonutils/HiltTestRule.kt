@@ -31,7 +31,7 @@ import org.junit.runners.model.Statement
  * the remaining closes. If the test failed, its failure is thrown and every close failure is suppressed into it.
  * Otherwise the first close failure is thrown and the later ones are suppressed into it.
  */
-class HiltTestRule(
+public class HiltTestRule(
     testInstance: Any,
 ) : TestRule {
     private val hiltRule = HiltAndroidRule(testInstance)
@@ -41,20 +41,20 @@ class HiltTestRule(
         description: Description,
     ): Statement = hiltRule.apply(closeResourcesRule().apply(base, description), description)
 
-    fun inject() = hiltRule.inject()
+    public fun inject(): Unit = hiltRule.inject()
 
-    companion object {
+    public companion object {
         private val resources = ConcurrentLinkedDeque<AutoCloseable>()
         private val registered = AtomicInteger()
 
         /** How many resources were registered with [closeAfterTest] since the process started. */
-        val registrations: Int get() = registered.get()
+        public val registrations: Int get() = registered.get()
 
         /** Closes [resource] after the running test and returns it. */
-        fun <T : AutoCloseable> closeAfterTest(resource: T): T = closeAfterTest(resource, AutoCloseable::close)
+        public fun <T : AutoCloseable> closeAfterTest(resource: T): T = closeAfterTest(resource, AutoCloseable::close)
 
         /** Calls [close] on [resource] after the running test and returns [resource]; for types that are no [AutoCloseable]. */
-        fun <T> closeAfterTest(
+        public fun <T> closeAfterTest(
             resource: T,
             close: (T) -> Unit,
         ): T {
@@ -67,7 +67,7 @@ class HiltTestRule(
          * Closes every registered resource after the test. A test that runs on `HiltTestApplication` without
          * `@HiltAndroidTest` declares it as `@get:Rule`; [HiltTestRule] already includes it.
          */
-        fun closeResourcesRule(): TestRule = TestRule { base, _ -> closeResourcesAfter(base) }
+        public fun closeResourcesRule(): TestRule = TestRule { base, _ -> closeResourcesAfter(base) }
 
         private fun closeResourcesAfter(base: Statement): Statement =
             object : Statement() {

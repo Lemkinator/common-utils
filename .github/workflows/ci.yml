@@ -58,8 +58,8 @@ jobs:
         run: mkdir -p ~/.gradle && cp .github/ci-gradle.properties ~/.gradle/gradle.properties
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
-      - name: Run lint
-        run: chmod +x ./gradlew && ./gradlew lintDebug --stacktrace
+      - name: Run lint and API check
+        run: chmod +x ./gradlew && ./gradlew lintDebug apiCheck --stacktrace
         env:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}

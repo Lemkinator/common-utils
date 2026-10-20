@@ -33,15 +33,15 @@ import org.robolectric.Robolectric
  * [deleted] and deletes the file, unless [deleteFailure] is set: then it throws that failure and keeps the file.
  * While [readOnly] is true it refuses every write to the document.
  */
-class RecordingDocumentsProvider : ContentProvider() {
-    lateinit var file: File
+public class RecordingDocumentsProvider : ContentProvider() {
+    public lateinit var file: File
         private set
-    var deleteFailure: Exception? = null
-    var readOnly = false
-    val deleted = mutableListOf<Uri>()
-    val uri: Uri = "content://$AUTHORITY/document/1".toUri()
+    public var deleteFailure: Exception? = null
+    public var readOnly: Boolean = false
+    public val deleted: MutableList<Uri> = mutableListOf<Uri>()
+    public val uri: Uri = "content://$AUTHORITY/document/1".toUri()
 
-    override fun onCreate() = true
+    override fun onCreate(): Boolean = true
 
     override fun call(
         method: String,
@@ -83,23 +83,23 @@ class RecordingDocumentsProvider : ContentProvider() {
         uri: Uri,
         selection: String?,
         selectionArgs: Array<out String>?,
-    ) = 0
+    ): Int = 0
 
     override fun update(
         uri: Uri,
         values: ContentValues?,
         selection: String?,
         selectionArgs: Array<out String>?,
-    ) = 0
+    ): Int = 0
 
-    companion object {
-        const val AUTHORITY = "de.lemke.commonutils.test.documents"
+    public companion object {
+        public const val AUTHORITY: String = "de.lemke.commonutils.test.documents"
 
         // The hidden DocumentsContract.METHOD_DELETE_DOCUMENT and EXTRA_URI that deleteDocument sends to the provider.
         private const val METHOD_DELETE_DOCUMENT = "android:deleteDocument"
         private const val EXTRA_DOCUMENT_URI = "uri"
 
-        fun create(context: Context): RecordingDocumentsProvider =
+        public fun create(context: Context): RecordingDocumentsProvider =
             Robolectric
                 .buildContentProvider(RecordingDocumentsProvider::class.java)
                 .create(AUTHORITY)

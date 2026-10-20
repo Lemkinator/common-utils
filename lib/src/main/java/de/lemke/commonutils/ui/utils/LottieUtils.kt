@@ -33,7 +33,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Default delay before a Lottie animation starts playing, to avoid flicker on fast data loads. */
-val DEFAULT_LOTTIE_DELAY = 400.milliseconds
+public val DEFAULT_LOTTIE_DELAY: Duration = 400.milliseconds
 
 private val pendingPlayJobs = WeakHashMap<LottieAnimationView, Job>()
 
@@ -43,7 +43,7 @@ private val pendingPlayJobs = WeakHashMap<LottieAnimationView, Job>()
  * When [delay] is [Duration.ZERO] (default), plays immediately on the calling thread.
  * Otherwise, requires an attached view tree lifecycle owner; does nothing if none is found.
  */
-fun LottieAnimationView.play(
+public fun LottieAnimationView.play(
     animation: String? = null,
     cancelFirst: Boolean = true,
     delay: Duration = Duration.ZERO,

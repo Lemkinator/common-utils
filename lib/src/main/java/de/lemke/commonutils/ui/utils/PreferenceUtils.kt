@@ -55,7 +55,7 @@ private const val DELETE_APP_DATA_DIALOG_TAG = "commonutils_delete_app_data"
 
 /** Adds a relative-links card with "Share app" and "Rate app" actions to the preference screen. */
 @NoCoverage
-fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
+public fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
     addRelativeLinksCard(
         RelativeLink(getString(R.string.commonutils_share_app)) { shareApp() },
         RelativeLink(getString(R.string.commonutils_rate_app)) { openApp(requireContext().packageName, false) },
@@ -63,7 +63,7 @@ fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
 }
 
 /** Initializes the standard common-utils preferences (dark mode, save location, language, dev options, more info). */
-fun PreferenceFragmentCompat.initCommonUtilsPreferences(settings: SettingsRepository) {
+public fun PreferenceFragmentCompat.initCommonUtilsPreferences(settings: SettingsRepository) {
     initDarkMode()
     initImageSaveLocation()
     initMoreInfo()
@@ -112,7 +112,7 @@ private fun PreferenceFragmentCompat.initImageSaveLocation() {
 }
 
 /** Shows a confirmation dialog, unless it already shows, and clears all application user data on confirmation. */
-fun Fragment.deleteAppDataAndExit(
+public fun Fragment.deleteAppDataAndExit(
     title: String? = null,
     message: String? = null,
     cancel: String? = null,
