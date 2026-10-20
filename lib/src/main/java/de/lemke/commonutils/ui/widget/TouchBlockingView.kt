@@ -19,7 +19,7 @@ import android.content.Context
 import android.util.AttributeSet
 
 /** Full-screen overlay that intercepts all touch events, preventing interaction with content behind it. */
-public open class TouchBlockingView @JvmOverloads constructor(
+internal open class TouchBlockingView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : DimmingView(context, attrs) {

@@ -11,11 +11,6 @@ public final class de/lemke/commonutils/data/DelegatesAdvancedKt {
 	public static final fun sanitized (Lkotlin/properties/ReadWriteProperty;Lkotlin/jvm/functions/Function1;)Lkotlin/properties/ReadWriteProperty;
 }
 
-public final class de/lemke/commonutils/data/InAppReviewCooldownKt {
-	public static final fun canShowInAppReview (Lde/lemke/commonutils/data/SettingsRepository;)Z
-	public static final fun markInAppReviewRequested (Lde/lemke/commonutils/data/SettingsRepository;)V
-}
-
 public abstract interface class de/lemke/commonutils/data/PackageLookup {
 	public abstract fun applicationInfo (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun installedApps (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -278,17 +273,6 @@ public final class de/lemke/commonutils/ui/utils/AppUpdateManagerUtilsKt {
 
 public final class de/lemke/commonutils/ui/utils/AutoClearedUtilsKt {
 	public static final fun autoCleared (Landroidx/fragment/app/Fragment;Lkotlin/jvm/functions/Function0;)Lkotlin/properties/ReadOnlyProperty;
-}
-
-public final class de/lemke/commonutils/ui/utils/BackAnimationOutlineProvider : android/view/ViewOutlineProvider {
-	public static final field $stable I
-	public static final field MAX_CORNER_RADIUS_PX F
-	public fun <init> ()V
-	public fun getOutline (Landroid/view/View;Landroid/graphics/Outline;)V
-	public final fun getProgress ()F
-	public final fun getRadius ()F
-	public final fun setProgress (F)V
-	public final fun setRadius (F)V
 }
 
 public abstract interface class de/lemke/commonutils/ui/utils/BitmapExport {
@@ -621,6 +605,7 @@ public final class de/lemke/commonutils/ui/utils/FileSharingUtilsKt {
 }
 
 public abstract interface class de/lemke/commonutils/ui/utils/InAppReview {
+	public abstract fun canShow ()Z
 	public abstract fun showIfPossible (Landroidx/appcompat/app/AppCompatActivity;)V
 	public abstract fun showOrFinish (Landroidx/appcompat/app/AppCompatActivity;)V
 }
@@ -713,6 +698,7 @@ public final class de/lemke/commonutils/ui/utils/OpenUtilsKt {
 public final class de/lemke/commonutils/ui/utils/PlayInAppReview : de/lemke/commonutils/ui/utils/InAppReview {
 	public static final field $stable I
 	public fun <init> (Lde/lemke/commonutils/data/SettingsRepository;)V
+	public fun canShow ()Z
 	public fun showIfPossible (Landroidx/appcompat/app/AppCompatActivity;)V
 	public fun showOrFinish (Landroidx/appcompat/app/AppCompatActivity;)V
 }
@@ -723,7 +709,9 @@ public final class de/lemke/commonutils/ui/utils/PredictiveBackGestureUtilsKt {
 	public static final fun getDefaultWindowBackground (Landroidx/appcompat/app/AppCompatActivity;)I
 	public static final fun getGestureInterpolator ()Landroid/view/animation/Interpolator;
 	public static final fun setCustomBackAnimation (Landroidx/appcompat/app/AppCompatActivity;Landroid/view/View;Lkotlinx/coroutines/flow/StateFlow;Lde/lemke/commonutils/data/SettingsRepository;)V
+	public static final fun setCustomBackAnimation (Landroidx/appcompat/app/AppCompatActivity;Landroid/view/View;Lkotlinx/coroutines/flow/StateFlow;Lde/lemke/commonutils/ui/utils/InAppReview;)V
 	public static synthetic fun setCustomBackAnimation$default (Landroidx/appcompat/app/AppCompatActivity;Landroid/view/View;Lkotlinx/coroutines/flow/StateFlow;Lde/lemke/commonutils/data/SettingsRepository;ILjava/lang/Object;)V
+	public static synthetic fun setCustomBackAnimation$default (Landroidx/appcompat/app/AppCompatActivity;Landroid/view/View;Lkotlinx/coroutines/flow/StateFlow;Lde/lemke/commonutils/ui/utils/InAppReview;ILjava/lang/Object;)V
 	public static final fun setWindowTransparent (Landroidx/appcompat/app/AppCompatActivity;Z)V
 }
 
@@ -918,12 +906,5 @@ public final class de/lemke/commonutils/ui/widget/NoEntryView : dev/oneuiproject
 	public static synthetic fun updateVisibility$default (Lde/lemke/commonutils/ui/widget/NoEntryView;ZLandroid/view/View;ILjava/lang/Object;)V
 	public final fun updateVisibilityWith (Ljava/util/List;Landroid/view/View;)V
 	public static synthetic fun updateVisibilityWith$default (Lde/lemke/commonutils/ui/widget/NoEntryView;Ljava/util/List;Landroid/view/View;ILjava/lang/Object;)V
-}
-
-public class de/lemke/commonutils/ui/widget/TouchBlockingView : de/lemke/commonutils/ui/widget/DimmingView {
-	public static final field $stable I
-	public fun <init> (Landroid/content/Context;)V
-	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
-	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 

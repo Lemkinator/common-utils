@@ -17,14 +17,18 @@ package de.lemke.commonutils.ui.utils
 
 import androidx.appcompat.app.AppCompatActivity
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.data.canShowInAppReview
+import javax.inject.Inject
 
 /**
  * Requests the Play in-app review flow for an activity.
  *
  * An app injects it into the screen that asks for a review, so a test swaps in `FakeInAppReview` from the testFixtures.
  */
-@JvmDefaultWithoutCompatibility
 public interface InAppReview {
+    /** `true` once the cooldown period has elapsed. The first call starts the cooldown, so it returns `false` on a fresh install. */
+    public fun canShow(): Boolean
+
     /** Requests the review flow if the cooldown period has elapsed; skips it silently otherwise. */
     public fun showIfPossible(activity: AppCompatActivity)
 
@@ -33,9 +37,11 @@ public interface InAppReview {
 }
 
 /** The [InAppReview] over [showInAppReviewIfPossible] and [showInAppReviewOrFinish], with the cooldown kept in [settings]. */
-public class PlayInAppReview(
+public class PlayInAppReview @Inject constructor(
     private val settings: SettingsRepository,
 ) : InAppReview {
+    override fun canShow(): Boolean = settings.canShowInAppReview()
+
     override fun showIfPossible(activity: AppCompatActivity): Unit = activity.showInAppReviewIfPossible(settings)
 
     override fun showOrFinish(activity: AppCompatActivity): Unit = activity.showInAppReviewOrFinish(settings)

@@ -40,7 +40,6 @@ import androidx.lifecycle.lifecycleScope
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.data.canShowInAppReview
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -88,7 +87,7 @@ public inline fun Fragment.addOnBackLogic(
 public val GestureInterpolator: Interpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
 
 /** [ViewOutlineProvider] that applies rounded corners scaled with back-gesture progress. */
-public class BackAnimationOutlineProvider : ViewOutlineProvider() {
+internal class BackAnimationOutlineProvider : ViewOutlineProvider() {
     /** Current corner radius in pixels, driven by [progress]. */
     public var radius: Float = 0f
 
@@ -113,13 +112,13 @@ public class BackAnimationOutlineProvider : ViewOutlineProvider() {
 }
 
 /**
- * Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back. Pass the app's
- * [SettingsRepository] as [inAppReview] to show the in-app review flow on back instead, when its cooldown has elapsed.
+ * Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back. Pass an
+ * [InAppReview] to show the in-app review flow on back instead, when its cooldown has elapsed.
  */
 public fun AppCompatActivity.setCustomBackAnimation(
     animatedView: View,
     backEnabled: StateFlow<Boolean>? = null,
-    inAppReview: SettingsRepository? = null,
+    inAppReview: InAppReview? = null,
 ) {
     setWindowTransparent(true)
     val predictiveBackMargin = resources.getDimension(R.dimen.predictive_back_margin)
@@ -127,19 +126,19 @@ public fun AppCompatActivity.setCustomBackAnimation(
     val outlineProvider = BackAnimationOutlineProvider()
     animatedView.clipToOutline = true
     animatedView.outlineProvider = outlineProvider
-    val reviewSettings = inAppReview?.takeIf { it.canShowInAppReview() }
+    val review = inAppReview?.takeIf { it.canShow() }
     val callback =
         object : OnBackPressedCallback(backEnabled?.value != false) {
             override fun handleOnBackPressed() {
-                if (reviewSettings != null) {
-                    showInAppReviewOrFinish(reviewSettings)
+                if (review != null) {
+                    review.showOrFinish(this@setCustomBackAnimation)
                 } else {
                     finishAfterTransition()
                 }
             }
 
             override fun handleOnBackProgressed(backEvent: BackEventCompat) {
-                if (reviewSettings != null) return
+                if (review != null) return
                 val progress = GestureInterpolator.getInterpolation(backEvent.progress)
                 if (initialTouchY < 0f) initialTouchY = backEvent.touchY
                 val progressY = GestureInterpolator.getInterpolation((backEvent.touchY - initialTouchY) / animatedView.height)
@@ -177,6 +176,22 @@ public fun AppCompatActivity.setCustomBackAnimation(
         }
     onBackPressedDispatcher.addCallback(this, callback)
     backEnabled?.apply { lifecycleScope.launch { flowWithLifecycle(lifecycle).collectLatest { enable -> callback.isEnabled = enable } } }
+}
+
+/** Adds the predictive-back animation of [setCustomBackAnimation], with the review cooldown kept in [inAppReview]. */
+@Deprecated(
+    "Pass an InAppReview, such as PlayInAppReview(settings).",
+    ReplaceWith(
+        "setCustomBackAnimation(animatedView, backEnabled, inAppReview?.let(::PlayInAppReview))",
+        "de.lemke.commonutils.ui.utils.PlayInAppReview",
+    ),
+)
+public fun AppCompatActivity.setCustomBackAnimation(
+    animatedView: View,
+    backEnabled: StateFlow<Boolean>? = null,
+    inAppReview: SettingsRepository?,
+) {
+    setCustomBackAnimation(animatedView, backEnabled, inAppReview?.let(::PlayInAppReview))
 }
 
 /** Makes the activity window transparent or restores its default background, required for the predictive-back animation. */

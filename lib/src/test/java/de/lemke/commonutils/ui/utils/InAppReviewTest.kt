@@ -22,8 +22,10 @@ import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.track
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.longs.shouldBeGreaterThan
+import java.util.concurrent.TimeUnit.DAYS
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -64,6 +66,22 @@ class InAppReviewTest {
         PlayInAppReview(settings).showOrFinish(activity)
 
         activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
+    fun `PlayInAppReview canShow is false on a fresh install and true after the cooldown`() {
+        val review = PlayInAppReview(settings)
+
+        review.canShow().shouldBeFalse()
+        settings.lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
+        review.canShow().shouldBeTrue()
+    }
+
+    @Test
+    fun `FakeInAppReview canShow returns its availability and records nothing`() {
+        FakeInAppReview().canShow().shouldBeTrue()
+        FakeInAppReview(available = false).canShow().shouldBeFalse()
+        FakeInAppReview().calls.shouldBeEmpty()
     }
 
     @Test
