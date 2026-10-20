@@ -38,6 +38,7 @@ import de.lemke.commonutils.ui.utils.saveBitmapToDirectory
 import de.lemke.commonutils.ui.utils.saveBitmapToUri
 import de.lemke.commonutils.ui.utils.toDocumentPick
 import de.lemke.commonutils.ui.utils.toast
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -50,6 +51,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.OutputStream
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -448,6 +450,43 @@ class ExportUtilsRobolectricTest {
             ctx.saveBitmapToUri(provider.uri, throwing, createdDocument = true) shouldBe BitmapSaveResult.WriteFailed
 
             provider.deleted shouldContainExactly listOf(provider.uri)
+        }
+
+    @Test
+    fun `saveBitmapToUri deletes the created document when canceled before any byte is written`() =
+        runTest {
+            val provider = documentProvider()
+            val io = HeldDispatcher()
+            val save = async { ctx.saveBitmapToUri(provider.uri, bitmap, createdDocument = true, io) }
+            runCurrent()
+
+            save.cancel()
+            runCurrent()
+            io.held.removeFirst().run()
+            runCurrent()
+            io.held.removeFirst().run()
+            runCurrent()
+
+            shouldThrow<CancellationException> { save.await() }
+            provider.deleted shouldContainExactly listOf(provider.uri)
+            provider.file.length() shouldBe 0
+        }
+
+    @Test
+    fun `saveBitmapToUri keeps an existing document when canceled before any byte is written`() =
+        runTest {
+            val provider = documentProvider()
+            val io = HeldDispatcher()
+            val save = async { ctx.saveBitmapToUri(provider.uri, bitmap, createdDocument = false, io) }
+            runCurrent()
+
+            save.cancel()
+            runCurrent()
+            io.held.removeFirst().run()
+            runCurrent()
+
+            shouldThrow<CancellationException> { save.await() }
+            provider.deleted.shouldBeEmpty()
         }
 
     @Test

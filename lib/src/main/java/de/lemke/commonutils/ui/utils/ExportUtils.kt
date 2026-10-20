@@ -37,8 +37,10 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 private const val TAG = "ExportUtils"
@@ -243,7 +245,7 @@ fun Context.toast(result: BitmapSaveResult.Finished) {
  * A null [uri], the result of a canceled picker, writes nothing and returns [BitmapSaveResult.Canceled].
  * A written bitmap returns [BitmapSaveResult.Saved] with [SaveLocation.CUSTOM]; a null [bitmap] writes nothing
  * and returns [BitmapSaveResult.WriteFailed]. Only if [createdDocument] is true, as for the result of the
- * `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] launches, does a failed save delete the document at [uri].
+ * `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] launches, does a failed or canceled save delete the document at [uri].
  */
 suspend fun Context.saveBitmapToUri(
     uri: Uri?,
@@ -252,10 +254,15 @@ suspend fun Context.saveBitmapToUri(
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ): BitmapSaveResult.UriResult {
     if (uri == null) return BitmapSaveResult.Canceled
-    return withContext(ioDispatcher) {
-        val result = if (bitmap == null) BitmapSaveResult.WriteFailed else writePng(uri, bitmap)
-        if (createdDocument && result !is BitmapSaveResult.Saved) deleteDocument(uri)
-        result
+    return try {
+        withContext(ioDispatcher) {
+            val result = if (bitmap == null) BitmapSaveResult.WriteFailed else writePng(uri, bitmap)
+            if (createdDocument && result !is BitmapSaveResult.Saved) deleteDocument(uri)
+            result
+        }
+    } catch (e: CancellationException) {
+        if (createdDocument) withContext(NonCancellable + ioDispatcher) { deleteDocument(uri) }
+        throw e
     }
 }
 
