@@ -86,7 +86,7 @@ class MockingConventionsTest : ShouldSpec() {
         }
         should("report the class name string of mockkStatic") {
             MockingConventions.mockedNames("""mockkStatic("demo.ToolsKt")""") shouldBe
-                listOf(MockedName(1, "demo.ToolsKt", isClassNameString = true))
+                listOf(MockedName(1, "demo.ToolsKt", MockedKind.ClassName))
         }
         should("report an annotated property with the property on the same line") {
             val source =
@@ -105,6 +105,36 @@ class MockingConventionsTest : ShouldSpec() {
                     MockedName(3, "Gizmo"),
                     MockedName(4, "Tool"),
                     MockedName(5, "Part"),
+                )
+        }
+        should("report an annotated property with other annotations between the mock annotation and the property") {
+            val source =
+                """
+                @MockK @Suppress("unused") lateinit var a: Widget
+                @RelaxedMockK
+                @JvmField
+                @Named("x") private val b: Gadget = TODO()
+                @SpyK @field:Inject var c: Gizmo? = null
+                """.trimIndent()
+
+            MockingConventions.mockedNames(source) shouldBe
+                listOf(MockedName(1, "Widget"), MockedName(2, "Gadget"), MockedName(5, "Gizmo"))
+        }
+        should("report a top-level function reference and a receiver type of mockkStatic") {
+            val source =
+                """
+                mockkStatic(::ownTopLevelFun)
+                mockkStatic(Own::fn, ::other)
+                mockkStatic(Tool::class, Part::class.java)
+                """.trimIndent()
+
+            MockingConventions.mockedNames(source) shouldBe
+                listOf(
+                    MockedName(1, "ownTopLevelFun", MockedKind.Function),
+                    MockedName(2, "Own"),
+                    MockedName(2, "other", MockedKind.Function),
+                    MockedName(3, "Part"),
+                    MockedName(3, "Tool"),
                 )
         }
         should("report an annotated property with the property on the next line") {
@@ -136,7 +166,7 @@ class MockingConventionsTest : ShouldSpec() {
         }
         should("keep a string that contains comment markers") {
             MockingConventions.mockedNames("""mockkStatic("https://demo.ToolsKt")""") shouldBe
-                listOf(MockedName(1, "https://demo.ToolsKt", isClassNameString = true))
+                listOf(MockedName(1, "https://demo.ToolsKt", MockedKind.ClassName))
         }
         should("ignore declarations without a mock call") {
             val source =
@@ -209,11 +239,64 @@ class MockingConventionsTest : ShouldSpec() {
 
             withScope(sources) { scope, _ -> shouldNotThrowAny { scope.assertNoMockedOwnTypes(projectScope = scope) } }
         }
+        should("list an own top-level function and an own receiver type that mockkStatic references") {
+            val sources =
+                mapOf(
+                    "Own.kt" to
+                        "package own\n\nclass Store {\n    fun member() = Unit\n}\n\nfun topLevel() = Unit\n\nfun aliased() = Unit\n",
+                    "Mocks.kt" to
+                        """
+                        package demo
+
+                        import own.aliased as renamed
+                        import own.topLevel
+
+                        val byImport = mockkStatic(::topLevel)
+                        val byAlias = mockkStatic(::renamed)
+                        val byReceiver = mockkStatic(own.Store::member)
+                        """.trimIndent(),
+                    "Same.kt" to "package own\n\nval bySamePackage = mockkStatic(::topLevel)\n",
+                    "Wild.kt" to "package other\n\nimport own.*\n\nval byWildcard = mockkStatic(::topLevel)\n",
+                )
+
+            withScope(sources) { scope, base ->
+                val error = shouldThrow<AssertionError> { scope.assertNoMockedOwnTypes(projectScope = scope) }
+
+                error.message shouldBe
+                    """
+                    5 mocked own type(s), use a fake:
+                    $base/Mocks.kt:6: mocks own type topLevel
+                    $base/Mocks.kt:7: mocks own type renamed
+                    $base/Mocks.kt:8: mocks own type own.Store
+                    $base/Same.kt:3: mocks own type topLevel
+                    $base/Wild.kt:5: mocks own type topLevel
+                    """.trimIndent()
+            }
+        }
+        should("accept an external function reference that shares its name with an own function") {
+            val sources =
+                mapOf(
+                    "Own.kt" to "package own\n\nfun toast() = Unit\n\nfun parse() = Unit\n",
+                    "Mocks.kt" to
+                        """
+                        package demo
+
+                        import android.widget.toast
+                        import android.net.Uri
+
+                        val explicit = mockkStatic(::toast)
+                        val unresolved = mockkStatic(::parse)
+                        val receiver = mockkStatic(Uri::parse)
+                        """.trimIndent(),
+                )
+
+            withScope(sources) { scope, _ -> shouldNotThrowAny { scope.assertNoMockedOwnTypes(projectScope = scope) } }
+        }
         should("pass a scope that mocks no own type") {
             val sources =
                 mapOf(
                     "Own.kt" to "package own\n\nclass Store\n",
-                    "Clean.kt" to "package demo\n\nval fake = Store()\n// mockk<Store>()\n",
+                    "Clean.kt" to "package demo\n\nimport own.Store\n\nval fake = Store()\n// mockk<Store>()\n",
                 )
 
             withScope(sources) { scope, _ -> shouldNotThrowAny { scope.assertNoMockedOwnTypes(projectScope = scope) } }
