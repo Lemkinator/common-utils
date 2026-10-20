@@ -318,34 +318,56 @@ dependencies {
     abiValidationRuntime(libs.abi.kotlin.metadata.jvm)
 }
 
-val apiBuild =
-    tasks.register<KotlinApiBuildTask>("apiBuild") {
-        description = "Builds the public ABI dump of the release variant."
-        runtimeClasspath.from(abiValidationRuntime)
-        ignoredClasses.add("de.lemke.commonutils.ui.activity.ComposableSingletons\$CommonUtilsLibsActivityKt")
-        outputApiFile.set(layout.buildDirectory.file("api/${project.name}.api"))
-    }
-
-extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
-    if (name == "release") {
-        apiBuild.configure {
-            inputClassesDirs.from(compileTaskProvider.flatMap { (it as KotlinJvmCompile).destinationDirectory })
+fun registerApiBuild(
+    taskName: String,
+    compilationName: String,
+    dumpName: String,
+    configure: KotlinApiBuildTask.() -> Unit = {},
+): TaskProvider<KotlinApiBuildTask> {
+    val build =
+        tasks.register<KotlinApiBuildTask>(taskName) {
+            description = "Builds the public ABI dump of the $compilationName compilation."
+            runtimeClasspath.from(abiValidationRuntime)
+            outputApiFile.set(layout.buildDirectory.file("api/$dumpName.api"))
+            configure()
+        }
+    extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
+        if (name == compilationName) {
+            build.configure {
+                inputClassesDirs.from(compileTaskProvider.flatMap { (it as KotlinJvmCompile).destinationDirectory })
+            }
         }
     }
+    return build
 }
 
-val apiCheck =
-    tasks.register<KotlinApiCompareTask>("apiCheck") {
+fun registerApiCompare(
+    taskName: String,
+    dumpName: String,
+    build: TaskProvider<KotlinApiBuildTask>,
+): TaskProvider<KotlinApiCompareTask> =
+    tasks.register<KotlinApiCompareTask>(taskName) {
         group = "verification"
-        description = "Checks the public ABI against the committed api/${project.name}.api dump."
-        projectApiFile.set(layout.projectDirectory.file("api/${project.name}.api"))
-        generatedApiFile.set(apiBuild.flatMap { it.outputApiFile })
+        description = "Checks the public ABI against the committed api/$dumpName.api dump."
+        projectApiFile.set(layout.projectDirectory.file("api/$dumpName.api"))
+        generatedApiFile.set(build.flatMap { it.outputApiFile })
     }
+
+val apiBuild =
+    registerApiBuild("apiBuild", "release", project.name) {
+        ignoredClasses.add("de.lemke.commonutils.ui.activity.ComposableSingletons\$CommonUtilsLibsActivityKt")
+    }
+val apiBuildTestFixtures = registerApiBuild("apiBuildTestFixtures", "releaseTestFixtures", "${project.name}-testFixtures")
+
+val apiCheck = registerApiCompare("apiCheck", project.name, apiBuild)
+val apiCheckTestFixtures = registerApiCompare("apiCheckTestFixtures", "${project.name}-testFixtures", apiBuildTestFixtures)
+apiCheck.configure { dependsOn(apiCheckTestFixtures) }
 
 tasks.register<Copy>("apiDump") {
     group = "other"
-    description = "Overwrites api/${project.name}.api with the current public ABI."
+    description = "Overwrites api/${project.name}.api and api/${project.name}-testFixtures.api with the current public ABI."
     from(apiBuild.flatMap { it.outputApiFile })
+    from(apiBuildTestFixtures.flatMap { it.outputApiFile })
     into(layout.projectDirectory.dir("api"))
 }
 
