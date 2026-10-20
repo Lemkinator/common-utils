@@ -32,9 +32,7 @@ for architecture rules.
 `@Config(shadows = [ShadowFileProvider::class])` instead of `mockkStatic(FileProvider::class)`
 whenever a test needs a real (not stubbed) URI or reads one back through a `ContentResolver`, since
 the stock implementation compares raw `getCanonicalPath()` strings and throws on Windows. The shadow
-resolves roots per call. An unshadowed
-test that calls the stock `getUriForFile` calls the published `resetFileProviderCache()` in `@Before`
-and `@After`.
+resolves roots per call and keeps no strategy cache; `resetFileProviderCache()` is deprecated.
 
 **`assertLaunchLatchConventions`** (published testFixtures,
 `LaunchLatchConventions.kt`): each app's Konsist `CodingConventionsTest` calls

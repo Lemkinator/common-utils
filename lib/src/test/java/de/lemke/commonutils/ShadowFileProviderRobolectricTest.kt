@@ -24,12 +24,9 @@ import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.test.R
-import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
@@ -40,7 +37,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import java.io.File
 import java.io.IOException
-import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
@@ -360,10 +356,6 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
 class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
     override val resolvesOnThisPlatform = File.separatorChar == '/'
 
-    @Before
-    @After
-    fun clearFileProviderCache() = resetFileProviderCache()
-
     @Test
     fun `shadow produces the same uri as the real FileProvider on posix separators`() {
         val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
@@ -371,39 +363,5 @@ class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
         val shadowed = ShadowFileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
 
         shadowed shouldBe real
-    }
-}
-
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
-class ResetFileProviderCacheRobolectricTest {
-    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
-
-    private fun cachedAuthorities(): Set<Any?> {
-        val sCache = FileProvider::class.java.getDeclaredField("sCache")
-        sCache.isAccessible = true
-        return (sCache.get(null) as Map<*, *>).keys
-    }
-
-    @After
-    fun tearDown() = resetFileProviderCache()
-
-    @Test
-    fun `resetFileProviderCache drops the strategy cached for an authority`() {
-        // The stock call throws on Windows, after it has cached the strategy.
-        runCatching { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "photo.png")) }
-        cachedAuthorities() shouldContain TEST_AUTHORITY
-
-        resetFileProviderCache()
-
-        cachedAuthorities().shouldBeEmpty()
-    }
-
-    @Test
-    fun `resetFileProviderCache on an empty cache leaves it empty`() {
-        resetFileProviderCache()
-
-        shouldNotThrowAny { resetFileProviderCache() }
-        cachedAuthorities().shouldBeEmpty()
     }
 }

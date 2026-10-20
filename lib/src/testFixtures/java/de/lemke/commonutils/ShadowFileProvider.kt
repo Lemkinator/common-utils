@@ -43,8 +43,7 @@ import org.xmlpull.v1.XmlPullParserException
  * `File.getCanonicalPath()` strings, which are backslash-separated on Windows, so the real
  * implementation throws for every file there. Apply with
  * `@Config(shadows = [ShadowFileProvider::class])` on any Robolectric test that reaches
- * `FileProvider` for real (i.e. not `mockkStatic`'d). An unshadowed test that calls the
- * stock `getUriForFile` must call [resetFileProviderCache] in `@Before` and `@After` instead.
+ * `FileProvider` for real (i.e. not `mockkStatic`'d).
  *
  * Shadowed entry points: both static `getUriForFile` overloads, and the provider's `query`, `getType`,
  * `openFile` and `delete`. The provider entry points take the authority from the URI, not from the
