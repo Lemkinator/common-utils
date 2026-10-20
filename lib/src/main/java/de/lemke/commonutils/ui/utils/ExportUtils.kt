@@ -245,7 +245,7 @@ public fun Context.toast(result: BitmapSaveResult.Finished) {
  * A null [uri], the result of a canceled picker, writes nothing and returns [BitmapSaveResult.Canceled].
  * A written bitmap returns [BitmapSaveResult.Saved] with [SaveLocation.CUSTOM]; a null [bitmap] writes nothing
  * and returns [BitmapSaveResult.WriteFailed]. Only if [createdDocument] is true, as for the result of the
- * `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] launches, does a failed or canceled save delete the document at [uri].
+ * `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] launches, does a failed save, or one canceled before the PNG is written, delete the document at [uri].
  */
 public suspend fun Context.saveBitmapToUri(
     uri: Uri?,
