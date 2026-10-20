@@ -180,9 +180,9 @@ public fun AppCompatActivity.setCustomBackAnimation(
 
 /** Adds the predictive-back animation of [setCustomBackAnimation], with the review cooldown kept in [inAppReview]. */
 @Deprecated(
-    "Pass an InAppReview, such as PlayInAppReview(settings).",
+    "Pass an InAppReview, such as PlayInAppReview(settings). For a null settings value, omit the argument.",
     ReplaceWith(
-        "setCustomBackAnimation(animatedView, backEnabled, inAppReview?.let(::PlayInAppReview))",
+        "setCustomBackAnimation(animatedView, backEnabled, PlayInAppReview(inAppReview))",
         "de.lemke.commonutils.ui.utils.PlayInAppReview",
     ),
 )
