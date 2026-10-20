@@ -56,7 +56,7 @@ import org.xmlpull.v1.XmlPullParserException
  * constructor without that `<meta-data>`.
  */
 @Implements(FileProvider::class, isInAndroidSdk = false)
-class ShadowFileProvider {
+open class ShadowFileProvider {
     @RealObject
     private lateinit var realProvider: FileProvider
 
@@ -108,13 +108,7 @@ class ShadowFileProvider {
         val root =
             roots[Uri.decode(path.substring(1, splitIndex))]
                 ?: throw IllegalArgumentException("Unable to find configured root for $uri")
-        val unresolved = File(root, Uri.decode(path.substring(splitIndex + 1)))
-        val file =
-            try {
-                unresolved.canonicalFile
-            } catch (e: IOException) {
-                throw IllegalArgumentException("Failed to resolve canonical path for $unresolved", e)
-            }
+        val file = File(root, Uri.decode(path.substring(splitIndex + 1))).resolvedCanonical()
         if (!belongsToRoot(file.path.toUnixPath(), root.path.toUnixPath())) {
             throw SecurityException("Resolved path jumped beyond configured root")
         }
@@ -131,12 +125,7 @@ class ShadowFileProvider {
             authority: String,
             file: File,
         ): Uri {
-            val path =
-                try {
-                    file.canonicalPath.toUnixPath()
-                } catch (e: IOException) {
-                    throw IllegalArgumentException("Failed to resolve canonical path for $file", e)
-                }
+            val path = file.resolvedCanonical().path.toUnixPath()
             val (name, rootPath) =
                 pathStrategyRoots(context, authority)
                     .map { (name, root) -> name to root.path.toUnixPath() }
@@ -166,6 +155,13 @@ class ShadowFileProvider {
             filePath: String,
             rootPath: String,
         ): Boolean = filePath.trimEnd('/').startsWith("${rootPath.trimEnd('/')}/")
+
+        private fun File.resolvedCanonical(): File =
+            try {
+                canonicalFile
+            } catch (e: IOException) {
+                throw IllegalArgumentException("Failed to resolve canonical path for $this", e)
+            }
 
         private fun String.toUnixPath(): String = replace(File.separatorChar, '/')
 

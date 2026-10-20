@@ -118,13 +118,15 @@ private fun KoFileDeclaration.receiverIsCommonUtils(
     receiver: String,
     typesByPackage: Map<String, Set<String>>,
 ): Boolean {
-    if (receiver.startsWith("$COMMON_UTILS_PACKAGE.")) return true
     val head = receiver.substringBefore('.')
     val named = imports.filter { !it.isWildcard && (it.alias?.name ?: it.name.substringAfterLast('.')) == head }
-    if (named.isNotEmpty()) return named.any { it.name.isCommonUtilsName() }
-    if (head in typesByPackage[packagee?.name.orEmpty()].orEmpty() || head in defaultTypeNames) return false
     val wildcardPackages = imports.filter { it.isWildcard }.map { it.name.removeSuffix(".*").removeSuffix(".") }
-    return wildcardPackages.any { it.isCommonUtilsName() } && wildcardPackages.all { it.isCommonUtilsName() }
+    return when {
+        receiver.startsWith("$COMMON_UTILS_PACKAGE.") -> true
+        named.isNotEmpty() -> named.any { it.name.isCommonUtilsName() }
+        head in typesByPackage[packagee?.name.orEmpty()].orEmpty() || head in defaultTypeNames -> false
+        else -> wildcardPackages.any { it.isCommonUtilsName() } && wildcardPackages.all { it.isCommonUtilsName() }
+    }
 }
 
 private fun String.isCommonUtilsName(): Boolean = this == COMMON_UTILS_PACKAGE || startsWith("$COMMON_UTILS_PACKAGE.")

@@ -222,6 +222,11 @@ detekt {
     buildUponDefaultConfig = true
     parallel = true
     autoCorrect = false
+    source.setFrom(
+        listOf("main", "test", "testFixtures", "androidTest").flatMap { sourceSet ->
+            listOf("java", "kotlin").map { "src/$sourceSet/$it" }
+        },
+    )
 }
 
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
