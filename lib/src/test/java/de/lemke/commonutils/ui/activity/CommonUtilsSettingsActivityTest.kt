@@ -32,6 +32,7 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
+import dev.oneuiproject.oneui.ktx.getRelativeLinksCard
 import dev.oneuiproject.oneui.preference.HorizontalRadioPreference
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -132,10 +133,18 @@ class CommonUtilsSettingsActivityTest {
     }
 
     @Test
-    fun `activity launches with the card switched off`() {
+    fun `activity launches with the card switched off and shows no relative links card`() {
         setupCommonUtilsSettingsActivity(listOf(TestR.xml.preferences_empty), relativeLinksCard = false)
         ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
-            it.onActivity { activity -> getSettingsFragment(activity).preferenceScreen shouldNotBe null }
+            it.onActivity { activity -> getSettingsFragment(activity).getRelativeLinksCard() shouldBe null }
+        }
+    }
+
+    @Test
+    fun `activity launches with the default card setting and shows the relative links card`() {
+        setupCommonUtilsSettingsActivity(listOf(TestR.xml.preferences_empty))
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            it.onActivity { activity -> getSettingsFragment(activity).getRelativeLinksCard() shouldNotBe null }
         }
     }
 
