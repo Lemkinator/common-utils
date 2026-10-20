@@ -61,6 +61,7 @@ types as `extraShowReceivers`.
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
 - `Context.cacheWriteUriPattern(pathName, directoryName, fileName)` and `Context.cacheFileOf` — the content URI layout of a
   cache write; `directoryName` is `share` or `clipboard`.
+- `FakeInAppReview` (records `showIfPossible`/`showOrFinish` calls; `showOrFinish` finishes the activity) — the fake of the `InAppReview` interface that `PlayInAppReview(settings)` implements.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
 - `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.
