@@ -17,8 +17,10 @@ package de.lemke.commonutils
 
 import androidx.core.content.FileProvider
 
-/** Clears FileProvider's static per-authority path-strategy cache. [ShadowFileProvider] never reads that cache. */
-@Deprecated("Stock FileProvider.attachInfo clears the authority from sCache on each manifest provider install; drop the call.")
+/**
+ * Clears FileProvider's static per-authority path-strategy cache. [ShadowFileProvider] never reads that cache; a test on the
+ * stock provider calls this after each test, since `getUriForFile` reads the cache before the provider is attached to the next test.
+ */
 public fun resetFileProviderCache() {
     val cache =
         try {

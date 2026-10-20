@@ -37,6 +37,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import java.io.File
 import java.io.IOException
+import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
@@ -201,6 +202,9 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
 @Config(sdk = [36])
 class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
     override val resolvesOnThisPlatform = File.separatorChar == '/'
+
+    @After
+    fun clearFileProviderCache() = resetFileProviderCache()
 
     @Test
     fun `shadow produces the same uri as the real FileProvider on posix separators`() {
