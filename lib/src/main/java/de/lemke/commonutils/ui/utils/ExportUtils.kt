@@ -254,14 +254,16 @@ public suspend fun Context.saveBitmapToUri(
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ): BitmapSaveResult.UriResult {
     if (uri == null) return BitmapSaveResult.Canceled
+    var produced: BitmapSaveResult.UriResult? = null
     return try {
         withContext(ioDispatcher) {
             val result = if (bitmap == null) BitmapSaveResult.WriteFailed else writePng(uri, bitmap)
+            produced = result
             if (createdDocument && result !is BitmapSaveResult.Saved) deleteDocument(uri)
             result
         }
     } catch (e: CancellationException) {
-        if (createdDocument) withContext(NonCancellable + ioDispatcher) { deleteDocument(uri) }
+        if (createdDocument && produced == null) withContext(NonCancellable + ioDispatcher) { deleteDocument(uri) }
         throw e
     }
 }

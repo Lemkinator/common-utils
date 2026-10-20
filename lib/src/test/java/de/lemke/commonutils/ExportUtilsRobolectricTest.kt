@@ -52,6 +52,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.OutputStream
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -487,6 +488,52 @@ class ExportUtilsRobolectricTest {
 
             shouldThrow<CancellationException> { save.await() }
             provider.deleted.shouldBeEmpty()
+        }
+
+    @Test
+    fun `saveBitmapToUri keeps the written document when canceled while the PNG is written`() =
+        runTest {
+            val provider = documentProvider()
+            val io = HeldDispatcher()
+            lateinit var save: Deferred<BitmapSaveResult.UriResult>
+            val canceling = mockk<Bitmap>()
+            every { canceling.compress(any(), any(), any<OutputStream>()) } answers {
+                bitmap.compress(firstArg(), 100, thirdArg())
+                save.cancel()
+                true
+            }
+            save = async { ctx.saveBitmapToUri(provider.uri, canceling, createdDocument = true, io) }
+            runCurrent()
+
+            io.held.removeFirst().run()
+            runCurrent()
+
+            shouldThrow<CancellationException> { save.await() }
+            io.held.shouldBeEmpty()
+            provider.deleted.shouldBeEmpty()
+            provider.file.hasPngSignature().shouldBeTrue()
+        }
+
+    @Test
+    fun `saveBitmapToUri deletes the document once when canceled after a failed encode`() =
+        runTest {
+            val provider = documentProvider()
+            val io = HeldDispatcher()
+            lateinit var save: Deferred<BitmapSaveResult.UriResult>
+            val canceling = mockk<Bitmap>()
+            every { canceling.compress(any(), any(), any<OutputStream>()) } answers {
+                save.cancel()
+                false
+            }
+            save = async { ctx.saveBitmapToUri(provider.uri, canceling, createdDocument = true, io) }
+            runCurrent()
+
+            io.held.removeFirst().run()
+            runCurrent()
+
+            shouldThrow<CancellationException> { save.await() }
+            io.held.shouldBeEmpty()
+            provider.deleted shouldContainExactly listOf(provider.uri)
         }
 
     @Test
