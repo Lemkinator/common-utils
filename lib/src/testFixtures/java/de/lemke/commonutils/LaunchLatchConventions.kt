@@ -41,6 +41,7 @@ public object LaunchLatchConventions {
     private const val TYPE_ARGUMENT_SYMBOLS = "_.,?*<>@():"
     private const val BACKTICK_BLANKED = "`'\""
     private const val DECLARATION_KEYWORD = "fun"
+    private const val LINE_BREAKS = "\r\n"
 
     private val launchName =
         Regex(
@@ -64,6 +65,20 @@ public object LaunchLatchConventions {
             .sortedBy { it.first }
             .map { (index, match) -> LaunchLatchViolation(stripped.code.lineAt(index), match) }
             .toList()
+    }
+
+    /** [source] with every comment blanked to spaces; strings, chars and backtick identifiers stay. Line breaks stay. */
+    internal fun withoutComments(source: String): String {
+        val code = StringBuilder(source)
+        var index = 0
+        while (index < source.length) {
+            val end = source.literalEnd(index)
+            if (source.startsWith("//", index) || source.startsWith("/*", index)) {
+                for (blanked in index until end) if (code[blanked] !in LINE_BREAKS) code[blanked] = ' '
+            }
+            index = maxOf(end, index + 1)
+        }
+        return code.toString()
     }
 
     private fun StrippedSource.launchViolation(

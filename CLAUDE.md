@@ -46,6 +46,12 @@ activity launches, raw result registration and every `show`/`showNow` whose
 receiver is no allowlisted non-dialog type. An app passes its own non-dialog
 types as `extraShowReceivers`.
 
+**`assertNoMockedOwnTypes`** (published testFixtures, `MockingConventions.kt`): each app's Konsist
+`CodingConventionsTest` calls `Konsist.scopeFromTest().assertNoMockedOwnTypes()`. It fails on
+a `mockk`, `spyk`, `mockkClass`, `mockkStatic`, `mockkObject` or `mockkConstructor` call and on a `@MockK`,
+`@RelaxedMockK` or `@SpyK` property whose type the project declares: own types get a fake, MockK stays at external
+boundaries. The KDoc lists the forms it detects and the inferred-type cases it misses.
+
 **Published testFixtures** declare kotest, coroutines-test, JUnit 4, Hilt testing, Konsist and Robolectric as
 `compileOnly`, so a consumer keeps its own versions and adds the ones its fixture groups need to its own test classpath:
 
@@ -58,8 +64,8 @@ types as `extraShowReceivers`.
 - `HiltTestRule(this)` and `assertHiltTestRuleConventions()` — the one Hilt rule of a `@HiltAndroidTest`; it closes
   everything registered with `closeAfterTest` after the test. The rule needs hilt-android-testing and JUnit 4; the
   convention check also needs Robolectric and Konsist, built and tested against the version in `gradle/libs.versions.toml` only.
-- `assertClassBodyOrder()`, `assertArchitecture(rootPackage)`, `assertNoCommonUtilsTypeExtensions()` and
-  `assertLaunchLatchConventions()` — Konsist rules that each app's `CodingConventionsTest` and `ArchitectureTest`
+- `assertClassBodyOrder()`, `assertArchitecture(rootPackage)`, `assertNoCommonUtilsTypeExtensions()`,
+  `assertLaunchLatchConventions()` and `assertNoMockedOwnTypes()` — Konsist rules that each app's `CodingConventionsTest` and `ArchitectureTest`
   call on `Konsist.scopeFromProduction()`. Need Konsist; built and tested against the version in `gradle/libs.versions.toml` only.
 - `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
   (returns the picker intent it answered),
