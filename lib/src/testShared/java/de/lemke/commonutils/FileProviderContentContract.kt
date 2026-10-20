@@ -27,6 +27,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.io.File
+import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
@@ -41,6 +42,9 @@ abstract class FileProviderContentContract {
 
     @Before
     fun assumeResolvesOnThisPlatform() = assumeTrue(resolvesOnThisPlatform)
+
+    @After
+    fun clearFileProviderCache() = resetFileProviderCache()
 
     protected fun cacheUri(name: String): Uri = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, name))
 

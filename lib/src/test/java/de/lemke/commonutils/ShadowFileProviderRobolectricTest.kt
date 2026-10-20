@@ -37,7 +37,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import java.io.File
 import java.io.IOException
-import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
@@ -203,9 +202,6 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
 class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
     override val resolvesOnThisPlatform = File.separatorChar == '/'
 
-    @After
-    fun clearFileProviderCache() = resetFileProviderCache()
-
     @Test
     fun `shadow produces the same uri as the real FileProvider on posix separators`() {
         val file = File(File(ctx.filesDir, "nested/dir"), "doc.txt")
@@ -213,5 +209,40 @@ class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
         val shadowed = ShadowFileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
 
         shadowed shouldBe real
+    }
+}
+
+/** Runs on every OS: the parity class above skips where the stock provider cannot resolve paths. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [36])
+class ResetFileProviderCacheRobolectricTest {
+    private val ctx: Context get() = ApplicationProvider.getApplicationContext()
+
+    private fun cacheSize(): Int {
+        val sCache =
+            FileProvider::class.java
+                .getDeclaredField("sCache")
+                .apply { isAccessible = true }
+                .get(null) as Map<*, *>
+        return synchronized(sCache) { sCache.size }
+    }
+
+    private fun lookUpCacheFile() {
+        // The strategy is cached before the root check; on Windows the check then throws.
+        runCatching { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "photo.png")) }
+    }
+
+    @Test
+    fun `reset empties the stock path-strategy cache and a new lookup fills it again`() {
+        resetFileProviderCache()
+        lookUpCacheFile()
+        cacheSize() shouldBe 1
+
+        resetFileProviderCache()
+        cacheSize() shouldBe 0
+
+        lookUpCacheFile()
+        cacheSize() shouldBe 1
+        resetFileProviderCache()
     }
 }
