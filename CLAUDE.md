@@ -35,6 +35,8 @@ for architecture rules.
 whenever a test needs a real (not stubbed) URI or reads one back through a `ContentResolver`, since
 the stock implementation compares raw `getCanonicalPath()` strings and throws on Windows. The shadow
 resolves roots per call and keeps no strategy cache; `resetFileProviderCache()` is deprecated.
+`FileProviderContentContract` (`src/testShared`) holds the stock-provider tests; the Robolectric shadow test and
+`StockFileProviderInstrumentedTest` (stock `FileProvider` on a device) both run it.
 
 **`assertLaunchLatchConventions`** (published testFixtures,
 `LaunchLatchConventions.kt`): each app's Konsist `CodingConventionsTest` calls

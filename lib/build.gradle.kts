@@ -112,8 +112,10 @@ android {
         }
     }
     sourceSets {
-        getByName("test").res.directories += "src/testShared/res"
-        getByName("androidTest").res.directories += "src/testShared/res"
+        listOf("test", "androidTest").forEach { name ->
+            getByName(name).res.directories += "src/testShared/res"
+            getByName(name).kotlin.directories += "src/testShared/java"
+        }
     }
     @Suppress("UnstableApiUsage")
     testFixtures {
@@ -227,7 +229,7 @@ detekt {
     parallel = true
     autoCorrect = false
     source.setFrom(
-        listOf("main", "test", "testFixtures", "androidTest").flatMap { sourceSet ->
+        listOf("main", "test", "testFixtures", "androidTest", "testShared").flatMap { sourceSet ->
             listOf("java", "kotlin").map { "src/$sourceSet/$it" }
         },
     )
