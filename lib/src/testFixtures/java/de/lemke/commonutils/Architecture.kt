@@ -36,7 +36,7 @@ import com.lemonappdev.konsist.api.verify.assertTrue
  *
  * Konsist has no type resolution, so the event-stream rule matches names, not resolved types.
  */
-fun KoScope.assertArchitecture(rootPackage: String) {
+public fun KoScope.assertArchitecture(rootPackage: String) {
     files
         .withPackage("$rootPackage.data..")
         .assertFalse(testName = "data layer does not depend on ui") {

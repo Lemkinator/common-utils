@@ -40,10 +40,10 @@ private const val TAG = "SharingUtils"
 private const val PNG_QUALITY = 100
 
 /** Shares the app's Play Store link via the system share sheet; a failure shows the error toast. */
-fun Fragment.shareApp(): LaunchOutcome = requireContext().shareApp()
+public fun Fragment.shareApp(): LaunchOutcome = requireContext().shareApp()
 
 /** Shares the app's Play Store link via the system share sheet; a failure shows the error toast. */
-fun Context.shareApp(): LaunchOutcome =
+public fun Context.shareApp(): LaunchOutcome =
     startShareActivity(
         Intent.createChooser(
             Intent().apply {
@@ -56,13 +56,13 @@ fun Context.shareApp(): LaunchOutcome =
     )
 
 /** Shares [text] via the system share sheet with an optional chooser [title]; a failure shows the error toast. */
-fun Fragment.shareText(
+public fun Fragment.shareText(
     text: String,
     title: String? = null,
 ): LaunchOutcome = requireContext().shareText(text, title)
 
 /** Shares [text] via the system share sheet with an optional chooser [title]; a failure shows the error toast. */
-fun Context.shareText(
+public fun Context.shareText(
     text: String,
     title: String? = null,
 ): LaunchOutcome {
@@ -82,7 +82,7 @@ fun Context.shareText(
  * [LaunchOutcome.Failed]. A launch the latch drops returns [LaunchOutcome.Dropped], so a RESUMED collector keeps its
  * state pending until the activity resumes.
  */
-fun Fragment.startActivityForOutcome(
+public fun Fragment.startActivityForOutcome(
     intent: Intent,
     @StringRes errorMessage: Int = R.string.commonutils_error,
 ): LaunchOutcome = requireContext().startActivityForOutcome(intent, errorMessage)
@@ -94,7 +94,7 @@ fun Fragment.startActivityForOutcome(
  * [LaunchOutcome.Failed]. A launch the latch drops returns [LaunchOutcome.Dropped], so a RESUMED collector keeps its
  * state pending until the activity resumes.
  */
-fun Context.startActivityForOutcome(
+public fun Context.startActivityForOutcome(
     intent: Intent,
     @StringRes errorMessage: Int = R.string.commonutils_error,
 ): LaunchOutcome =

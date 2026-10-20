@@ -25,26 +25,26 @@ import kotlinx.coroutines.CompletableDeferred
  * Both calls record themselves first, then await [gate] when set, so a test can observe a loading state and
  * complete the gate to let the calls return.
  */
-class FakePackageLookup(
+public class FakePackageLookup(
     vararg applicationInfos: ApplicationInfo,
 ) : PackageLookup {
     /** Result of [installedApps]: its list on success, its exception thrown on failure. */
-    var installedAppsResult: Result<List<AppInfoData>> = Result.success(emptyList())
+    public var installedAppsResult: Result<List<AppInfoData>> = Result.success(emptyList())
 
     /** Installed packages by package name; [applicationInfo] returns null for every other name. */
-    val applicationInfos: MutableMap<String, ApplicationInfo> = applicationInfos.associateByTo(mutableMapOf()) { it.packageName }
+    public val applicationInfos: MutableMap<String, ApplicationInfo> = applicationInfos.associateByTo(mutableMapOf()) { it.packageName }
 
     /** When set, every call suspends until this completes. */
-    var gate: CompletableDeferred<Unit>? = null
+    public var gate: CompletableDeferred<Unit>? = null
 
     /** Number of [installedApps] calls so far. */
-    var installedAppsCalls: Int = 0
+    public var installedAppsCalls: Int = 0
         private set
 
     private val lookedUp = mutableListOf<String>()
 
     /** Package names passed to [applicationInfo], in call order. */
-    val lookedUpPackages: List<String> get() = lookedUp.toList()
+    public val lookedUpPackages: List<String> get() = lookedUp.toList()
 
     override suspend fun installedApps(): List<AppInfoData> {
         installedAppsCalls++

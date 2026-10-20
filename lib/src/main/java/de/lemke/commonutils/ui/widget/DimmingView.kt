@@ -25,7 +25,7 @@ import androidx.core.content.withStyledAttributes
 import de.lemke.commonutils.R
 
 /** Full-screen semi-transparent overlay used as a background for tip popups. */
-open class DimmingView @JvmOverloads constructor(
+public open class DimmingView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : View(context, attrs) {
@@ -40,7 +40,7 @@ open class DimmingView @JvmOverloads constructor(
         }
     }
 
-    companion object {
+    public companion object {
         private const val DEFAULT_ALPHA = 0.5f
     }
 }

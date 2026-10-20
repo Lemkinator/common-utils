@@ -26,7 +26,7 @@ private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
  * `true` once 14 days have passed since [SettingsRepository.lastInAppReview]. A never-set timestamp is seeded with the
  * current time, so the cooldown starts at first launch instead of surfacing a review request immediately.
  */
-fun SettingsRepository.canShowInAppReview(): Boolean {
+public fun SettingsRepository.canShowInAppReview(): Boolean {
     if (lastInAppReview == 0L) lastInAppReview = currentTimeMillis()
     val daysSinceLastReview = MILLISECONDS.toDays(currentTimeMillis() - lastInAppReview)
     Log.d(TAG, "Days since last review: $daysSinceLastReview")
@@ -34,6 +34,6 @@ fun SettingsRepository.canShowInAppReview(): Boolean {
 }
 
 /** Restarts the cooldown from now. */
-fun SettingsRepository.markInAppReviewRequested() {
+public fun SettingsRepository.markInAppReviewRequested() {
     lastInAppReview = currentTimeMillis()
 }

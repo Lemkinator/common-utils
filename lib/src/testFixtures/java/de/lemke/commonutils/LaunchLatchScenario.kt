@@ -24,7 +24,7 @@ import androidx.test.core.app.ActivityScenario
  * Pauses and resumes the activity, as the user does by returning from the screen that its last launch opened, so the
  * launch latch admits the next launch.
  */
-fun <A : Activity> ActivityScenario<A>.returnFromLaunchedScreen() {
+public fun <A : Activity> ActivityScenario<A>.returnFromLaunchedScreen() {
     moveToState(STARTED)
     moveToState(RESUMED)
 }

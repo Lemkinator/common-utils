@@ -32,7 +32,7 @@ import com.google.android.material.transition.MaterialSharedAxis.Axis
  * @param customReenterTransition Transition played when this fragment re-enters after a pop.
  * @param customReturnTransition Transition played when this fragment returns after a pop.
  */
-abstract class TransitionFragment(
+public abstract class TransitionFragment(
     @LayoutRes layoutResId: Int,
     private val customEnterTransition: Transition = MaterialElevationScale(true),
     private val customExitTransition: Transition = MaterialElevationScale(true),
@@ -58,7 +58,7 @@ abstract class TransitionFragment(
  * @param layoutResId Layout resource to inflate, forwarded to [Fragment].
  * @param axis The [MaterialSharedAxis] axis along which the shared-axis transition runs.
  */
-abstract class TransitionFragmentSharedAxis(
+public abstract class TransitionFragmentSharedAxis(
     @LayoutRes layoutResId: Int = 0,
     @Axis axis: Int,
 ) : TransitionFragment(

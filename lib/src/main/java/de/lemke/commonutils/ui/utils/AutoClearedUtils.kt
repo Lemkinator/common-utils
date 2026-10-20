@@ -27,7 +27,7 @@ import kotlin.reflect.KProperty
  * on the Fragment's onDestroyView as required in
  * https://developer.android.com/topic/libraries/view-binding#fragments
  */
-fun <T> Fragment.autoCleared(initialize: () -> T): ReadOnlyProperty<Fragment, T> =
+public fun <T> Fragment.autoCleared(initialize: () -> T): ReadOnlyProperty<Fragment, T> =
     object : ReadOnlyProperty<Fragment, T>, DefaultLifecycleObserver {
         private var cachedValue: T? = null
 

@@ -23,6 +23,7 @@ import android.os.Build.VERSION_CODES.TIRAMISU
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND
+import android.view.animation.Interpolator
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT
 import androidx.activity.BackEventCompat
@@ -47,7 +48,7 @@ import kotlinx.coroutines.launch
 
 /** Registers [onBackPressedLogic] as the back handler, enabled whenever [backPressLogicEnabled] emits `true`. */
 @NoCoverage
-inline fun Fragment.addOnBackLogic(
+public inline fun Fragment.addOnBackLogic(
     backPressLogicEnabled: StateFlow<Boolean>,
     crossinline onBackPressedLogic: () -> Unit = {},
 ) {
@@ -84,15 +85,15 @@ inline fun Fragment.addOnBackLogic(
 }
 
 /** Path interpolator matching the predictive-back motion spec deceleration curve. */
-val GestureInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
+public val GestureInterpolator: Interpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
 
 /** [ViewOutlineProvider] that applies rounded corners scaled with back-gesture progress. */
-class BackAnimationOutlineProvider : ViewOutlineProvider() {
+public class BackAnimationOutlineProvider : ViewOutlineProvider() {
     /** Current corner radius in pixels, driven by [progress]. */
-    var radius = 0f
+    public var radius: Float = 0f
 
     /** Gesture progress in [0, 1]; setting it updates [radius] proportionally. */
-    var progress: Float = 0f
+    public var progress: Float = 0f
         set(value) {
             field = value
             radius = value * MAX_CORNER_RADIUS_PX
@@ -115,7 +116,7 @@ class BackAnimationOutlineProvider : ViewOutlineProvider() {
  * Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back. Pass the app's
  * [SettingsRepository] as [inAppReview] to show the in-app review flow on back instead, when its cooldown has elapsed.
  */
-fun AppCompatActivity.setCustomBackAnimation(
+public fun AppCompatActivity.setCustomBackAnimation(
     animatedView: View,
     backEnabled: StateFlow<Boolean>? = null,
     inAppReview: SettingsRepository? = null,
@@ -179,7 +180,7 @@ fun AppCompatActivity.setCustomBackAnimation(
 }
 
 /** Makes the activity window transparent or restores its default background, required for the predictive-back animation. */
-fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
+public fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
     window.apply {
         if (transparent) {
             clearFlags(FLAG_DIM_BEHIND)
@@ -194,7 +195,7 @@ fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
 }
 
 /** The theme-appropriate default window background color for this activity. */
-val AppCompatActivity.defaultWindowBackground: Int
+public val AppCompatActivity.defaultWindowBackground: Int
     @NoCoverage
     @SuppressLint("RestrictedApi", "PrivateResource")
     get() = if (isLightTheme(this)) sesl_round_and_bgcolor_light else sesl_round_and_bgcolor_dark

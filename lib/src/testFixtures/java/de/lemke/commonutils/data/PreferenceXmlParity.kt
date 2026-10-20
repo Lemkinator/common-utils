@@ -73,9 +73,9 @@ private fun collectDeclaredDefaultValueKeys(
  * `private`) because `FragmentManager` requires fragment classes to be public to recreate them from saved state.
  * Binds [dataStore] before inflating, so widgets initialise through the same seam production uses.
  */
-class PreferenceXmlParityFragment : PreferenceFragmentCompat() {
-    var xmlRes: Int = 0
-    var dataStore: PreferenceDataStore? = null
+public class PreferenceXmlParityFragment : PreferenceFragmentCompat() {
+    public var xmlRes: Int = 0
+    public var dataStore: PreferenceDataStore? = null
 
     override fun onCreatePreferences(
         savedInstanceState: Bundle?,
@@ -193,7 +193,7 @@ private fun Any?.describe(): String = if (this == null) "null" else "$this (${th
  *
  * Widgets inflate through the same `PreferenceDataStore` seam production uses, over a fresh store per XML.
  */
-fun <T : Any> assertPreferenceXmlBoundToSettings(
+public fun <T : Any> assertPreferenceXmlBoundToSettings(
     @XmlRes vararg xmlRes: Int,
     factory: (SharedPreferences) -> T,
 ) {

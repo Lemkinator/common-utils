@@ -48,55 +48,55 @@ private const val MIME_TYPE_PNG = "image/png"
 private const val EXTENSION_PNG = ".png"
 
 /** The outcome of [saveBitmapToDirectory] and [saveBitmapToUri]. */
-sealed interface BitmapSaveResult {
+public sealed interface BitmapSaveResult {
     /** The outcome of [saveBitmapToDirectory]: [Finished] or [NeedsPicker]. */
-    sealed interface DirectoryResult : BitmapSaveResult
+    public sealed interface DirectoryResult : BitmapSaveResult
 
     /** The outcome of [saveBitmapToUri]: [Finished] or [Canceled]. */
-    sealed interface UriResult : BitmapSaveResult
+    public sealed interface UriResult : BitmapSaveResult
 
     /** A terminal result; [toast] shows its message. */
-    sealed interface Finished :
+    public sealed interface Finished :
         DirectoryResult,
         UriResult
 
     /** The bitmap was written to [location]; [SaveLocation.CUSTOM] stands for a document picked through [exportBitmap]. */
-    data class Saved(
+    public data class Saved(
         val location: SaveLocation,
     ) : Finished
 
     /** The bitmap could not be encoded as PNG. */
-    data object EncodingFailed : Finished
+    public data object EncodingFailed : Finished
 
     /** The target file could not be created or written. */
-    data object WriteFailed : Finished
+    public data object WriteFailed : Finished
 
     /** No failure: the location needs the document picker on this device, so the caller launches [exportBitmap]. */
-    data object NeedsPicker : DirectoryResult
+    public data object NeedsPicker : DirectoryResult
 
     /** No failure: the user canceled the document picker, so there is nothing to save or show. */
-    data object Canceled : UriResult
+    public data object Canceled : UriResult
 }
 
 /**
  * The result of the `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] or [launchCreateDocument] launches; see
  * [toDocumentPick].
  */
-sealed interface DocumentPick {
+public sealed interface DocumentPick {
     /** The picker created the document at [uri]; pass it to [saveBitmapToUri] with `createdDocument = true`. */
-    data class Created(
+    public data class Created(
         val uri: Uri,
     ) : DocumentPick
 
     /** The picker reported success without a document URI, so the save fails with [BitmapSaveResult.WriteFailed]. */
-    data object MissingUri : DocumentPick
+    public data object MissingUri : DocumentPick
 
     /** The user canceled the picker, so there is nothing to save or show. */
-    data object Canceled : DocumentPick
+    public data object Canceled : DocumentPick
 }
 
 /** Reads this result of the picker that [exportBitmap] or [launchCreateDocument] launches as a [DocumentPick]. */
-fun ActivityResult.toDocumentPick(): DocumentPick {
+public fun ActivityResult.toDocumentPick(): DocumentPick {
     val uri = data?.data
     return when {
         resultCode != Activity.RESULT_OK -> DocumentPick.Canceled
@@ -113,7 +113,7 @@ fun ActivityResult.toDocumentPick(): DocumentPick {
  * [registerForSingleLaunchResult].
  */
 @MainThread
-fun ComponentActivity.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaunchResultLauncher<Intent> =
+public fun ComponentActivity.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaunchResultLauncher<Intent> =
     registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toDocumentPick()) }
 
 /**
@@ -122,7 +122,7 @@ fun ComponentActivity.registerForDocumentPick(onPick: (DocumentPick) -> Unit): S
  * @see ComponentActivity.registerForDocumentPick
  */
 @MainThread
-fun Fragment.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaunchResultLauncher<Intent> =
+public fun Fragment.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaunchResultLauncher<Intent> =
     registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toDocumentPick()) }
 
 /**
@@ -132,7 +132,7 @@ fun Fragment.registerForDocumentPick(onPick: (DocumentPick) -> Unit): SingleLaun
  * The launcher's callback writes the bitmap with [saveBitmapToUri]. A launch the latch drops returns
  * [LaunchOutcome.Dropped], so the caller keeps its save pending until the activity resumes.
  */
-fun Fragment.exportBitmap(
+public fun Fragment.exportBitmap(
     filename: String,
     activityResultLauncher: SingleLaunchResultLauncher<Intent>,
 ): LaunchOutcome = requireContext().exportBitmap(filename, activityResultLauncher)
@@ -144,7 +144,7 @@ fun Fragment.exportBitmap(
  * The launcher's callback writes the bitmap with [saveBitmapToUri]. A launch the latch drops returns
  * [LaunchOutcome.Dropped], so the caller keeps its save pending until the activity resumes.
  */
-fun Context.exportBitmap(
+public fun Context.exportBitmap(
     filename: String,
     activityResultLauncher: SingleLaunchResultLauncher<Intent>,
 ): LaunchOutcome = launchCreateDocument(filename, MIME_TYPE_PNG, EXTENSION_PNG, activityResultLauncher)
@@ -157,7 +157,7 @@ fun Context.exportBitmap(
  * [LaunchOutcome.Dropped], so the caller keeps its export pending until the activity resumes. Register [launcher] with
  * [registerForDocumentPick]; its callback writes the document at the picked URI.
  */
-fun Fragment.launchCreateDocument(
+public fun Fragment.launchCreateDocument(
     fileName: String,
     mimeType: String,
     extension: String,
@@ -172,7 +172,7 @@ fun Fragment.launchCreateDocument(
  * [LaunchOutcome.Dropped], so the caller keeps its export pending until the activity resumes. Register [launcher] with
  * [registerForDocumentPick]; its callback writes the document at the picked URI.
  */
-fun Context.launchCreateDocument(
+public fun Context.launchCreateDocument(
     fileName: String,
     mimeType: String,
     extension: String,
@@ -203,7 +203,7 @@ fun Context.launchCreateDocument(
  * collector resets that state after it acts on it, since a `StateFlow` replays its value on each resume.
  * A location that [SaveLocation.needsPicker] writes nothing and returns [BitmapSaveResult.NeedsPicker].
  */
-suspend fun saveBitmapToDirectory(
+public suspend fun saveBitmapToDirectory(
     saveLocation: SaveLocation,
     bitmap: Bitmap,
     filename: String,
@@ -224,10 +224,10 @@ suspend fun saveBitmapToDirectory(
 }
 
 /** Shows the message for [result]. */
-fun Fragment.toast(result: BitmapSaveResult.Finished) = requireContext().toast(result)
+public fun Fragment.toast(result: BitmapSaveResult.Finished): Unit = requireContext().toast(result)
 
 /** Shows the message for [result]. */
-fun Context.toast(result: BitmapSaveResult.Finished) {
+public fun Context.toast(result: BitmapSaveResult.Finished) {
     when (result) {
         BitmapSaveResult.Saved(SaveLocation.CUSTOM) -> toast(R.string.commonutils_image_saved)
         is BitmapSaveResult.Saved -> toast(getString(R.string.commonutils_image_saved) + ": ${result.location.toLocalizedString(this)}")
@@ -247,7 +247,7 @@ fun Context.toast(result: BitmapSaveResult.Finished) {
  * and returns [BitmapSaveResult.WriteFailed]. Only if [createdDocument] is true, as for the result of the
  * `ACTION_CREATE_DOCUMENT` picker that [exportBitmap] launches, does a failed or canceled save delete the document at [uri].
  */
-suspend fun Context.saveBitmapToUri(
+public suspend fun Context.saveBitmapToUri(
     uri: Uri?,
     bitmap: Bitmap?,
     createdDocument: Boolean,
@@ -295,7 +295,7 @@ internal fun Context.deleteDocument(uri: Uri) {
 }
 
 /** Converts this string to a filesystem-safe filename, appending a timestamp and [extension]. */
-fun String.toSafeFileName(extension: String): String =
+public fun String.toSafeFileName(extension: String): String =
     "${this}_${SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault()).format(Date())}"
         .replace("https://", "")
         .replace("[^a-zA-Z0-9]+".toRegex(), "_")

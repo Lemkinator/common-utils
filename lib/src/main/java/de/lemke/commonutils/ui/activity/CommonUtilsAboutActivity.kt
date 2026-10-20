@@ -59,9 +59,9 @@ import dev.oneuiproject.oneui.design.R as designR
 
 /** Pre-built About screen that shows the app version, optional text, and an in-app update check. */
 @AndroidEntryPoint
-class CommonUtilsAboutActivity : AppCompatActivity() {
+public class CommonUtilsAboutActivity : AppCompatActivity() {
     @Inject
-    lateinit var settings: SettingsRepository
+    public lateinit var settings: SettingsRepository
     private lateinit var binding: ActivityAboutBinding
     private lateinit var appUpdateManager: AppUpdateManager
     private lateinit var appUpdateInfo: AppUpdateInfo
@@ -197,13 +197,13 @@ class CommonUtilsAboutActivity : AppCompatActivity() {
         }
     }
 
-    companion object {
+    public companion object {
         private const val TAG = "CommonUtilsAboutActivity"
 
         /** Static version string displayed in the about screen. */
-        var appVersion = ""
+        public var appVersion: String = ""
 
         /** Optional extra text shown below the version; rendered as a [SpannableString] for clickable spans. */
-        var optionalText: SpannableString? = null
+        public var optionalText: SpannableString? = null
     }
 }

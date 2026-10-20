@@ -25,8 +25,8 @@ import javax.inject.Inject
  *
  * [invoke] is main-safe, as every [PackageLookup] is.
  */
-class GetInstalledAppsUseCase @Inject constructor(
+public class GetInstalledAppsUseCase @Inject constructor(
     private val packageLookup: PackageLookup,
 ) {
-    suspend operator fun invoke(): List<AppInfoData> = packageLookup.installedApps()
+    public suspend operator fun invoke(): List<AppInfoData> = packageLookup.installedApps()
 }

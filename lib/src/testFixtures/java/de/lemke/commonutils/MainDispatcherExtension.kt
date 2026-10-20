@@ -32,7 +32,7 @@ import kotlinx.coroutines.test.setMain
  * Spec bodies, beforeSpec and afterSpec run outside every TestCaseExtension, so Main is not set there.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class MainDispatcherExtension(
+public class MainDispatcherExtension(
     private val dispatcher: () -> TestDispatcher = { UnconfinedTestDispatcher() },
 ) : TestCaseExtension {
     override suspend fun intercept(

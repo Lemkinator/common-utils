@@ -20,7 +20,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 
 /** Clears this view model as its owner does when it finishes: cancels `viewModelScope` and calls `onCleared`. */
-fun ViewModel.clearForTest() {
+public fun ViewModel.clearForTest() {
     val store = ViewModelStore()
     val viewModel = this
     val factory =

@@ -24,19 +24,19 @@ import de.lemke.commonutils.data.SettingsRepository
  * An app injects it into the screen that asks for a review, so a test swaps in `FakeInAppReview` from the testFixtures.
  */
 @JvmDefaultWithoutCompatibility
-interface InAppReview {
+public interface InAppReview {
     /** Requests the review flow if the cooldown period has elapsed; skips it silently otherwise. */
-    fun showIfPossible(activity: AppCompatActivity)
+    public fun showIfPossible(activity: AppCompatActivity)
 
     /** Requests the review flow if the cooldown period has elapsed; finishes [activity] whether the review is shown or skipped. */
-    fun showOrFinish(activity: AppCompatActivity)
+    public fun showOrFinish(activity: AppCompatActivity)
 }
 
 /** The [InAppReview] over [showInAppReviewIfPossible] and [showInAppReviewOrFinish], with the cooldown kept in [settings]. */
-class PlayInAppReview(
+public class PlayInAppReview(
     private val settings: SettingsRepository,
 ) : InAppReview {
-    override fun showIfPossible(activity: AppCompatActivity) = activity.showInAppReviewIfPossible(settings)
+    override fun showIfPossible(activity: AppCompatActivity): Unit = activity.showInAppReviewIfPossible(settings)
 
-    override fun showOrFinish(activity: AppCompatActivity) = activity.showInAppReviewOrFinish(settings)
+    override fun showOrFinish(activity: AppCompatActivity): Unit = activity.showInAppReviewOrFinish(settings)
 }

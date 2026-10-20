@@ -26,43 +26,44 @@ import de.lemke.commonutils.NoCoverage
 
 /** Shows a OneUI suggestive snackbar with [msg] string resource and an optional action. */
 @NoCoverage
-inline fun Fragment.suggestiveSnackBar(
+public inline fun Fragment.suggestiveSnackBar(
     @StringRes msg: Int,
     view: View? = null,
     duration: Int? = null,
     actionText: String? = null,
     crossinline action: (Snackbar.() -> Unit) = { dismiss() },
-) = requireActivity().suggestiveSnackBar(msg, view, duration, actionText, action)
+): Snackbar = requireActivity().suggestiveSnackBar(msg, view, duration, actionText, action)
 
 /** Shows a OneUI suggestive snackbar with [msg] and an optional action. */
 @NoCoverage
-inline fun Fragment.suggestiveSnackBar(
+public inline fun Fragment.suggestiveSnackBar(
     msg: String,
     view: View? = null,
     duration: Int? = null,
     actionText: String? = null,
     crossinline action: (Snackbar.() -> Unit) = { dismiss() },
-) = requireActivity().suggestiveSnackBar(msg, view, duration, actionText, action)
+): Snackbar = requireActivity().suggestiveSnackBar(msg, view, duration, actionText, action)
 
 /** Shows a OneUI suggestive snackbar with [msg] string resource and an optional action. */
 @NoCoverage
-inline fun Activity.suggestiveSnackBar(
+public inline fun Activity.suggestiveSnackBar(
     @StringRes msg: Int,
     view: View? = null,
     duration: Int? = null,
     actionText: String? = null,
     crossinline action: (Snackbar.() -> Unit) = { dismiss() },
-) = suggestiveSnackBar(getString(msg), view, duration, actionText, action)
+): Snackbar = suggestiveSnackBar(getString(msg), view, duration, actionText, action)
 
 /** Shows a OneUI suggestive snackbar with [msg] and an optional action. */
 @NoCoverage
-inline fun Activity.suggestiveSnackBar(
+public inline fun Activity.suggestiveSnackBar(
     msg: String,
     view: View? = null,
     duration: Int? = null,
     actionText: String? = null,
     crossinline action: (Snackbar.() -> Unit) = { dismiss() },
-) = Snackbar.make(view ?: findViewById(android.R.id.content), msg, duration ?: LENGTH_SHORT, SESL_SNACKBAR_TYPE_SUGGESTION).apply {
-    actionText?.let { setAction(it) { action() } }
-    show()
-}
+): Snackbar =
+    Snackbar.make(view ?: findViewById(android.R.id.content), msg, duration ?: LENGTH_SHORT, SESL_SNACKBAR_TYPE_SUGGESTION).apply {
+        actionText?.let { setAction(it) { action() } }
+        show()
+    }

@@ -32,7 +32,7 @@ private const val TAG = "SharingUtils"
 
 /** Shares this file as [mimeType] via the system share sheet with an optional chooser [title]; a failure shows the error toast. */
 @JvmOverloads
-fun File.share(
+public fun File.share(
     context: Context,
     mimeType: String = MIME_TYPE_PNG,
     title: String? = null,
@@ -43,7 +43,7 @@ fun File.share(
  * chooser [title]; a failure, also an empty list, shows the error toast.
  */
 @JvmOverloads
-fun List<File>.share(
+public fun List<File>.share(
     context: Context,
     mimeType: String = MIME_TYPE_PNG,
     title: String? = null,
@@ -81,4 +81,4 @@ fun List<File>.share(
 internal val Context.fileProviderAuthority: String get() = "$packageName.fileprovider"
 
 /** Returns a content URI for this file via the app's FileProvider, usable in share intents. */
-fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, context.fileProviderAuthority, this)
+public fun File.getFileUri(context: Context): Uri = FileProvider.getUriForFile(context, context.fileProviderAuthority, this)

@@ -24,7 +24,7 @@ import java.io.File
  * (`<package>.fileprovider`), the FileProvider path name [pathName] of the cache directory, the cache subdirectory
  * [directoryName] of the write's kind (`share` or `clipboard`) and one write directory.
  */
-fun Context.cacheWriteUriPattern(
+public fun Context.cacheWriteUriPattern(
     pathName: String,
     directoryName: String,
     fileName: String,
@@ -36,4 +36,4 @@ fun Context.cacheWriteUriPattern(
     )
 
 /** The cache file that [contentUri] stands for: its path below the FileProvider path name, in the cache directory. */
-fun Context.cacheFileOf(contentUri: Uri): File = File(cacheDir, contentUri.pathSegments.drop(1).joinToString("/"))
+public fun Context.cacheFileOf(contentUri: Uri): File = File(cacheDir, contentUri.pathSegments.drop(1).joinToString("/"))

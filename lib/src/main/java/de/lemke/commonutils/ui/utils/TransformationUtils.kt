@@ -43,24 +43,24 @@ internal const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"
 
 /** Default shared-element transition name used when no explicit name is supplied. */
 @PublishedApi
-internal const val DEFAULT_TRANSITION_NAME = "commonUtilsActivityTransitionName"
+internal const val DEFAULT_TRANSITION_NAME: String = "commonUtilsActivityTransitionName"
 internal const val DURATION_KEY = "commonUtilsDurationKey"
 
 /** Default transition duration in milliseconds. */
 @PublishedApi
-internal const val DEFAULT_DURATION = 400L
+internal const val DEFAULT_DURATION: Long = 400L
 internal const val FADE_MODE_KEY = "commonUtilsFadeModeKey"
 
 /** Default fade mode for container transforms; uses cross-fade between entering and leaving content. */
 @PublishedApi
-internal const val DEFAULT_FADE_MODE = FADE_MODE_CROSS
+internal const val DEFAULT_FADE_MODE: Int = FADE_MODE_CROSS
 
 /**
  * Extension function to get a configured MaterialContainerTransform for the Activity.
  * @receiver The activity where the transition will be applied.
  * @return MaterialContainerTransform The configured container transform.
  */
-fun Activity.getTransitionContainerTransform() =
+public fun Activity.getTransitionContainerTransform(): MaterialContainerTransform =
     MaterialContainerTransform().apply {
         addTarget(android.R.id.content)
         pathMotion = MaterialArcMotion()
@@ -73,7 +73,7 @@ fun Activity.getTransitionContainerTransform() =
  * Call in `onCreate`, after `super.onCreate`.
  * @receiver The activity to prepare.
  */
-fun Activity.prepareActivityTransformationFrom() {
+public fun Activity.prepareActivityTransformationFrom() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
     setExitSharedElementCallback(MaterialContainerTransformSharedElementCallback())
     window.sharedElementsUseOverlay = false
@@ -100,7 +100,7 @@ fun Activity.prepareActivityTransformationFrom() {
  * Call in `onCreate`, after `super.onCreate`.
  * @receiver The activity to prepare.
  */
-fun Activity.prepareActivityTransformationTo() {
+public fun Activity.prepareActivityTransformationTo() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
     val transitionName =
         intent.getStringExtra(TRANSITION_NAME_KEY) ?: run {
@@ -134,7 +134,7 @@ fun Activity.prepareActivityTransformationTo() {
  * Call in `onCreate`, after `super.onCreate`.
  * @receiver The activity to prepare.
  */
-fun Activity.prepareActivityTransformationBetween() {
+public fun Activity.prepareActivityTransformationBetween() {
     prepareActivityTransformationFrom()
     prepareActivityTransformationTo()
 }
@@ -186,7 +186,7 @@ internal fun View.performTransform(
  * @param duration The duration of the transition in milliseconds. Default is 400L.
  * @param fadeMode The fade mode for the transition. Default is MaterialContainerTransform.FADE_MODE_CROSS.
  */
-fun View.transformTo(
+public fun View.transformTo(
     targetView: View,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
@@ -209,7 +209,7 @@ fun View.transformTo(
  * When the source calls `startActivity` and then [finishWithFade], the source-side call here is
  * unnecessary — [finishWithFade] already applies the entering fade to the new activity on pre-34.
  */
-fun Activity.overrideFadeOpenTransition() {
+public fun Activity.overrideFadeOpenTransition() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
         overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, fade_in, fade_out)
     } else {
@@ -219,7 +219,7 @@ fun Activity.overrideFadeOpenTransition() {
 }
 
 /** Applies a fade-out close transition and finishes the activity (predictive-back aware). */
-fun Activity.finishWithFade() {
+public fun Activity.finishWithFade() {
     if (SDK_INT >= UPSIDE_DOWN_CAKE) {
         overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, fade_in, fade_out)
         finishAfterTransition()

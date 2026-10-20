@@ -30,14 +30,14 @@ import de.lemke.commonutils.NoCoverage
  * `SharingUtils.openOutputStream()`.
  */
 @NoCoverage
-fun <T, R> Context.withSystemService(
+public fun <T, R> Context.withSystemService(
     serviceClass: Class<T>,
     action: (T) -> R,
 ): R? = ContextCompat.getSystemService(this, serviceClass)?.let(action)
 
 /** Like [withSystemService], but runs [onMissing] instead of returning `null` if the service isn't present. */
 @NoCoverage
-fun <T, R> Context.withSystemService(
+public fun <T, R> Context.withSystemService(
     serviceClass: Class<T>,
     onMissing: () -> R,
     action: (T) -> R,
@@ -45,12 +45,12 @@ fun <T, R> Context.withSystemService(
 
 /** Requests focus and shows the soft keyboard for this view. */
 @NoCoverage
-fun View.showSoftInput(flags: Int = 0) {
+public fun View.showSoftInput(flags: Int = 0) {
     context.withSystemService(InputMethodManager::class.java) { it.showSoftInput(this, flags) }
 }
 
 /** Sets [clip] as the current primary clipboard content. */
 @NoCoverage
-fun Context.setClip(clip: ClipData) {
+public fun Context.setClip(clip: ClipData) {
     withSystemService(ClipboardManager::class.java) { it.setPrimaryClip(clip) }
 }

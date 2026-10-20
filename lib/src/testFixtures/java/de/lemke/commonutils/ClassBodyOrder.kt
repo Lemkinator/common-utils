@@ -31,7 +31,7 @@ import com.lemonappdev.konsist.api.verify.assertTrue
  * before other functions, the companion object after all properties, functions and init blocks, and non-private
  * nested types last.
  */
-fun KoScope.assertClassBodyOrder() {
+public fun KoScope.assertClassBodyOrder() {
     classBodyRules.forEach { (testName, holds) ->
         classes().assertTrue(testName = testName) { holds(it.body()) }
         interfaces().assertTrue(testName = testName) { holds(it.body()) }

@@ -25,5 +25,5 @@ import java.util.UUID
  * no manual `.edit().clear()`, no caller-supplied names, no collision risk on a reused device.
  * The only canonical way to get a settings-backed store in a test.
  */
-fun freshTestPreferences(context: Context = ApplicationProvider.getApplicationContext()): SharedPreferences =
+public fun freshTestPreferences(context: Context = ApplicationProvider.getApplicationContext()): SharedPreferences =
     context.getSharedPreferences("test_${UUID.randomUUID()}", Context.MODE_PRIVATE)

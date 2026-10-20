@@ -29,16 +29,17 @@ import androidx.picker.model.viewdata.ViewData
  * name as each entry's sub-label.
  */
 @Keep
-class AppPickerStrategy(
+public class AppPickerStrategy(
     appPickerContext: AppPickerContext,
 ) : AppItemStrategy(appPickerContext) {
     override fun convert(
         dataList: List<AppData>,
         comparator: Comparator<ViewData>?,
-    ) = super.convert(dataList, comparator).also { results ->
-        results.filterIsInstance<AppInfoViewData>().forEach {
-            it.searchable = listOfNotNull(it.label, it.packageName)
-            it.subLabel = it.packageName
+    ): List<ViewData> =
+        super.convert(dataList, comparator).also { results ->
+            results.filterIsInstance<AppInfoViewData>().forEach {
+                it.searchable = listOfNotNull(it.label, it.packageName)
+                it.subLabel = it.packageName
+            }
         }
-    }
 }

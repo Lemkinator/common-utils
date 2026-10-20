@@ -18,10 +18,10 @@ package de.lemke.commonutils.data
 import androidx.annotation.ColorInt
 
 /** How many colors a recent-colors list holds, as many as the recent row of the OneUI color picker shows. */
-const val MAX_RECENT_COLORS: Int = 6
+public const val MAX_RECENT_COLORS: Int = 6
 
 /** Returns this recent-colors list with [color] first, without duplicates, capped at [max] colors. */
-fun List<Int>.withRecentColor(
+public fun List<Int>.withRecentColor(
     @ColorInt color: Int,
     max: Int = MAX_RECENT_COLORS,
 ): List<Int> = (listOf(color) + this).distinct().take(max)

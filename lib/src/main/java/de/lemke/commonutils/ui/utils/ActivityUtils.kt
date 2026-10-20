@@ -22,24 +22,24 @@ import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
 /** Configures the settings activity with the given preference XML resources. */
-fun setupCommonUtilsSettingsActivity(vararg preferences: Int) {
+public fun setupCommonUtilsSettingsActivity(vararg preferences: Int) {
     CommonUtilsSettingsActivity.preferences = preferences.toList()
 }
 
 /** Configures the settings activity with the given preference XML resource list. */
-fun setupCommonUtilsSettingsActivity(preferences: List<Int>) {
+public fun setupCommonUtilsSettingsActivity(preferences: List<Int>) {
     CommonUtilsSettingsActivity.preferences = preferences
 }
 
 /** Configures the About Me activity with an optional share-app callback. */
-fun setupCommonUtilsAboutMeActivity(onShareApp: (activity: Activity) -> Unit = {}) {
+public fun setupCommonUtilsAboutMeActivity(onShareApp: (activity: Activity) -> Unit = {}) {
     CommonUtilsAboutMeActivity.apply {
         this.onShareApp = onShareApp
     }
 }
 
 /** Configures the About activity with a static version string and optional extra text. */
-fun setupCommonUtilsAboutActivity(
+public fun setupCommonUtilsAboutActivity(
     appVersion: String,
     optionalText: SpannableString? = null,
 ) {

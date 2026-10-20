@@ -23,7 +23,7 @@ import org.robolectric.Shadows.shadowOf
 private const val PNG_SIGNATURE = "\u0089PNG\r\n\u001a\n"
 
 /** Delivers [resultCode] and [data] to the picker that this activity started last and returns the intent that started it. */
-fun Activity.receivePickerResult(
+public fun Activity.receivePickerResult(
     resultCode: Int,
     data: Intent?,
 ): Intent {
@@ -34,5 +34,5 @@ fun Activity.receivePickerResult(
 }
 
 /** Whether this file starts with the eight bytes of the PNG signature. */
-fun File.hasPngSignature(): Boolean =
+public fun File.hasPngSignature(): Boolean =
     inputStream().buffered().use { stream -> PNG_SIGNATURE.all { expected -> stream.read() == expected.code } }

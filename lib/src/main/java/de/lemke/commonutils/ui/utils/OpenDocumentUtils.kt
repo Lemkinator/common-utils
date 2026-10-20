@@ -41,7 +41,7 @@ private fun ActivityResult.toPickedUri(): Uri? = data?.data?.takeIf { resultCode
  * [registerForSingleLaunchResult].
  */
 @MainThread
-fun ComponentActivity.registerForOpenDocument(onPick: (Uri?) -> Unit): SingleLaunchResultLauncher<Intent> =
+public fun ComponentActivity.registerForOpenDocument(onPick: (Uri?) -> Unit): SingleLaunchResultLauncher<Intent> =
     registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toPickedUri()) }
 
 /**
@@ -50,7 +50,7 @@ fun ComponentActivity.registerForOpenDocument(onPick: (Uri?) -> Unit): SingleLau
  * @see ComponentActivity.registerForOpenDocument
  */
 @MainThread
-fun Fragment.registerForOpenDocument(onPick: (Uri?) -> Unit): SingleLaunchResultLauncher<Intent> =
+public fun Fragment.registerForOpenDocument(onPick: (Uri?) -> Unit): SingleLaunchResultLauncher<Intent> =
     registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toPickedUri()) }
 
 /**
@@ -60,7 +60,7 @@ fun Fragment.registerForOpenDocument(onPick: (Uri?) -> Unit): SingleLaunchResult
  * [LaunchOutcome.Dropped], so the caller keeps its import pending until the activity resumes. Register [launcher] with
  * [registerForOpenDocument].
  */
-fun Fragment.launchOpenDocument(
+public fun Fragment.launchOpenDocument(
     mimeType: String,
     launcher: SingleLaunchResultLauncher<Intent>,
 ): LaunchOutcome = requireContext().launchOpenDocument(mimeType, launcher)
@@ -72,7 +72,7 @@ fun Fragment.launchOpenDocument(
  * [LaunchOutcome.Dropped], so the caller keeps its import pending until the activity resumes. Register [launcher] with
  * [registerForOpenDocument].
  */
-fun Context.launchOpenDocument(
+public fun Context.launchOpenDocument(
     mimeType: String,
     launcher: SingleLaunchResultLauncher<Intent>,
 ): LaunchOutcome =

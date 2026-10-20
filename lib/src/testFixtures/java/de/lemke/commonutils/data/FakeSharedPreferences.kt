@@ -25,7 +25,7 @@ private object Removed
  * (Hilt/Robolectric structurally unavailable) that still want a real settings-backed store
  * instead of mocking settings.
  */
-class FakeSharedPreferences : SharedPreferences {
+public class FakeSharedPreferences : SharedPreferences {
     private val map = mutableMapOf<String, Any?>()
     private val listeners = mutableSetOf<SharedPreferences.OnSharedPreferenceChangeListener>()
 

@@ -42,7 +42,7 @@ private val shownDialogs = WeakHashMap<Activity, MutableMap<String, WeakReferenc
  * @return true if this dialog was shown, false if one with [tag] exists or the state of [fragmentManager] is saved.
  */
 @MainThread
-fun DialogFragment.showOnce(
+public fun DialogFragment.showOnce(
     fragmentManager: FragmentManager,
     tag: String,
 ): Boolean {
@@ -74,7 +74,7 @@ private val DialogFragment.isGone: Boolean
  * @return true if this dialog was shown, false if the one under [tag] still shows.
  */
 @MainThread
-fun Dialog.showOnce(tag: String): Boolean {
+public fun Dialog.showOnce(tag: String): Boolean {
     val shown = context.activity?.let { shownDialogs.getOrPut(it, ::mutableMapOf) }
     if (shown?.get(tag)?.get()?.isShowing == true) return false
     shown?.set(tag, WeakReference(this))
@@ -88,7 +88,7 @@ fun Dialog.showOnce(tag: String): Boolean {
  * @return the shown dialog, or null if the one under [tag] still shows.
  */
 @MainThread
-fun AlertDialog.Builder.showOnce(tag: String): AlertDialog? = create().takeIf { it.showOnce(tag) }
+public fun AlertDialog.Builder.showOnce(tag: String): AlertDialog? = create().takeIf { it.showOnce(tag) }
 
 /** Shows the terms of service unless they already show in this context's activity. */
 internal fun Context.showTosDialogOnce(): AlertDialog? =

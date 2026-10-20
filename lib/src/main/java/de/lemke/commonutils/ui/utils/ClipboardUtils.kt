@@ -28,13 +28,13 @@ import kotlinx.coroutines.withContext
 private const val TAG = "ClipboardUtils"
 
 /** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
-fun Fragment.copyToClipboard(
+public fun Fragment.copyToClipboard(
     text: String,
     label: String,
 ): Boolean = requireContext().copyToClipboard(text, label)
 
 /** Copies [text] to the clipboard under [label] and shows a confirmation toast. */
-fun Context.copyToClipboard(
+public fun Context.copyToClipboard(
     text: String,
     label: String,
 ): Boolean = copyToClipboard(ClipData.newPlainText(label, text))
@@ -44,14 +44,14 @@ fun Context.copyToClipboard(
  * shows the error toast instead.
  * @return true if the clipboard holds [clip].
  */
-fun Fragment.copyToClipboard(clip: ClipData?): Boolean = requireContext().copyToClipboard(clip)
+public fun Fragment.copyToClipboard(clip: ClipData?): Boolean = requireContext().copyToClipboard(clip)
 
 /**
  * Sets [clip] as the primary clip and shows a confirmation toast; a null [clip], from a failed [createBitmapClip],
  * shows the error toast instead.
  * @return true if the clipboard holds [clip].
  */
-fun Context.copyToClipboard(clip: ClipData?): Boolean {
+public fun Context.copyToClipboard(clip: ClipData?): Boolean {
     if (clip == null) {
         toast(R.string.commonutils_error_share_content_not_supported_on_device)
         return false
@@ -81,7 +81,7 @@ fun Context.copyToClipboard(clip: ClipData?): Boolean {
  * Main-safe. A ViewModel calls the [Context.createBitmapClip] overload with an application context instead; a
  * ViewModel that holds this fragment leaks it, and the call throws once the fragment detaches.
  */
-suspend fun Fragment.createBitmapClip(
+public suspend fun Fragment.createBitmapClip(
     bitmap: Bitmap,
     label: String,
     fileName: String,
@@ -101,7 +101,7 @@ suspend fun Fragment.createBitmapClip(
  * [copyToClipboard]. The collector resets that state after it acts on it, since a `StateFlow` replays its value on
  * each resume.
  */
-suspend fun Context.createBitmapClip(
+public suspend fun Context.createBitmapClip(
     bitmap: Bitmap,
     label: String,
     fileName: String,

@@ -24,14 +24,14 @@ import de.lemke.commonutils.ui.utils.SingleLaunchResultLauncher
  * Records every admitted [Intent] instead of starting an activity. While [admits] is false the launch latch refuses
  * each launch; while [failure] is set every launch throws it, as the system does when no activity can handle the intent.
  */
-class RecordingIntentLauncher(
-    var failure: RuntimeException? = null,
-    var admits: Boolean = true,
+public class RecordingIntentLauncher(
+    public var failure: RuntimeException? = null,
+    public var admits: Boolean = true,
 ) : SingleLaunchResultLauncher<Intent>() {
     private val recorded = mutableListOf<Intent>()
-    val launched: List<Intent> get() = recorded
+    public val launched: List<Intent> get() = recorded
 
-    override val contract = StartActivityForResult()
+    override val contract: StartActivityForResult = StartActivityForResult()
 
     override fun tryLaunch(
         input: Intent,
@@ -42,5 +42,5 @@ class RecordingIntentLauncher(
         return admits
     }
 
-    override fun unregister() = Unit
+    override fun unregister(): Unit = Unit
 }

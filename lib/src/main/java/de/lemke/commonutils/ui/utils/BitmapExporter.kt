@@ -34,13 +34,13 @@ import kotlinx.coroutines.withContext
  * [BitmapExportStateHolder] ends in the failure [BitmapExport.Result] of that export kind.
  */
 @JvmDefaultWithoutCompatibility
-interface BitmapExporter {
+public interface BitmapExporter {
     /**
      * Writes [bitmap] as a PNG named after [fileName] to the public directory of [location].
      *
      * A location that [SaveLocation.needsPicker] writes nothing and returns [BitmapSaveResult.NeedsPicker].
      */
-    suspend fun saveToDirectory(
+    public suspend fun saveToDirectory(
         location: SaveLocation,
         bitmap: Bitmap,
         fileName: String,
@@ -52,7 +52,7 @@ interface BitmapExporter {
      * Deletes the created document unless [bitmap] is written to it; a null [bitmap] returns
      * [BitmapSaveResult.WriteFailed].
      */
-    suspend fun saveToCreatedDocument(
+    public suspend fun saveToCreatedDocument(
         uri: Uri,
         bitmap: Bitmap?,
     ): BitmapSaveResult.UriResult
@@ -62,15 +62,15 @@ interface BitmapExporter {
      *
      * The default body calls [saveToCreatedDocument] without a bitmap, which deletes the document.
      */
-    suspend fun deleteCreatedDocument(uri: Uri) {
+    public suspend fun deleteCreatedDocument(uri: Uri) {
         saveToCreatedDocument(uri, null)
     }
 
     /** Writes [bitmap] as a PNG cache file and returns a clip of its content URI, or null if writing fails. */
-    suspend fun createClip(bitmap: Bitmap): ClipData?
+    public suspend fun createClip(bitmap: Bitmap): ClipData?
 
     /** Writes [bitmap] as a PNG cache file for a share. */
-    suspend fun createShareFile(bitmap: Bitmap): BitmapShareFile
+    public suspend fun createShareFile(bitmap: Bitmap): BitmapShareFile
 }
 
 /**
@@ -80,7 +80,7 @@ interface BitmapExporter {
  * The library binds no `BitmapExporter`, so an app provides it from its own module with an application [context] and its
  * `@IoDispatcher`. Clips carry [clipLabel]; clip and share cache files are named [cacheFileName].
  */
-class DefaultBitmapExporter(
+public class DefaultBitmapExporter(
     private val context: Context,
     private val ioDispatcher: CoroutineDispatcher,
     private val clipLabel: String,

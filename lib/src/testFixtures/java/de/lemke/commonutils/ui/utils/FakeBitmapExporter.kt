@@ -25,36 +25,36 @@ import kotlinx.coroutines.CompletableDeferred
  * In-memory [BitmapExporter] that writes nothing: each call records a [Call], waits for [gate] and returns the configured
  * result.
  */
-class FakeBitmapExporter : BitmapExporter {
+public class FakeBitmapExporter : BitmapExporter {
     /**
      * The result of [saveToDirectory] for a location that needs no picker; null returns [BitmapSaveResult.Saved] to that
      * location. A location that [SaveLocation.needsPicker] always returns [BitmapSaveResult.NeedsPicker].
      */
-    var directoryResult: BitmapSaveResult.DirectoryResult? = null
+    public var directoryResult: BitmapSaveResult.DirectoryResult? = null
 
     /** The result of [saveToCreatedDocument] for a non-null bitmap. */
-    var documentResult: BitmapSaveResult.UriResult = BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+    public var documentResult: BitmapSaveResult.UriResult = BitmapSaveResult.Saved(SaveLocation.CUSTOM)
 
     /** The result of [createClip]. */
-    var clip: ClipData? = null
+    public var clip: ClipData? = null
 
     /** The result of [createShareFile]. */
-    var shareFile: BitmapShareFile = BitmapShareFile.Failed
+    public var shareFile: BitmapShareFile = BitmapShareFile.Failed
 
     /** While set and not completed, every call suspends after it records its [Call]. */
-    var gate: CompletableDeferred<Unit>? = null
+    public var gate: CompletableDeferred<Unit>? = null
 
     /** While set, every call throws it after it records its [Call] and passes [gate]; it models a broken exporter. */
-    var exception: Exception? = null
+    public var exception: Exception? = null
 
     private val recordedCalls = mutableListOf<Call>()
     private val deletedUris = mutableListOf<Uri>()
 
     /** Every call in order, recorded before it waits for [gate]. */
-    val calls: List<Call> get() = recordedCalls.toList()
+    public val calls: List<Call> get() = recordedCalls.toList()
 
     /** The documents that [saveToCreatedDocument] or [deleteCreatedDocument] deleted. */
-    val deletedDocuments: List<Uri> get() = deletedUris.toList()
+    public val deletedDocuments: List<Uri> get() = deletedUris.toList()
 
     override suspend fun saveToDirectory(
         location: SaveLocation,
@@ -94,32 +94,32 @@ class FakeBitmapExporter : BitmapExporter {
     }
 
     /** A recorded call to [FakeBitmapExporter]. */
-    sealed interface Call {
+    public sealed interface Call {
         /** A [FakeBitmapExporter.saveToDirectory] call. */
-        data class SaveToDirectory(
+        public data class SaveToDirectory(
             val location: SaveLocation,
             val bitmap: Bitmap,
             val fileName: String,
         ) : Call
 
         /** A [FakeBitmapExporter.saveToCreatedDocument] call. */
-        data class SaveToCreatedDocument(
+        public data class SaveToCreatedDocument(
             val uri: Uri,
             val bitmap: Bitmap?,
         ) : Call
 
         /** A [FakeBitmapExporter.deleteCreatedDocument] call. */
-        data class DeleteCreatedDocument(
+        public data class DeleteCreatedDocument(
             val uri: Uri,
         ) : Call
 
         /** A [FakeBitmapExporter.createClip] call. */
-        data class CreateClip(
+        public data class CreateClip(
             val bitmap: Bitmap,
         ) : Call
 
         /** A [FakeBitmapExporter.createShareFile] call. */
-        data class CreateShareFile(
+        public data class CreateShareFile(
             val bitmap: Bitmap,
         ) : Call
     }

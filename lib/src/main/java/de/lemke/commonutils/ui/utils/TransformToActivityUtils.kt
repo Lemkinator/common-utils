@@ -35,7 +35,7 @@ private const val STATE_ANIMATOR_RESTORE_DELAY_MS = 1_000L
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-fun View.transformToActivity(
+public fun View.transformToActivity(
     cls: Class<*>,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
@@ -51,7 +51,7 @@ fun View.transformToActivity(
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @NoCoverage
-inline fun <reified T : Activity> View.transformToActivity(
+public inline fun <reified T : Activity> View.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
@@ -71,7 +71,7 @@ inline fun <reified T : Activity> View.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-fun View.transformToActivity(
+public fun View.transformToActivity(
     intent: Intent,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
@@ -104,7 +104,7 @@ fun View.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-fun Activity.transformToActivity(
+public fun Activity.transformToActivity(
     @IdRes viewId: Int,
     cls: Class<*>,
     transitionName: String = DEFAULT_TRANSITION_NAME,
@@ -123,7 +123,7 @@ fun Activity.transformToActivity(
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @NoCoverage
-inline fun <reified T : Activity> Activity.transformToActivity(
+public inline fun <reified T : Activity> Activity.transformToActivity(
     @IdRes viewId: Int,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
@@ -142,7 +142,7 @@ inline fun <reified T : Activity> Activity.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-fun Activity.transformToActivity(
+public fun Activity.transformToActivity(
     @IdRes viewId: Int,
     intent: Intent,
     transitionName: String = DEFAULT_TRANSITION_NAME,
@@ -161,7 +161,7 @@ fun Activity.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-fun Activity.transformToActivity(
+public fun Activity.transformToActivity(
     view: View?,
     intent: Intent,
     transitionName: String = DEFAULT_TRANSITION_NAME,
@@ -185,7 +185,7 @@ fun Activity.transformToActivity(
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @NoCoverage
-inline fun <reified T : Activity> Activity.transformToActivity(
+public inline fun <reified T : Activity> Activity.transformToActivity(
     view: View?,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,

@@ -33,16 +33,16 @@ private const val TAG = "OnboardingUtils"
 private const val EXTRA_ONBOARDING_CONTEXT = "commonUtilsOnboardingContext"
 
 /** Intent extra (honored only when the host opts in) that bypasses the onboarding chain, for benchmarks. */
-const val EXTRA_SKIP_ONBOARDING = "commonUtilsSkipOnboarding"
+public const val EXTRA_SKIP_ONBOARDING: String = "commonUtilsSkipOnboarding"
 
 /**
  * Holds the ordered onboarding chain configuration.
  *
  * OOBE ([CommonUtilsOOBEActivity]) is always the implicit first step and must not appear in [steps].
  */
-object Onboarding {
+public object Onboarding {
     /** App-specific steps that run after OOBE in order. */
-    var steps: List<Class<out Activity>> = emptyList()
+    public var steps: List<Class<out Activity>> = emptyList()
         internal set
 }
 
@@ -52,7 +52,7 @@ object Onboarding {
  * Call in your `Application.onCreate()` to ensure steps are restored if the process is killed
  * and recreated during the onboarding flow.
  */
-fun setupOnboarding(steps: List<Class<out Activity>> = emptyList()) {
+public fun setupOnboarding(steps: List<Class<out Activity>> = emptyList()) {
     require(CommonUtilsOOBEActivity::class.java !in steps) {
         "CommonUtilsOOBEActivity is the implicit first step and must not be included in steps"
     }
@@ -118,7 +118,7 @@ private fun AppCompatActivity.commitAppStart(
  * When [allowSkip] is `true` and the launch intent carries [EXTRA_SKIP_ONBOARDING], the chain is
  * bypassed (used by benchmarks). [allowSkip] must be gated by the caller (e.g., a BuildConfig flag).
  */
-fun AppCompatActivity.onboardIfNeeded(
+public fun AppCompatActivity.onboardIfNeeded(
     versionCode: Int,
     versionName: String,
     settings: SettingsRepository,
@@ -191,7 +191,7 @@ internal fun nextInChain(
  * Call from a step activity when the user finishes that step. Safe to call from standalone context
  * (activity not launched as part of the chain) — just finishes the activity.
  */
-fun Activity.advanceOnboarding(): LaunchOutcome {
+public fun Activity.advanceOnboarding(): LaunchOutcome {
     val ctx = intent.onboardingContext
     val outcome = if (ctx == null) LaunchOutcome.Started else startNextOnboardingStep(ctx)
     if (outcome == LaunchOutcome.Started) finishWithFade()
@@ -211,4 +211,4 @@ private fun Activity.startNextOnboardingStep(ctx: OnboardingContext): LaunchOutc
 }
 
 /** `true` if this activity was launched as a step of the onboarding chain (vs. standalone). */
-fun Activity.isOnboardingStep(): Boolean = intent.onboardingContext != null
+public fun Activity.isOnboardingStep(): Boolean = intent.onboardingContext != null

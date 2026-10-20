@@ -19,7 +19,7 @@ import com.lemonappdev.konsist.api.container.KoScope
 import java.io.File
 
 /** One raw launch or dialog show that bypasses the launch latch. */
-data class LaunchLatchViolation(
+public data class LaunchLatchViolation(
     val line: Int,
     val match: String,
 )
@@ -30,9 +30,9 @@ data class LaunchLatchViolation(
  * Konsist has no type resolution, so both rules match names: a launch by its function name, a show by the
  * names in its receiver chain. Comments, string literals and char literals never match.
  */
-object LaunchLatchConventions {
+public object LaunchLatchConventions {
     /** Receiver types whose `show` is no dialog: Snackbar, Toast, PopupMenu, TipPopup. */
-    val defaultShowReceivers: Set<String> = setOf("Snackbar", "Toast", "PopupMenu", "TipPopup")
+    public val defaultShowReceivers: Set<String> = setOf("Snackbar", "Toast", "PopupMenu", "TipPopup")
 
     private const val RAW_QUOTE = "\"\"\""
     private const val TEMPLATE_START = "\${"
@@ -52,7 +52,7 @@ object LaunchLatchConventions {
     private val openingBrackets = closingBrackets.entries.associate { (close, open) -> open to close }
 
     /** The violations in [source], in source order. */
-    fun violations(
+    public fun violations(
         source: String,
         extraShowReceivers: Set<String> = emptySet(),
     ): List<LaunchLatchViolation> {
@@ -411,7 +411,7 @@ object LaunchLatchConventions {
  * Fails with one message that lists every violation in this scope's files as `projectPath:line: match`, one per line,
  * with `/` as the path separator on every platform.
  */
-fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = emptySet()) {
+public fun KoScope.assertLaunchLatchConventions(extraShowReceivers: Set<String> = emptySet()) {
     val hits =
         files
             .map { portableProjectPath(it.projectPath) to it.text }

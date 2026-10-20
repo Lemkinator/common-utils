@@ -20,9 +20,9 @@ import de.lemke.commonutils.data.PackageLookup
 import javax.inject.Inject
 
 /** Looks up a package's [ApplicationInfo] by package name through [packageLookup]; main-safe, as every [PackageLookup] is. */
-class GetApplicationInfoUseCase @Inject constructor(
+public class GetApplicationInfoUseCase @Inject constructor(
     private val packageLookup: PackageLookup,
 ) {
     /** Returns the [ApplicationInfo] of [packageName], or null if no such package is installed. */
-    suspend operator fun invoke(packageName: String): ApplicationInfo? = packageLookup.applicationInfo(packageName)
+    public suspend operator fun invoke(packageName: String): ApplicationInfo? = packageLookup.applicationInfo(packageName)
 }

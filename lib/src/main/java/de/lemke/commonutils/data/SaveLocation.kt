@@ -22,7 +22,7 @@ import android.os.Environment
 import de.lemke.commonutils.R
 
 /** Target directory for exported images. */
-enum class SaveLocation {
+public enum class SaveLocation {
     /** User selects the destination via the system document picker. */
     CUSTOM,
 
@@ -37,7 +37,7 @@ enum class SaveLocation {
     ;
 
     /** The public [Environment] directory type this location saves to, or null for [CUSTOM]. */
-    val publicDirectoryType: String?
+    public val publicDirectoryType: String?
         get() =
             when (this) {
                 CUSTOM -> null
@@ -47,11 +47,11 @@ enum class SaveLocation {
             }
 
     /** True if saving here goes through the document picker: always for [CUSTOM], and for every location up to API 29. */
-    val needsPicker: Boolean
+    public val needsPicker: Boolean
         get() = publicDirectoryType == null || SDK_INT <= Q
 
     /** Returns a user-facing label for this save location. */
-    fun toLocalizedString(context: Context): String =
+    public fun toLocalizedString(context: Context): String =
         when (this) {
             CUSTOM -> context.getString(R.string.commonutils_custom)
             DOWNLOADS -> context.getString(R.string.commonutils_downloads)
@@ -59,17 +59,17 @@ enum class SaveLocation {
             DCIM -> context.getString(R.string.commonutils_dcim)
         }
 
-    companion object {
+    public companion object {
         /** The default save location used when no preference has been set. */
-        val default = CUSTOM
+        public val default: SaveLocation = CUSTOM
 
         /** Returns the [SaveLocation] whose name matches [string], or [default] if no match is found. */
-        fun fromStringOrDefault(string: String?): SaveLocation = entries.firstOrNull { it.name == string } ?: default
+        public fun fromStringOrDefault(string: String?): SaveLocation = entries.firstOrNull { it.name == string } ?: default
 
         /** Array of [SaveLocation] name strings, suitable for use as `DropDownPreference` entry values. */
-        val entryValues = entries.map { it.name }.toTypedArray()
+        public val entryValues: Array<String> = entries.map { it.name }.toTypedArray()
 
         /** Returns an array of localized display strings for each [SaveLocation]. */
-        fun getLocalizedEntries(context: Context) = entries.map { it.toLocalizedString(context) }.toTypedArray()
+        public fun getLocalizedEntries(context: Context): Array<String> = entries.map { it.toLocalizedString(context) }.toTypedArray()
     }
 }

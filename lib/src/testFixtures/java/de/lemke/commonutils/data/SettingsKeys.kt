@@ -21,7 +21,7 @@ package de.lemke.commonutils.data
  * superclass pins its own. Fails on any added, removed, or renamed property until [expected] is updated, so a rename
  * is a conscious choice rather than a silently orphaned stored value.
  */
-fun assertDelegatedKeys(
+public fun assertDelegatedKeys(
     settingsClass: Class<*>,
     expected: Set<String>,
 ) {

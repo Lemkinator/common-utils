@@ -56,7 +56,7 @@ import org.xmlpull.v1.XmlPullParserException
  * constructor without that `<meta-data>`.
  */
 @Implements(FileProvider::class, isInAndroidSdk = false)
-open class ShadowFileProvider {
+public open class ShadowFileProvider {
     @RealObject
     private lateinit var realProvider: FileProvider
 
@@ -115,12 +115,12 @@ open class ShadowFileProvider {
         return file
     }
 
-    companion object {
+    public companion object {
         private const val DISPLAY_NAME_PARAMETER = "displayName"
 
         @Implementation
         @JvmStatic
-        fun getUriForFile(
+        public fun getUriForFile(
             context: Context,
             authority: String,
             file: File,
@@ -144,7 +144,7 @@ open class ShadowFileProvider {
 
         @Implementation
         @JvmStatic
-        fun getUriForFile(
+        public fun getUriForFile(
             context: Context,
             authority: String,
             file: File,

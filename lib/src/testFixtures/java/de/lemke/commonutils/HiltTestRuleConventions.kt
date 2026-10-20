@@ -61,7 +61,7 @@ private const val MISSING_CLOSE_RULE =
  *
  * Fails with one message that lists every problem as `projectPath: Class: reason`, one per line.
  */
-fun KoScope.assertHiltTestRuleConventions(requireCloseRuleOnPlainHiltApplicationTests: Boolean = false) {
+public fun KoScope.assertHiltTestRuleConventions(requireCloseRuleOnPlainHiltApplicationTests: Boolean = false) {
     val plainClasses =
         if (requireCloseRuleOnPlainHiltApplicationTests) {
             classes()

@@ -29,16 +29,16 @@ import dev.oneuiproject.oneui.R as iconsR
 private const val NAV_RAIL_MIN_SIDE_MARGIN_DP = 14
 
 /** Bundle key for persisting search mode state. */
-const val COMMONUTILS_KEY_IS_SEARCH_MODE = "commonutils_isSearchMode"
+public const val COMMONUTILS_KEY_IS_SEARCH_MODE: String = "commonutils_isSearchMode"
 
 /** Bundle key for persisting action mode state. */
-const val COMMONUTILS_KEY_IS_ACTION_MODE = "commonutils_isActionMode"
+public const val COMMONUTILS_KEY_IS_ACTION_MODE: String = "commonutils_isActionMode"
 
 /** Bundle key for persisting the set of selected item IDs during action mode. */
-const val COMMONUTILS_KEY_SELECTED_IDS = "commonutils_selectedIds"
+public const val COMMONUTILS_KEY_SELECTED_IDS: String = "commonutils_selectedIds"
 
 /** Saves search and action mode state into this bundle for later restoration via [restoreSearchAndActionMode]. */
-fun Bundle.saveSearchAndActionMode(
+public fun Bundle.saveSearchAndActionMode(
     isSearchMode: Boolean = false,
     isActionMode: Boolean = false,
     selectedIds: Set<Long> = emptySet(),
@@ -54,7 +54,7 @@ fun Bundle.saveSearchAndActionMode(
 
 /** Restores search and action mode state from this bundle, invoking the provided callbacks as needed. */
 @NoCoverage
-inline fun Bundle?.restoreSearchAndActionMode(
+public inline fun Bundle?.restoreSearchAndActionMode(
     crossinline onSearchMode: () -> Unit = {},
     crossinline onActionMode: (selectedIds: Set<Long>) -> Unit = {},
     crossinline bundleIsNull: () -> Unit = {},
@@ -73,7 +73,7 @@ inline fun Bundle?.restoreSearchAndActionMode(
 
 /** Sets up the drawer header button with an info icon navigating to [CommonUtilsAboutActivity] and configures the nav rail. */
 @NoCoverage
-fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
+public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
         icon = AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)!!,
         tooltipText = aboutApp,
@@ -93,6 +93,6 @@ private fun View.openAboutActivity() {
  * Sets [listener] to handle item selections as inputs, so a fast second tap launches nothing; a dropped selection
  * leaves the item unselected. See [singleLaunch].
  */
-fun DrawerNavigationView.onSingleLaunchItemSelected(listener: NavigationView.OnNavigationItemSelectedListener) {
+public fun DrawerNavigationView.onSingleLaunchItemSelected(listener: NavigationView.OnNavigationItemSelectedListener) {
     setNavigationItemSelectedListener { item -> context.singleLaunchOrNull { listener.onNavigationItemSelected(item) } ?: false }
 }

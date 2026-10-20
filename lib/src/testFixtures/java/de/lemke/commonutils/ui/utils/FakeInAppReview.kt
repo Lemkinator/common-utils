@@ -18,11 +18,11 @@ package de.lemke.commonutils.ui.utils
 import androidx.appcompat.app.AppCompatActivity
 
 /** In-memory [InAppReview] that shows no review: each call records a [Call], and [showOrFinish] finishes the activity. */
-class FakeInAppReview : InAppReview {
+public class FakeInAppReview : InAppReview {
     private val recordedCalls = mutableListOf<Call>()
 
     /** Every call in order. */
-    val calls: List<Call> get() = recordedCalls.toList()
+    public val calls: List<Call> get() = recordedCalls.toList()
 
     override fun showIfPossible(activity: AppCompatActivity) {
         recordedCalls += Call.ShowIfPossible(activity)
@@ -34,17 +34,17 @@ class FakeInAppReview : InAppReview {
     }
 
     /** A recorded call to [FakeInAppReview]. */
-    sealed interface Call {
+    public sealed interface Call {
         /** The activity the call was made for. */
-        val activity: AppCompatActivity
+        public val activity: AppCompatActivity
 
         /** A [FakeInAppReview.showIfPossible] call. */
-        data class ShowIfPossible(
+        public data class ShowIfPossible(
             override val activity: AppCompatActivity,
         ) : Call
 
         /** A [FakeInAppReview.showOrFinish] call. */
-        data class ShowOrFinish(
+        public data class ShowOrFinish(
             override val activity: AppCompatActivity,
         ) : Call
     }

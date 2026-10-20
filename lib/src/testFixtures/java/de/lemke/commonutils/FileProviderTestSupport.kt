@@ -19,7 +19,7 @@ import androidx.core.content.FileProvider
 
 /** Clears FileProvider's static per-authority path-strategy cache. [ShadowFileProvider] never reads that cache. */
 @Deprecated("ShadowFileProvider keeps no strategy cache; drop the call.")
-fun resetFileProviderCache() {
+public fun resetFileProviderCache() {
     val cache =
         try {
             val sCache = FileProvider::class.java.getDeclaredField("sCache")

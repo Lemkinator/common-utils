@@ -18,6 +18,8 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 ./gradlew assembleRelease
 ./gradlew test           # Run unit tests
 ./gradlew koverVerifyDebug    # Check coverage floor (debug variant only)
+./gradlew apiCheck       # Compare the public ABI with lib/api/lib.api
+./gradlew apiDump        # Rewrite lib/api/lib.api after an intended API change
 ```
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/`.

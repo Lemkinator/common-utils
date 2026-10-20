@@ -17,6 +17,10 @@
 @file:OptIn(ExperimentalRoborazziApi::class)
 
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
+import kotlinx.validation.KotlinApiBuildTask
+import kotlinx.validation.KotlinApiCompareTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.android.library)
@@ -294,3 +298,53 @@ kover {
         }
     }
 }
+
+kotlin {
+    explicitApi()
+}
+
+// Neither the Kotlin Gradle plugin's ABI validation nor the kotlinx plugin registers tasks for an Android
+// library on built-in Kotlin, so the kotlinx task types run against the release compilation.
+val abiValidationRuntime: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+dependencies {
+    abiValidationRuntime(libs.abi.asm)
+    abiValidationRuntime(libs.abi.asm.tree)
+    abiValidationRuntime(libs.abi.kotlin.metadata.jvm)
+}
+
+val apiBuild =
+    tasks.register<KotlinApiBuildTask>("apiBuild") {
+        description = "Builds the public ABI dump of the release variant."
+        runtimeClasspath.from(abiValidationRuntime)
+        ignoredClasses.add("de.lemke.commonutils.ui.activity.ComposableSingletons\$CommonUtilsLibsActivityKt")
+        outputApiFile.set(layout.buildDirectory.file("api/${project.name}.api"))
+    }
+
+extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
+    if (name == "release") {
+        apiBuild.configure {
+            inputClassesDirs.from(compileTaskProvider.flatMap { (it as KotlinJvmCompile).destinationDirectory })
+        }
+    }
+}
+
+val apiCheck =
+    tasks.register<KotlinApiCompareTask>("apiCheck") {
+        group = "verification"
+        description = "Checks the public ABI against the committed api/${project.name}.api dump."
+        projectApiFile.set(layout.projectDirectory.file("api/${project.name}.api"))
+        generatedApiFile.set(apiBuild.flatMap { it.outputApiFile })
+    }
+
+tasks.register<Copy>("apiDump") {
+    group = "other"
+    description = "Overwrites api/${project.name}.api with the current public ABI."
+    from(apiBuild.flatMap { it.outputApiFile })
+    into(layout.projectDirectory.dir("api"))
+}
+
+tasks.named("check") { dependsOn(apiCheck) }

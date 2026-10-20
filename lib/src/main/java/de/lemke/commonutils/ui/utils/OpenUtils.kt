@@ -38,7 +38,7 @@ private const val TAG = "OpenUtils"
  * Opens the app with [packageName], trying the local install first if [tryLocalFirst] is `true`, otherwise opens the
  * Play Store; a failure shows the error toast.
  */
-fun Fragment.openApp(
+public fun Fragment.openApp(
     packageName: String,
     tryLocalFirst: Boolean,
 ): LaunchOutcome = requireContext().openApp(packageName, tryLocalFirst)
@@ -47,7 +47,7 @@ fun Fragment.openApp(
  * Opens the app with [packageName], trying the local install first if [tryLocalFirst] is `true`, otherwise opens the
  * Play Store; a failure shows the error toast.
  */
-fun Context.openApp(
+public fun Context.openApp(
     packageName: String,
     tryLocalFirst: Boolean,
 ): LaunchOutcome =
@@ -91,11 +91,11 @@ private fun Context.openAppWithPackageNameOnStore(packageName: String): LaunchOu
 
 /** Returns `true` if per-app language settings are supported (Android 13+). */
 @ChecksSdkIntAtLeast(api = TIRAMISU)
-fun areAppLocalSettingsSupported(): Boolean = SDK_INT >= TIRAMISU
+public fun areAppLocalSettingsSupported(): Boolean = SDK_INT >= TIRAMISU
 
 /** Opens the system per-app language settings screen for this app; a failure shows the error toast. */
 @RequiresApi(TIRAMISU)
-fun Fragment.openAppLocaleSettings(): LaunchOutcome {
+public fun Fragment.openAppLocaleSettings(): LaunchOutcome {
     if (!areAppLocalSettingsSupported()) {
         toast(getString(R.string.commonutils_change_language_not_supported_by_device))
         return LaunchOutcome.Failed
@@ -112,7 +112,7 @@ fun Fragment.openAppLocaleSettings(): LaunchOutcome {
 }
 
 /** Opens the system application settings screen for this app; a failure shows the error toast. */
-fun Context.openApplicationSettings(): LaunchOutcome =
+public fun Context.openApplicationSettings(): LaunchOutcome =
     try {
         launchForOutcome {
             startActivity(
