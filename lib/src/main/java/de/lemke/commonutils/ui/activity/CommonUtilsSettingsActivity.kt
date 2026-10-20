@@ -52,6 +52,9 @@ public class CommonUtilsSettingsActivity : AppCompatActivity() {
                 R.xml.preferences_dev_options_delete_app_data,
                 R.xml.preferences_more_info,
             )
+
+        /** Whether the share and rate card is added; configure via [setupCommonUtilsSettingsActivity]. */
+        public var relativeLinksCard: Boolean = true
     }
 
     /** [PreferenceFragmentCompat] that inflates the configured preference XML resources. */
@@ -78,7 +81,7 @@ public class CommonUtilsSettingsActivity : AppCompatActivity() {
             savedInstanceState: Bundle?,
         ) {
             super.onViewCreated(view, savedInstanceState)
-            addShareAppAndRateRelativeLinksCard()
+            if (relativeLinksCard && preferenceScreen != null) addShareAppAndRateRelativeLinksCard()
         }
     }
 }

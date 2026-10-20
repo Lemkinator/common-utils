@@ -231,7 +231,9 @@ public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity 
 
 public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity$Companion {
 	public final fun getPreferences ()Ljava/util/List;
+	public final fun getRelativeLinksCard ()Z
 	public final fun setPreferences (Ljava/util/List;)V
+	public final fun setRelativeLinksCard (Z)V
 }
 
 public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity$SettingsFragment : androidx/preference/PreferenceFragmentCompat {
@@ -264,7 +266,11 @@ public final class de/lemke/commonutils/ui/utils/ActivityUtilsKt {
 	public static final fun setupCommonUtilsAboutMeActivity (Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun setupCommonUtilsAboutMeActivity$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public static final fun setupCommonUtilsSettingsActivity (Ljava/util/List;)V
+	public static final fun setupCommonUtilsSettingsActivity (Ljava/util/List;Z)V
 	public static final fun setupCommonUtilsSettingsActivity ([I)V
+	public static final fun setupCommonUtilsSettingsActivity ([IZ)V
+	public static synthetic fun setupCommonUtilsSettingsActivity$default (Ljava/util/List;ZILjava/lang/Object;)V
+	public static synthetic fun setupCommonUtilsSettingsActivity$default ([IZILjava/lang/Object;)V
 }
 
 public final class de/lemke/commonutils/ui/utils/AppUpdateManagerUtilsKt {

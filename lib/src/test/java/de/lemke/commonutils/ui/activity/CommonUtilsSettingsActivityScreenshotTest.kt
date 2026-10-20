@@ -17,7 +17,6 @@ package de.lemke.commonutils.ui.activity
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
-import androidx.preference.PreferenceFragmentCompat
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.isRoot
@@ -29,13 +28,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
-import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockkStatic
-import io.mockk.runs
-import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -70,20 +63,17 @@ class CommonUtilsSettingsActivityScreenshotTest {
         // of the resource qualifier).
         setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         hiltRule.inject()
-        // addShareAppAndRateRelativeLinksCard requires a ListView not available under Robolectric.
-        mockkStatic("de.lemke.commonutils.ui.utils.PreferenceUtilsKt")
-        every { any<PreferenceFragmentCompat>().addShareAppAndRateRelativeLinksCard() } just runs
         setupCommonUtilsSettingsActivity(
             R.xml.preferences_design,
             R.xml.preferences_general_language_and_image_save_location,
             R.xml.preferences_dev_options_delete_app_data,
             R.xml.preferences_more_info,
+            relativeLinksCard = false,
         )
     }
 
     @After
     fun tearDown() {
-        unmockkAll()
         setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         CommonUtilsSettingsActivity.preferences =
             listOf(
@@ -92,6 +82,7 @@ class CommonUtilsSettingsActivityScreenshotTest {
                 R.xml.preferences_dev_options_delete_app_data,
                 R.xml.preferences_more_info,
             )
+        CommonUtilsSettingsActivity.relativeLinksCard = true
     }
 
     @Test

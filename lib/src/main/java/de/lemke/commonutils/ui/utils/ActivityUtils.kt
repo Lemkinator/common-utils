@@ -21,14 +21,29 @@ import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 
-/** Configures the settings activity with the given preference XML resources. */
-public fun setupCommonUtilsSettingsActivity(vararg preferences: Int) {
-    CommonUtilsSettingsActivity.preferences = preferences.toList()
+/**
+ * Configures the settings activity with the given preference XML resources.
+ * [relativeLinksCard] adds the share and rate card; it needs a preference screen, so it stays off without [preferences].
+ */
+@JvmOverloads
+public fun setupCommonUtilsSettingsActivity(
+    vararg preferences: Int,
+    relativeLinksCard: Boolean = true,
+) {
+    setupCommonUtilsSettingsActivity(preferences.toList(), relativeLinksCard)
 }
 
-/** Configures the settings activity with the given preference XML resource list. */
-public fun setupCommonUtilsSettingsActivity(preferences: List<Int>) {
+/**
+ * Configures the settings activity with the given preference XML resource list.
+ * [relativeLinksCard] adds the share and rate card; it needs a preference screen, so it stays off without [preferences].
+ */
+@JvmOverloads
+public fun setupCommonUtilsSettingsActivity(
+    preferences: List<Int>,
+    relativeLinksCard: Boolean = true,
+) {
     CommonUtilsSettingsActivity.preferences = preferences
+    CommonUtilsSettingsActivity.relativeLinksCard = relativeLinksCard
 }
 
 /** Configures the About Me activity with an optional share-app callback. */

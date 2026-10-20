@@ -74,6 +74,7 @@ class CommonUtilsSettingsActivityTest {
         // shadow — the dark-mode tests below leave it set to whatever they last triggered, which
         // would otherwise leak into whichever test runs next.
         setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        CommonUtilsSettingsActivity.relativeLinksCard = true
     }
 
     private fun launchWithEmptyPrefs(block: (CommonUtilsSettingsActivity) -> Unit) {
@@ -120,6 +121,22 @@ class CommonUtilsSettingsActivityTest {
     // Mirrors HorizontalRadioPreference's real onClickListener.
     private fun HorizontalRadioPreference.triggerRadioClick(newValue: String) {
         if (triggerChange(newValue)) value = newValue
+    }
+
+    @Test
+    fun `activity launches without any preference resource and shows no card`() {
+        setupCommonUtilsSettingsActivity(emptyList())
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            it.onActivity { activity -> getSettingsFragment(activity).preferenceScreen shouldBe null }
+        }
+    }
+
+    @Test
+    fun `activity launches with the card switched off`() {
+        setupCommonUtilsSettingsActivity(listOf(TestR.xml.preferences_empty), relativeLinksCard = false)
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            it.onActivity { activity -> getSettingsFragment(activity).preferenceScreen shouldNotBe null }
+        }
     }
 
     @Test
