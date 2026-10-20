@@ -323,6 +323,13 @@ class LaunchLatchConventionsTest : ShouldSpec() {
             LaunchLatchConventions.violations("sheets.show<InfoSheet>(supportFragmentManager)") shouldBe
                 listOf(LaunchLatchViolation(1, "sheets.show"))
         }
+        should("report a show with function type arguments") {
+            LaunchLatchConventions.violations("show<() -> Unit>(x)") shouldBe listOf(LaunchLatchViolation(1, "show"))
+        }
+        should("report a show with a function type argument that has a receiver and parameters") {
+            LaunchLatchConventions.violations("sheets.show<Map<String, (a: Int, b: String?) -> Unit>>(x)") shouldBe
+                listOf(LaunchLatchViolation(1, "sheets.show"))
+        }
         should("report a show with a trailing lambda") {
             LaunchLatchConventions.violations("dialog.show { setTitle(R.string.title) }") shouldBe
                 listOf(LaunchLatchViolation(1, "dialog.show"))
@@ -402,6 +409,7 @@ class LaunchLatchConventionsTest : ShouldSpec() {
             "imm.showSoftInput(view, 0)",
             "if (dialog.isShowing) dismiss()",
             "show < limit && x > (y)",
+            "show < a - b > (c)",
         ).forEach { source ->
             should("accept $source") {
                 LaunchLatchConventions.violations(source).shouldBeEmpty()

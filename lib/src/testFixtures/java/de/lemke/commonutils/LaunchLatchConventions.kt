@@ -37,7 +37,8 @@ object LaunchLatchConventions {
     private const val RAW_QUOTE = "\"\"\""
     private const val TEMPLATE_START = "\${"
     private const val REFERENCE = "::"
-    private const val TYPE_ARGUMENT_SYMBOLS = "_.,?*<>@"
+    private const val FUNCTION_ARROW = "->"
+    private const val TYPE_ARGUMENT_SYMBOLS = "_.,?*<>@():"
     private const val BACKTICK_BLANKED = "`'\""
     private const val DECLARATION_KEYWORD = "fun"
 
@@ -182,11 +183,17 @@ object LaunchLatchConventions {
         }
     }
 
-    /** Whether the text from [start] to [end] can be type arguments, so a comparison as in `show < a && b > (c)` is none. */
+    /**
+     * Whether the text from [start] to [end] can be type arguments, including function types as in `() -> Unit`, so a
+     * comparison as in `show < a && b > (c)` is none.
+     */
     private fun String.isTypeArgumentList(
         start: Int,
         end: Int,
-    ): Boolean = substring(start, minOf(end, length)).all { it.isLetterOrDigit() || it.isWhitespace() || it in TYPE_ARGUMENT_SYMBOLS }
+    ): Boolean =
+        substring(start, minOf(end, length))
+            .replace(FUNCTION_ARROW, "")
+            .all { it.isLetterOrDigit() || it.isWhitespace() || it in TYPE_ARGUMENT_SYMBOLS }
 
     private fun String.closingBracketIndex(openIndex: Int): Int {
         val open = this[openIndex]
@@ -196,7 +203,7 @@ object LaunchLatchConventions {
         while (index < length) {
             when (this[index]) {
                 open -> depth++
-                close -> if (--depth == 0) return index
+                close -> if (!isArrowHead(index) && --depth == 0) return index
             }
             index++
         }
