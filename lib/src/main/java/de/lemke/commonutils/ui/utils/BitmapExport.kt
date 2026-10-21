@@ -172,7 +172,7 @@ public class BitmapExportStateHolder(
 
     /** Resets the state to [BitmapExport.Idle] if it still holds [result]. */
     public fun onHandled(result: BitmapExport.Result) {
-        mutableState.update { if (it == result) BitmapExport.Idle else it }
+        mutableState.compareAndSet(result, BitmapExport.Idle)
     }
 
     private fun publishUnlessRunning(result: BitmapExport.Result) {

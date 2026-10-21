@@ -37,6 +37,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import java.io.File
 import java.io.IOException
+import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
@@ -232,6 +233,11 @@ class ResetFileProviderCacheRobolectricTest {
         runCatching { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "photo.png")) }
     }
 
+    @After
+    fun resetCache() {
+        resetFileProviderCache()
+    }
+
     @Test
     fun `reset empties the stock path-strategy cache and a new lookup fills it again`() {
         resetFileProviderCache()
@@ -243,6 +249,5 @@ class ResetFileProviderCacheRobolectricTest {
 
         lookUpCacheFile()
         cacheSize() shouldBe 1
-        resetFileProviderCache()
     }
 }

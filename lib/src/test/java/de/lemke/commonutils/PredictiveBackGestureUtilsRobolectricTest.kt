@@ -23,9 +23,12 @@ import de.lemke.commonutils.ui.utils.FakeInAppReview
 import de.lemke.commonutils.ui.utils.defaultWindowBackground
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import de.lemke.commonutils.ui.utils.setWindowTransparent
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.floats.shouldBeGreaterThan
+import io.kotest.matchers.floats.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.util.concurrent.TimeUnit.DAYS
@@ -85,15 +88,21 @@ class PredictiveBackGestureUtilsRobolectricTest {
     }
 
     @Test
-    fun `callback handleOnBackProgressed animates view`() {
+    fun `callback handleOnBackProgressed animates view relative to the first touch`() {
         val view = View(activity)
         view.layout(0, 0, 1000, 2000) // non-zero size so division does not produce NaN
         activity.setCustomBackAnimation(view)
         val dispatcher = activity.onBackPressedDispatcher
         val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
         dispatcher.dispatchOnBackStarted(event)
+
         dispatcher.dispatchOnBackProgressed(event)
-        // view should have been translated/scaled
+        view.translationX shouldBeGreaterThan 0f
+        view.translationY shouldBe 0f
+        view.scaleX shouldBeLessThan 1f
+
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 900f, 0.5f, BackEventCompat.EDGE_LEFT))
+        view.translationY shouldBeGreaterThan 0f
     }
 
     @Test
@@ -121,9 +130,9 @@ class PredictiveBackGestureUtilsRobolectricTest {
 
     @Test
     fun `setCustomBackAnimation with disabled backEnabled covers value-false branch`() {
-        // MutableStateFlow(false) → backEnabled?.value != false = false → callback disabled initially
         val view = View(activity)
         activity.setCustomBackAnimation(view, MutableStateFlow(false))
+        activity.onBackPressedDispatcher.hasEnabledCallbacks().shouldBeFalse()
     }
 
     @Test
@@ -204,7 +213,6 @@ class PredictiveBackGestureUtilsSdk29RobolectricTest {
 
     @Test
     fun `setWindowTransparent true on pre-R does not call setTranslucent`() {
-        // SDK_INT (29) < R (30) → if (SDK_INT >= R) false branch covered
         activity.setWindowTransparent(true)
     }
 

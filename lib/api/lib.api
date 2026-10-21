@@ -876,7 +876,6 @@ public final class de/lemke/commonutils/ui/widget/InfoBottomSheet : dev/oneuipro
 	public synthetic fun onCreateDialog (Landroid/os/Bundle;)Landroid/app/Dialog;
 	public fun onCreateDialog (Landroid/os/Bundle;)Lcom/google/android/material/bottomsheet/BottomSheetDialog;
 	public fun onCreateView (Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
-	public fun onDismiss (Landroid/content/DialogInterface;)V
 	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
 }
 

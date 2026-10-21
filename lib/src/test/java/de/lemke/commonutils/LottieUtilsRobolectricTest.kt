@@ -38,7 +38,6 @@ class LottieUtilsRobolectricTest {
     @get:Rule
     val destroyActivities = DestroyActivitiesRule()
 
-    // Application context → findViewTreeLifecycleOwner() == null → delayed launch branch skipped
     private val view get() = LottieAnimationView(ApplicationProvider.getApplicationContext())
 
     @Test
@@ -101,7 +100,7 @@ class LottieUtilsRobolectricTest {
         val lottieView = LottieAnimationView(activity)
         activity.setContentView(lottieView)
         lottieView.play(delay = DEFAULT_LOTTIE_DELAY)
-        lottieView.play(delay = DEFAULT_LOTTIE_DELAY) // cancels the first pending job
+        lottieView.play(delay = DEFAULT_LOTTIE_DELAY)
         shadowOf(Looper.getMainLooper()).idleFor(600, TimeUnit.MILLISECONDS)
     }
 }

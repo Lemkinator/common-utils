@@ -15,7 +15,6 @@
  */
 package de.lemke.commonutils.ui.widget
 
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.Gravity.CENTER
 import android.view.LayoutInflater
@@ -35,11 +34,6 @@ import dev.oneuiproject.oneui.app.SemBottomSheetDialogFragment
 /** Bottom sheet dialog that displays a title and a message, used for informational overlays. */
 public class InfoBottomSheet : SemBottomSheetDialogFragment() {
     private lateinit var binding: WidgetInfoBottomsheetBinding
-
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        // onDismissListener?.onDismiss(dialog)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
