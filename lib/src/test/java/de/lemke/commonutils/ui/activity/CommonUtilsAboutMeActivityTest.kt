@@ -102,7 +102,6 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `AboutAppBarListener onOffsetChanged abs gt half range - alpha-zero branch`() {
         val activity = launchActivity()
-        // abs(-500) >= totalScrollRange/2 → alpha = 0, setBottomContentEnabled(true)
         activity.dispatchAppBarOffset(-500)
         shadowOf(Looper.getMainLooper()).idle()
     }
@@ -110,7 +109,6 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `AboutAppBarListener onOffsetChanged abs equals zero - alpha-one branch`() {
         val activity = launchActivity()
-        // abs(0) == 0 → alpha = 1, setBottomContentEnabled(false)
         activity.dispatchAppBarOffset(0)
         shadowOf(Looper.getMainLooper()).idle()
     }
@@ -313,7 +311,6 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackProgressedHandler high progress triggers expand branch`() {
         val activity = launchActivity()
-        // interpolatedProgress > 0.5 and !isExpanding → isExpanding = true branch
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
         activity.backGesture.isExpanding.shouldBeTrue()
     }
@@ -321,10 +318,8 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackProgressedHandler low progress while expanding triggers collapse branch`() {
         val activity = launchActivity()
-        // First call: iprog(0.9f)≈0.97 > 0.5 and isExpanding=false → if-body → isExpanding=true
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
         activity.backGesture.isExpanding.shouldBeTrue()
-        // Second call: iprog(0.01f)≈0.12 < 0.3 and isExpanding=true → else-if-body → lines 132-133 covered
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
         activity.backGesture.isExpanding.shouldBeFalse()
     }
@@ -332,7 +327,6 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackProgressedHandler low progress while not expanding hits fallthrough`() {
         val activity = launchActivity()
-        // isExpanding=false (initial): iprog(0.1f)≈0.447 in [0.3, 0.5] → A=false, C=false → fallthrough (branch 5)
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.1f, BackEventCompat.EDGE_LEFT))
         activity.backGesture.isExpanding.shouldBeFalse()
     }
@@ -340,10 +334,8 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackProgressedHandler two consecutive high-progress events cover A=true B=false branch`() {
         val activity = launchActivity()
-        // First: iprog(0.9f)≈0.97 > 0.5, isExpanding=false → B=true → if-body → isExpanding=true
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
         activity.backGesture.isExpanding.shouldBeTrue()
-        // Second: iprog≈0.97 > 0.5, isExpanding=true → B=!isExpanding=false (branch 3) → else-if: C=false (branch 5)
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
         activity.backGesture.isExpanding.shouldBeTrue()
     }
@@ -351,7 +343,6 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `onBackProgressedHandler very low progress while not expanding covers C=true D=false branch`() {
         val activity = launchActivity()
-        // isExpanding=false (initial): iprog(0.01f)≈0.12 < 0.3 → C=true (branch 6), D=false (branch 7) → skip body
         activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
         activity.backGesture.isExpanding.shouldBeFalse()
     }
