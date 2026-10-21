@@ -15,11 +15,15 @@
  */
 package de.lemke.commonutils.ui.activity
 
+import android.app.Activity
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Looper
 import android.view.View
 import androidx.activity.BackEventCompat
+import androidx.core.content.IntentCompat
+import androidx.core.view.isVisible
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.DestroyActivitiesRule
@@ -28,7 +32,11 @@ import de.lemke.commonutils.track
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutMeActivity
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.floats.plusOrMinus
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,6 +46,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
+import dev.oneuiproject.oneui.design.R as designR
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -72,59 +81,113 @@ class CommonUtilsAboutMeActivityTest {
         listener.onOffsetChanged(findViewById(R.id.aboutAppBar), offset)
     }
 
+    private fun CommonUtilsAboutMeActivity.startedIntent(): Intent = shadowOf(this).nextStartedActivity.shouldNotBeNull()
+
+    private fun CommonUtilsAboutMeActivity.shouldHaveOpenedUrl(url: String) {
+        val intent = startedIntent()
+        intent.action shouldBe Intent.ACTION_VIEW
+        intent.dataString shouldBe url
+    }
+
+    private fun CommonUtilsAboutMeActivity.shouldHaveSharedApp() {
+        val chooser = startedIntent()
+        chooser.action shouldBe Intent.ACTION_CHOOSER
+        val target = IntentCompat.getParcelableExtra(chooser, Intent.EXTRA_INTENT, Intent::class.java).shouldNotBeNull()
+        target.action shouldBe Intent.ACTION_SEND
+        target.type shouldBe "text/plain"
+        target.getStringExtra(Intent.EXTRA_TEXT) shouldBe "https://play.google.com/store/apps/details?id=de.lemke.commonutils.test"
+    }
+
+    private fun CommonUtilsAboutMeActivity.shouldHaveStartedAboutMeEmail() {
+        val intent = startedIntent()
+        intent.action shouldBe Intent.ACTION_SENDTO
+        intent.dataString shouldBe "mailto:"
+        intent.getStringArrayExtra(Intent.EXTRA_EMAIL) shouldBe arrayOf("apps@leonard-lemke.com")
+        intent.getStringExtra(Intent.EXTRA_SUBJECT) shouldBe "CommonUtils"
+        intent.getStringExtra(Intent.EXTRA_TEXT) shouldBe "This is the best app I’ve ever seen in my life!"
+    }
+
+    /** `CardItemView` registers its click listener on the inner container, so a click on the card itself reaches no listener. */
+    private fun View.performCardClick() {
+        findViewById<View>(designR.id.cardview_container).performClick()
+    }
+
+    private fun CommonUtilsAboutMeActivity.collapseAppBar() {
+        dispatchAppBarOffset(-findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange)
+    }
+
+    private val CommonUtilsAboutMeActivity.bottomContentEnabled: Boolean
+        get() = findViewById<View>(R.id.aboutBottomContent).isEnabled
+
     @Test
     fun `activity launches without crashing`() {
         launchActivity() shouldNotBe null
     }
 
     @Test
-    fun `onConfigurationChanged landscape covers refreshAppBar landscape branch`() {
+    fun `onConfigurationChanged landscape hides the swipe-up container and shows the bottom content`() {
         val activity = launchActivity()
+        activity.findViewById<View>(R.id.aboutBottomContainer).alpha = 0.2f
         val landscapeConfig =
             Configuration(activity.resources.configuration).apply {
                 orientation = Configuration.ORIENTATION_LANDSCAPE
             }
         activity.onConfigurationChanged(landscapeConfig)
         shadowOf(Looper.getMainLooper()).idle()
+        activity.findViewById<View>(R.id.aboutSwipeUpContainer).isVisible.shouldBeFalse()
+        activity.findViewById<View>(R.id.aboutBottomContainer).alpha shouldBe 1f
+        activity.bottomContentEnabled.shouldBeTrue()
     }
 
     @Test
-    fun `onConfigurationChanged portrait covers refreshAppBar portrait branch`() {
+    fun `onConfigurationChanged portrait shows the swipe-up container at half the screen height`() {
         val activity = launchActivity()
+        val swipeUp = activity.findViewById<View>(R.id.aboutSwipeUpContainer)
+        swipeUp.isVisible = false
         val portraitConfig =
             Configuration(activity.resources.configuration).apply {
                 orientation = Configuration.ORIENTATION_PORTRAIT
             }
         activity.onConfigurationChanged(portraitConfig)
         shadowOf(Looper.getMainLooper()).idle()
+        swipeUp.isVisible.shouldBeTrue()
+        swipeUp.layoutParams.height shouldBe activity.resources.displayMetrics.heightPixels / 2
     }
 
     @Test
-    fun `AboutAppBarListener onOffsetChanged abs gt half range - alpha-zero branch`() {
+    fun `AboutAppBarListener onOffsetChanged abs gt half range hides swipe-up and enables bottom content`() {
         val activity = launchActivity()
-        activity.dispatchAppBarOffset(-500)
+        activity.dispatchAppBarOffset(-600)
         shadowOf(Looper.getMainLooper()).idle()
+        activity.findViewById<View>(R.id.aboutSwipeUpContainer).alpha shouldBe 0f
+        activity.bottomContentEnabled.shouldBeTrue()
     }
 
     @Test
-    fun `AboutAppBarListener onOffsetChanged abs equals zero - alpha-one branch`() {
+    fun `AboutAppBarListener onOffsetChanged abs equals zero shows swipe-up and disables bottom content`() {
         val activity = launchActivity()
+        activity.dispatchAppBarOffset(-1000)
         activity.dispatchAppBarOffset(0)
         shadowOf(Looper.getMainLooper()).idle()
+        activity.findViewById<View>(R.id.aboutSwipeUpContainer).alpha shouldBe 1f
+        activity.bottomContentEnabled.shouldBeFalse()
     }
 
     @Test
-    fun `AboutAppBarListener onOffsetChanged intermediate offset - else interpolated-alpha branch`() {
+    fun `AboutAppBarListener onOffsetChanged intermediate offset fades swipe-up with the app bar position`() {
         val activity = launchActivity()
-        // offset = -10: abs = 10, not >= range/2 and not == 0 → else branch
+        val appBar = activity.findViewById<AppBarLayout>(R.id.aboutAppBar)
+        appBar.y = -appBar.totalScrollRange / 10f
         activity.dispatchAppBarOffset(-10)
         shadowOf(Looper.getMainLooper()).idle()
+        activity.findViewById<View>(R.id.aboutSwipeUpContainer).alpha shouldBe (0.7f plusOrMinus 0.001f)
     }
 
     @Test
-    fun `github header click fires without crashing`() {
+    fun `github header click opens the GitHub profile`() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.aboutHeaderGithub).performClick()
+        activity.shouldHaveOpenedUrl("https://github.com/Lemkinator")
     }
 
     @Test
@@ -136,21 +199,24 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `website header click fires without crashing`() {
+    fun `website header click opens the website`() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.aboutHeaderWebsite).performClick()
+        activity.shouldHaveOpenedUrl("https://www.leonard-lemke.com")
     }
 
     @Test
-    fun `insta header click fires without crashing`() {
+    fun `insta header click opens the Instagram profile`() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.aboutHeaderInsta).performClick()
+        activity.shouldHaveOpenedUrl("https://www.instagram.com/lemkinator5/")
     }
 
     @Test
-    fun `tiktok header click fires without crashing`() {
+    fun `tiktok header click opens the redirect link`() {
         val activity = launchActivity()
         activity.findViewById<View>(R.id.aboutHeaderTiktok).performClick()
+        activity.shouldHaveOpenedUrl("https://www.leonard-lemke.com/rr")
     }
 
     @Test
@@ -158,22 +224,24 @@ class CommonUtilsAboutMeActivityTest {
         var invoked = false
         setupCommonUtilsAboutMeActivity(onShareApp = { invoked = true })
         val activity = launchActivity()
-        // Invoke the companion-object callback directly, as the view click path requires
-        // a fully laid-out activity that is not available under Robolectric.
         CommonUtilsAboutMeActivity.onShareApp(activity)
-        invoked shouldNotBe false
+        invoked.shouldBeTrue()
     }
 
     @Test
-    fun `bottom rate-app click fires without crashing`() {
+    fun `bottom rate-app click opens the app page in the store`() {
         val activity = launchActivity()
-        activity.findViewById<View>(R.id.aboutBottomRateApp).performClick()
+        activity.collapseAppBar()
+        activity.findViewById<View>(R.id.aboutBottomRateApp).performCardClick()
+        activity.shouldHaveOpenedUrl("market://details?id=de.lemke.commonutils.test")
     }
 
     @Test
-    fun `bottom write-email click fires without crashing`() {
+    fun `bottom write-email click composes the contact email`() {
         val activity = launchActivity()
-        activity.findViewById<View>(R.id.aboutBottomWriteEmail).performClick()
+        activity.collapseAppBar()
+        activity.findViewById<View>(R.id.aboutBottomWriteEmail).performCardClick()
+        activity.shouldHaveStartedAboutMeEmail()
     }
 
     @Test
@@ -185,22 +253,31 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `bottom website click fires without crashing`() {
+    fun `bottom website click opens the website`() {
         val activity = launchActivity()
+        activity.collapseAppBar()
         activity.findViewById<View>(R.id.aboutBottomRelativeWebsite).performClick()
+        activity.shouldHaveOpenedUrl("https://www.leonard-lemke.com")
     }
 
     @Test
-    fun `bottom tiktok click fires without crashing`() {
+    fun `bottom tiktok click opens the redirect link`() {
         val activity = launchActivity()
+        activity.collapseAppBar()
         activity.findViewById<View>(R.id.aboutBottomRelativeTiktok).performClick()
+        activity.shouldHaveOpenedUrl("https://www.leonard-lemke.com/rr")
     }
 
     @Test
-    fun `bottom shareApp click invokes onShareApp and shareApp`() {
+    fun `bottom shareApp click invokes onShareApp and shares the Play Store link`() {
+        var sharedFrom: Activity? = null
+        setupCommonUtilsAboutMeActivity(onShareApp = { sharedFrom = it })
         val activity = launchActivity()
-        activity.findViewById<View>(R.id.aboutBottomShareApp).performClick()
+        activity.collapseAppBar()
+        activity.findViewById<View>(R.id.aboutBottomShareApp).performCardClick()
         shadowOf(Looper.getMainLooper()).idle()
+        sharedFrom shouldBeSameInstanceAs activity
+        activity.shouldHaveSharedApp()
     }
 
     @Test
@@ -209,9 +286,9 @@ class CommonUtilsAboutMeActivityTest {
         activity.findViewById<View>(R.id.aboutHeaderPlayStore).performClick()
         shadowOf(Looper.getMainLooper()).idle()
         val dialog = ShadowDialog.getLatestDialog() as? androidx.appcompat.app.AlertDialog
-        dialog shouldNotBe null
-        dialog!!.getButton(DialogInterface.BUTTON_POSITIVE).performClick()
+        dialog.shouldNotBeNull().getButton(DialogInterface.BUTTON_POSITIVE).performClick()
         shadowOf(Looper.getMainLooper()).idle()
+        activity.shouldHaveOpenedUrl("https://play.google.com/store/apps/dev?id=4961154860499174073")
     }
 
     @Test
@@ -269,24 +346,27 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `handleShareApp direct call covers share path`() {
+    fun `handleShareApp invokes onShareApp and shares the Play Store link`() {
+        var sharedFrom: Activity? = null
+        setupCommonUtilsAboutMeActivity(onShareApp = { sharedFrom = it })
         val activity = launchActivity()
         activity.handleShareApp()
-        shadowOf(Looper.getMainLooper()).idle()
+        sharedFrom shouldBeSameInstanceAs activity
+        activity.shouldHaveSharedApp()
     }
 
     @Test
-    fun `handleWriteEmail direct call covers email path`() {
+    fun `handleWriteEmail composes the contact email`() {
         val activity = launchActivity()
         activity.handleWriteEmail()
-        shadowOf(Looper.getMainLooper()).idle()
+        activity.shouldHaveStartedAboutMeEmail()
     }
 
     @Test
-    fun `onPlayStoreConfirmed direct call opens URL`() {
+    fun `onPlayStoreConfirmed opens the developer page`() {
         val activity = launchActivity()
         activity.onPlayStoreConfirmed()
-        shadowOf(Looper.getMainLooper()).idle()
+        activity.shouldHaveOpenedUrl("https://play.google.com/store/apps/dev?id=4961154860499174073")
     }
 
     @Test
