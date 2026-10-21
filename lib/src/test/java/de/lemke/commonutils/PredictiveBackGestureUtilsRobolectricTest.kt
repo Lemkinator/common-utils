@@ -27,6 +27,8 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.floats.shouldBeGreaterThan
+import io.kotest.matchers.floats.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.util.concurrent.TimeUnit.DAYS
@@ -86,15 +88,21 @@ class PredictiveBackGestureUtilsRobolectricTest {
     }
 
     @Test
-    fun `callback handleOnBackProgressed animates view`() {
+    fun `callback handleOnBackProgressed animates view relative to the first touch`() {
         val view = View(activity)
         view.layout(0, 0, 1000, 2000) // non-zero size so division does not produce NaN
         activity.setCustomBackAnimation(view)
         val dispatcher = activity.onBackPressedDispatcher
         val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
         dispatcher.dispatchOnBackStarted(event)
+
         dispatcher.dispatchOnBackProgressed(event)
-        // view should have been translated/scaled
+        view.translationX shouldBeGreaterThan 0f
+        view.translationY shouldBe 0f
+        view.scaleX shouldBeLessThan 1f
+
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 900f, 0.5f, BackEventCompat.EDGE_LEFT))
+        view.translationY shouldBeGreaterThan 0f
     }
 
     @Test
