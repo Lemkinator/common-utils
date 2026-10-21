@@ -294,27 +294,28 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `back gesture start progressed and cancelled dispatches callbacks`() {
         val activity = launchActivity()
-        // Enable callback by simulating fully-expanded app bar (offset=0 → updateCallbackState(true))
-        activity.dispatchAppBarOffset(0)
+        activity.collapseAppBar()
         shadowOf(Looper.getMainLooper()).idle()
 
         val dispatcher = activity.onBackPressedDispatcher
         val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
         dispatcher.dispatchOnBackStarted(event)
         shadowOf(Looper.getMainLooper()).idle()
+        activity.backGesture.isBackProgressing.shouldBeTrue()
 
-        // progress > 0.5 → isExpanding = true branch
         val highProgressEvent = BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT)
         dispatcher.dispatchOnBackProgressed(highProgressEvent)
         shadowOf(Looper.getMainLooper()).idle()
+        activity.backGesture.isExpanding.shouldBeTrue()
 
-        // progress < 0.3 → collapse branch (isExpanding resets to false)
-        val lowProgressEvent = BackEventCompat(10f, 500f, 0.1f, BackEventCompat.EDGE_LEFT)
+        val lowProgressEvent = BackEventCompat(10f, 500f, 0.01f, BackEventCompat.EDGE_LEFT)
         dispatcher.dispatchOnBackProgressed(lowProgressEvent)
         shadowOf(Looper.getMainLooper()).idle()
+        activity.backGesture.isExpanding.shouldBeFalse()
 
         dispatcher.dispatchOnBackCancelled()
         shadowOf(Looper.getMainLooper()).idle()
+        activity.backGesture.isBackProgressing.shouldBeFalse()
     }
 
     @Test
@@ -332,13 +333,11 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         val totalScrollRange = activity.findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange
 
-        // Fully collapsed: totalScrollRange + verticalOffset == 0.
         activity.dispatchAppBarOffset(-totalScrollRange)
         shadowOf(Looper.getMainLooper()).idle()
         activity.backGesture.callback.isEnabled
             .shouldBeTrue()
 
-        // Not fully collapsed.
         activity.dispatchAppBarOffset(-totalScrollRange + 1)
         shadowOf(Looper.getMainLooper()).idle()
         activity.backGesture.callback.isEnabled
@@ -452,7 +451,6 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `applyInsetIfNeeded with fitsSystemWindows=true skips listener setup`() {
         setupCommonUtilsAboutMeActivity()
-        // Set fitsSystemWindows=true before onCreate → !fitsSystemWindows=false → body skipped (B false branch)
         val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).track(destroyActivities)
         controller
             .get()
@@ -488,7 +486,6 @@ class CommonUtilsAboutMeActivitySdk29Test {
 
     @Test
     fun `applyInsetIfNeeded SDK_INT less than R skips listener setup`() {
-        // SDK 29 < R (30) → first condition false → body skipped → SDK<R branch covered
         val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
         controller.get() shouldNotBe null

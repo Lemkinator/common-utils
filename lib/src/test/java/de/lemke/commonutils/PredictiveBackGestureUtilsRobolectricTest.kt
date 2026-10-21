@@ -23,6 +23,7 @@ import de.lemke.commonutils.ui.utils.FakeInAppReview
 import de.lemke.commonutils.ui.utils.defaultWindowBackground
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import de.lemke.commonutils.ui.utils.setWindowTransparent
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -121,9 +122,9 @@ class PredictiveBackGestureUtilsRobolectricTest {
 
     @Test
     fun `setCustomBackAnimation with disabled backEnabled covers value-false branch`() {
-        // MutableStateFlow(false) → backEnabled?.value != false = false → callback disabled initially
         val view = View(activity)
         activity.setCustomBackAnimation(view, MutableStateFlow(false))
+        activity.onBackPressedDispatcher.hasEnabledCallbacks().shouldBeFalse()
     }
 
     @Test
@@ -204,7 +205,6 @@ class PredictiveBackGestureUtilsSdk29RobolectricTest {
 
     @Test
     fun `setWindowTransparent true on pre-R does not call setTranslucent`() {
-        // SDK_INT (29) < R (30) → if (SDK_INT >= R) false branch covered
         activity.setWindowTransparent(true)
     }
 

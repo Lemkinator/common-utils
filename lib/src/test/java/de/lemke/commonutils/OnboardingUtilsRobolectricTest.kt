@@ -34,6 +34,7 @@ import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.Before
@@ -115,7 +116,6 @@ class OnboardingUtilsRobolectricTest {
 
     @Test
     fun `advanceOnboarding with context where activity not in chain finishes without starting new activity`() {
-        // Activity::class is not CommonUtilsOOBEActivity → not in chain
         val ctx = onboardingContext(steps = emptyList())
         val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
         val a =
@@ -126,16 +126,14 @@ class OnboardingUtilsRobolectricTest {
                 .get()
         a.advanceOnboarding() shouldBe LaunchOutcome.Started
         a.isFinishing.shouldBeTrue()
-        // No new activity started for the next step (since not in chain, we finish early)
+        shadowOf(a).nextStartedActivity.shouldBeNull()
     }
 
     @Test
     fun `advanceOnboarding completes onboarding when last step in chain`() {
-        // Chain: [OOBE, Activity]. Current = Activity → last → completeOnboarding starts main.
         val stepClass = Activity::class.java.name
         val mainClass = Activity::class.java.name
         val ctx = onboardingContext(mainActivityName = mainClass, steps = listOf(stepClass))
-        // Manually construct the intent that would have OOBE in chain + stepClass
         val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
         val a =
             Robolectric
@@ -144,8 +142,7 @@ class OnboardingUtilsRobolectricTest {
                 .track(destroyActivities)
                 .get()
         a.advanceOnboarding() shouldBe LaunchOutcome.Started
-        // Should have started the main activity and finished
-        shadowOf(a).nextStartedActivity shouldNotBe null
+        shadowOf(a).nextStartedActivity.component?.className shouldBe mainClass
         a.isFinishing.shouldBeTrue()
     }
 
@@ -170,8 +167,6 @@ class OnboardingUtilsRobolectricTest {
 
     @Test
     fun `setupOnboarding with duplicate steps throws IllegalArgumentException`() {
-        // 3 items: Activity appears twice, AppCompatActivity once.
-        // filter { size > 1 } returns only Activity (size=2); AppCompatActivity (size=1) hits the false branch.
         shouldThrow<IllegalArgumentException> {
             setupOnboarding(listOf(Activity::class.java, AppCompatActivity::class.java, Activity::class.java))
         }
@@ -179,7 +174,6 @@ class OnboardingUtilsRobolectricTest {
 
     @Test
     fun `advanceOnboarding starts next step when more steps remain in chain`() {
-        // chain = [OOBE, Activity, AppCompatActivity]; current = Activity → next = AppCompatActivity
         val ctx = onboardingContext(steps = listOf(Activity::class.java.name, AppCompatActivity::class.java.name))
         val intent = Intent().apply { putExtra("commonUtilsOnboardingContext", ctx) }
         val a =
@@ -195,7 +189,6 @@ class OnboardingUtilsRobolectricTest {
 
     @Test
     fun `onboardIfNeeded with allowSkip and skip extra bypasses OOBE and returns AppStart`() {
-        // shouldShowOOBE=true (fresh install), but allowSkip=true + EXTRA_SKIP_ONBOARDING=true → skip
         val intent = Intent().apply { putExtra("commonUtilsSkipOnboarding", true) }
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java, intent).setup().track(destroyActivities)
         val result = controller.get().onboardIfNeeded(1, "1.0", settings, allowSkip = true)
@@ -205,7 +198,6 @@ class OnboardingUtilsRobolectricTest {
 
     @Test
     fun `onboardIfNeeded allowSkip true but no skip extra starts OOBE`() {
-        // allowSkip=true but no EXTRA_SKIP_ONBOARDING in intent → !(true && false) = true → start OOBE
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup().track(destroyActivities)
         val result = controller.get().onboardIfNeeded(1, "1.0", settings, allowSkip = true)
         result shouldBe null
@@ -262,7 +254,6 @@ class OnboardingUtilsRobolectricTest {
         a.singleLaunch {}.shouldBeFalse()
     }
 
-    // onboardIfNeeded - Path 1: intent carries onboarding context (post-onboarding re-launch)
     @Test
     fun `onboardIfNeeded with onboarding context returns AppStart and commits version`() {
         val ctx =
@@ -285,10 +276,8 @@ class OnboardingUtilsRobolectricTest {
         settings.lastVersionCode shouldBe 1
     }
 
-    // onboardIfNeeded - Path 2: fresh install (lastVersionCode=-1 → shouldShowOOBE=true) → null
     @Test
     fun `onboardIfNeeded fresh install starts OOBE and returns null`() {
-        // lastVersionCode defaults to -1 → isFirstTime = true → shouldShowOOBE = true
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup().track(destroyActivities)
         val a = controller.get()
         val result = a.onboardIfNeeded(1, "1.0", settings)
@@ -296,11 +285,10 @@ class OnboardingUtilsRobolectricTest {
         shadowOf(a).nextStartedActivity shouldNotBe null
     }
 
-    // onboardIfNeeded - covers tosChanged=true: FIRST_TIME_VERSION + TOS not accepted → starts OOBE
     @Test
     fun `onboardIfNeeded FIRST_TIME_VERSION with unaccepted TOS sets tosChanged true and starts OOBE`() {
         settings.lastVersionCode = 1
-        settings.acceptedTosVersion = -1 // -1 < tosVersion(0) → !tosAccepted = true
+        settings.acceptedTosVersion = -1
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup().track(destroyActivities)
         val result = controller.get().onboardIfNeeded(2, "2.0", settings)
         result shouldBe null
@@ -325,11 +313,10 @@ class OnboardingUtilsRobolectricTest {
         }
     }
 
-    // onboardIfNeeded - Path 3: TOS accepted + same version → returns AppStart, commits
     @Test
     fun `onboardIfNeeded with accepted TOS returns AppStart`() {
         settings.lastVersionCode = 1
-        settings.acceptedTosVersion = Int.MAX_VALUE // >= any tosVersion in resources
+        settings.acceptedTosVersion = Int.MAX_VALUE
         val controller = Robolectric.buildActivity(AppCompatActivity::class.java).setup().track(destroyActivities)
         val a = controller.get()
         val result = a.onboardIfNeeded(1, "1.0", settings)

@@ -219,8 +219,8 @@ class OpenAppLocaleSettingsApi33Test {
             .beginTransaction()
             .add(fragment, "tag")
             .commitNow()
-        // SDK 36 ≥ TIRAMISU → should start ACTION_APP_LOCALE_SETTINGS
         fragment.openAppLocaleSettings() shouldBe LaunchOutcome.Started
+        shadowOf(activity).nextStartedActivity.action shouldBe Settings.ACTION_APP_LOCALE_SETTINGS
     }
 }
 
