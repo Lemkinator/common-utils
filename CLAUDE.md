@@ -206,7 +206,7 @@ An app that includes it must drop its own bindings for `@IoDispatcher`, `@Defaul
 library's.
 
 `CommonUtilsInAppReviewModule` binds `InAppReview` to `PlayInAppReview` (needs a `SettingsRepository` binding); an app
-includes it from its own `InAppReviewModule`, which a test replaces with `@TestInstallIn` to bind `FakeInAppReview`.
+includes it from its own `InAppReviewModule`, which a test replaces with `@TestInstallIn` to bind `FakeInAppReview`. The app must drop its own `@Binds` for `InAppReview`, because a duplicate binding fails compilation.
 
 Hilt modules need no ProGuard/R8 keep rules.
 

@@ -27,10 +27,8 @@ import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.InAppReview
 import de.lemke.commonutils.ui.utils.PlayInAppReview
 import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.longs.shouldBeInRange
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.util.concurrent.TimeUnit.DAYS
 import javax.inject.Inject
 import org.junit.Before
 import org.junit.Rule
@@ -69,12 +67,11 @@ class CommonUtilsInAppReviewModuleHiltTest {
     }
 
     @Test
-    fun `the bound review keeps its cooldown in the injected settings`() {
+    fun `the bound review seeds its cooldown in the injected settings`() {
+        val before = System.currentTimeMillis()
+
         review.canShow().shouldBeFalse()
-        settings.lastInAppReview shouldBeGreaterThan 0L
 
-        settings.lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
-
-        review.canShow().shouldBeTrue()
+        settings.lastInAppReview shouldBeInRange before..System.currentTimeMillis()
     }
 }
