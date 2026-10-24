@@ -127,6 +127,10 @@ public final class de/lemke/commonutils/di/CommonUtilsCoroutinesModule {
 	public final fun provideMainDispatcher ()Lkotlinx/coroutines/CoroutineDispatcher;
 }
 
+public abstract interface class de/lemke/commonutils/di/CommonUtilsInAppReviewModule {
+	public abstract fun bindInAppReview (Lde/lemke/commonutils/ui/utils/PlayInAppReview;)Lde/lemke/commonutils/ui/utils/InAppReview;
+}
+
 public abstract interface annotation class de/lemke/commonutils/di/DefaultDispatcher : java/lang/annotation/Annotation {
 }
 

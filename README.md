@@ -43,6 +43,19 @@ An app that includes it must drop its own bindings for `@IoDispatcher`, `@Defaul
 `@ApplicationScope` (a duplicate binding is a Dagger compile error), and its Dagger/Hilt version must be at least the
 library's.
 
+`CommonUtilsInAppReviewModule` binds `InAppReview` to `PlayInAppReview` the same way; it needs a `SettingsRepository`
+binding:
+
+```kotlin
+@Module(includes = [CommonUtilsInAppReviewModule::class])
+@InstallIn(SingletonComponent::class)
+interface InAppReviewModule
+```
+
+The app keeps its own `@InstallIn` wrapper module that includes `CommonUtilsInAppReviewModule`; tests replace that wrapper
+with `@TestInstallIn(replaces = [InAppReviewModule::class])` and bind `FakeInAppReview`. The app must drop its own
+`@Binds` for `InAppReview` (a duplicate binding fails compilation).
+
 <br><br>
 
 ## Konsist test fixtures
