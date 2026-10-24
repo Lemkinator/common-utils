@@ -122,7 +122,7 @@ git config core.hooksPath .githooks
 
 ## Architecture
 
-**Single-module utility library** — ships an opt-in Hilt module and no ViewModel layer.
+**Single-module utility library** — ships opt-in Hilt modules and no ViewModel layer.
 Code is organized into:
 
 - **Root utilities** (`lib/src/main/java/de/lemke/commonutils/`):
@@ -204,6 +204,9 @@ interface AppCoroutinesModule
 An app that includes it must drop its own bindings for `@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher` and
 `@ApplicationScope` (a duplicate binding is a Dagger compile error), and its Dagger/Hilt version must be at least the
 library's.
+
+`CommonUtilsInAppReviewModule` binds `InAppReview` to `PlayInAppReview` (needs a `SettingsRepository` binding); an app
+includes it from its own `InAppReviewModule`, which a test replaces with `@TestInstallIn` to bind `FakeInAppReview`. The app must drop its own `@Binds` for `InAppReview`, because a duplicate binding fails compilation.
 
 Hilt modules need no ProGuard/R8 keep rules.
 
