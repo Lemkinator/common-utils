@@ -32,8 +32,8 @@ private const val TAG = "URLUtils"
 public fun String.withHttps(): String = if (this.startsWith("http://") || this.startsWith("https://")) this else "https://$this"
 
 private val WEB_SCHEMES = setOf("http", "https")
-private val SCP_LIKE_URL = Regex("""^[\w.-]+@([\w.-]+):(?!//)(.+?)(?:\.git)?/?$""")
-private val GIT_PROTOCOL_URL = Regex("""^(?:git|ssh|git\+ssh)://(?:[^@/]+@)?([^/:]+)(?::\d+)?/(.+?)(?:\.git)?/?$""")
+private val SCP_LIKE_URL = Regex("""^[\w.-]+@([\w.-]+):(?!//)/?(.+?)(?:\.git)?/?$""")
+private val GIT_PROTOCOL_URL = Regex("""^(?:git|ssh|git\+ssh|ssh\+git)://(?:[^@/]+@)?([^/:]+)(?::\d+)?/(.+?)(?:\.git)?/?$""")
 
 /**
  * Rewrites a repository URL that only git understands, such as `scm:git:git@github.com:owner/repo.git`, to its
@@ -55,11 +55,10 @@ public fun String.urlEncodeAmpersand(): String = this.replace("&", "%26")
 /** Percent-encodes this string using UTF-8. */
 public fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
 
-/** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
+/** Opens [url] with the app registered for it, showing a toast if no app can open it or the URL is blank. */
 public fun Fragment.openURL(url: String?): LaunchOutcome = requireContext().openURL(url)
 
-/** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
-@Suppress("TooGenericExceptionCaught")
+/** Opens [url] with the app registered for it, showing a toast if no app can open it or the URL is blank. */
 public fun Context.openURL(url: String?): LaunchOutcome {
     if (url.isNullOrBlank()) {
         Log.e(TAG, "link is null or blank")
@@ -67,12 +66,13 @@ public fun Context.openURL(url: String?): LaunchOutcome {
         return LaunchOutcome.Failed
     }
     val uri = url.toUri()
-    // startActivity and the target app throw an open-ended exception set; every failure must toast, not crash.
+    // startActivity and the target app throw an open-ended exception set.
+    @Suppress("TooGenericExceptionCaught")
     return try {
         launchForOutcome { startActivity(Intent(ACTION_VIEW, uri).addFlags(FLAG_ACTIVITY_NEW_TASK)) }
     } catch (e: ActivityNotFoundException) {
         val isWebLink = uri.normalizeScheme().scheme in WEB_SCHEMES
-        Log.e(TAG, if (isWebLink) "No browser app installed" else "No app can open $url", e)
+        Log.e(TAG, if (isWebLink) "No browser app installed" else "No app can open the link", e)
         toast(getString(if (isWebLink) R.string.commonutils_no_browser_app_installed else R.string.commonutils_error_cant_open_url))
         LaunchOutcome.Failed
     } catch (e: Exception) {

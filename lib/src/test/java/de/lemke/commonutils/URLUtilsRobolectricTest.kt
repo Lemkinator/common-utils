@@ -43,16 +43,19 @@ class URLUtilsRobolectricTest {
     @Test
     fun `openURL returns Failed for null URL`() {
         ctx.openURL(null) shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 
     @Test
     fun `openURL returns Failed for blank URL`() {
         ctx.openURL("   ") shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 
     @Test
     fun `openURL returns Failed for empty URL`() {
         ctx.openURL("") shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 
     @Test

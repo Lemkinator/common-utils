@@ -201,6 +201,7 @@ dependencies {
 
     androidTestImplementation(testFixtures(project(":lib")))
     androidTestImplementation(libs.bundles.android.test)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.kotest.assertions.core)
     kspAndroidTest(libs.hilt.compiler)

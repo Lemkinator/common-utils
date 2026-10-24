@@ -39,6 +39,7 @@ ksp = "2.3.12"
 ktlint = "1.7.1"
 lottie = "6.7.1"
 material3 = "1.4.0"
+compose-ui-test = "1.12.1"
 mockk = "1.14.11"
 oneui-design = "0.9.20+oneui8"
 oneui-icons = "1.1.0"
@@ -54,6 +55,7 @@ abi-asm-tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
 abi-kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "compose-ui-test" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test" }
