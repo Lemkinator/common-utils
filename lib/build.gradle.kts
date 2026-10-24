@@ -149,14 +149,13 @@ roborazzi {
 }
 
 dependencies {
-    implementation(libs.oneui.design)
+    api(libs.oneui.design)
     implementation(libs.oneui.icons)
     implementation(libs.app.update)
     implementation(libs.review)
     implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
-    api(libs.androidx.navigation.fragment.ktx)
     api(libs.core.splashscreen)
     api(libs.lottie)
     implementation(libs.hilt.android)
@@ -169,7 +168,7 @@ dependencies {
     testImplementation(libs.bundles.robolectric.test)
     testImplementation(testFixtures(project(":lib")))
 
-    testFixturesImplementation(libs.androidx.test.core)
+    testFixturesApi(libs.androidx.test.core)
     // Compose compiler plugin applies to every Kotlin compile task in this module, including
     // testFixtures — it fails outright if no Compose runtime is on that classpath, even though
     // none of these test helpers use Compose.
@@ -203,6 +202,7 @@ dependencies {
     androidTestImplementation(libs.bundles.android.test)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.junit4)
     androidTestImplementation(libs.kotest.assertions.core)
     kspAndroidTest(libs.hilt.compiler)
 }

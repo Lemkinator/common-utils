@@ -13,11 +13,9 @@ jvmTarget = "21"
 aboutlibraries = "15.3.0"
 activity-compose = "1.13.0"
 agp = "9.4.1"
-androidx-navigation = "2.10.2"
 androidx-test = "1.7.0"
 androidx-test-espresso = "3.7.0"
 androidx-test-ext-junit = "1.3.0"
-androidx-test-rules = "1.7.0"
 androidx-test-runner = "1.7.0"
 app-update = "2.1.0"
 asm = "9.11.1"
@@ -57,13 +55,10 @@ aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3",
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "compose-ui-test" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
-androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test" }
-androidx-test-core-ktx = { module = "androidx.test:core-ktx", version.ref = "androidx-test" }
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso" }
 androidx-test-espresso-intents = { module = "androidx.test.espresso:espresso-intents", version.ref = "androidx-test-espresso" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
-androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidx-test-rules" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 app-update = { module = "com.google.android.play:app-update", version.ref = "app-update" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
@@ -89,8 +84,8 @@ roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = 
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 [bundles]
-android-test = ["androidx-test-core", "androidx-test-core-ktx", "androidx-test-runner", "androidx-test-rules", "androidx-test-ext-junit", "androidx-test-espresso-core", "androidx-test-espresso-intents"]
-robolectric-test = ["robolectric", "roborazzi", "androidx-test-core", "androidx-test-core-ktx", "androidx-test-ext-junit"]
+android-test = ["androidx-test-core", "androidx-test-runner", "androidx-test-ext-junit", "androidx-test-espresso-intents"]
+robolectric-test = ["robolectric", "roborazzi", "androidx-test-core", "androidx-test-espresso-core"]
 unit-test = ["kotest-runner-junit5", "kotest-assertions-core", "kotest-property", "mockk", "turbine", "kotlinx-coroutines-test"]
 
 [plugins]
