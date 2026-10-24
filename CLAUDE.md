@@ -20,6 +20,7 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 ./gradlew koverVerifyDebug    # Check coverage floor (debug variant only)
 ./gradlew apiCheck       # Compare the public ABI with lib/api/lib.api
 ./gradlew apiDump        # Rewrite lib/api/lib.api after an intended API change
+./gradlew buildHealth    # Dependency analysis report and gate
 ```
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/`.
@@ -111,6 +112,16 @@ default compiles to a definition-site private static method that's never invoked
 default is inlined at every call site regardless of runner). These annotations predate the
 JUnit 4 migration above and haven't been re-audited against the new runner — some may now
 be unnecessary; treat that as an open follow-up, not a settled fact.
+
+## Dependency Analysis
+
+`./gradlew buildHealth` runs in the `check-formatting` CI job. It fails on unused dependencies, incorrect
+configurations and unused annotation processors; other advice warns. The `dependencyAnalysis {}` block in the root
+`build.gradle.kts` holds the facade bundles and two narrow excludes. Each bundle names its primary and only the
+transitive internals the report lists, so it never masks a declared artifact. `hilt-android` is excluded from the
+incorrect-configuration check: the plugin reads the types Hilt generates into the module as public API, while the
+library keeps Hilt `implementation` (see Hilt). `oneui-design` and the testFixtures `androidx.test:core` are `api`
+because their types appear in the public API. Report: `build/reports/dependency-analysis/build-health-report.txt`.
 
 ## Pre-commit Hook
 
