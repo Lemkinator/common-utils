@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils.ui.activity
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -32,11 +33,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -45,9 +50,11 @@ import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import com.mikepenz.aboutlibraries.ui.compose.variant.LibraryBadges
 import com.mikepenz.aboutlibraries.util.withContext
 import de.lemke.commonutils.R
+import de.lemke.commonutils.ui.utils.openURL
 import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import de.lemke.commonutils.ui.utils.setWindowTransparent
+import de.lemke.commonutils.ui.utils.toBrowsableUrl
 import dev.oneuiproject.oneui.R as iconsR
 import dev.oneuiproject.oneui.design.R as designR
 
@@ -89,14 +96,25 @@ public class CommonUtilsLibsActivity : AppCompatActivity() {
                     },
                 ) { padding ->
                     Column(modifier = Modifier.padding(padding)) {
-                        LibrariesContainer(
-                            Libs.Builder().withContext(this@CommonUtilsLibsActivity).build(),
-                            modifier = Modifier.fillMaxSize(),
-                            badges = LibraryBadges(description = true, funding = true),
-                        )
+                        CompositionLocalProvider(LocalUriHandler provides remember { OpenUrlUriHandler(this@CommonUtilsLibsActivity) }) {
+                            LibrariesContainer(
+                                Libs.Builder().withContext(this@CommonUtilsLibsActivity).build(),
+                                modifier = Modifier.fillMaxSize(),
+                                badges = LibraryBadges(description = true, funding = true),
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+/** Opens links through [openURL] after [toBrowsableUrl]. */
+internal class OpenUrlUriHandler(
+    private val context: Context,
+) : UriHandler {
+    override fun openUri(uri: String) {
+        context.openURL(uri.toBrowsableUrl())
     }
 }
