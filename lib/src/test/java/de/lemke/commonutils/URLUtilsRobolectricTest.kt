@@ -43,16 +43,19 @@ class URLUtilsRobolectricTest {
     @Test
     fun `openURL returns Failed for null URL`() {
         ctx.openURL(null) shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 
     @Test
     fun `openURL returns Failed for blank URL`() {
         ctx.openURL("   ") shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 
     @Test
     fun `openURL returns Failed for empty URL`() {
         ctx.openURL("") shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
     }
 
     @Test
@@ -100,5 +103,19 @@ class URLUtilsRobolectricTest {
         val failing = StartActivityFailingContext(ctx, IllegalStateException("activity manager unavailable"))
         failing.openURL("https://example.com") shouldBe LaunchOutcome.Failed
         ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
+    }
+
+    @Test
+    fun `openURL of a non-web URL shows the cant-open toast when no activity handles it`() {
+        val failing = StartActivityFailingContext(ctx, ActivityNotFoundException("no activity for market"))
+        failing.openURL("market://details?id=de.lemke.sudoku") shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: URL could not be opened."
+    }
+
+    @Test
+    fun `openURL of an upper-case HTTPS URL shows the no-browser toast when no activity handles it`() {
+        val failing = StartActivityFailingContext(ctx, ActivityNotFoundException("no browser"))
+        failing.openURL("HTTPS://example.com") shouldBe LaunchOutcome.Failed
+        ShadowToast.getTextOfLatestToast() shouldBe "No browser app installed…"
     }
 }

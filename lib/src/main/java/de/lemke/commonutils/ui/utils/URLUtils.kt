@@ -31,6 +31,21 @@ private const val TAG = "URLUtils"
 /** Returns this string with an `https://` prefix, unless it already starts with `http://` or `https://`. */
 public fun String.withHttps(): String = if (this.startsWith("http://") || this.startsWith("https://")) this else "https://$this"
 
+private val WEB_SCHEMES = setOf("http", "https")
+private val SCP_LIKE_URL = Regex("""^[\w.-]+@([\w.-]+):(?!//)/?(.+?)(?:\.git)?/?$""")
+private val GIT_PROTOCOL_URL = Regex("""^(?:git|ssh|git\+ssh|ssh\+git)://(?:[^@/]+@)?([^/:]+)(?::\d+)?/(.+?)(?:\.git)?/?$""")
+
+/**
+ * Rewrites a repository URL that only git understands, such as `scm:git:git@github.com:owner/repo.git`, to its
+ * `https://` web page. Any other URL is returned without its `scm:git:` prefix.
+ */
+internal fun String.toBrowsableUrl(): String {
+    val url = trim().removePrefix("scm:git:")
+    val match = SCP_LIKE_URL.matchEntire(url) ?: GIT_PROTOCOL_URL.matchEntire(url) ?: return url
+    val (host, path) = match.destructured
+    return "https://$host/$path"
+}
+
 /** Removes `https://`, `http://`, and a trailing `/` from this string. */
 public fun String.withoutHttps(): String = this.removePrefix("https://").removePrefix("http://").removeSuffix("/")
 
@@ -40,27 +55,29 @@ public fun String.urlEncodeAmpersand(): String = this.replace("&", "%26")
 /** Percent-encodes this string using UTF-8. */
 public fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
 
-/** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
+/** Opens [url] with the app registered for it, showing a toast if no app can open it or the URL is blank. */
 public fun Fragment.openURL(url: String?): LaunchOutcome = requireContext().openURL(url)
 
-/** Opens [url] in the default browser, showing a toast if no browser is available or the URL is blank. */
-public fun Context.openURL(url: String?): LaunchOutcome =
-    // startActivity and the target app throw an open-ended exception set; every failure must toast, not crash.
+/** Opens [url] with the app registered for it, showing a toast if no app can open it or the URL is blank. */
+public fun Context.openURL(url: String?): LaunchOutcome {
+    if (url.isNullOrBlank()) {
+        Log.e(TAG, "link is null or blank")
+        toast(getString(R.string.commonutils_error_cant_open_url))
+        return LaunchOutcome.Failed
+    }
+    val uri = url.toUri()
+    // startActivity and the target app throw an open-ended exception set.
     @Suppress("TooGenericExceptionCaught")
-    try {
-        if (url.isNullOrBlank()) {
-            Log.e(TAG, "link is null or blank")
-            toast(getString(R.string.commonutils_error_cant_open_url))
-            LaunchOutcome.Failed
-        } else {
-            launchForOutcome { startActivity(Intent(ACTION_VIEW, url.toUri()).addFlags(FLAG_ACTIVITY_NEW_TASK)) }
-        }
+    return try {
+        launchForOutcome { startActivity(Intent(ACTION_VIEW, uri).addFlags(FLAG_ACTIVITY_NEW_TASK)) }
     } catch (e: ActivityNotFoundException) {
-        Log.e(TAG, "No browser app installed", e)
-        toast(getString(R.string.commonutils_no_browser_app_installed))
+        val isWebLink = uri.normalizeScheme().scheme in WEB_SCHEMES
+        Log.e(TAG, if (isWebLink) "No browser app installed" else "No app can open the link", e)
+        toast(getString(if (isWebLink) R.string.commonutils_no_browser_app_installed else R.string.commonutils_error_cant_open_url))
         LaunchOutcome.Failed
     } catch (e: Exception) {
         Log.e(TAG, "Failed to open URL", e)
         toast(getString(R.string.commonutils_error_cant_open_url))
         LaunchOutcome.Failed
     }
+}

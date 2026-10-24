@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils
 
+import de.lemke.commonutils.ui.utils.toBrowsableUrl
 import de.lemke.commonutils.ui.utils.urlEncode
 import de.lemke.commonutils.ui.utils.urlEncodeAmpersand
 import de.lemke.commonutils.ui.utils.withHttps
@@ -75,6 +76,37 @@ class URLUtilsTest : ShouldSpec(
             }
             should("leave alphanumeric unchanged") {
                 "abc123".urlEncode() shouldBe "abc123"
+            }
+        }
+        context("toBrowsableUrl") {
+            context("rewrites a git-only repository URL to its web page") {
+                listOf(
+                    "git@github.com:sfuhrm/sudoku.git",
+                    "scm:git:git@github.com:sfuhrm/sudoku.git",
+                    "git://github.com/sfuhrm/sudoku.git",
+                    "ssh://git@github.com:22/sfuhrm/sudoku.git",
+                    "scm:git:ssh://git@github.com/sfuhrm/sudoku",
+                    "git+ssh://git@github.com/sfuhrm/sudoku/",
+                    "ssh+git://git@github.com/sfuhrm/sudoku.git",
+                    " git@github.com:sfuhrm/sudoku.git ",
+                ).forEach { url -> should("rewrite '$url'") { url.toBrowsableUrl() shouldBe "https://github.com/sfuhrm/sudoku" } }
+            }
+            should("rewrite an ssh URL without a user on another host") {
+                "ssh://gitlab.example.com/group/repo.git".toBrowsableUrl() shouldBe "https://gitlab.example.com/group/repo"
+            }
+            should("not double the slash of an absolute scp-style path") {
+                "git@host.example.com:/srv/repo.git".toBrowsableUrl() shouldBe "https://host.example.com/srv/repo"
+            }
+            should("drop the scm:git: prefix of a web URL") {
+                "scm:git:https://github.com/sfuhrm/sudoku".toBrowsableUrl() shouldBe "https://github.com/sfuhrm/sudoku"
+            }
+            context("keep any other URL") {
+                listOf(
+                    "https://github.com/sfuhrm/sudoku",
+                    "https://github.com/sfuhrm/sudoku.git",
+                    "mailto:dev@example.com",
+                    "",
+                ).forEach { url -> should("keep '$url'") { url.toBrowsableUrl() shouldBe url } }
             }
         }
     },
