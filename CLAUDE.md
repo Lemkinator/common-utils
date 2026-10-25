@@ -117,11 +117,12 @@ be unnecessary; treat that as an open follow-up, not a settled fact.
 
 `./gradlew buildHealth` runs in the `check-formatting` CI job. It fails on unused dependencies, incorrect
 configurations and unused annotation processors; other advice warns. The `dependencyAnalysis {}` block in the root
-`build.gradle.kts` holds the facade bundles and two narrow excludes. Each bundle names its primary and only the
-transitive internals the report lists, so it never masks a declared artifact. `hilt-android` is excluded from the
-incorrect-configuration check: the plugin reads the types Hilt generates into the module as public API, while the
-library keeps Hilt `implementation` (see Hilt). `oneui-design` and the testFixtures `androidx.test:core` are `api`
-because their types appear in the public API. Report: `build/reports/dependency-analysis/build-health-report.txt`.
+`build.gradle.kts` holds the facade bundles, the narrow guava exclude and the `hilt-android` exclude. Each bundle
+names its primary and only the transitive internals the report lists, so it never masks a declared artifact.
+`hilt-android` is excluded from the incorrect-configuration check: the plugin reads the types Hilt generates into the
+module as public API, while the library keeps Hilt `implementation` (see Hilt). `oneui-design` and the testFixtures
+`androidx.test:core` are `api` because their types appear in the public API. Report:
+`build/reports/dependency-analysis/build-health-report.txt`.
 
 ## Pre-commit Hook
 
