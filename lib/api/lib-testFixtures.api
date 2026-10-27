@@ -195,6 +195,20 @@ public final class de/lemke/commonutils/WhileResumed : java/lang/Enum {
 	public static fun values ()[Lde/lemke/commonutils/WhileResumed;
 }
 
+public final class de/lemke/commonutils/backup/FakeBackupDocuments : de/lemke/commonutils/backup/BackupDocuments {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun delete (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getDeleted ()Ljava/util/List;
+	public final fun getFailRead ()Z
+	public final fun getFailWrite ()Z
+	public final fun getFiles ()Ljava/util/Map;
+	public fun read (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setFailRead (Z)V
+	public final fun setFailWrite (Z)V
+	public fun write (Landroid/net/Uri;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class de/lemke/commonutils/data/FakePackageLookup : de/lemke/commonutils/data/PackageLookup {
 	public static final field $stable I
 	public fun <init> ([Landroid/content/pm/ApplicationInfo;)V
