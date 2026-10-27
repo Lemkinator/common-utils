@@ -16,3 +16,7 @@
 package de.lemke.commonutils.backup.core
 
 public enum class ImportMode { MERGE, REPLACE }
+
+/** Merge needs a rule from every section; Replace works for any section. */
+internal fun importModes(sections: Collection<BackupSection<*>>): Set<ImportMode> =
+    if (sections.all { it is MergeableSection<*, *> }) ImportMode.entries.toSet() else setOf(ImportMode.REPLACE)

@@ -20,60 +20,60 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 
 @Serializable
-private data class Item(val name: String, val rank: Int = 0, val stamp: Int = 0)
+private data class Ranked(val name: String, val rank: Int = 0, val stamp: Int = 0)
 
-private val byName: Comparator<Item> = compareBy { it.name }
+private val byName: Comparator<Ranked> = compareBy { it.name }
 
 class MergeRulesTest : ShouldSpec(
     {
-        val newer = newerWins<Item, Int>({ it.stamp }, byName)
-        val ranked = higherRankWins<Item, Int, Int>({ it.rank }, { it.stamp }, byName)
+        val newer = newerWins<Ranked, Int>({ it.stamp }, byName)
+        val ranked = higherRankWins<Ranked, Int, Int>({ it.rank }, { it.stamp }, byName)
 
         should("newerWins takes the incoming entry when its stamp is greater") {
-            val local = Item("local", stamp = 1)
-            val incoming = Item("incoming", stamp = 2)
+            val local = Ranked("local", stamp = 1)
+            val incoming = Ranked("incoming", stamp = 2)
             newer(local, incoming) shouldBe incoming
         }
         should("newerWins keeps the local entry when its stamp is greater") {
-            val local = Item("local", stamp = 2)
-            val incoming = Item("incoming", stamp = 1)
+            val local = Ranked("local", stamp = 2)
+            val incoming = Ranked("incoming", stamp = 1)
             newer(local, incoming) shouldBe local
         }
         should("newerWins on an equal stamp picks the entry greater by order, whichever side is local") {
-            val a = Item("a", stamp = 1)
-            val b = Item("b", stamp = 1)
+            val a = Ranked("a", stamp = 1)
+            val b = Ranked("b", stamp = 1)
             newer(a, b) shouldBe b
             newer(b, a) shouldBe b
         }
         should("higherRankWins takes the higher rank even when it is older") {
-            val local = Item("local", rank = 1, stamp = 9)
-            val incoming = Item("incoming", rank = 2, stamp = 1)
+            val local = Ranked("local", rank = 1, stamp = 9)
+            val incoming = Ranked("incoming", rank = 2, stamp = 1)
             ranked(local, incoming) shouldBe incoming
             ranked(incoming, local) shouldBe incoming
         }
         should("higherRankWins falls back to the newer stamp on an equal rank") {
-            val older = Item("z", rank = 1, stamp = 1)
-            val newest = Item("a", rank = 1, stamp = 2)
+            val older = Ranked("z", rank = 1, stamp = 1)
+            val newest = Ranked("a", rank = 1, stamp = 2)
             ranked(older, newest) shouldBe newest
             ranked(newest, older) shouldBe newest
         }
         should("higherRankWins on an equal rank and stamp picks by order, whichever side is local") {
-            val a = Item("a", rank = 1, stamp = 1)
-            val b = Item("b", rank = 1, stamp = 1)
+            val a = Ranked("a", rank = 1, stamp = 1)
+            val b = Ranked("b", rank = 1, stamp = 1)
             ranked(a, b) shouldBe b
             ranked(b, a) shouldBe b
         }
         should("both helpers return local when order reports equal entries") {
-            val local = Item("same", stamp = 1)
-            val incoming = Item("same", stamp = 1)
+            val local = Ranked("same", stamp = 1)
+            val incoming = Ranked("same", stamp = 1)
             (newer(local, incoming) === local) shouldBe true
             (ranked(local, incoming) === local) shouldBe true
         }
         should("encodedOrder orders entries by their encoded JSON text") {
-            val order = encodedOrder(Item.serializer())
-            order.compare(Item("a", rank = 2), Item("b", rank = 1)) shouldBe -1
-            order.compare(Item("b"), Item("a")) shouldBe 1
-            order.compare(Item("a"), Item("a")) shouldBe 0
+            val order = encodedOrder(Ranked.serializer())
+            order.compare(Ranked("a", rank = 2), Ranked("b", rank = 1)) shouldBe -1
+            order.compare(Ranked("b"), Ranked("a")) shouldBe 1
+            order.compare(Ranked("a"), Ranked("a")) shouldBe 0
         }
     },
 )
