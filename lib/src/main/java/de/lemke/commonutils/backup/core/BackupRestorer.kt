@@ -57,7 +57,8 @@ private suspend fun <E : Any, K : Any> mergeEntries(
     val incoming = linkedMapOf<K, E>()
     entries.forEach { entry ->
         val key = section.key(entry)
-        incoming[key] = incoming[key]?.let { earlier -> section.resolve(earlier, entry) } ?: entry
+        val earlier = incoming[key]
+        incoming[key] = if (earlier == null) entry else section.resolve(earlier, entry)
     }
     val local = section.localEntries(incoming.keys)
     val (existing, fresh) = incoming.entries.partition { it.key in local }

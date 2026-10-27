@@ -1,3 +1,313 @@
+public final class de/lemke/commonutils/backup/core/BackupApp {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;J)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun copy (Ljava/lang/String;J)Lde/lemke/commonutils/backup/core/BackupApp;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupApp;Ljava/lang/String;JILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupApp;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getVersionCode ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupEngine {
+	public static final field $stable I
+	public fun <init> (Ljava/util/Set;Lde/lemke/commonutils/backup/core/BackupTransaction;Lde/lemke/commonutils/backup/core/BackupApp;Lkotlin/jvm/functions/Function0;)V
+	public final fun export (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getModes ()Ljava/util/Set;
+	public final fun read (Ljava/util/Map;)Lde/lemke/commonutils/backup/core/BackupReadResult;
+	public final fun restore (Lde/lemke/commonutils/backup/core/BackupReadResult$Ready;Lde/lemke/commonutils/backup/core/ImportMode;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupManifest {
+	public static final field $stable I
+	public static final field Companion Lde/lemke/commonutils/backup/core/BackupManifest$Companion;
+	public fun <init> (Ljava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()J
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/util/List;)Lde/lemke/commonutils/backup/core/BackupManifest;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupManifest;Ljava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupManifest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApp ()Ljava/lang/String;
+	public final fun getAppVersionCode ()J
+	public final fun getCreatedAt ()Ljava/lang/String;
+	public final fun getFormat ()I
+	public final fun getKind ()Ljava/lang/String;
+	public final fun getSections ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class de/lemke/commonutils/backup/core/BackupManifest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/core/BackupManifest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lde/lemke/commonutils/backup/core/BackupManifest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lde/lemke/commonutils/backup/core/BackupManifest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupManifest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupPreview {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;JLjava/util/List;Ljava/util/List;Ljava/util/Set;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/Set;
+	public final fun copy (Ljava/lang/String;JLjava/util/List;Ljava/util/List;Ljava/util/Set;)Lde/lemke/commonutils/backup/core/BackupPreview;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupPreview;Ljava/lang/String;JLjava/util/List;Ljava/util/List;Ljava/util/Set;ILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupPreview;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAppVersionCode ()J
+	public final fun getCreatedAt ()Ljava/lang/String;
+	public final fun getModes ()Ljava/util/Set;
+	public final fun getSections ()Ljava/util/List;
+	public final fun getSkippedSections ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class de/lemke/commonutils/backup/core/BackupReadResult {
+}
+
+public final class de/lemke/commonutils/backup/core/BackupReadResult$Ready : de/lemke/commonutils/backup/core/BackupReadResult {
+	public static final field $stable I
+	public final fun getPreview ()Lde/lemke/commonutils/backup/core/BackupPreview;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupReadResult$Refused : de/lemke/commonutils/backup/core/BackupReadResult {
+	public static final field $stable I
+	public fun <init> (Lde/lemke/commonutils/backup/core/BackupRefusal;)V
+	public final fun component1 ()Lde/lemke/commonutils/backup/core/BackupRefusal;
+	public final fun copy (Lde/lemke/commonutils/backup/core/BackupRefusal;)Lde/lemke/commonutils/backup/core/BackupReadResult$Refused;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupReadResult$Refused;Lde/lemke/commonutils/backup/core/BackupRefusal;ILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupReadResult$Refused;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lde/lemke/commonutils/backup/core/BackupRefusal;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class de/lemke/commonutils/backup/core/BackupRefusal {
+}
+
+public final class de/lemke/commonutils/backup/core/BackupRefusal$NewerFormat : de/lemke/commonutils/backup/core/BackupRefusal {
+	public static final field $stable I
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lde/lemke/commonutils/backup/core/BackupRefusal$NewerFormat;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupRefusal$NewerFormat;IILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupRefusal$NewerFormat;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFormat ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupRefusal$NewerSection : de/lemke/commonutils/backup/core/BackupRefusal {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;I)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/String;I)Lde/lemke/commonutils/backup/core/BackupRefusal$NewerSection;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupRefusal$NewerSection;Ljava/lang/String;IILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupRefusal$NewerSection;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getVersion ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupRefusal$NotABackup : de/lemke/commonutils/backup/core/BackupRefusal {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/core/BackupRefusal$NotABackup;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupRefusal$OtherApp : de/lemke/commonutils/backup/core/BackupRefusal {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lde/lemke/commonutils/backup/core/BackupRefusal$OtherApp;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupRefusal$OtherApp;Ljava/lang/String;ILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupRefusal$OtherApp;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApp ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupRefusal$TooOldSection : de/lemke/commonutils/backup/core/BackupRefusal {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;I)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/String;I)Lde/lemke/commonutils/backup/core/BackupRefusal$TooOldSection;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupRefusal$TooOldSection;Ljava/lang/String;IILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupRefusal$TooOldSection;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getVersion ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class de/lemke/commonutils/backup/core/BackupSection {
+	public abstract fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun exportEntries (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getId ()Ljava/lang/String;
+	public abstract fun getMinReadableVersion ()I
+	public abstract fun getSerializer ()Lkotlinx/serialization/KSerializer;
+	public abstract fun getVersion ()I
+	public abstract fun insert (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun upgrade (ILkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
+	public abstract fun validate (Ljava/lang/Object;)Lde/lemke/commonutils/backup/core/EntryCheck;
+}
+
+public abstract interface class de/lemke/commonutils/backup/core/BackupTransaction {
+	public abstract fun run (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class de/lemke/commonutils/backup/core/EntryCheck {
+}
+
+public final class de/lemke/commonutils/backup/core/EntryCheck$Invalid : de/lemke/commonutils/backup/core/EntryCheck {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lde/lemke/commonutils/backup/core/EntryCheck$Invalid;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/EntryCheck$Invalid;Ljava/lang/String;ILjava/lang/Object;)Lde/lemke/commonutils/backup/core/EntryCheck$Invalid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/EntryCheck$Valid : de/lemke/commonutils/backup/core/EntryCheck {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/core/EntryCheck$Valid;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/ImportMode : java/lang/Enum {
+	public static final field MERGE Lde/lemke/commonutils/backup/core/ImportMode;
+	public static final field REPLACE Lde/lemke/commonutils/backup/core/ImportMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lde/lemke/commonutils/backup/core/ImportMode;
+	public static fun values ()[Lde/lemke/commonutils/backup/core/ImportMode;
+}
+
+public final class de/lemke/commonutils/backup/core/MergeRulesKt {
+	public static final fun encodedOrder (Lkotlinx/serialization/KSerializer;)Ljava/util/Comparator;
+	public static final fun higherRankWins (Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Ljava/util/Comparator;)Lkotlin/jvm/functions/Function2;
+	public static final fun newerWins (Lkotlin/jvm/functions/Function1;Ljava/util/Comparator;)Lkotlin/jvm/functions/Function2;
+}
+
+public abstract interface class de/lemke/commonutils/backup/core/MergeableSection : de/lemke/commonutils/backup/core/BackupSection {
+	public abstract fun key (Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun localEntries (Ljava/util/Set;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun replace (Ljava/lang/Object;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun resolve (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class de/lemke/commonutils/backup/core/RestoreReport {
+	public static final field $stable I
+	public fun <init> (Lde/lemke/commonutils/backup/core/ImportMode;Ljava/util/List;)V
+	public final fun component1 ()Lde/lemke/commonutils/backup/core/ImportMode;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lde/lemke/commonutils/backup/core/ImportMode;Ljava/util/List;)Lde/lemke/commonutils/backup/core/RestoreReport;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/RestoreReport;Lde/lemke/commonutils/backup/core/ImportMode;Ljava/util/List;ILjava/lang/Object;)Lde/lemke/commonutils/backup/core/RestoreReport;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMode ()Lde/lemke/commonutils/backup/core/ImportMode;
+	public final fun getSections ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/SectionInfo {
+	public static final field $stable I
+	public static final field Companion Lde/lemke/commonutils/backup/core/SectionInfo$Companion;
+	public fun <init> (Ljava/lang/String;II)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun copy (Ljava/lang/String;II)Lde/lemke/commonutils/backup/core/SectionInfo;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/SectionInfo;Ljava/lang/String;IIILjava/lang/Object;)Lde/lemke/commonutils/backup/core/SectionInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntries ()I
+	public final fun getId ()Ljava/lang/String;
+	public final fun getVersion ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class de/lemke/commonutils/backup/core/SectionInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/core/SectionInfo$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lde/lemke/commonutils/backup/core/SectionInfo;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lde/lemke/commonutils/backup/core/SectionInfo;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class de/lemke/commonutils/backup/core/SectionInfo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class de/lemke/commonutils/backup/core/SectionPreview {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;II)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun copy (Ljava/lang/String;II)Lde/lemke/commonutils/backup/core/SectionPreview;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/SectionPreview;Ljava/lang/String;IIILjava/lang/Object;)Lde/lemke/commonutils/backup/core/SectionPreview;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntries ()I
+	public final fun getId ()Ljava/lang/String;
+	public final fun getSkipped ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/core/SectionReport {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;IIIII)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun component5 ()I
+	public final fun component6 ()I
+	public final fun copy (Ljava/lang/String;IIIII)Lde/lemke/commonutils/backup/core/SectionReport;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/SectionReport;Ljava/lang/String;IIIIIILjava/lang/Object;)Lde/lemke/commonutils/backup/core/SectionReport;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdded ()I
+	public final fun getId ()Ljava/lang/String;
+	public final fun getKept ()I
+	public final fun getRemoved ()I
+	public final fun getSkipped ()I
+	public final fun getUpdated ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class de/lemke/commonutils/data/DefaultPackageLookup : de/lemke/commonutils/data/PackageLookup {
 	public static final field $stable I
 	public fun <init> (Landroid/content/Context;Lkotlinx/coroutines/CoroutineDispatcher;)V

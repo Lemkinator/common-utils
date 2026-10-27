@@ -15,8 +15,10 @@
  */
 package de.lemke.commonutils.backup.core
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.SerializationException
 
 class BackupManifestTest : ShouldSpec(
     {
@@ -40,6 +42,12 @@ class BackupManifestTest : ShouldSpec(
                 """{"kind":"backup","format":1,"app":"oneurl","appVersionCode":1234,"extra":true,""" +
                     """"createdAt":"2026-10-27T14:30:00+01:00","sections":[{"id":"urls","version":1,"entries":87,"more":1}]}"""
             backupJson.decodeFromString(BackupManifest.serializer(), text) shouldBe manifest
+        }
+        should("refuse to decode a manifest without its required fields") {
+            shouldThrow<SerializationException> { backupJson.decodeFromString(BackupManifest.serializer(), """{"kind":"backup"}""") }
+        }
+        should("refuse to decode a section info without its required fields") {
+            shouldThrow<SerializationException> { backupJson.decodeFromString(SectionInfo.serializer(), """{"id":"urls"}""") }
         }
         should("name the manifest entry and a section entry") {
             MANIFEST_ENTRY shouldBe "manifest.json"

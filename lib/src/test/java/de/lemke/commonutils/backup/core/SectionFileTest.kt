@@ -15,8 +15,10 @@
  */
 package de.lemke.commonutils.backup.core
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -29,6 +31,9 @@ class SectionFileTest : ShouldSpec(
         should("decode a section file with an unknown key next to entries") {
             val file = backupJson.decodeFromString(SectionFile.serializer(), """{"entries":[{"a":1}],"deleted":[]}""")
             file shouldBe SectionFile(listOf(JsonObject(mapOf("a" to JsonPrimitive(1)))))
+        }
+        should("refuse to decode a section file without entries") {
+            shouldThrow<SerializationException> { backupJson.decodeFromString(SectionFile.serializer(), """{"deleted":[]}""") }
         }
     },
 )
