@@ -6,6 +6,10 @@ public final class de/lemke/commonutils/ArchitectureKt {
 	public static final fun assertArchitecture (Lcom/lemonappdev/konsist/api/container/KoScope;Ljava/lang/String;)V
 }
 
+public final class de/lemke/commonutils/BackupConventionsKt {
+	public static final fun assertBackupConventions (Lcom/lemonappdev/konsist/api/container/KoScope;)V
+}
+
 public final class de/lemke/commonutils/CacheWriteUrisKt {
 	public static final fun cacheFileOf (Landroid/content/Context;Landroid/net/Uri;)Ljava/io/File;
 	public static final fun cacheWriteUriPattern (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lkotlin/text/Regex;

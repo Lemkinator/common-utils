@@ -71,6 +71,10 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
   call on `Konsist.scopeFromProduction()`. Need Konsist; built and tested against the version in `gradle/libs.versions.toml` only.
 - `assertNoMockedOwnTypes()` — Konsist rule that each app's `CodingConventionsTest` calls on `Konsist.scopeFromTest()`.
   Needs Konsist; built and tested against the version in `gradle/libs.versions.toml` only.
+- `assertBackupConventions()` — Konsist rule that each app with a backup calls on `Konsist.scopeFromProduction()`: no class
+  is both `@Entity` and `@Serializable`. Needs Konsist.
+- `BackupSectionContract<E>` and `DirectBackupTransaction` — the tests every backup section runs through `BackupEngine`
+  (JUnit 4; see "Backup"), and a transaction that runs in place. `FakeBackupDocuments` fakes `BackupDocuments`.
 - `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
   (returns the picker intent it answered),
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
