@@ -4,6 +4,140 @@ public abstract interface class de/lemke/commonutils/backup/BackupDocuments {
 	public abstract fun write (Landroid/net/Uri;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public abstract interface class de/lemke/commonutils/backup/BackupResult {
+}
+
+public final class de/lemke/commonutils/backup/BackupResult$ExportFailed : de/lemke/commonutils/backup/BackupResult {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupResult$ExportFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupResult$Exported : de/lemke/commonutils/backup/BackupResult {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupResult$Exported;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupResult$ReadFailed : de/lemke/commonutils/backup/BackupResult {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupResult$ReadFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupResult$Refused : de/lemke/commonutils/backup/BackupResult {
+	public static final field $stable I
+	public fun <init> (Lde/lemke/commonutils/backup/core/BackupRefusal;)V
+	public final fun component1 ()Lde/lemke/commonutils/backup/core/BackupRefusal;
+	public final fun copy (Lde/lemke/commonutils/backup/core/BackupRefusal;)Lde/lemke/commonutils/backup/BackupResult$Refused;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/BackupResult$Refused;Lde/lemke/commonutils/backup/core/BackupRefusal;ILjava/lang/Object;)Lde/lemke/commonutils/backup/BackupResult$Refused;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lde/lemke/commonutils/backup/core/BackupRefusal;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupResult$RestoreFailed : de/lemke/commonutils/backup/BackupResult {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupResult$RestoreFailed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupResult$Restored : de/lemke/commonutils/backup/BackupResult {
+	public static final field $stable I
+	public fun <init> (Lde/lemke/commonutils/backup/core/RestoreReport;)V
+	public final fun component1 ()Lde/lemke/commonutils/backup/core/RestoreReport;
+	public final fun copy (Lde/lemke/commonutils/backup/core/RestoreReport;)Lde/lemke/commonutils/backup/BackupResult$Restored;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/BackupResult$Restored;Lde/lemke/commonutils/backup/core/RestoreReport;ILjava/lang/Object;)Lde/lemke/commonutils/backup/BackupResult$Restored;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReport ()Lde/lemke/commonutils/backup/core/RestoreReport;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class de/lemke/commonutils/backup/BackupState {
+}
+
+public final class de/lemke/commonutils/backup/BackupState$ConfirmReplace : de/lemke/commonutils/backup/BackupState {
+	public static final field $stable I
+	public final fun getPreview ()Lde/lemke/commonutils/backup/core/BackupPreview;
+}
+
+public final class de/lemke/commonutils/backup/BackupState$Idle : de/lemke/commonutils/backup/BackupState {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupState$Idle;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupState$PickExportTarget : de/lemke/commonutils/backup/BackupState {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lde/lemke/commonutils/backup/BackupState$PickExportTarget;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/BackupState$PickExportTarget;Ljava/lang/String;ILjava/lang/Object;)Lde/lemke/commonutils/backup/BackupState$PickExportTarget;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFileName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupState$PickImportFile : de/lemke/commonutils/backup/BackupState {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupState$PickImportFile;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupState$Preview : de/lemke/commonutils/backup/BackupState {
+	public static final field $stable I
+	public final fun getPreview ()Lde/lemke/commonutils/backup/core/BackupPreview;
+}
+
+public final class de/lemke/commonutils/backup/BackupState$Result : de/lemke/commonutils/backup/BackupState {
+	public static final field $stable I
+	public fun <init> (Lde/lemke/commonutils/backup/BackupResult;)V
+	public final fun component1 ()Lde/lemke/commonutils/backup/BackupResult;
+	public final fun copy (Lde/lemke/commonutils/backup/BackupResult;)Lde/lemke/commonutils/backup/BackupState$Result;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/BackupState$Result;Lde/lemke/commonutils/backup/BackupResult;ILjava/lang/Object;)Lde/lemke/commonutils/backup/BackupState$Result;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResult ()Lde/lemke/commonutils/backup/BackupResult;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupState$Working : de/lemke/commonutils/backup/BackupState {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupState$Working;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupStateHolder {
+	public static final field $stable I
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lde/lemke/commonutils/backup/core/BackupEngine;Lde/lemke/commonutils/backup/BackupDocuments;)V
+	public final fun cancel ()V
+	public final fun confirmReplace ()V
+	public final fun export (Ljava/lang/String;)V
+	public final fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun import ()V
+	public final fun onExportTargetPicked (Lde/lemke/commonutils/ui/utils/DocumentPick;)V
+	public final fun onHandled (Lde/lemke/commonutils/backup/BackupState;)V
+	public final fun onImportFilePicked (Landroid/net/Uri;)V
+	public final fun restore (Lde/lemke/commonutils/backup/core/ImportMode;)V
+}
+
 public final class de/lemke/commonutils/backup/DefaultBackupDocuments : de/lemke/commonutils/backup/BackupDocuments {
 	public static final field $stable I
 	public fun <init> (Landroid/content/Context;Lkotlinx/coroutines/CoroutineDispatcher;)V
