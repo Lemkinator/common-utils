@@ -134,7 +134,8 @@ git config core.hooksPath .githooks
 
 ## Architecture
 
-**Single-module utility library** — ships opt-in Hilt modules and no ViewModel layer.
+**Single-module utility library** — ships opt-in Hilt modules and one ViewModel, `BackupViewModel`, which hosts
+the backup flow of the settings screen.
 Code is organized into:
 
 - **Root utilities** (`lib/src/main/java/de/lemke/commonutils/`):
@@ -173,6 +174,29 @@ this library:
    manually per bump.
 2. **Hilt version** — must match consumer apps to avoid duplicate-class errors. Renovate's `hilt`
    group bumps both repos together.
+
+## Backup
+
+Export and import of an app's data to one zip file. The pure-Kotlin core (`backup/core`, no `android.*`, `androidx.*`,
+`java.*` or `javax.*` import, guarded by `ArchitectureTest`) holds the manifest, read, upgrade, validate, Merge,
+Replace and the optional signature. `backup/` holds the Android layer: `ZipBackupContainer`, `BackupDocuments`,
+`BackupStateHolder`, `BackupViewModel`.
+
+An app opts in with:
+
+- one `BackupSection<E>` per data kind, bound `@Binds @IntoSet`; a `MergeableSection` adds merge rules and
+  enables Merge, otherwise the app offers Replace only. Entries are `@Serializable` DTOs, never Room entities.
+- `BackupApp`, and a `BackupTransaction` bound to its database transaction (an object expression: the interface has a
+  generic method, so no lambda).
+- `@Module(includes = [CommonUtilsBackupModule::class])` and
+  `@EntryPoint @InstallIn(SingletonComponent::class) interface AppBackupEntryPoint : BackupEntryPoint`.
+- `setupCommonUtilsSettingsActivity(..., backupEntryPoint = AppBackupEntryPoint::class.java)` plus
+  `R.xml.preferences_backup` in its preference list. An app without a backup passes neither and binds nothing.
+
+`BackupSectionContract` and `assertBackupConventions()` (testFixtures) test a section through the whole engine.
+Merge helpers `newerWins` and `higherRankWins` end in a total order, so every device keeps the same entry.
+Stamps in the file are ISO-8601 text with a UTC offset. `upgrade` steps throw `IllegalArgumentException` for an
+entry they cannot map; the reader skips and counts it.
 
 ## Launches and Exports
 

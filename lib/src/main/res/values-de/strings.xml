@@ -152,4 +152,56 @@
     <string name="commonutils_openInStore">Im Store Öffnen</string>
     <string name="commonutils_openOnPhone">Auf Telefon Öffnen</string>
 
+    <!--Backup-->
+    <string name="commonutils_backup">Sicherung</string>
+    <string name="commonutils_export_backup">Sicherung exportieren</string>
+    <string name="commonutils_import_backup">Sicherung importieren</string>
+    <string name="commonutils_backup_merge">Zusammenführen</string>
+    <string name="commonutils_backup_replace">Ersetzen</string>
+    <string name="commonutils_backup_preview_date">Sicherung vom %1$s</string>
+    <string name="commonutils_backup_section_line">%1$s: %2$s</string>
+    <string name="commonutils_backup_section_line_skipped">%1$s: %2$s, %3$s</string>
+    <plurals name="commonutils_backup_entries">
+        <item quantity="one">%d Eintrag</item>
+        <item quantity="other">%d Einträge</item>
+    </plurals>
+    <plurals name="commonutils_backup_entries_skipped">
+        <item quantity="one">%d defekter Eintrag übersprungen</item>
+        <item quantity="other">%d defekte Einträge übersprungen</item>
+    </plurals>
+    <string name="commonutils_backup_modes_info">Zusammenführen fügt die Sicherung deinen Daten hinzu. Einträge, die du seitdem gelöscht hast, kommen zurück. Ersetzen tauscht alle Daten gegen die Sicherung.</string>
+    <string name="commonutils_backup_skipped_sections">Diese Sicherung enthält Teile, die diese App-Version nicht kennt: %1$s. Sie werden übersprungen.</string>
+    <string name="commonutils_backup_replace_title">Alle Daten ersetzen?</string>
+    <string name="commonutils_backup_replace_warning">Achtung: Dadurch werden die aktuellen Daten der Teile in dieser Sicherung gelöscht und durch die Sicherung ersetzt. Das kann nicht rückgängig gemacht werden.</string>
+    <string name="commonutils_backup_exported">Sicherung exportiert</string>
+    <string name="commonutils_backup_export_failed">Fehler beim Exportieren der Sicherung</string>
+    <string name="commonutils_backup_restored">Sicherung importiert: %1$s.</string>
+    <plurals name="commonutils_backup_added">
+        <item quantity="one">%d hinzugefügt</item>
+        <item quantity="other">%d hinzugefügt</item>
+    </plurals>
+    <plurals name="commonutils_backup_updated">
+        <item quantity="one">%d aktualisiert</item>
+        <item quantity="other">%d aktualisiert</item>
+    </plurals>
+    <plurals name="commonutils_backup_kept">
+        <item quantity="one">%d behalten</item>
+        <item quantity="other">%d behalten</item>
+    </plurals>
+    <plurals name="commonutils_backup_restored_entries">
+        <item quantity="one">%d Eintrag wiederhergestellt</item>
+        <item quantity="other">%d Einträge wiederhergestellt</item>
+    </plurals>
+    <plurals name="commonutils_backup_removed_entries">
+        <item quantity="one">%d bisheriger Eintrag entfernt</item>
+        <item quantity="other">%d bisherige Einträge entfernt</item>
+    </plurals>
+    <string name="commonutils_backup_read_failed">Die Datei konnte nicht gelesen werden.</string>
+    <string name="commonutils_backup_restore_failed">Fehler beim Importieren der Sicherung. Deine Daten sind unverändert.</string>
+    <string name="commonutils_backup_refused_not_a_backup">Diese Datei ist keine Sicherung.</string>
+    <string name="commonutils_backup_refused_other_app">Diese Sicherung gehört zu einer anderen App.</string>
+    <string name="commonutils_backup_refused_newer">Diese Sicherung stammt von einer neueren Version der App. Bitte aktualisiere die App.</string>
+    <string name="commonutils_backup_refused_too_old">Diese Sicherung ist zu alt, um importiert zu werden.</string>
+    <string name="commonutils_backup_refused_tampered">Diese Sicherung wurde außerhalb der App geändert.</string>
+
 </resources>

@@ -43,6 +43,9 @@
     <string name="commonutils_preference_key_tos" translatable="false">tos</string>
     <string name="commonutils_preference_key_privacy_policy" translatable="false">privacyPolicy</string>
     <string name="commonutils_preference_key_report_bug" translatable="false">reportBug</string>
+    <string name="commonutils_preference_key_backup" translatable="false">commonutilsBackup</string>
+    <string name="commonutils_preference_key_export_backup" translatable="false">commonutilsExportBackup</string>
+    <string name="commonutils_preference_key_import_backup" translatable="false">commonutilsImportBackup</string>
 
     <!--Following strings should be overridden by the app-->
     <string name="commonutils_app_description" translatable="false">App description</string>
@@ -189,5 +192,57 @@
     <!--Other-->
     <string name="commonutils_openInStore">Open in Store</string>
     <string name="commonutils_openOnPhone">Open on Phone</string>
+
+    <!--Backup-->
+    <string name="commonutils_backup">Backup</string>
+    <string name="commonutils_export_backup">Export backup</string>
+    <string name="commonutils_import_backup">Import backup</string>
+    <string name="commonutils_backup_merge">Merge</string>
+    <string name="commonutils_backup_replace">Replace</string>
+    <string name="commonutils_backup_preview_date">Backup from %1$s</string>
+    <string name="commonutils_backup_section_line">%1$s: %2$s</string>
+    <string name="commonutils_backup_section_line_skipped">%1$s: %2$s, %3$s</string>
+    <plurals name="commonutils_backup_entries">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <plurals name="commonutils_backup_entries_skipped">
+        <item quantity="one">%d broken entry skipped</item>
+        <item quantity="other">%d broken entries skipped</item>
+    </plurals>
+    <string name="commonutils_backup_modes_info">Merge adds the backup to your data. Entries you deleted since then come back. Replace swaps all data for the backup.</string>
+    <string name="commonutils_backup_skipped_sections">This backup holds parts this app version does not know: %1$s. They are skipped.</string>
+    <string name="commonutils_backup_replace_title">Replace all data?</string>
+    <string name="commonutils_backup_replace_warning">Attention: This deletes the current data of the parts in this backup and replaces it with the backup. This cannot be undone.</string>
+    <string name="commonutils_backup_exported">Backup exported</string>
+    <string name="commonutils_backup_export_failed">Error exporting backup</string>
+    <string name="commonutils_backup_restored">Backup imported: %1$s.</string>
+    <plurals name="commonutils_backup_added">
+        <item quantity="one">%d added</item>
+        <item quantity="other">%d added</item>
+    </plurals>
+    <plurals name="commonutils_backup_updated">
+        <item quantity="one">%d updated</item>
+        <item quantity="other">%d updated</item>
+    </plurals>
+    <plurals name="commonutils_backup_kept">
+        <item quantity="one">%d kept</item>
+        <item quantity="other">%d kept</item>
+    </plurals>
+    <plurals name="commonutils_backup_restored_entries">
+        <item quantity="one">%d entry restored</item>
+        <item quantity="other">%d entries restored</item>
+    </plurals>
+    <plurals name="commonutils_backup_removed_entries">
+        <item quantity="one">%d previous entry removed</item>
+        <item quantity="other">%d previous entries removed</item>
+    </plurals>
+    <string name="commonutils_backup_read_failed">The file could not be read.</string>
+    <string name="commonutils_backup_restore_failed">Error importing backup. Your data is unchanged.</string>
+    <string name="commonutils_backup_refused_not_a_backup">This file is not a backup.</string>
+    <string name="commonutils_backup_refused_other_app">This backup belongs to another app.</string>
+    <string name="commonutils_backup_refused_newer">This backup was made with a newer version of the app. Please update the app.</string>
+    <string name="commonutils_backup_refused_too_old">This backup is too old to be imported.</string>
+    <string name="commonutils_backup_refused_tampered">This backup was changed outside the app.</string>
 
 </resources>

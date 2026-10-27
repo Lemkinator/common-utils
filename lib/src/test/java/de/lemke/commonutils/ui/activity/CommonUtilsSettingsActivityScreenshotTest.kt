@@ -99,4 +99,21 @@ class CommonUtilsSettingsActivityScreenshotTest {
             onView(isRoot()).captureRoboImage("src/test/screenshots/settings_default_dark.png")
         }
     }
+
+    @Test
+    fun settingsActivity_backup() {
+        CommonUtilsSettingsActivity.preferences = listOf(R.xml.preferences_design, R.xml.preferences_backup)
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            onView(isRoot()).captureRoboImage("src/test/screenshots/settings_backup.png")
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun settingsActivity_backup_dark() {
+        CommonUtilsSettingsActivity.preferences = listOf(R.xml.preferences_design, R.xml.preferences_backup)
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            onView(isRoot()).captureRoboImage("src/test/screenshots/settings_backup_dark.png")
+        }
+    }
 }
