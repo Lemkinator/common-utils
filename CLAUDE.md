@@ -193,6 +193,10 @@ An app opts in with:
 - `setupCommonUtilsSettingsActivity(..., backupEntryPoint = AppBackupEntryPoint::class.java)` plus
   `R.xml.preferences_backup` in its preference list. An app without a backup passes neither and binds nothing.
 
+An app that signs its backups binds `@Provides fun signer(): BackupSigner = HmacSha256BackupSigner(keyId, key)` in its
+module: its export carries `signature.json`, and its import refuses an unsigned or changed file before any write. An
+app without that binding exports and reads plain files, and ignores a signature it finds. The key never enters a repo.
+
 `BackupSectionContract` and `assertBackupConventions()` (testFixtures) test a section through the whole engine.
 Merge helpers `newerWins` and `higherRankWins` end in a total order, so every device keeps the same entry.
 Stamps in the file are ISO-8601 text with a UTC offset. `upgrade` steps throw `IllegalArgumentException` for an

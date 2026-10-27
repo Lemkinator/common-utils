@@ -42,7 +42,9 @@ import de.lemke.commonutils.backup.BackupEntryPoint
 import de.lemke.commonutils.backup.BackupState
 import de.lemke.commonutils.backup.BackupViewModel
 import de.lemke.commonutils.backup.FakeBackupDocuments
+import de.lemke.commonutils.backup.HmacSha256BackupSigner
 import de.lemke.commonutils.backup.ZipBackupContainer
+import de.lemke.commonutils.backup.ZipRead
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
 import de.lemke.commonutils.backup.core.BackupSection
@@ -63,6 +65,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotContain
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import org.junit.After
 import org.junit.Before
@@ -298,6 +301,42 @@ class BackupPreferencesRobolectricTest {
 
             store shouldContainExactly listOf(Item("a", 1), Item("b", 2))
             latestDialog().message() shouldBe "Backup imported: 2 added, 0 updated, 0 kept, 0 broken entries skipped."
+        }
+    }
+
+    @Test
+    fun `settings activity with a signer binding refuses an edited export`() {
+        val signer = HmacSha256BackupSigner("test", "Jefe".encodeToByteArray())
+        engine =
+            BackupEngine(setOf(MergeableMemorySection(store = store)), DirectTransaction, BackupApp("oneurl", 100), {
+                "2026-10-27T14:30:00+01:00"
+            }, signer)
+        store += Item("a", 1)
+        launch { activity ->
+            activity.click(R.string.commonutils_preference_key_export_backup)
+            activity.receivePickerResult(Activity.RESULT_OK, Intent().setData(exportUri))
+            idle()
+            latestDialog().click(AlertDialog.BUTTON_POSITIVE)
+            val files = (ZipBackupContainer.read(ByteArrayInputStream(fakeDocuments.files.getValue(exportUri))) as ZipRead.Files).files
+            val edited =
+                files
+                    .getValue("sections/items.json")
+                    .decodeToString()
+                    .replace("\"value\":1", "\"value\":99")
+                    .encodeToByteArray()
+
+            fakeDocuments.files[importUri] = zip(files + ("sections/items.json" to edited))
+            activity.click(R.string.commonutils_preference_key_import_backup)
+            activity.receivePickerResult(Activity.RESULT_OK, Intent().setData(importUri))
+            idle()
+            latestDialog().message() shouldBe "This backup was changed outside the app."
+
+            latestDialog().click(AlertDialog.BUTTON_POSITIVE)
+            fakeDocuments.files[importUri] = fakeDocuments.files.getValue(exportUri)
+            activity.click(R.string.commonutils_preference_key_import_backup)
+            activity.receivePickerResult(Activity.RESULT_OK, Intent().setData(importUri))
+            idle()
+            latestDialog().message() shouldContain "items: 1 entry"
         }
     }
 

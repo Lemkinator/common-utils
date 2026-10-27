@@ -157,6 +157,14 @@ public final class de/lemke/commonutils/backup/DefaultBackupDocuments : de/lemke
 	public fun write (Landroid/net/Uri;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public final class de/lemke/commonutils/backup/HmacSha256BackupSigner : de/lemke/commonutils/backup/core/BackupSigner {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;[B)V
+	public fun getKeyId ()Ljava/lang/String;
+	public fun mac ([B)[B
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class de/lemke/commonutils/backup/core/BackupApp {
 	public static final field $stable I
 	public fun <init> (Ljava/lang/String;J)V
