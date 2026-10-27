@@ -14,7 +14,8 @@ public final class de/lemke/commonutils/backup/core/BackupApp {
 
 public final class de/lemke/commonutils/backup/core/BackupEngine {
 	public static final field $stable I
-	public fun <init> (Ljava/util/Set;Lde/lemke/commonutils/backup/core/BackupTransaction;Lde/lemke/commonutils/backup/core/BackupApp;Lkotlin/jvm/functions/Function0;)V
+	public fun <init> (Ljava/util/Set;Lde/lemke/commonutils/backup/core/BackupTransaction;Lde/lemke/commonutils/backup/core/BackupApp;Lkotlin/jvm/functions/Function0;Lde/lemke/commonutils/backup/core/BackupSigner;)V
+	public synthetic fun <init> (Ljava/util/Set;Lde/lemke/commonutils/backup/core/BackupTransaction;Lde/lemke/commonutils/backup/core/BackupApp;Lkotlin/jvm/functions/Function0;Lde/lemke/commonutils/backup/core/BackupSigner;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun export (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getModes ()Ljava/util/Set;
 	public final fun read (Ljava/util/Map;)Lde/lemke/commonutils/backup/core/BackupReadResult;
@@ -149,6 +150,14 @@ public final class de/lemke/commonutils/backup/core/BackupRefusal$OtherApp : de/
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class de/lemke/commonutils/backup/core/BackupRefusal$Tampered : de/lemke/commonutils/backup/core/BackupRefusal {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/core/BackupRefusal$Tampered;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class de/lemke/commonutils/backup/core/BackupRefusal$TooOldSection : de/lemke/commonutils/backup/core/BackupRefusal {
 	public static final field $stable I
 	public fun <init> (Ljava/lang/String;I)V
@@ -173,6 +182,11 @@ public abstract interface class de/lemke/commonutils/backup/core/BackupSection {
 	public abstract fun insert (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun upgrade (ILkotlinx/serialization/json/JsonObject;)Lkotlinx/serialization/json/JsonObject;
 	public abstract fun validate (Ljava/lang/Object;)Lde/lemke/commonutils/backup/core/EntryCheck;
+}
+
+public abstract interface class de/lemke/commonutils/backup/core/BackupSigner {
+	public abstract fun getKeyId ()Ljava/lang/String;
+	public abstract fun mac ([B)[B
 }
 
 public abstract interface class de/lemke/commonutils/backup/core/BackupTransaction {

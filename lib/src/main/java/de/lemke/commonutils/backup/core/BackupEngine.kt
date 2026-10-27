@@ -17,13 +17,15 @@ package de.lemke.commonutils.backup.core
 
 /**
  * Exports, reads and restores backups of [sections]. The core is pure Kotlin: [clock] returns the export time as
- * ISO-8601 text with a UTC offset, supplied by the platform layer.
+ * ISO-8601 text with a UTC offset, supplied by the platform layer. With a [signer], an export is signed and a read
+ * refuses an unsigned or changed file.
  */
 public class BackupEngine(
     private val sections: Set<BackupSection<*>>,
     private val transaction: BackupTransaction,
     private val app: BackupApp,
     private val clock: () -> String,
+    private val signer: BackupSigner? = null,
 ) {
     init {
         require(sections.map { it.id }.toSet().size == sections.size) { "Backup section ids must be unique" }
@@ -32,17 +34,22 @@ public class BackupEngine(
     /** MERGE only when every bound section is a [MergeableSection]. */
     public val modes: Set<ImportMode> = importModes(sections)
 
-    /** The files of a backup by entry name: `manifest.json` and `sections/<id>.json`. All sections are read in one transaction. */
+    /**
+     * The files of a backup by entry name: `manifest.json`, `sections/<id>.json` and, with a signer, `signature.json`.
+     * All sections are read in one transaction.
+     */
     public suspend fun export(): Map<String, ByteArray> {
         val exported = transaction.run { sections.map { exportSection(it) } }
         val manifest = BackupManifest(BACKUP_KIND, BACKUP_FORMAT, app.id, app.versionCode, clock(), exported.map { it.first })
-        return buildMap {
-            put(MANIFEST_ENTRY, backupJson.encodeToString(BackupManifest.serializer(), manifest).encodeToByteArray())
-            exported.forEach { (info, bytes) -> put(sectionEntryName(info.id), bytes) }
-        }
+        val files =
+            buildMap {
+                put(MANIFEST_ENTRY, backupJson.encodeToString(BackupManifest.serializer(), manifest).encodeToByteArray())
+                exported.forEach { (info, bytes) -> put(sectionEntryName(info.id), bytes) }
+            }
+        return if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
     }
 
-    public fun read(files: Map<String, ByteArray>): BackupReadResult = readBackup(files, sections, app)
+    public fun read(files: Map<String, ByteArray>): BackupReadResult = readBackup(files, sections, app, signer)
 
     public suspend fun restore(
         ready: BackupReadResult.Ready,

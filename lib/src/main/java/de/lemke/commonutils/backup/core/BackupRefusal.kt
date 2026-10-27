@@ -27,4 +27,7 @@ public sealed interface BackupRefusal {
     public data class NewerSection(val id: String, val version: Int) : BackupRefusal
 
     public data class TooOldSection(val id: String, val version: Int) : BackupRefusal
+
+    /** A signing app got a file that is unsigned or changed since export. */
+    public data object Tampered : BackupRefusal
 }

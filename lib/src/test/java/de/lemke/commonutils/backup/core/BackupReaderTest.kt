@@ -27,7 +27,7 @@ import kotlinx.serialization.json.jsonPrimitive
 private fun read(
     files: Map<String, ByteArray>,
     vararg sections: BackupSection<*>,
-): BackupReadResult = readBackup(files, sections.toSet(), app)
+): BackupReadResult = readBackup(files, sections.toSet(), app, null)
 
 private fun refusal(result: BackupReadResult): BackupRefusal = result.shouldBeInstanceOf<BackupReadResult.Refused>().reason
 

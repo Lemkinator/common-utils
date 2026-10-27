@@ -21,6 +21,7 @@ import kotlinx.serialization.json.Json
 internal const val BACKUP_KIND: String = "backup"
 internal const val BACKUP_FORMAT: Int = 1
 internal const val MANIFEST_ENTRY: String = "manifest.json"
+internal const val SIGNATURE_ENTRY: String = "signature.json"
 
 internal fun sectionEntryName(id: String): String = "sections/$id.json"
 
