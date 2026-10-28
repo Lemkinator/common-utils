@@ -23,6 +23,7 @@ import de.lemke.commonutils.ui.utils.DocumentPick
 import de.lemke.commonutils.ui.utils.runContained
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val TAG = "BackupStateHolder"
 
@@ -39,7 +41,7 @@ private val restoreFailed = BackupState.Result(BackupResult.RestoreFailed)
 
 /**
  * Runs the export and import of a ViewModel through [engine] and [documents] in [scope], one at a time, and holds the
- * [BackupState] of the latest one.
+ * [BackupState] of the latest one. The CPU work (zip, parse, upgrade, validate, signature) runs on [dispatcher].
  *
  * A ViewModel creates it with `viewModelScope` and exposes [state]. Only [BackupState.Working] blocks: while an export or
  * import runs, [export], [import] and the picker callbacks do nothing. A document the export picker created while
@@ -51,6 +53,7 @@ public class BackupStateHolder(
     private val scope: CoroutineScope,
     private val engine: BackupEngine,
     private val documents: BackupDocuments,
+    private val dispatcher: CoroutineDispatcher,
 ) {
     private val mutableState = MutableStateFlow<BackupState>(BackupState.Idle)
 
@@ -125,7 +128,7 @@ public class BackupStateHolder(
         work: suspend () -> BackupState,
     ): Boolean {
         if (mutableState.getAndUpdate { BackupState.Working } == BackupState.Working) return false
-        scope.launch { mutableState.value = runContained(TAG, "Backup work", failure, work) }
+        scope.launch { mutableState.value = runContained(TAG, "Backup work", failure) { withContext(dispatcher) { work() } } }
         return true
     }
 

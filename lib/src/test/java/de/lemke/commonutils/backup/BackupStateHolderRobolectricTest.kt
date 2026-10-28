@@ -91,7 +91,7 @@ private fun engineOf(
 private fun TestScope.holderOf(
     engine: BackupEngine,
     documents: BackupDocuments,
-): BackupStateHolder = BackupStateHolder(this, engine, documents)
+): BackupStateHolder = BackupStateHolder(this, engine, documents, UnconfinedTestDispatcher(testScheduler))
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])

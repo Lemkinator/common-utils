@@ -16,6 +16,7 @@
 package de.lemke.commonutils.backup
 
 import de.lemke.commonutils.backup.core.BackupEngine
+import kotlinx.coroutines.CoroutineDispatcher
 
 /**
  * What the common-utils settings screen needs from the app's Hilt graph to offer a backup. `CommonUtilsBackupModule`
@@ -25,4 +26,5 @@ public class BackupScreenDeps internal constructor(
     internal val engine: BackupEngine,
     internal val documents: BackupDocuments,
     internal val sectionLabels: Set<BackupSectionLabel>,
+    internal val dispatcher: CoroutineDispatcher,
 )

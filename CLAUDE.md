@@ -194,8 +194,9 @@ An app opts in with:
   section by it, or by its id if the app binds none.
 - `BackupApp`, and a `BackupTransaction` bound to its database transaction (an object expression: the interface has a
   generic method, so no lambda).
-- `@Module(includes = [CommonUtilsBackupModule::class])` on its own module, plus `R.xml.preferences_backup` in the
-  preference list it passes to `setupCommonUtilsSettingsActivity`. The module binds `BackupScreenDeps`; the settings fragment injects
+- `@Module(includes = [CommonUtilsBackupModule::class])` on its own module, with `CommonUtilsCoroutinesModule` bound for
+  `@DefaultDispatcher`, plus `R.xml.preferences_backup` in the preference list it passes to
+  `setupCommonUtilsSettingsActivity`. The module binds `BackupScreenDeps`; the settings fragment injects
   `Optional<BackupScreenDeps>` through Hilt, so it needs no static setup and works after process death. An app without
   the module binds nothing and the screen removes the Backup category.
 

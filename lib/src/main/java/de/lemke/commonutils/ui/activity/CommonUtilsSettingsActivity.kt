@@ -91,7 +91,7 @@ public class CommonUtilsSettingsActivity : AppCompatActivity() {
             super.onCreate(bundle)
             initCommonUtilsPreferences(settings)
             backupScreen.orElse(null)?.let { screen ->
-                val factory = viewModelFactory { initializer { BackupViewModel(screen.engine, screen.documents) } }
+                val factory = viewModelFactory { initializer { BackupViewModel(screen.engine, screen.documents, screen.dispatcher) } }
                 val viewModel = ViewModelProvider(this, factory)[BackupViewModel::class.java]
                 bindBackupPreferences(screen.sectionLabels) { viewModel.backup }
             }

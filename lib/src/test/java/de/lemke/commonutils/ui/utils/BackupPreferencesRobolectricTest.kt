@@ -65,6 +65,7 @@ import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotContain
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -114,6 +115,7 @@ class BackupPreferencesRobolectricTest {
             engine,
             fakeDocuments,
             setOf(BackupSectionLabel("items", TestR.string.test_section_label_urls)),
+            UnconfinedTestDispatcher(),
         )
 
     private val store = mutableListOf<Item>()

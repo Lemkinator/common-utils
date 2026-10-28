@@ -144,7 +144,7 @@ public final class de/lemke/commonutils/backup/BackupState$Working : de/lemke/co
 
 public final class de/lemke/commonutils/backup/BackupStateHolder {
 	public static final field $stable I
-	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lde/lemke/commonutils/backup/core/BackupEngine;Lde/lemke/commonutils/backup/BackupDocuments;)V
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lde/lemke/commonutils/backup/core/BackupEngine;Lde/lemke/commonutils/backup/BackupDocuments;Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public final fun cancel ()V
 	public final fun confirmReplace ()V
 	public final fun export (Ljava/lang/String;)V
@@ -569,7 +569,7 @@ public abstract interface class de/lemke/commonutils/di/CommonUtilsBackupModule 
 }
 
 public final class de/lemke/commonutils/di/CommonUtilsBackupModule$Companion {
-	public final fun backupScreen (Lde/lemke/commonutils/backup/core/BackupEngine;Lde/lemke/commonutils/backup/BackupDocuments;Ljava/util/Set;)Lde/lemke/commonutils/backup/BackupScreenDeps;
+	public final fun backupScreen (Lde/lemke/commonutils/backup/core/BackupEngine;Lde/lemke/commonutils/backup/BackupDocuments;Ljava/util/Set;Lkotlinx/coroutines/CoroutineDispatcher;)Lde/lemke/commonutils/backup/BackupScreenDeps;
 	public final fun engine (Ljava/util/Set;Lde/lemke/commonutils/backup/core/BackupTransaction;Lde/lemke/commonutils/backup/core/BackupApp;Ljava/util/Optional;)Lde/lemke/commonutils/backup/core/BackupEngine;
 }
 

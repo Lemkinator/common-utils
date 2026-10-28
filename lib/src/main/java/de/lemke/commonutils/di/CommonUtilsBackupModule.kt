@@ -33,6 +33,7 @@ import de.lemke.commonutils.backup.core.BackupSigner
 import de.lemke.commonutils.backup.core.BackupTransaction
 import java.time.OffsetDateTime
 import java.util.Optional
+import kotlinx.coroutines.CoroutineDispatcher
 
 /**
  * Opt-in Hilt bindings for the backup: a [BackupEngine] over the sections the app binds, and [BackupDocuments].
@@ -40,7 +41,7 @@ import java.util.Optional
  * It installs itself nowhere. An app includes it from its own module and binds [BackupApp], [BackupTransaction] and its
  * sections with `@Binds @IntoSet`, plus a [BackupSectionLabel] per section with `@Provides @IntoSet`; a [BackupSigner]
  * binding makes it sign. It also binds the [BackupScreenDeps] that make the settings screen show the Backup category.
- * It needs the bindings of [CommonUtilsCoroutinesModule] for `@IoDispatcher`.
+ * It needs the bindings of [CommonUtilsCoroutinesModule] for `@IoDispatcher` and `@DefaultDispatcher`.
  * ```
  * @Module(includes = [CommonUtilsBackupModule::class])
  * @InstallIn(SingletonComponent::class)
@@ -76,6 +77,7 @@ public interface CommonUtilsBackupModule {
             engine: BackupEngine,
             documents: BackupDocuments,
             sectionLabels: Set<BackupSectionLabel>,
-        ): BackupScreenDeps = BackupScreenDeps(engine, documents, sectionLabels)
+            @DefaultDispatcher dispatcher: CoroutineDispatcher,
+        ): BackupScreenDeps = BackupScreenDeps(engine, documents, sectionLabels, dispatcher)
     }
 }
