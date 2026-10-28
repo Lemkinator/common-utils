@@ -21,6 +21,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.Random
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -37,11 +38,18 @@ private fun zipOf(vararg entries: Pair<String, ByteArray>): ByteArray {
     return out.toByteArray()
 }
 
+private const val MIB = 1024 * 1024
+
 private fun readFiles(
     bytes: ByteArray,
     cap: Long? = null,
+    sectionCap: Long? = null,
 ): ZipRead =
-    if (cap == null) ZipBackupContainer.read(ByteArrayInputStream(bytes)) else ZipBackupContainer.read(ByteArrayInputStream(bytes), cap)
+    when {
+        cap == null -> ZipBackupContainer.read(ByteArrayInputStream(bytes))
+        sectionCap == null -> ZipBackupContainer.read(ByteArrayInputStream(bytes), cap)
+        else -> ZipBackupContainer.read(ByteArrayInputStream(bytes), cap, sectionCap)
+    }
 
 private fun filesOf(read: ZipRead): Map<String, String> =
     read.shouldBeInstanceOf<ZipRead.Files>().files.mapValues { it.value.decodeToString() }
@@ -105,10 +113,38 @@ class ZipBackupContainerTest : ShouldSpec(
             (zip.size < 1000) shouldBe true
             readFiles(zip, cap = 1000) shouldBe ZipRead.TooLarge
         }
-        should("accept 16 MiB uncompressed by default and refuse one byte more") {
-            val cap = 16 * 1024 * 1024
-            filesOf(readFiles(zipOf("manifest.json" to ByteArray(cap)))).getValue("manifest.json").length shouldBe cap
-            readFiles(zipOf("manifest.json" to ByteArray(cap + 1))) shouldBe ZipRead.TooLarge
+        should("accept 16 MiB uncompressed in one section by default and refuse one byte more") {
+            val cap = 16 * MIB
+            filesOf(readFiles(zipOf("sections/a.json" to ByteArray(cap)))).getValue("sections/a.json").length shouldBe cap
+            readFiles(zipOf("sections/a.json" to ByteArray(cap + 1))) shouldBe ZipRead.TooLarge
+        }
+        should("read two sections of 16 MiB each") {
+            val read = readFiles(zipOf("sections/a.json" to ByteArray(16 * MIB), "sections/b.json" to ByteArray(16 * MIB)))
+            read.shouldBeInstanceOf<ZipRead.Files>().files.mapValues { it.value.size } shouldBe
+                mapOf("sections/a.json" to 16 * MIB, "sections/b.json" to 16 * MIB)
+        }
+        should("accept 64 MiB uncompressed in all by default and refuse one byte more") {
+            val atCap = zipOf("files/a.bin" to ByteArray(48 * MIB), "sections/a.json" to ByteArray(16 * MIB))
+            filesOf(readFiles(atCap)).keys shouldBe setOf("sections/a.json")
+            val overCap = zipOf("files/a.bin" to ByteArray(48 * MIB + 1), "sections/a.json" to ByteArray(16 * MIB))
+            readFiles(overCap) shouldBe ZipRead.TooLarge
+        }
+        should("refuse 64 MiB and one byte spread over four sections and a manifest") {
+            val sections = Array(4) { "sections/s$it.json" to ByteArray(16 * MIB) }
+            readFiles(zipOf(*sections, "manifest.json" to byteArrayOf(1))) shouldBe ZipRead.TooLarge
+        }
+        should("fit the largest accepted backup of incompressible bytes into the archive limit") {
+            val random = Random(7)
+            val sections = Array(4) { "sections/s$it.json" to ByteArray(16 * MIB).also(random::nextBytes) }
+            val zip = written(mapOf(*sections))
+            (zip.size > 64 * MIB) shouldBe true
+            (zip.size <= MAX_ARCHIVE_BYTES) shouldBe true
+            filesOf(readFiles(zip)).keys shouldBe setOf("sections/s0.json", "sections/s1.json", "sections/s2.json", "sections/s3.json")
+        }
+        should("apply the section cap to sections only") {
+            val zip = zipOf("manifest.json" to ByteArray(600), "sections/a.json" to ByteArray(400))
+            filesOf(readFiles(zip, cap = 1000, sectionCap = 500)).keys shouldBe setOf("manifest.json", "sections/a.json")
+            readFiles(zipOf("sections/a.json" to ByteArray(501)), cap = 1000, sectionCap = 500) shouldBe ZipRead.TooLarge
         }
         should("count a skipped files/ entry toward the cap") {
             readFiles(zipOf("files/big.bin" to ByteArray(2000), "manifest.json" to byteArrayOf(1)), cap = 1000) shouldBe ZipRead.TooLarge

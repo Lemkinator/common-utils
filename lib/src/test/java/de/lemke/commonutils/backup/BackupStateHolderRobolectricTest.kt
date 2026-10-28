@@ -264,7 +264,7 @@ class BackupStateHolderRobolectricTest {
             holder.state.value shouldBe readFailed
 
             holder.onHandled(readFailed)
-            documents.files[source] = zip(mapOf("manifest.json" to ByteArray(16 * 1024 * 1024 + 1)))
+            documents.files[source] = zip(mapOf("sections/items.json" to ByteArray(16 * 1024 * 1024 + 1)))
             holder.onImportFilePicked(source)
             holder.state.value shouldBe readFailed
 

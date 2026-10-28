@@ -24,7 +24,8 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-private const val MAX_TOTAL_BYTES = 16L * 1024 * 1024
+private const val MAX_SECTION_BYTES = 16L * 1024 * 1024
+private const val MAX_TOTAL_BYTES = 64L * 1024 * 1024
 private const val ARCHIVE_OVERHEAD_BYTES = 1L * 1024 * 1024
 private const val FILES_PREFIX = "files/"
 private val SECTION_NAME = Regex("sections/[a-z0-9_-]+\\.json")
@@ -41,7 +42,7 @@ internal sealed interface ZipRead {
     /** Not a zip, or an entry with a name the container refuses. */
     data object Invalid : ZipRead
 
-    /** The uncompressed bytes passed the cap. */
+    /** The uncompressed bytes of a section or of the whole backup passed the cap. */
     data object TooLarge : ZipRead
 }
 
@@ -61,14 +62,18 @@ internal object ZipBackupContainer {
         }
     }
 
-    /** Reads the entries of [input]. The uncompressed bytes of every entry, a skipped `files/` entry too, count toward [maxTotalBytes]. */
+    /**
+     * Reads the entries of [input]. The uncompressed bytes of every entry, a skipped `files/` entry too, count toward
+     * [maxTotalBytes]; a section entry also stays within [maxSectionBytes].
+     */
     fun read(
         input: InputStream,
         maxTotalBytes: Long = MAX_TOTAL_BYTES,
+        maxSectionBytes: Long = MAX_SECTION_BYTES,
     ): ZipRead =
         try {
             val zip = ZipInputStream(input)
-            val collector = EntryCollector(maxTotalBytes)
+            val collector = EntryCollector(maxTotalBytes, maxSectionBytes)
             val refusal = generateSequence { zip.nextEntry }.firstNotNullOfOrNull { collector.accept(zip, it.name) }
             refusal ?: if (collector.files.isEmpty()) ZipRead.Invalid else ZipRead.Files(collector.files)
         } catch (_: IOException) {
@@ -76,7 +81,10 @@ internal object ZipBackupContainer {
         }
 }
 
-private class EntryCollector(private var remaining: Long) {
+private class EntryCollector(
+    private var remaining: Long,
+    private val maxSectionBytes: Long,
+) {
     val files = linkedMapOf<String, ByteArray>()
 
     /** Takes the entry [name] that [zip] is positioned on; returns the refusal, or null if the entry is fine. */
@@ -85,7 +93,14 @@ private class EntryCollector(private var remaining: Long) {
         name: String,
     ): ZipRead? {
         val acceptable = isAcceptedName(name) && name !in files
-        val bytes = if (acceptable) zip.readAtMost(remaining) else null
+        val bytes =
+            if (acceptable) {
+                zip.readAtMost(
+                    if (SECTION_NAME.matches(name)) minOf(remaining, maxSectionBytes) else remaining,
+                )
+            } else {
+                null
+            }
         return when {
             !acceptable -> ZipRead.Invalid
             bytes == null -> ZipRead.TooLarge
