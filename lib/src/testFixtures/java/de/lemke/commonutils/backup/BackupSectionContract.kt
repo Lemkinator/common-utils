@@ -55,10 +55,17 @@ public data class ClashCase<E : Any>(
     val symmetric: Boolean = true,
 )
 
+/** A section file text `{"entries": [...]}` of one version and the [entries] its import must produce. */
+public data class SectionFixture<E : Any>(
+    val text: String,
+    val entries: List<E>,
+)
+
 /**
  * The tests every app runs over its real, store-backed [BackupSection], through the whole [BackupEngine] pipeline: export,
  * read, upgrade, validate, Replace and Merge. An app subclasses it under its JUnit 4 runner and supplies a section over an
  * empty store, the transaction of that store and the samples; it needs JUnit 4 and kotlinx-coroutines on its test classpath.
+ * [section] may return sections over one shared store: a test clears it before each case that assumes it empty.
  */
 public abstract class BackupSectionContract<E : Any> {
     /** A section over an empty store. */
@@ -70,13 +77,13 @@ public abstract class BackupSectionContract<E : Any> {
     /** At least two entries with distinct keys. */
     protected abstract fun sampleEntries(): List<E>
 
-    /** A section file text `{"entries": [...]}` for each section version from `minReadableVersion` to `version`. */
-    protected abstract fun fixtures(): Map<Int, String>
+    /** A fixture for each section version from `minReadableVersion` to `version`. */
+    protected abstract fun fixtures(): Map<Int, SectionFixture<E>>
 
     /** One JSON object that the section must skip as a broken entry. */
     protected abstract fun brokenEntryJson(): String
 
-    /** The clashes of the merge rule; empty for a section without merge rules. */
+    /** The clashes of the merge rule; empty only for a section without merge rules. */
     protected open fun clashCases(): List<ClashCase<E>> = emptyList()
 
     private fun engineOf(section: BackupSection<E>) =
@@ -95,6 +102,7 @@ public abstract class BackupSectionContract<E : Any> {
         runBlocking {
             val section = section()
             val engine = engineOf(section)
+            section.clear()
             section.insert(sampleEntries())
             val files = engine.export()
             section.clear()
@@ -109,6 +117,7 @@ public abstract class BackupSectionContract<E : Any> {
         runBlocking {
             val section = section()
             val engine = engineOf(section)
+            section.clear()
             section.insert(sampleEntries())
             val ready = engine.ready(engine.export())
 
@@ -120,10 +129,29 @@ public abstract class BackupSectionContract<E : Any> {
         }
 
     @Test
+    public fun replaceRemovesLocalOnlyEntries(): Unit =
+        runBlocking {
+            val section = section()
+            val engine = engineOf(section)
+            val (fileOnly, localOnly) = sampleEntries().take(2)
+            section.clear()
+            section.insert(listOf(fileOnly))
+            val files = engine.export()
+            section.clear()
+            section.insert(listOf(localOnly))
+
+            val report = engine.restore(engine.ready(files), ImportMode.REPLACE).sections.single()
+
+            assertEquals(1, report.removed)
+            assertEquals(listOf(fileOnly), section.sortedEntries())
+        }
+
+    @Test
     public fun mergeTwiceChangesNothingTheSecondTime(): Unit =
         runBlocking {
             val section = section()
             val engine = engineOf(section)
+            section.clear()
             section.insert(sampleEntries())
             val ready = engine.ready(engine.export())
             if (ImportMode.MERGE in engine.modes) {
@@ -140,38 +168,69 @@ public abstract class BackupSectionContract<E : Any> {
         }
 
     @Test
+    public fun mergeKeepsLocalOnlyEntries(): Unit =
+        runBlocking {
+            val section = section()
+            val engine = engineOf(section)
+            if (ImportMode.MERGE in engine.modes) {
+                val (fileOnly, localOnly) = sampleEntries().take(2)
+                section.clear()
+                section.insert(listOf(fileOnly))
+                val files = engine.export()
+                section.clear()
+                section.insert(listOf(localOnly))
+
+                val report = engine.restore(engine.ready(files), ImportMode.MERGE).sections.single()
+
+                assertEquals(1, report.added)
+                assertEquals(listOf(fileOnly, localOnly).sortedWith(encodedOrder(section.serializer)), section.sortedEntries())
+            }
+        }
+
+    @Test
     public fun everyClashCaseKeepsTheExpectedEntry(): Unit =
         runBlocking {
-            clashCases().forEach { case ->
-                assertEquals(case.name, listOf(case.expected), merged(case.local, case.incoming))
+            val section = section()
+            section.requiredClashCases().forEach { case ->
+                assertEquals(case.name, listOf(case.expected), section.merged(case.local, case.incoming))
             }
         }
 
     @Test
     public fun everySymmetricClashCaseKeepsTheSameEntryWithSidesSwapped(): Unit =
         runBlocking {
-            clashCases().filter { it.symmetric }.forEach { case ->
-                assertEquals(case.name, listOf(case.expected), merged(case.incoming, case.local))
+            val section = section()
+            section.requiredClashCases().filter { it.symmetric }.forEach { case ->
+                assertEquals(case.name, listOf(case.expected), section.merged(case.incoming, case.local))
             }
         }
 
     @Test
     public fun everyVersionFromMinReadableToCurrentHasAFixtureThatImports(): Unit =
         runBlocking {
-            val probe = section()
-            for (version in probe.minReadableVersion..probe.version) {
-                val text = fixtures()[version]
-                assertNotNull("The section needs a fixture for version $version", text)
-                val section = section()
-                val engine = engineOf(section)
+            val section = section()
+            val engine = engineOf(section)
+            for (version in section.minReadableVersion..section.version) {
+                val fixture = fixtures()[version]
+                assertNotNull("The section needs a fixture for version $version", fixture)
+                assertTrue("The fixture of version $version must expect an entry", fixture!!.entries.isNotEmpty())
+                section.clear()
 
-                val ready = engine.ready(fileOf(section.id, version, text!!))
+                val ready = engine.ready(fileOf(section.id, version, fixture.text))
 
-                val preview = ready.preview.sections.single()
-                assertTrue("The fixture of version $version must hold an entry", preview.entries > 0)
-                assertEquals("The fixture of version $version must hold no broken entry", 0, preview.skipped)
+                assertEquals(
+                    "The fixture of version $version must hold no broken entry",
+                    0,
+                    ready.preview.sections
+                        .single()
+                        .skipped,
+                )
                 engine.restore(ready, ImportMode.REPLACE)
-                assertEquals(preview.entries, section.exportEntries().size)
+                assertEquals(
+                    "The fixture of version $version must import as the entries it expects",
+                    fixture.entries.sortedWith(encodedOrder(section.serializer)),
+                    section.sortedEntries(),
+                )
             }
         }
 
@@ -180,6 +239,7 @@ public abstract class BackupSectionContract<E : Any> {
         runBlocking {
             val section = section()
             val engine = engineOf(section)
+            section.clear()
             section.insert(sampleEntries())
             val files = engine.export()
             val name = "sections/${section.id}.json"
@@ -195,13 +255,20 @@ public abstract class BackupSectionContract<E : Any> {
             assertEquals(sampleEntries().size, preview.entries)
         }
 
-    private suspend fun merged(
+    private fun BackupSection<E>.requiredClashCases(): List<ClashCase<E>> {
+        val cases = clashCases()
+        if (this is MergeableSection<*, *>) assertTrue("A MergeableSection needs clashCases", cases.isNotEmpty())
+        return cases
+    }
+
+    private suspend fun BackupSection<E>.merged(
         local: E,
         incoming: E,
     ): List<E> {
-        val section = section()
+        val section = this
         assertTrue("A clash case needs a mergeable section", section is MergeableSection<*, *>)
         val engine = engineOf(section)
+        section.clear()
         section.insert(listOf(incoming))
         val files = engine.export()
         section.clear()
@@ -242,11 +309,9 @@ public abstract class BackupSectionContract<E : Any> {
             "sections/$id.json" to sectionText.encodeToByteArray(),
         )
     }
-
-    private companion object {
-        const val KIND = "backup"
-        const val FORMAT = 1
-        const val CONTRACT_APP = "contract"
-        const val CONTRACT_TIME = "2026-10-27T14:30:00+01:00"
-    }
 }
+
+private const val KIND = "backup"
+private const val FORMAT = 1
+private const val CONTRACT_APP = "contract"
+private const val CONTRACT_TIME = "2026-10-27T14:30:00+01:00"

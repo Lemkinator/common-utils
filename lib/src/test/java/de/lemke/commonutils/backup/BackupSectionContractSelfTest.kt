@@ -24,6 +24,8 @@ import de.lemke.commonutils.backup.core.newerWins
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import org.junit.Assert.assertThrows
+import org.junit.Test
 
 @Serializable
 internal data class Event(val id: String, val stamp: Int, val note: String = "")
@@ -36,13 +38,14 @@ private open class ListSection<E : Any>(
     override val serializer: KSerializer<E>,
     override val version: Int,
     val store: MutableList<E> = mutableListOf(),
+    private val upgradeStep: (JsonObject) -> JsonObject = { it },
 ) : BackupSection<E> {
     override val minReadableVersion: Int = 1
 
     override fun upgrade(
         fromVersion: Int,
         entry: JsonObject,
-    ): JsonObject = entry
+    ): JsonObject = upgradeStep(entry)
 
     override fun validate(entry: E): EntryCheck = EntryCheck.Valid
 
@@ -59,9 +62,11 @@ private class MergeListSection<E : Any>(
     id: String,
     serializer: KSerializer<E>,
     version: Int,
+    store: MutableList<E>,
     private val keyOf: (E) -> String,
     private val rule: (E, E) -> E,
-) : ListSection<E>(id, serializer, version),
+    upgradeStep: (JsonObject) -> JsonObject = { it },
+) : ListSection<E>(id, serializer, version, store, upgradeStep),
     MergeableSection<E, String> {
     override fun key(entry: E): String = keyOf(entry)
 
@@ -80,22 +85,42 @@ private class MergeListSection<E : Any>(
     }
 }
 
+private val renameLegacyNote: (JsonObject) -> JsonObject = { entry ->
+    JsonObject(entry.filterKeys { it != "legacyNote" } + listOfNotNull(entry["legacyNote"]?.let { "note" to it }))
+}
+
+private fun newerWinsEventSection(
+    store: MutableList<Event>,
+    upgradeStep: (JsonObject) -> JsonObject,
+): BackupSection<Event> =
+    MergeListSection(
+        "events",
+        Event.serializer(),
+        version = 2,
+        store,
+        { it.id },
+        newerWins({ it.stamp }, encodedOrder(Event.serializer())),
+        upgradeStep,
+    )
+
+private val eventFixtures =
+    mapOf(
+        1 to SectionFixture("""{"entries":[{"id":"a","stamp":1,"legacyNote":"first"}]}""", listOf(Event("a", 1, "first"))),
+        2 to SectionFixture("""{"entries":[{"id":"a","stamp":1,"note":"first"}]}""", listOf(Event("a", 1, "first"))),
+    )
+
 /** A section with merge rules, a newer-wins rule and two format versions. */
 internal class NewerWinsSectionContractSelfTest : BackupSectionContract<Event>() {
     private val transaction = DirectBackupTransaction()
+    private val store = mutableListOf<Event>()
 
-    override fun section(): BackupSection<Event> =
-        MergeListSection("events", Event.serializer(), version = 2, { it.id }, newerWins({ it.stamp }, encodedOrder(Event.serializer())))
+    override fun section(): BackupSection<Event> = newerWinsEventSection(store, renameLegacyNote)
 
     override fun transaction(): BackupTransaction = transaction
 
     override fun sampleEntries(): List<Event> = listOf(Event("a", 1, "first"), Event("b", 2))
 
-    override fun fixtures(): Map<Int, String> =
-        mapOf(
-            1 to """{"entries":[{"id":"a","stamp":1}]}""",
-            2 to """{"entries":[{"id":"a","stamp":1,"note":"first"}]}""",
-        )
+    override fun fixtures(): Map<Int, SectionFixture<Event>> = eventFixtures
 
     override fun brokenEntryJson(): String = """{"id":["not","a","string"]}"""
 
@@ -109,20 +134,18 @@ internal class NewerWinsSectionContractSelfTest : BackupSectionContract<Event>()
 /** A section whose rule keeps the title of the phone by decision, so one clash is not symmetric. */
 internal class PhoneSideSectionContractSelfTest : BackupSectionContract<Note>() {
     private val transaction = DirectBackupTransaction()
+    private val store = mutableListOf<Note>()
 
     override fun section(): BackupSection<Note> =
-        MergeListSection("notes", Note.serializer(), version = 1, { it.id }, { local, incoming ->
-            local.copy(
-                starred =
-                    local.starred || incoming.starred,
-            )
+        MergeListSection("notes", Note.serializer(), version = 1, store, { it.id }, { local, incoming ->
+            local.copy(starred = local.starred || incoming.starred)
         })
 
     override fun transaction(): BackupTransaction = transaction
 
     override fun sampleEntries(): List<Note> = listOf(Note("a", "first", false), Note("b", "second", true))
 
-    override fun fixtures(): Map<Int, String> = mapOf(1 to """{"entries":[{"id":"a","title":"first","starred":false}]}""")
+    override fun fixtures(): Map<Int, SectionFixture<Note>> = noteFixtures
 
     override fun brokenEntryJson(): String = """{"id":"a","title":"broken"}"""
 
@@ -143,14 +166,107 @@ internal class PhoneSideSectionContractSelfTest : BackupSectionContract<Note>() 
 /** A section without merge rules: Replace only. */
 internal class ReplaceOnlySectionContractSelfTest : BackupSectionContract<Note>() {
     private val transaction = DirectBackupTransaction()
+    private val store = mutableListOf<Note>()
 
-    override fun section(): BackupSection<Note> = ListSection("notes", Note.serializer(), version = 1)
+    override fun section(): BackupSection<Note> = ListSection("notes", Note.serializer(), version = 1, store)
 
     override fun transaction(): BackupTransaction = transaction
 
     override fun sampleEntries(): List<Note> = listOf(Note("a", "first", false), Note("b", "second", true))
 
-    override fun fixtures(): Map<Int, String> = mapOf(1 to """{"entries":[{"id":"a","title":"first","starred":false}]}""")
+    override fun fixtures(): Map<Int, SectionFixture<Note>> = noteFixtures
 
     override fun brokenEntryJson(): String = """{"id":"a"}"""
+}
+
+private val noteFixtures =
+    mapOf(1 to SectionFixture("""{"entries":[{"id":"a","title":"first","starred":false}]}""", listOf(Note("a", "first", false))))
+
+private fun <E : Any> contractOf(
+    sectionOf: (MutableList<E>) -> BackupSection<E>,
+    samples: List<E>,
+    fixtures: Map<Int, SectionFixture<E>>,
+    clashes: List<ClashCase<E>> = emptyList(),
+): BackupSectionContract<E> =
+    object : BackupSectionContract<E>() {
+        private val store = mutableListOf<E>()
+        private val transaction = DirectBackupTransaction()
+
+        override fun section(): BackupSection<E> = sectionOf(store)
+
+        override fun transaction(): BackupTransaction = transaction
+
+        override fun sampleEntries(): List<E> = samples
+
+        override fun fixtures(): Map<Int, SectionFixture<E>> = fixtures
+
+        override fun brokenEntryJson(): String = """{"id":["not","a","string"]}"""
+
+        override fun clashCases(): List<ClashCase<E>> = clashes
+    }
+
+private val noteSamples = listOf(Note("a", "first", false), Note("b", "second", true))
+
+private fun localWinsNoteSection(store: MutableList<Note>): BackupSection<Note> =
+    MergeListSection("notes", Note.serializer(), version = 1, store, { it.id }, { local, _ -> local })
+
+/** A Replace that clears nothing and inserts by key, so entries only the phone holds survive. */
+private class NoClearNoteSection(store: MutableList<Note>) : ListSection<Note>("notes", Note.serializer(), version = 1, store) {
+    override suspend fun clear() = Unit
+
+    override suspend fun insert(entries: List<Note>) {
+        entries.forEach { entry ->
+            store.removeAll { it.id == entry.id }
+            store += entry
+        }
+    }
+}
+
+class BackupSectionContractNegativeSelfTest {
+    @Test
+    fun `a local-wins rule marked symmetric fails the swapped-sides check`() {
+        val contract =
+            contractOf(
+                ::localWinsNoteSection,
+                noteSamples,
+                noteFixtures,
+                listOf(ClashCase("local wins", Note("a", "phone", false), Note("a", "file", false), Note("a", "phone", false))),
+            )
+
+        contract.everyClashCaseKeepsTheExpectedEntry()
+        assertThrows(AssertionError::class.java) { contract.everySymmetricClashCaseKeepsTheSameEntryWithSidesSwapped() }
+    }
+
+    @Test
+    fun `a mergeable section without clash cases fails both clash checks`() {
+        val contract = contractOf(::localWinsNoteSection, noteSamples, noteFixtures)
+
+        assertThrows(AssertionError::class.java) { contract.everyClashCaseKeepsTheExpectedEntry() }
+        assertThrows(AssertionError::class.java) { contract.everySymmetricClashCaseKeepsTheSameEntryWithSidesSwapped() }
+    }
+
+    @Test
+    fun `a fixture that does not import fails the fixture check`() {
+        val broken = mapOf(1 to SectionFixture("""{"entries":[{"id":"a"}]}""", listOf(Note("a", "first", false))))
+        val contract = contractOf(::localWinsNoteSection, noteSamples, broken)
+
+        assertThrows(AssertionError::class.java) { contract.everyVersionFromMinReadableToCurrentHasAFixtureThatImports() }
+    }
+
+    @Test
+    fun `an upgrade that maps an entry to defaults fails the fixture check`() {
+        val keepsData =
+            contractOf({ store -> newerWinsEventSection(store, renameLegacyNote) }, listOf(Event("a", 1), Event("b", 2)), eventFixtures)
+        val dropsData = contractOf({ store -> newerWinsEventSection(store) { it } }, listOf(Event("a", 1), Event("b", 2)), eventFixtures)
+
+        keepsData.everyVersionFromMinReadableToCurrentHasAFixtureThatImports()
+        assertThrows(AssertionError::class.java) { dropsData.everyVersionFromMinReadableToCurrentHasAFixtureThatImports() }
+    }
+
+    @Test
+    fun `a Replace that keeps local-only entries fails the removal check`() {
+        val contract = contractOf(::NoClearNoteSection, noteSamples, noteFixtures)
+
+        assertThrows(AssertionError::class.java) { contract.replaceRemovesLocalOnlyEntries() }
+    }
 }
