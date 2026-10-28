@@ -17,7 +17,6 @@ package de.lemke.commonutils.backup
 
 import de.lemke.commonutils.backup.core.MANIFEST_ENTRY
 import de.lemke.commonutils.backup.core.SIGNATURE_ENTRY
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -25,11 +24,14 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-private const val MAX_TOTAL_BYTES = 64L * 1024 * 1024
-private const val BUFFER_SIZE = 8 * 1024
+private const val MAX_TOTAL_BYTES = 16L * 1024 * 1024
+private const val ARCHIVE_OVERHEAD_BYTES = 1L * 1024 * 1024
 private const val FILES_PREFIX = "files/"
 private val SECTION_NAME = Regex("sections/[a-z0-9_-]+\\.json")
 private val FILE_SEGMENT = Regex("[A-Za-z0-9._-]+")
+
+/** The largest zip file the import reads: the uncompressed cap plus the headers and the DEFLATE framing of an incompressible file. */
+internal const val MAX_ARCHIVE_BYTES: Long = MAX_TOTAL_BYTES + ARCHIVE_OVERHEAD_BYTES
 
 /** What [ZipBackupContainer.read] found. */
 internal sealed interface ZipRead {
@@ -83,7 +85,7 @@ private class EntryCollector(private var remaining: Long) {
         name: String,
     ): ZipRead? {
         val acceptable = isAcceptedName(name) && name !in files
-        val bytes = if (acceptable) drain(zip, remaining) else null
+        val bytes = if (acceptable) zip.readAtMost(remaining) else null
         return when {
             !acceptable -> ZipRead.Invalid
             bytes == null -> ZipRead.TooLarge
@@ -101,20 +103,3 @@ private fun isAcceptedName(name: String): Boolean =
         name == SIGNATURE_ENTRY ||
         SECTION_NAME.matches(name) ||
         (name.startsWith(FILES_PREFIX) && name.removePrefix(FILES_PREFIX).split('/').all { it != ".." && FILE_SEGMENT.matches(it) })
-
-/** Reads the current entry, or returns null once it passes [limit] bytes; it never holds more than [limit] plus one buffer. */
-private fun drain(
-    zip: InputStream,
-    limit: Long,
-): ByteArray? {
-    val bytes = ByteArrayOutputStream()
-    val buffer = ByteArray(BUFFER_SIZE)
-    var total = 0L
-    var read = zip.read(buffer)
-    while (read >= 0 && total <= limit) {
-        total += read
-        bytes.write(buffer, 0, read)
-        read = zip.read(buffer)
-    }
-    return bytes.toByteArray().takeIf { total <= limit }
-}

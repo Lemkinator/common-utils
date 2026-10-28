@@ -112,6 +112,8 @@ private class OctetStreamProvider : ContentProvider() {
     ): Int = 0
 }
 
+private const val MAX_BYTES = 1024L
+
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class DefaultBackupDocumentsRobolectricTest {
@@ -119,13 +121,24 @@ class DefaultBackupDocumentsRobolectricTest {
     private val documents get() = DefaultBackupDocuments(context, Dispatchers.Unconfined)
 
     @Test
-    fun `writes and reads back bytes`(): Unit =
+    fun `writes the bytes into the provider file`(): Unit =
         runBlocking {
             val provider = RecordingDocumentsProvider.create(context)
 
             documents.write(provider.uri, "zip bytes".encodeToByteArray()) shouldBe true
 
-            documents.read(provider.uri)?.decodeToString() shouldBe "zip bytes"
+            provider.file.readText() shouldBe "zip bytes"
+        }
+
+    @Test
+    fun `reads a document of exactly maxBytes and returns null for one byte more`(): Unit =
+        runBlocking {
+            val provider = RecordingDocumentsProvider.create(context)
+            val bytes = ByteArray(20_000) { it.toByte() }
+            documents.write(provider.uri, bytes) shouldBe true
+
+            documents.read(provider.uri, 20_000)?.toList() shouldBe bytes.toList()
+            documents.read(provider.uri, 19_999) shouldBe null
         }
 
     @Test
@@ -136,7 +149,7 @@ class DefaultBackupDocumentsRobolectricTest {
             provider.file = File(context.cacheDir, "backup.zip").apply { writeText("zip bytes") }
             context.contentResolver.getType(uri) shouldBe "application/octet-stream"
 
-            documents.read(uri)?.decodeToString() shouldBe "zip bytes"
+            documents.read(uri, MAX_BYTES)?.decodeToString() shouldBe "zip bytes"
         }
 
     @Test
@@ -145,7 +158,7 @@ class DefaultBackupDocumentsRobolectricTest {
             val provider = RecordingDocumentsProvider.create(context)
             provider.file.delete()
 
-            documents.read(provider.uri) shouldBe null
+            documents.read(provider.uri, MAX_BYTES) shouldBe null
         }
 
     @Test
@@ -153,7 +166,7 @@ class DefaultBackupDocumentsRobolectricTest {
         runBlocking {
             Robolectric.buildContentProvider(NoStreamProvider::class.java).create("no.stream.documents")
 
-            documents.read("content://no.stream.documents/document/1".toUri()) shouldBe null
+            documents.read("content://no.stream.documents/document/1".toUri(), MAX_BYTES) shouldBe null
         }
 
     @Test

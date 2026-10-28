@@ -41,8 +41,14 @@ public interface BackupDocuments {
         bytes: ByteArray,
     ): Boolean
 
-    /** Reads the whole document at [uri], whatever MIME type its provider reports; null on any provider failure. */
-    public suspend fun read(uri: Uri): ByteArray?
+    /**
+     * Reads the whole document at [uri], whatever MIME type its provider reports; null on any provider failure and for a
+     * document larger than [maxBytes], which it stops reading at that size.
+     */
+    public suspend fun read(
+        uri: Uri,
+        maxBytes: Long,
+    ): ByteArray?
 
     /** Deletes the document at [uri]; a failed delete only logs. */
     public suspend fun delete(uri: Uri)
@@ -76,10 +82,13 @@ public class DefaultBackupDocuments @Inject constructor(
 
     // Providers and system services throw an open-ended exception set; every failure must return a result, not crash.
     @Suppress("TooGenericExceptionCaught")
-    override suspend fun read(uri: Uri): ByteArray? =
+    override suspend fun read(
+        uri: Uri,
+        maxBytes: Long,
+    ): ByteArray? =
         withContext(io) {
             try {
-                context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                context.contentResolver.openInputStream(uri)?.use { it.readAtMost(maxBytes) }
             } catch (e: Exception) {
                 Log.e(TAG, "Error reading backup", e)
                 null

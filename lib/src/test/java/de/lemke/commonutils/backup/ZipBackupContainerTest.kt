@@ -105,6 +105,11 @@ class ZipBackupContainerTest : ShouldSpec(
             (zip.size < 1000) shouldBe true
             readFiles(zip, cap = 1000) shouldBe ZipRead.TooLarge
         }
+        should("accept 16 MiB uncompressed by default and refuse one byte more") {
+            val cap = 16 * 1024 * 1024
+            filesOf(readFiles(zipOf("manifest.json" to ByteArray(cap)))).getValue("manifest.json").length shouldBe cap
+            readFiles(zipOf("manifest.json" to ByteArray(cap + 1))) shouldBe ZipRead.TooLarge
+        }
         should("count a skipped files/ entry toward the cap") {
             readFiles(zipOf("files/big.bin" to ByteArray(2000), "manifest.json" to byteArrayOf(1)), cap = 1000) shouldBe ZipRead.TooLarge
         }

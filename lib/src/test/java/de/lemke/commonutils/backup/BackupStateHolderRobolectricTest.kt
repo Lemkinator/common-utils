@@ -65,7 +65,10 @@ private class GatedDocuments(private val inner: FakeBackupDocuments, val gate: C
         bytes: ByteArray,
     ): Boolean = gate.await().let { inner.write(uri, bytes) }
 
-    override suspend fun read(uri: Uri): ByteArray? = gate.await().let { inner.read(uri) }
+    override suspend fun read(
+        uri: Uri,
+        maxBytes: Long,
+    ): ByteArray? = gate.await().let { inner.read(uri, maxBytes) }
 
     override suspend fun delete(uri: Uri) = inner.delete(uri)
 }
@@ -224,7 +227,12 @@ class BackupStateHolderRobolectricTest {
             holder.state.value shouldBe readFailed
 
             holder.onHandled(readFailed)
-            documents.files[source] = zip(mapOf("manifest.json" to ByteArray(65 * 1024 * 1024)))
+            documents.files[source] = zip(mapOf("manifest.json" to ByteArray(16 * 1024 * 1024 + 1)))
+            holder.onImportFilePicked(source)
+            holder.state.value shouldBe readFailed
+
+            holder.onHandled(readFailed)
+            documents.files[source] = backupZip(item("a")) + ByteArray(MAX_ARCHIVE_BYTES.toInt())
             holder.onImportFilePicked(source)
             holder.state.value shouldBe readFailed
         }

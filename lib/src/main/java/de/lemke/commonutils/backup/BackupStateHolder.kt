@@ -139,7 +139,7 @@ public class BackupStateHolder(
     private suspend fun zipped(): ByteArray = ByteArrayOutputStream().also { ZipBackupContainer.write(engine.export(), it) }.toByteArray()
 
     private suspend fun readFrom(uri: Uri): BackupState {
-        val zip = documents.read(uri)?.let { ZipBackupContainer.read(ByteArrayInputStream(it)) }
+        val zip = documents.read(uri, MAX_ARCHIVE_BYTES)?.let { ZipBackupContainer.read(ByteArrayInputStream(it)) }
         return when (zip) {
             null, ZipRead.Invalid, ZipRead.TooLarge -> readFailed
             is ZipRead.Files -> engine.read(zip.files).toState()

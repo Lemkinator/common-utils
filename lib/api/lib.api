@@ -1,6 +1,6 @@
 public abstract interface class de/lemke/commonutils/backup/BackupDocuments {
 	public abstract fun delete (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun read (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun read (Landroid/net/Uri;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun write (Landroid/net/Uri;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -153,7 +153,7 @@ public final class de/lemke/commonutils/backup/DefaultBackupDocuments : de/lemke
 	public static final field $stable I
 	public fun <init> (Landroid/content/Context;Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public fun delete (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun read (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun read (Landroid/net/Uri;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun write (Landroid/net/Uri;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
