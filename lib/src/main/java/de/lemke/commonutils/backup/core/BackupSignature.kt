@@ -33,13 +33,20 @@ internal data class SignatureFile(val alg: String, val keyId: String, val mac: S
  * a 0x00 byte, its length as 8 bytes big-endian, then its bytes. The length framing stops bytes from moving between
  * entries unnoticed. `files/` entries and `signature.json` stay out.
  */
-internal fun signedPayload(files: Map<String, ByteArray>): ByteArray =
-    files.entries
-        .filter { (name) -> name == MANIFEST_ENTRY || (name.startsWith(SECTIONS_PREFIX) && name.endsWith(".json")) }
-        .sortedBy { it.key }
-        .fold(ByteArray(0)) { payload, (name, bytes) ->
-            payload + name.encodeToByteArray() + 0.toByte() + bigEndian(bytes.size.toLong()) + bytes
-        }
+internal fun signedPayload(files: Map<String, ByteArray>): ByteArray {
+    val parts =
+        files.entries
+            .filter { (name) -> name == MANIFEST_ENTRY || (name.startsWith(SECTIONS_PREFIX) && name.endsWith(".json")) }
+            .sortedBy { it.key }
+            .flatMap { (name, bytes) -> listOf(name.encodeToByteArray(), byteArrayOf(0), bigEndian(bytes.size.toLong()), bytes) }
+    val payload = ByteArray(parts.sumOf { it.size })
+    var offset = 0
+    parts.forEach { part ->
+        part.copyInto(payload, offset)
+        offset += part.size
+    }
+    return payload
+}
 
 private fun bigEndian(value: Long): ByteArray =
     ByteArray(LENGTH_BYTES) { index -> (value shr (BITS_PER_BYTE * (LENGTH_BYTES - 1 - index))).toByte() }
