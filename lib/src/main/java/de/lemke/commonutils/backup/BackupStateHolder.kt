@@ -23,8 +23,10 @@ import de.lemke.commonutils.ui.utils.DocumentPick
 import de.lemke.commonutils.ui.utils.runContained
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,8 +48,8 @@ private val restoreFailed = BackupState.Result(BackupResult.RestoreFailed)
  * A ViewModel creates it with `viewModelScope` and exposes [state]. Only [BackupState.Working] blocks: while an export or
  * import runs, [export], [import] and the picker callbacks do nothing. A document the export picker created while
  * something runs is deleted. A read keeps its decoded entries inside [BackupState.Preview] and
- * [BackupState.ConfirmReplace]. After [scope] is cancelled the state stays [BackupState.Working]. Tests drive the holder
- * with `FakeBackupDocuments` from the testFixtures.
+ * [BackupState.ConfirmReplace]. After [scope] is cancelled the state stays [BackupState.Working], and an export in
+ * flight deletes its document. Tests drive the holder with `FakeBackupDocuments` from the testFixtures.
  */
 public class BackupStateHolder(
     private val scope: CoroutineScope,
@@ -133,11 +135,19 @@ public class BackupStateHolder(
     }
 
     private suspend fun exportTo(uri: Uri): BackupState {
-        val bytes = runContained<ByteArray?>(TAG, "Backup export", null) { zipped() }
-        val written = bytes != null && documents.write(uri, bytes)
-        if (!written) documents.delete(uri)
+        val written =
+            try {
+                val bytes = runContained<ByteArray?>(TAG, "Backup export", null) { zipped() }
+                bytes != null && documents.write(uri, bytes)
+            } catch (e: CancellationException) {
+                discard(uri)
+                throw e
+            }
+        if (!written) discard(uri)
         return BackupState.Result(if (written) BackupResult.Exported else BackupResult.ExportFailed)
     }
+
+    private suspend fun discard(uri: Uri) = withContext(NonCancellable) { documents.delete(uri) }
 
     private suspend fun zipped(): ByteArray = ByteArrayOutputStream().also { ZipBackupContainer.write(engine.export(), it) }.toByteArray()
 

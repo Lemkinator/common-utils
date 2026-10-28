@@ -40,6 +40,11 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.job
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -143,6 +148,38 @@ class BackupStateHolderRobolectricTest {
 
             holder.state.value shouldBe BackupState.Result(BackupResult.ExportFailed)
             documents.deleted shouldContainExactly listOf(target)
+        }
+
+    @Test
+    fun `canceling the scope during the write deletes the created document`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            val exportScope = CoroutineScope(coroutineContext + SupervisorJob(coroutineContext.job))
+            val holder =
+                BackupStateHolder(
+                    exportScope,
+                    engineOf(MemorySection()),
+                    GatedDocuments(documents, CompletableDeferred()),
+                    UnconfinedTestDispatcher(testScheduler),
+                )
+            holder.onExportTargetPicked(DocumentPick.Created(target))
+            holder.state.value shouldBe BackupState.Working
+
+            exportScope.cancel()
+
+            documents.deleted shouldContainExactly listOf(target)
+        }
+
+    @Test
+    fun `the work runs on the injected dispatcher`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            documents.files[source] = backupZip(item("a"))
+            val holder = BackupStateHolder(this, engineOf(MemorySection()), documents, StandardTestDispatcher(testScheduler))
+
+            holder.onImportFilePicked(source)
+            holder.state.value shouldBe BackupState.Working
+
+            testScheduler.advanceUntilIdle()
+            holder.state.value.shouldBeInstanceOf<BackupState.Preview>()
         }
 
     @Test
