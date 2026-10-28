@@ -189,45 +189,6 @@ public final class de/lemke/commonutils/backup/core/BackupEngine {
 	public final fun restore (Lde/lemke/commonutils/backup/core/BackupReadResult$Ready;Lde/lemke/commonutils/backup/core/ImportMode;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class de/lemke/commonutils/backup/core/BackupManifest {
-	public static final field $stable I
-	public static final field Companion Lde/lemke/commonutils/backup/core/BackupManifest$Companion;
-	public fun <init> (Ljava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/util/List;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()I
-	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()J
-	public final fun component5 ()Ljava/lang/String;
-	public final fun component6 ()Ljava/util/List;
-	public final fun copy (Ljava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/util/List;)Lde/lemke/commonutils/backup/core/BackupManifest;
-	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/BackupManifest;Ljava/lang/String;ILjava/lang/String;JLjava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lde/lemke/commonutils/backup/core/BackupManifest;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getApp ()Ljava/lang/String;
-	public final fun getAppVersionCode ()J
-	public final fun getCreatedAt ()Ljava/lang/String;
-	public final fun getFormat ()I
-	public final fun getKind ()Ljava/lang/String;
-	public final fun getSections ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class de/lemke/commonutils/backup/core/BackupManifest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field $stable I
-	public static final field INSTANCE Lde/lemke/commonutils/backup/core/BackupManifest$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lde/lemke/commonutils/backup/core/BackupManifest;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lde/lemke/commonutils/backup/core/BackupManifest;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class de/lemke/commonutils/backup/core/BackupManifest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class de/lemke/commonutils/backup/core/BackupPreview {
 	public static final field $stable I
 	public fun <init> (Ljava/lang/String;JLjava/util/List;Ljava/util/List;Ljava/util/Set;)V
@@ -432,39 +393,6 @@ public final class de/lemke/commonutils/backup/core/RestoreReport {
 	public final fun getSections ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
-}
-
-public final class de/lemke/commonutils/backup/core/SectionInfo {
-	public static final field $stable I
-	public static final field Companion Lde/lemke/commonutils/backup/core/SectionInfo$Companion;
-	public fun <init> (Ljava/lang/String;II)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()I
-	public final fun component3 ()I
-	public final fun copy (Ljava/lang/String;II)Lde/lemke/commonutils/backup/core/SectionInfo;
-	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/core/SectionInfo;Ljava/lang/String;IIILjava/lang/Object;)Lde/lemke/commonutils/backup/core/SectionInfo;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getEntries ()I
-	public final fun getId ()Ljava/lang/String;
-	public final fun getVersion ()I
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class de/lemke/commonutils/backup/core/SectionInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field $stable I
-	public static final field INSTANCE Lde/lemke/commonutils/backup/core/SectionInfo$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lde/lemke/commonutils/backup/core/SectionInfo;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lde/lemke/commonutils/backup/core/SectionInfo;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class de/lemke/commonutils/backup/core/SectionInfo$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class de/lemke/commonutils/backup/core/SectionPreview {

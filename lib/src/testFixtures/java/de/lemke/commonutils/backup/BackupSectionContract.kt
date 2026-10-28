@@ -17,16 +17,16 @@ package de.lemke.commonutils.backup
 
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
-import de.lemke.commonutils.backup.core.BackupManifest
 import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.BackupSection
 import de.lemke.commonutils.backup.core.BackupTransaction
 import de.lemke.commonutils.backup.core.ImportMode
 import de.lemke.commonutils.backup.core.MergeableSection
-import de.lemke.commonutils.backup.core.SectionInfo
 import de.lemke.commonutils.backup.core.encodedOrder
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -217,9 +217,28 @@ public abstract class BackupSectionContract<E : Any> {
         version: Int,
         sectionText: String,
     ): Map<String, ByteArray> {
-        val manifest = BackupManifest(KIND, FORMAT, CONTRACT_APP, 1, CONTRACT_TIME, listOf(SectionInfo(id, version, 0)))
+        val manifest =
+            buildJsonObject {
+                put("kind", KIND)
+                put("format", FORMAT)
+                put("app", CONTRACT_APP)
+                put("appVersionCode", 1)
+                put("createdAt", CONTRACT_TIME)
+                put(
+                    "sections",
+                    JsonArray(
+                        listOf(
+                            buildJsonObject {
+                                put("id", id)
+                                put("version", version)
+                                put("entries", 0)
+                            },
+                        ),
+                    ),
+                )
+            }
         return mapOf(
-            "manifest.json" to Json.encodeToString(BackupManifest.serializer(), manifest).encodeToByteArray(),
+            "manifest.json" to manifest.toString().encodeToByteArray(),
             "sections/$id.json" to sectionText.encodeToByteArray(),
         )
     }

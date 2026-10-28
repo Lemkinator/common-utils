@@ -33,7 +33,7 @@ internal val backupJson: Json =
 
 /** The first entry of a backup file. [createdAt] is ISO-8601 text with a UTC offset; the core never parses it. */
 @Serializable
-public data class BackupManifest(
+internal data class BackupManifest(
     val kind: String,
     val format: Int,
     val app: String,
@@ -43,4 +43,4 @@ public data class BackupManifest(
 )
 
 @Serializable
-public data class SectionInfo(val id: String, val version: Int, val entries: Int)
+internal data class SectionInfo(val id: String, val version: Int, val entries: Int)
