@@ -30,6 +30,7 @@ import de.lemke.commonutils.backup.DefaultBackupDocuments
 import de.lemke.commonutils.backup.HmacSha256BackupSigner
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.BackupSection
 import de.lemke.commonutils.backup.core.BackupSigner
 import de.lemke.commonutils.backup.core.BackupTransaction
@@ -177,5 +178,6 @@ class CommonUtilsBackupModuleSignerHiltTest {
 
             files.keys shouldBe setOf("manifest.json", "sections/items.json", "signature.json")
             files.getValue("signature.json").decodeToString() shouldContain "\"keyId\":\"test-key\""
+            engine.read(files).shouldBeInstanceOf<BackupReadResult.Ready>()
         }
 }
