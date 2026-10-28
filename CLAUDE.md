@@ -190,12 +190,14 @@ An app opts in with:
 
 - one `BackupSection<E>` per data kind, bound `@Binds @IntoSet`; a `MergeableSection` adds merge rules and
   enables Merge, otherwise the app offers Replace only. Entries are `@Serializable` DTOs, never Room entities.
+- one `BackupSectionLabel(sectionId, @StringRes label)` per section, `@Provides @IntoSet`: the import preview names the
+  section by it, or by its id if the app binds none.
 - `BackupApp`, and a `BackupTransaction` bound to its database transaction (an object expression: the interface has a
   generic method, so no lambda).
-- `@Module(includes = [CommonUtilsBackupModule::class])` and
-  `@EntryPoint @InstallIn(SingletonComponent::class) interface AppBackupEntryPoint : BackupEntryPoint`.
-- `setupCommonUtilsSettingsActivity(..., backupEntryPoint = AppBackupEntryPoint::class.java)` plus
-  `R.xml.preferences_backup` in its preference list. An app without a backup passes neither and binds nothing.
+- `@Module(includes = [CommonUtilsBackupModule::class])` on its own module, plus `R.xml.preferences_backup` in the
+  preference list it passes to `setupCommonUtilsSettingsActivity`. The module binds `BackupScreenDeps`; the settings fragment injects
+  `Optional<BackupScreenDeps>` through Hilt, so it needs no static setup and works after process death. An app without
+  the module binds nothing and the screen removes the Backup category.
 
 An app that signs its backups binds `@Provides fun signer(): BackupSigner = HmacSha256BackupSigner(keyId, key)` in its
 module: its export carries `signature.json`, and its import refuses an unsigned or changed file before any write. An
@@ -240,9 +242,11 @@ Hilt is a same-module `implementation` dep: apps that include a module apply Hil
 does not leak its Hilt version onto their compile classpath. Qualifier annotations (`@IoDispatcher`,
 `@DefaultDispatcher`, `@MainDispatcher`, `@ApplicationScope`) ship compiled into the published AAR.
 
-No module installs itself into a consumer DI graph: a library module carries no `@InstallIn`. An opt-in module
-carries `@DisableInstallInCheck` and apps include it. `CommonUtilsCoroutinesModule` provides the four qualified
-bindings; an app opts in with:
+No binding installs itself into a consumer DI graph. An opt-in module carries `@DisableInstallInCheck` and apps include
+it. The one `@InstallIn(SingletonComponent::class)` module of the library, `BackupScreenOptionalModule`, holds only
+`@BindsOptionalOf BackupScreenDeps`: it adds no binding, so an app without a backup is unaffected.
+
+`CommonUtilsCoroutinesModule` provides the four qualified bindings; an app opts in with:
 
 ```kotlin
 @Module(includes = [CommonUtilsCoroutinesModule::class])

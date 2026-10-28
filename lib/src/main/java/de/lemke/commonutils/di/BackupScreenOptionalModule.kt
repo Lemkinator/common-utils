@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils.backup
+package de.lemke.commonutils.di
 
-import de.lemke.commonutils.backup.core.BackupEngine
+import dagger.BindsOptionalOf
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import de.lemke.commonutils.backup.BackupScreenDeps
 
-/**
- * What the common-utils settings screen needs from an app's Hilt graph to offer a backup. An app declares
- * `@EntryPoint @InstallIn(SingletonComponent::class) interface AppBackupEntryPoint : BackupEntryPoint` and passes the
- * class to `setupCommonUtilsSettingsActivity`; an app without a backup passes nothing and binds nothing.
- */
-public interface BackupEntryPoint {
-    public fun backupEngine(): BackupEngine
-
-    public fun backupDocuments(): BackupDocuments
+/** Declares [BackupScreenDeps] optional, so an app without the backup module still builds and shows no Backup category. */
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface BackupScreenOptionalModule {
+    @BindsOptionalOf
+    fun backupScreen(): BackupScreenDeps
 }

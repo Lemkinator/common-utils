@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.os.Looper
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -28,17 +29,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.test.core.app.ActivityScenario
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
-import dagger.hilt.components.SingletonComponent
 import de.lemke.commonutils.DrainMainLooperRule
 import de.lemke.commonutils.R
-import de.lemke.commonutils.backup.BackupDocuments
-import de.lemke.commonutils.backup.BackupEntryPoint
+import de.lemke.commonutils.backup.BackupScreenDeps
+import de.lemke.commonutils.backup.BackupSectionLabel
 import de.lemke.commonutils.backup.BackupState
 import de.lemke.commonutils.backup.BackupViewModel
 import de.lemke.commonutils.backup.FakeBackupDocuments
@@ -72,6 +70,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
@@ -98,10 +97,6 @@ private fun zip(files: Map<String, ByteArray>): ByteArray =
 @RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class, sdk = [36])
 class BackupPreferencesRobolectricTest {
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface TestBackupEntryPoint : BackupEntryPoint
-
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
 
@@ -114,15 +109,18 @@ class BackupPreferencesRobolectricTest {
 
     private val fakeDocuments = FakeBackupDocuments()
 
-    @BindValue
-    @JvmField
-    val documents: BackupDocuments = fakeDocuments
+    private fun screenOf(engine: BackupEngine) =
+        BackupScreenDeps(
+            engine,
+            fakeDocuments,
+            setOf(BackupSectionLabel("items", TestR.string.test_section_label_urls)),
+        )
 
     private val store = mutableListOf<Item>()
 
     @BindValue
     @JvmField
-    var engine: BackupEngine = engineOf(MergeableMemorySection(store = store))
+    var backupScreen: BackupScreenDeps = screenOf(engineOf(MergeableMemorySection(store = store)))
 
     @Before
     fun setUp() {
@@ -131,19 +129,20 @@ class BackupPreferencesRobolectricTest {
 
     @After
     fun tearDown() {
-        CommonUtilsSettingsActivity.backupEntryPoint = null
         CommonUtilsSettingsActivity.preferences = emptyList()
+        CommonUtilsSettingsActivity.relativeLinksCard = true
     }
 
-    private fun launch(
-        withEntryPoint: Boolean = true,
-        block: (CommonUtilsSettingsActivity) -> Unit,
-    ) {
+    private fun launch(block: (CommonUtilsSettingsActivity) -> Unit) {
         CommonUtilsSettingsActivity.relativeLinksCard = false
         CommonUtilsSettingsActivity.preferences = listOf(R.xml.preferences_backup)
-        CommonUtilsSettingsActivity.backupEntryPoint = TestBackupEntryPoint::class.java.takeIf { withEntryPoint }
         ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use { it.onActivity(block) }
     }
+
+    private fun fragmentOf(activity: CommonUtilsSettingsActivity) =
+        activity.supportFragmentManager.fragments
+            .filterIsInstance<PreferenceFragmentCompat>()
+            .first()
 
     private fun Context.isOwnedBy(activity: Activity): Boolean =
         generateSequence(this) { (it as? ContextWrapper)?.baseContext }.any { it === activity }
@@ -151,7 +150,7 @@ class BackupPreferencesRobolectricTest {
     private fun idle() = shadowOf(Looper.getMainLooper()).idle()
 
     private fun CommonUtilsSettingsActivity.click(keyRes: Int) {
-        val fragment = supportFragmentManager.fragments.filterIsInstance<PreferenceFragmentCompat>().first()
+        val fragment = fragmentOf(this)
         val preference = fragment.findPreference<Preference>(getString(keyRes))!!
         Preference::class.java
             .getDeclaredMethod("callClickListener")
@@ -204,7 +203,7 @@ class BackupPreferencesRobolectricTest {
             activity.pickImportFile(item("a"), item("bad", -1), item("b"))
 
             val dialog = latestDialog()
-            dialog.message() shouldContain "items: 2 entries, 1 broken entry skipped"
+            dialog.message() shouldContain "Saved links: 2 entries, 1 broken entry skipped"
             dialog.message() shouldContain
                 "Merge adds the backup to your data. Entries you deleted since then come back. Replace swaps all data for the backup."
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).text.toString() shouldBe "Merge"
@@ -214,7 +213,7 @@ class BackupPreferencesRobolectricTest {
 
     @Test
     fun `replace-only preview shows no Merge button and no modes text`() {
-        engine = engineOf(MemorySection(store = store))
+        backupScreen = screenOf(engineOf(MemorySection(store = store)))
         launch { activity ->
             activity.pickImportFile(item("a"))
 
@@ -307,10 +306,12 @@ class BackupPreferencesRobolectricTest {
     @Test
     fun `settings activity with a signer binding refuses an edited export`() {
         val signer = HmacSha256BackupSigner("test", "Jefe".encodeToByteArray())
-        engine =
-            BackupEngine(setOf(MergeableMemorySection(store = store)), DirectTransaction, BackupApp("oneurl", 100), {
-                "2026-10-27T14:30:00+01:00"
-            }, signer)
+        backupScreen =
+            screenOf(
+                BackupEngine(setOf(MergeableMemorySection(store = store)), DirectTransaction, BackupApp("oneurl", 100), {
+                    "2026-10-27T14:30:00+01:00"
+                }, signer),
+            )
         store += Item("a", 1)
         launch { activity ->
             activity.click(R.string.commonutils_preference_key_export_backup)
@@ -336,7 +337,7 @@ class BackupPreferencesRobolectricTest {
             activity.click(R.string.commonutils_preference_key_import_backup)
             activity.receivePickerResult(Activity.RESULT_OK, Intent().setData(importUri))
             idle()
-            latestDialog().message() shouldContain "items: 1 entry"
+            latestDialog().message() shouldContain "Saved links: 1 entry"
         }
     }
 
@@ -356,7 +357,6 @@ class BackupPreferencesRobolectricTest {
     fun `recreating the activity during the preview shows the preview once and keeps the file`() {
         CommonUtilsSettingsActivity.relativeLinksCard = false
         CommonUtilsSettingsActivity.preferences = listOf(R.xml.preferences_backup)
-        CommonUtilsSettingsActivity.backupEntryPoint = TestBackupEntryPoint::class.java
         ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use { scenario ->
             scenario.onActivity { it.pickImportFile(item("a")) }
             scenario.recreate()
@@ -371,15 +371,43 @@ class BackupPreferencesRobolectricTest {
     }
 
     @Test
-    fun `setupCommonUtilsSettingsActivity stores the backup entry point`() {
-        setupCommonUtilsSettingsActivity(R.xml.preferences_backup, backupEntryPoint = TestBackupEntryPoint::class.java)
+    fun `setupCommonUtilsSettingsActivity with a backup in the graph serves the backup entries`() {
+        setupCommonUtilsSettingsActivity(R.xml.preferences_backup, relativeLinksCard = false)
 
-        CommonUtilsSettingsActivity.backupEntryPoint shouldBe TestBackupEntryPoint::class.java
-        CommonUtilsSettingsActivity.preferences shouldContainExactly listOf(R.xml.preferences_backup)
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            it.onActivity { activity ->
+                activity.click(R.string.commonutils_preference_key_import_backup)
 
-        setupCommonUtilsSettingsActivity(listOf(R.xml.preferences_backup))
+                activity.receivePickerResult(Activity.RESULT_CANCELED, null).action shouldBe Intent.ACTION_OPEN_DOCUMENT
+            }
+        }
+    }
 
-        CommonUtilsSettingsActivity.backupEntryPoint shouldBe null
+    @Test
+    fun `a picker result reaches the screen restored after process death`() {
+        CommonUtilsSettingsActivity.relativeLinksCard = false
+        CommonUtilsSettingsActivity.preferences = listOf(R.xml.preferences_backup)
+        store += Item("a")
+        val first = Robolectric.buildActivity(CommonUtilsSettingsActivity::class.java).setup()
+        first.get().click(R.string.commonutils_preference_key_export_backup)
+        val requestCode = shadowOf(first.get()).peekNextStartedActivityForResult().requestCode
+        val savedState = Bundle().also { first.saveInstanceState(it) }
+        first.pause().stop().destroy()
+
+        val second =
+            Robolectric
+                .buildActivity(
+                    CommonUtilsSettingsActivity::class.java,
+                ).create(savedState)
+                .start()
+                .restoreInstanceState(savedState)
+        second.resume().visible()
+        second.get().activityResultRegistry.dispatchResult(requestCode, Activity.RESULT_OK, Intent().setData(exportUri))
+        idle()
+
+        val files = (ZipBackupContainer.read(ByteArrayInputStream(fakeDocuments.files.getValue(exportUri))) as ZipRead.Files).files
+        files.keys shouldBe setOf("manifest.json", "sections/items.json")
+        second.pause().stop().destroy()
     }
 
     @Test
@@ -400,24 +428,17 @@ class BackupPreferencesRobolectricTest {
     }
 
     @Test
-    fun `a settings screen without the backup entries skips their binding`() {
+    fun `a settings screen without the backup entries renders and skips their binding`() {
         CommonUtilsSettingsActivity.relativeLinksCard = false
         CommonUtilsSettingsActivity.preferences = listOf(TestR.xml.preferences_empty)
-        CommonUtilsSettingsActivity.backupEntryPoint = TestBackupEntryPoint::class.java
         ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
             it.onActivity { activity ->
-                activity.isFinishing shouldBe
-                    false
+                val fragment = fragmentOf(activity)
+                fragment.isResumed shouldBe true
+                fragment.preferenceScreen.preferenceCount shouldBe 0
+                fragment.findPreference<Preference>(activity.getString(R.string.commonutils_preference_key_export_backup)) shouldBe null
+                fragment.findPreference<Preference>(activity.getString(R.string.commonutils_preference_key_import_backup)) shouldBe null
             }
-        }
-    }
-
-    @Test
-    fun `settings activity without a backup entry point touches no backup type`() {
-        launch(withEntryPoint = false) { activity ->
-            activity.click(R.string.commonutils_preference_key_import_backup)
-
-            ShadowDialog.getLatestDialog() shouldBe null
         }
     }
 }

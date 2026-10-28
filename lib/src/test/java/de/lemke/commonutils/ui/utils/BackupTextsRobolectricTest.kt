@@ -31,6 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import de.lemke.commonutils.test.R as TestR
 
 private fun preview(
     createdAt: String = "2026-10-27T14:30:00+01:00",
@@ -39,6 +40,11 @@ private fun preview(
     modes: Set<ImportMode> = setOf(ImportMode.REPLACE),
 ) = BackupPreview(createdAt, 7, sections, skippedSections, modes)
 
+private fun Context.previewMessage(
+    preview: BackupPreview,
+    labels: Map<String, Int> = emptyMap(),
+): String = backupPreviewMessage(preview, labels)
+
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class BackupTextsRobolectricTest {
@@ -46,7 +52,7 @@ class BackupTextsRobolectricTest {
 
     @Test
     fun `a preview names the date, the entries of each section and nothing else for a replace-only backup`() {
-        val message = context.backupPreviewMessage(preview(sections = listOf(SectionPreview("urls", 1, 0), SectionPreview("notes", 3, 0))))
+        val message = context.previewMessage(preview(sections = listOf(SectionPreview("urls", 1, 0), SectionPreview("notes", 3, 0))))
 
         message shouldStartWith "Backup from "
         message shouldContain "2026"
@@ -54,31 +60,42 @@ class BackupTextsRobolectricTest {
     }
 
     @Test
+    fun `a preview names a labeled section by its label and an unlabeled one by its id`() {
+        val message =
+            context.previewMessage(
+                preview(sections = listOf(SectionPreview("urls", 2, 1), SectionPreview("notes", 3, 0))),
+                mapOf("urls" to TestR.string.test_section_label_urls),
+            )
+
+        message.substringAfter("\n\n") shouldBe "Saved links: 2 entries, 1 broken entry skipped\nnotes: 3 entries"
+    }
+
+    @Test
     fun `a preview counts skipped entries per section`() {
-        context.backupPreviewMessage(preview(sections = listOf(SectionPreview("urls", 2, 3)))) shouldContain
+        context.previewMessage(preview(sections = listOf(SectionPreview("urls", 2, 3)))) shouldContain
             "urls: 2 entries, 3 broken entries skipped"
     }
 
     @Test
     fun `a preview of Merge and Replace shows the modes text`() {
-        context.backupPreviewMessage(preview(modes = ImportMode.entries.toSet())) shouldContain
+        context.previewMessage(preview(modes = ImportMode.entries.toSet())) shouldContain
             "Merge adds the backup to your data. Entries you deleted since then come back. Replace swaps all data for the backup."
     }
 
     @Test
     fun `a preview joins the skipped sections with commas`() {
-        context.backupPreviewMessage(preview(skippedSections = listOf("a", "b"))) shouldContain
+        context.previewMessage(preview(skippedSections = listOf("a", "b"))) shouldContain
             "This backup holds parts this app version does not know: a, b. They are skipped."
     }
 
     @Test
     fun `a preview shows an unparsable date as written`() {
-        context.backupPreviewMessage(preview(createdAt = "yesterday")) shouldStartWith "Backup from yesterday"
+        context.previewMessage(preview(createdAt = "yesterday")) shouldStartWith "Backup from yesterday"
     }
 
     @Test
     fun `a backup without sections has a preview with the date only`() {
-        context.backupPreviewMessage(preview(sections = emptyList())).lines().size shouldBe 1
+        context.previewMessage(preview(sections = emptyList())).lines().size shouldBe 1
     }
 
     @Test

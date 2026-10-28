@@ -26,6 +26,11 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
+import de.lemke.commonutils.backup.BackupScreenDeps
+import de.lemke.commonutils.backup.FakeBackupDocuments
+import de.lemke.commonutils.backup.core.BackupApp
+import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupTransaction
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
@@ -54,6 +59,22 @@ class CommonUtilsSettingsActivityScreenshotTest {
     @BindValue
     @JvmField
     val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
+
+    @BindValue
+    @JvmField
+    val backupScreen: BackupScreenDeps =
+        BackupScreenDeps(
+            BackupEngine(
+                emptySet(),
+                object : BackupTransaction {
+                    override suspend fun <R> run(block: suspend () -> R): R = block()
+                },
+                BackupApp("screenshot", 1),
+                { "2026-10-27T14:30:00+01:00" },
+            ),
+            FakeBackupDocuments(),
+            emptySet(),
+        )
 
     @Before
     fun setUp() {

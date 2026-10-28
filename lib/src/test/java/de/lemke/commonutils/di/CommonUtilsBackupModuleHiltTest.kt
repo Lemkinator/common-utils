@@ -25,6 +25,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import de.lemke.commonutils.backup.BackupDocuments
+import de.lemke.commonutils.backup.BackupScreenDeps
 import de.lemke.commonutils.backup.DefaultBackupDocuments
 import de.lemke.commonutils.backup.HmacSha256BackupSigner
 import de.lemke.commonutils.backup.core.BackupApp
@@ -40,6 +41,7 @@ import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.util.Optional
 import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -88,6 +90,9 @@ class CommonUtilsBackupModuleHiltTest {
     @Inject
     lateinit var documents: BackupDocuments
 
+    @Inject
+    lateinit var backupScreen: Optional<BackupScreenDeps>
+
     @Before
     fun setUp() {
         sharedStore.clear()
@@ -112,6 +117,11 @@ class CommonUtilsBackupModuleHiltTest {
     @Test
     fun `the module binds the default documents`() {
         documents.shouldBeInstanceOf<DefaultBackupDocuments>()
+    }
+
+    @Test
+    fun `the module makes the settings screen deps present`() {
+        backupScreen.isPresent shouldBe true
     }
 }
 

@@ -24,6 +24,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import de.lemke.commonutils.R
+import de.lemke.commonutils.backup.BackupSectionLabel
 import de.lemke.commonutils.backup.BackupState
 import de.lemke.commonutils.backup.BackupStateHolder
 import de.lemke.commonutils.backup.core.ImportMode
@@ -40,12 +41,17 @@ private const val RESULT_DIALOG_TAG = "commonutils_backup_result"
 
 /**
  * Wires the "Export backup" and "Import backup" entries of `preferences_backup` to the [BackupStateHolder] that [holder]
- * returns: the pickers, the preview, the Replace warning and the result dialogs.
+ * returns: the pickers, the preview, the Replace warning and the result dialogs. The preview names a section by its
+ * entry in [sectionLabels], or by its id if it has none.
  *
  * Call it in `onCreate`, after the preferences are inflated: it registers the picker launchers. A dialog stays tied to
  * the state of the holder, so a rotation shows it again once and keeps the parsed file.
  */
-public fun PreferenceFragmentCompat.bindBackupPreferences(holder: () -> BackupStateHolder) {
+public fun PreferenceFragmentCompat.bindBackupPreferences(
+    sectionLabels: Set<BackupSectionLabel>,
+    holder: () -> BackupStateHolder,
+) {
+    val labels = sectionLabels.associate { it.sectionId to it.label }
     val exportPicker = registerForDocumentPick { holder().onExportTargetPicked(it) }
     val importPicker = registerForOpenDocument { holder().onImportFilePicked(it) }
     findPreference<PreferenceScreen>(getString(R.string.commonutils_preference_key_export_backup))?.apply {
@@ -66,7 +72,7 @@ public fun PreferenceFragmentCompat.bindBackupPreferences(holder: () -> BackupSt
                         if (launchCreateDocument(state.fileName, MIME_ZIP, EXTENSION_ZIP, exportPicker).isSettled) holder().onHandled(state)
                     BackupState.PickImportFile ->
                         if (launchOpenDocument(MIME_ZIP, importPicker, listOf(MIME_OCTET_STREAM)).isSettled) holder().onHandled(state)
-                    is BackupState.Preview -> showPreview(state, holder())
+                    is BackupState.Preview -> showPreview(state, labels, holder())
                     is BackupState.ConfirmReplace -> showReplaceWarning(holder())
                     is BackupState.Result -> showResult(state, holder())
                 }
@@ -77,13 +83,14 @@ public fun PreferenceFragmentCompat.bindBackupPreferences(holder: () -> BackupSt
 
 private fun Fragment.showPreview(
     state: BackupState.Preview,
+    labels: Map<String, Int>,
     holder: BackupStateHolder,
 ) {
     val builder =
         AlertDialog
             .Builder(requireContext())
             .setTitle(R.string.commonutils_import_backup)
-            .setMessage(requireContext().backupPreviewMessage(state.preview))
+            .setMessage(requireContext().backupPreviewMessage(state.preview, labels))
             .setNegativeButton(designR.string.oui_des_common_cancel) { _, _ -> holder.cancel() }
             .setOnCancelListener { holder.cancel() }
     if (ImportMode.MERGE in state.preview.modes) {

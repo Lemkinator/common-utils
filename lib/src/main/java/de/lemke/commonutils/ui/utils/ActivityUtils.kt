@@ -17,7 +17,6 @@ package de.lemke.commonutils.ui.utils
 
 import android.app.Activity
 import android.text.SpannableString
-import de.lemke.commonutils.backup.BackupEntryPoint
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutMeActivity
 import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
@@ -25,31 +24,26 @@ import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 /**
  * Configures the settings activity with the given preference XML resources.
  * [relativeLinksCard] adds the share and rate card; it needs a preference screen, so it stays off without [preferences].
- * [backupEntryPoint] serves the backup of the `preferences_backup` entries; without it they do nothing.
  */
 @JvmOverloads
 public fun setupCommonUtilsSettingsActivity(
     vararg preferences: Int,
     relativeLinksCard: Boolean = true,
-    backupEntryPoint: Class<out BackupEntryPoint>? = null,
 ) {
-    setupCommonUtilsSettingsActivity(preferences.toList(), relativeLinksCard, backupEntryPoint)
+    setupCommonUtilsSettingsActivity(preferences.toList(), relativeLinksCard)
 }
 
 /**
  * Configures the settings activity with the given preference XML resource list.
  * [relativeLinksCard] adds the share and rate card; it needs a preference screen, so it stays off without [preferences].
- * [backupEntryPoint] serves the backup of the `preferences_backup` entries; without it they do nothing.
  */
 @JvmOverloads
 public fun setupCommonUtilsSettingsActivity(
     preferences: List<Int>,
     relativeLinksCard: Boolean = true,
-    backupEntryPoint: Class<out BackupEntryPoint>? = null,
 ) {
     CommonUtilsSettingsActivity.preferences = preferences
     CommonUtilsSettingsActivity.relativeLinksCard = relativeLinksCard
-    CommonUtilsSettingsActivity.backupEntryPoint = backupEntryPoint
 }
 
 /** Configures the About Me activity with an optional share-app callback. */

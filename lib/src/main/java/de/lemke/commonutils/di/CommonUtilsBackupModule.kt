@@ -22,6 +22,8 @@ import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import dagger.multibindings.Multibinds
 import de.lemke.commonutils.backup.BackupDocuments
+import de.lemke.commonutils.backup.BackupScreenDeps
+import de.lemke.commonutils.backup.BackupSectionLabel
 import de.lemke.commonutils.backup.DefaultBackupDocuments
 import de.lemke.commonutils.backup.backupTimestamp
 import de.lemke.commonutils.backup.core.BackupApp
@@ -36,8 +38,9 @@ import java.util.Optional
  * Opt-in Hilt bindings for the backup: a [BackupEngine] over the sections the app binds, and [BackupDocuments].
  *
  * It installs itself nowhere. An app includes it from its own module and binds [BackupApp], [BackupTransaction] and its
- * sections with `@Binds @IntoSet`; a [BackupSigner] binding makes it sign. It needs the bindings of
- * [CommonUtilsCoroutinesModule] for `@IoDispatcher`.
+ * sections with `@Binds @IntoSet`, plus a [BackupSectionLabel] per section with `@Provides @IntoSet`; a [BackupSigner]
+ * binding makes it sign. It also binds the [BackupScreenDeps] that make the settings screen show the Backup category.
+ * It needs the bindings of [CommonUtilsCoroutinesModule] for `@IoDispatcher`.
  * ```
  * @Module(includes = [CommonUtilsBackupModule::class])
  * @InstallIn(SingletonComponent::class)
@@ -49,6 +52,9 @@ import java.util.Optional
 public interface CommonUtilsBackupModule {
     @Multibinds
     public fun sections(): Set<@JvmSuppressWildcards BackupSection<*>>
+
+    @Multibinds
+    public fun sectionLabels(): Set<BackupSectionLabel>
 
     @Binds
     public fun documents(impl: DefaultBackupDocuments): BackupDocuments
@@ -64,5 +70,12 @@ public interface CommonUtilsBackupModule {
             app: BackupApp,
             signer: Optional<BackupSigner>,
         ): BackupEngine = BackupEngine(sections, transaction, app, { backupTimestamp(OffsetDateTime.now()) }, signer.orElse(null))
+
+        @Provides
+        public fun backupScreen(
+            engine: BackupEngine,
+            documents: BackupDocuments,
+            sectionLabels: Set<BackupSectionLabel>,
+        ): BackupScreenDeps = BackupScreenDeps(engine, documents, sectionLabels)
     }
 }

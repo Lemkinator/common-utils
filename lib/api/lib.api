@@ -4,11 +4,6 @@ public abstract interface class de/lemke/commonutils/backup/BackupDocuments {
 	public abstract fun write (Landroid/net/Uri;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public abstract interface class de/lemke/commonutils/backup/BackupEntryPoint {
-	public abstract fun backupDocuments ()Lde/lemke/commonutils/backup/BackupDocuments;
-	public abstract fun backupEngine ()Lde/lemke/commonutils/backup/core/BackupEngine;
-}
-
 public abstract interface class de/lemke/commonutils/backup/BackupResult {
 }
 
@@ -64,6 +59,24 @@ public final class de/lemke/commonutils/backup/BackupResult$Restored : de/lemke/
 	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/BackupResult$Restored;Lde/lemke/commonutils/backup/core/RestoreReport;ILjava/lang/Object;)Lde/lemke/commonutils/backup/BackupResult$Restored;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getReport ()Lde/lemke/commonutils/backup/core/RestoreReport;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/BackupScreenDeps {
+	public static final field $stable I
+}
+
+public final class de/lemke/commonutils/backup/BackupSectionLabel {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;I)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/String;I)Lde/lemke/commonutils/backup/BackupSectionLabel;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/BackupSectionLabel;Ljava/lang/String;IILjava/lang/Object;)Lde/lemke/commonutils/backup/BackupSectionLabel;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLabel ()I
+	public final fun getSectionId ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -141,12 +154,6 @@ public final class de/lemke/commonutils/backup/BackupStateHolder {
 	public final fun onHandled (Lde/lemke/commonutils/backup/BackupState;)V
 	public final fun onImportFilePicked (Landroid/net/Uri;)V
 	public final fun restore (Lde/lemke/commonutils/backup/core/ImportMode;)V
-}
-
-public final class de/lemke/commonutils/backup/BackupViewModel : androidx/lifecycle/ViewModel {
-	public static final field $stable I
-	public fun <init> (Lde/lemke/commonutils/backup/core/BackupEngine;Lde/lemke/commonutils/backup/BackupDocuments;)V
-	public final fun getBackup ()Lde/lemke/commonutils/backup/BackupStateHolder;
 }
 
 public final class de/lemke/commonutils/backup/DefaultBackupDocuments : de/lemke/commonutils/backup/BackupDocuments {
@@ -556,11 +563,13 @@ public abstract interface annotation class de/lemke/commonutils/di/ApplicationSc
 public abstract interface class de/lemke/commonutils/di/CommonUtilsBackupModule {
 	public static final field Companion Lde/lemke/commonutils/di/CommonUtilsBackupModule$Companion;
 	public abstract fun documents (Lde/lemke/commonutils/backup/DefaultBackupDocuments;)Lde/lemke/commonutils/backup/BackupDocuments;
+	public abstract fun sectionLabels ()Ljava/util/Set;
 	public abstract fun sections ()Ljava/util/Set;
 	public abstract fun signer ()Lde/lemke/commonutils/backup/core/BackupSigner;
 }
 
 public final class de/lemke/commonutils/di/CommonUtilsBackupModule$Companion {
+	public final fun backupScreen (Lde/lemke/commonutils/backup/core/BackupEngine;Lde/lemke/commonutils/backup/BackupDocuments;Ljava/util/Set;)Lde/lemke/commonutils/backup/BackupScreenDeps;
 	public final fun engine (Ljava/util/Set;Lde/lemke/commonutils/backup/core/BackupTransaction;Lde/lemke/commonutils/backup/core/BackupApp;Ljava/util/Optional;)Lde/lemke/commonutils/backup/core/BackupEngine;
 }
 
@@ -680,22 +689,23 @@ public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity 
 }
 
 public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity$Companion {
-	public final fun getBackupEntryPoint ()Ljava/lang/Class;
 	public final fun getPreferences ()Ljava/util/List;
 	public final fun getRelativeLinksCard ()Z
-	public final fun setBackupEntryPoint (Ljava/lang/Class;)V
 	public final fun setPreferences (Ljava/util/List;)V
 	public final fun setRelativeLinksCard (Z)V
 }
 
 public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity$SettingsFragment : androidx/preference/PreferenceFragmentCompat {
 	public static final field $stable I
+	public field backupScreen Ljava/util/Optional;
 	public field settings Lde/lemke/commonutils/data/SettingsRepository;
 	public fun <init> ()V
+	public final fun getBackupScreen ()Ljava/util/Optional;
 	public final fun getSettings ()Lde/lemke/commonutils/data/SettingsRepository;
 	public fun onCreate (Landroid/os/Bundle;)V
 	public fun onCreatePreferences (Landroid/os/Bundle;Ljava/lang/String;)V
 	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	public final fun setBackupScreen (Ljava/util/Optional;)V
 	public final fun setSettings (Lde/lemke/commonutils/data/SettingsRepository;)V
 }
 
@@ -719,12 +729,10 @@ public final class de/lemke/commonutils/ui/utils/ActivityUtilsKt {
 	public static synthetic fun setupCommonUtilsAboutMeActivity$default (Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public static final fun setupCommonUtilsSettingsActivity (Ljava/util/List;)V
 	public static final fun setupCommonUtilsSettingsActivity (Ljava/util/List;Z)V
-	public static final fun setupCommonUtilsSettingsActivity (Ljava/util/List;ZLjava/lang/Class;)V
 	public static final fun setupCommonUtilsSettingsActivity ([I)V
 	public static final fun setupCommonUtilsSettingsActivity ([IZ)V
-	public static final fun setupCommonUtilsSettingsActivity ([IZLjava/lang/Class;)V
-	public static synthetic fun setupCommonUtilsSettingsActivity$default (Ljava/util/List;ZLjava/lang/Class;ILjava/lang/Object;)V
-	public static synthetic fun setupCommonUtilsSettingsActivity$default ([IZLjava/lang/Class;ILjava/lang/Object;)V
+	public static synthetic fun setupCommonUtilsSettingsActivity$default (Ljava/util/List;ZILjava/lang/Object;)V
+	public static synthetic fun setupCommonUtilsSettingsActivity$default ([IZILjava/lang/Object;)V
 }
 
 public final class de/lemke/commonutils/ui/utils/AppUpdateManagerUtilsKt {
@@ -736,7 +744,7 @@ public final class de/lemke/commonutils/ui/utils/AutoClearedUtilsKt {
 }
 
 public final class de/lemke/commonutils/ui/utils/BackupPreferencesKt {
-	public static final fun bindBackupPreferences (Landroidx/preference/PreferenceFragmentCompat;Lkotlin/jvm/functions/Function0;)V
+	public static final fun bindBackupPreferences (Landroidx/preference/PreferenceFragmentCompat;Ljava/util/Set;Lkotlin/jvm/functions/Function0;)V
 }
 
 public abstract interface class de/lemke/commonutils/ui/utils/BitmapExport {

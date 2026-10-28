@@ -20,9 +20,9 @@ import androidx.lifecycle.viewModelScope
 import de.lemke.commonutils.backup.core.BackupEngine
 
 /** Hosts the [BackupStateHolder] of the common-utils settings screen, so a rotation keeps a previewed backup. */
-public class BackupViewModel(
+internal class BackupViewModel(
     engine: BackupEngine,
     documents: BackupDocuments,
 ) : ViewModel() {
-    public val backup: BackupStateHolder = BackupStateHolder(viewModelScope, engine, documents)
+    val backup: BackupStateHolder = BackupStateHolder(viewModelScope, engine, documents)
 }

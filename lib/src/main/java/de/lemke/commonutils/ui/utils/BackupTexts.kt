@@ -28,11 +28,17 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.format.FormatStyle
 
-/** The message of the import preview: backup date, entries per section, skipped parts, and the modes text if Merge is offered. */
-internal fun Context.backupPreviewMessage(preview: BackupPreview): String =
+/**
+ * The message of the import preview: backup date, entries per section, skipped parts, and the modes text if Merge is
+ * offered. [labels] maps a section id to the string resource that names it; a known section without one shows its id.
+ */
+internal fun Context.backupPreviewMessage(
+    preview: BackupPreview,
+    labels: Map<String, Int>,
+): String =
     listOf(
         getString(R.string.commonutils_backup_preview_date, backupDate(preview.createdAt)),
-        preview.sections.joinToString("\n") { sectionLine(it) },
+        preview.sections.joinToString("\n") { sectionLine(it, sectionName(it.id, labels)) },
         if (preview.skippedSections.isEmpty()) {
             ""
         } else {
@@ -75,13 +81,24 @@ private fun Context.backupDate(createdAt: String): String =
         createdAt
     }
 
-private fun Context.sectionLine(section: SectionPreview): String {
+private fun Context.sectionName(
+    id: String,
+    labels: Map<String, Int>,
+): String {
+    val label = labels[id]
+    return if (label == null) id else getString(label)
+}
+
+private fun Context.sectionLine(
+    section: SectionPreview,
+    name: String,
+): String {
     val entries = count(R.plurals.commonutils_backup_entries, section.entries)
     return if (section.skipped == 0) {
-        getString(R.string.commonutils_backup_section_line, section.id, entries)
+        getString(R.string.commonutils_backup_section_line, name, entries)
     } else {
         val skipped = count(R.plurals.commonutils_backup_entries_skipped, section.skipped)
-        getString(R.string.commonutils_backup_section_line_skipped, section.id, entries, skipped)
+        getString(R.string.commonutils_backup_section_line_skipped, name, entries, skipped)
     }
 }
 
