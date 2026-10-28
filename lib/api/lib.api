@@ -1153,7 +1153,9 @@ public final class de/lemke/commonutils/ui/utils/OnboardingUtilsKt {
 }
 
 public final class de/lemke/commonutils/ui/utils/OpenDocumentUtilsKt {
+	public static final fun launchOpenDocument (Landroid/content/Context;Ljava/lang/String;Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;)Lde/lemke/commonutils/ui/utils/LaunchOutcome;
 	public static final fun launchOpenDocument (Landroid/content/Context;Ljava/lang/String;Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;Ljava/util/List;)Lde/lemke/commonutils/ui/utils/LaunchOutcome;
+	public static final fun launchOpenDocument (Landroidx/fragment/app/Fragment;Ljava/lang/String;Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;)Lde/lemke/commonutils/ui/utils/LaunchOutcome;
 	public static final fun launchOpenDocument (Landroidx/fragment/app/Fragment;Ljava/lang/String;Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;Ljava/util/List;)Lde/lemke/commonutils/ui/utils/LaunchOutcome;
 	public static synthetic fun launchOpenDocument$default (Landroid/content/Context;Ljava/lang/String;Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;Ljava/util/List;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/LaunchOutcome;
 	public static synthetic fun launchOpenDocument$default (Landroidx/fragment/app/Fragment;Ljava/lang/String;Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;Ljava/util/List;ILjava/lang/Object;)Lde/lemke/commonutils/ui/utils/LaunchOutcome;

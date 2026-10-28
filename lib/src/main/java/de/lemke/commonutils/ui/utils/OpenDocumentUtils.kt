@@ -62,6 +62,7 @@ public fun Fragment.registerForOpenDocument(onPick: (Uri?) -> Unit): SingleLaunc
  * [LaunchOutcome.Dropped], so the caller keeps its import pending until the activity resumes. Register [launcher] with
  * [registerForOpenDocument].
  */
+@JvmOverloads
 public fun Fragment.launchOpenDocument(
     mimeType: String,
     launcher: SingleLaunchResultLauncher<Intent>,
@@ -76,6 +77,7 @@ public fun Fragment.launchOpenDocument(
  * [LaunchOutcome.Dropped], so the caller keeps its import pending until the activity resumes. Register [launcher] with
  * [registerForOpenDocument].
  */
+@JvmOverloads
 public fun Context.launchOpenDocument(
     mimeType: String,
     launcher: SingleLaunchResultLauncher<Intent>,
