@@ -212,7 +212,7 @@
     </plurals>
     <string name="commonutils_backup_modes_info">Merge adds the backup to your data. Entries you deleted since then come back. Replace swaps all data for the backup.</string>
     <string name="commonutils_backup_skipped_sections">This backup holds parts this app version does not know: %1$s. They are skipped.</string>
-    <string name="commonutils_backup_replace_title">Replace all data?</string>
+    <string name="commonutils_backup_replace_title">Replace data?</string>
     <string name="commonutils_backup_replace_warning">Attention: This deletes the current data of the parts in this backup and replaces it with the backup. This cannot be undone.</string>
     <string name="commonutils_backup_exported">Backup exported</string>
     <string name="commonutils_backup_export_failed">Error exporting backup</string>

@@ -171,7 +171,7 @@
     </plurals>
     <string name="commonutils_backup_modes_info">Zusammenführen fügt die Sicherung deinen Daten hinzu. Einträge, die du seitdem gelöscht hast, kommen zurück. Ersetzen tauscht alle Daten gegen die Sicherung.</string>
     <string name="commonutils_backup_skipped_sections">Diese Sicherung enthält Teile, die diese App-Version nicht kennt: %1$s. Sie werden übersprungen.</string>
-    <string name="commonutils_backup_replace_title">Alle Daten ersetzen?</string>
+    <string name="commonutils_backup_replace_title">Daten ersetzen?</string>
     <string name="commonutils_backup_replace_warning">Achtung: Dadurch werden die aktuellen Daten der Teile in dieser Sicherung gelöscht und durch die Sicherung ersetzt. Das kann nicht rückgängig gemacht werden.</string>
     <string name="commonutils_backup_exported">Sicherung exportiert</string>
     <string name="commonutils_backup_export_failed">Fehler beim Exportieren der Sicherung</string>
