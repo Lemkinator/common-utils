@@ -44,6 +44,16 @@ private object DirectTransaction : BackupTransaction {
 private suspend fun signedExport(signer: BackupSigner = FoldSigner()): Map<String, ByteArray> =
     engine(mutableListOf(Item("a", 1)), signer).export()
 
+// name, 0x00, length as 8 bytes big-endian, bytes; manifest.json first, then the section entries by name
+private fun handBuiltPayload(files: Map<String, ByteArray>): ByteArray {
+    fun framed(name: String): ByteArray {
+        val bytes = files.getValue(name)
+        require(bytes.size < 256) { "The test export must stay below 256 bytes per entry" }
+        return name.encodeToByteArray() + byteArrayOf(0, 0, 0, 0, 0, 0, 0, 0, bytes.size.toByte()) + bytes
+    }
+    return framed("manifest.json") + framed("sections/items.json")
+}
+
 private fun refusalOf(
     files: Map<String, ByteArray>,
     signer: BackupSigner? = FoldSigner(),
@@ -56,7 +66,7 @@ class BackupEngineSigningTest : ShouldSpec(
             val signature = backupJson.parseToJsonElement(files.getValue(SIGNATURE_ENTRY).decodeToString()).jsonObject
             signature.getValue("alg").jsonPrimitive.content shouldBe "HMAC-SHA256"
             signature.getValue("keyId").jsonPrimitive.content shouldBe "test"
-            signature.getValue("mac").jsonPrimitive.content shouldBe FoldSigner().mac(signedPayload(files)).toHex()
+            signature.getValue("mac").jsonPrimitive.content shouldBe FoldSigner().mac(handBuiltPayload(files)).toHex()
         }
         should("export without a signer writes no signature entry") {
             (SIGNATURE_ENTRY in engine(mutableListOf(), null).export()) shouldBe false
