@@ -61,6 +61,7 @@ internal fun Context.backupRefusalMessage(reason: BackupRefusal): String =
             is BackupRefusal.NewerFormat, is BackupRefusal.NewerSection -> R.string.commonutils_backup_refused_newer
             is BackupRefusal.TooOldSection -> R.string.commonutils_backup_refused_too_old
             BackupRefusal.NoKnownSection -> R.string.commonutils_backup_refused_no_known_section
+            BackupRefusal.TooLarge -> R.string.commonutils_backup_read_failed
             BackupRefusal.Tampered -> R.string.commonutils_backup_refused_tampered
         },
     )

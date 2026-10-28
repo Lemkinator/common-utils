@@ -31,6 +31,9 @@ public sealed interface BackupRefusal {
     /** No section of the file is known to this app version, so there is nothing to restore. */
     public data object NoKnownSection : BackupRefusal
 
+    /** A section file exceeds the limits on entries, nesting depth or values per entry. */
+    public data object TooLarge : BackupRefusal
+
     /** A signing app got a file that is unsigned or changed since export. */
     public data object Tampered : BackupRefusal
 }

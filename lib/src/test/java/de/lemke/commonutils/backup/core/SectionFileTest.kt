@@ -22,18 +22,25 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
+private fun decoder() = SectionDecoder(1, MemorySection())
+
 class SectionFileTest : ShouldSpec(
     {
         should("encode a section file as an object with an entries array") {
-            val file = SectionFile(listOf(JsonObject(mapOf("a" to JsonPrimitive(1)))))
-            backupJson.encodeToString(SectionFile.serializer(), file) shouldBe """{"entries":[{"a":1}]}"""
+            sectionFileText(listOf(JsonObject(mapOf("a" to JsonPrimitive(1))))) shouldBe """{"entries":[{"a":1}]}"""
         }
         should("decode a section file with an unknown key next to entries") {
-            val file = backupJson.decodeFromString(SectionFile.serializer(), """{"entries":[{"a":1}],"deleted":[]}""")
-            file shouldBe SectionFile(listOf(JsonObject(mapOf("a" to JsonPrimitive(1)))))
+            val read = backupJson.decodeFromString(decoder(), """{"entries":[{"key":"a","value":1}],"deleted":[]}""")
+            read.entries shouldBe listOf(Item("a", 1))
+            read.skipped shouldBe 0
+        }
+        should("count an entry that does not decode as skipped") {
+            val read = backupJson.decodeFromString(decoder(), """{"entries":[{"key":"a"},5,{"key":"b","value":2}]}""")
+            read.entries shouldBe listOf(Item("a", 0), Item("b", 2))
+            read.skipped shouldBe 1
         }
         should("refuse to decode a section file without entries") {
-            shouldThrow<SerializationException> { backupJson.decodeFromString(SectionFile.serializer(), """{"deleted":[]}""") }
+            shouldThrow<SerializationException> { backupJson.decodeFromString(decoder(), """{"deleted":[]}""") }
         }
     },
 )

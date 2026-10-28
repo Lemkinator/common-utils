@@ -16,6 +16,7 @@
 package de.lemke.commonutils.backup.core
 
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
@@ -47,8 +48,13 @@ private fun readSections(
     knownIds: Set<String>,
     files: Map<String, ByteArray>,
 ): BackupReadResult {
-    val read = present.mapNotNull { (info, section) -> readSection(info, section, files) }
-    if (read.size < present.size) return BackupReadResult.Refused(BackupRefusal.NotABackup)
+    val read = mutableListOf<ReadSection<*>>()
+    for ((info, section) in present) {
+        when (val outcome = readSection(info, section, files)) {
+            is SectionRead.Read -> read += outcome.section
+            is SectionRead.Refused -> return BackupReadResult.Refused(outcome.reason)
+        }
+    }
     val preview =
         BackupPreview(
             createdAt = manifest.createdAt,
@@ -60,15 +66,7 @@ private fun readSections(
     return BackupReadResult.Ready(preview, read)
 }
 
-private fun decodeManifest(bytes: ByteArray): BackupManifest? =
-    decodeOrNull {
-        backupJson.decodeFromString(BackupManifest.serializer(), bytes.decodeToString())
-    }
-
-private fun decodeSectionFile(bytes: ByteArray): SectionFile? =
-    decodeOrNull {
-        backupJson.decodeFromString(SectionFile.serializer(), bytes.decodeToString())
-    }
+private fun decodeManifest(bytes: ByteArray): BackupManifest? = bytes.decodeWithinLimits(BackupManifest.serializer())
 
 // App upgrade, validate and serializer code throws an open-ended exception set; one broken entry must not fail the import.
 @Suppress("TooGenericExceptionCaught")
@@ -106,17 +104,42 @@ private fun versionRefusal(
         else -> null
     }
 
+private sealed interface SectionRead {
+    class Read(val section: ReadSection<*>) : SectionRead
+
+    class Refused(val reason: BackupRefusal) : SectionRead
+}
+
 private fun <E : Any> readSection(
     info: SectionInfo,
     section: BackupSection<E>,
     files: Map<String, ByteArray>,
-): ReadSection<E>? {
-    val file = files[sectionEntryName(info.id)]?.let(::decodeSectionFile) ?: return null
-    val decoded = file.entries.map { decodeEntry(it, info.version, section) }
-    return ReadSection(section, decoded.filterNotNull(), decoded.count { it == null })
+): SectionRead {
+    val bytes = files[sectionEntryName(info.id)]
+    return when {
+        bytes == null -> SectionRead.Refused(BackupRefusal.NotABackup)
+        !bytes.withinJsonLimits() -> SectionRead.Refused(BackupRefusal.TooLarge)
+        else -> decodeSection(bytes, info, section) ?: SectionRead.Refused(BackupRefusal.NotABackup)
+    }
 }
 
-private fun <E : Any> decodeEntry(
+private fun <E : Any> decodeSection(
+    bytes: ByteArray,
+    info: SectionInfo,
+    section: BackupSection<E>,
+): SectionRead? =
+    decodeOrNull {
+        try {
+            SectionRead.Read(backupJson.decodeFromString(SectionDecoder(info.version, section), bytes.decodeToString()))
+        } catch (_: TooManyEntriesException) {
+            SectionRead.Refused(BackupRefusal.TooLarge)
+        } catch (e: SerializationException) {
+            // The JSON decoder wraps what an upgrade step throws; a cancellation must still propagate.
+            throw e.cause as? CancellationException ?: e
+        }
+    }
+
+internal fun <E : Any> decodeEntry(
     element: JsonElement,
     fromVersion: Int,
     section: BackupSection<E>,

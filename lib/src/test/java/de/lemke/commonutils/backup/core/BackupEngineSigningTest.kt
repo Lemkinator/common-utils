@@ -107,6 +107,21 @@ class BackupEngineSigningTest : ShouldSpec(
         should("refuse a file with an added sections entry") {
             refusalOf(signedExport() + ("sections/extra.json" to entriesJson().encodeToByteArray())) shouldBe BackupRefusal.Tampered
         }
+        should("read a signature that nests as deep as the limit and refuse one deeper") {
+            val files = signedExport()
+
+            fun nested(levels: Int) =
+                files
+                    .getValue(
+                        SIGNATURE_ENTRY,
+                    ).decodeToString()
+                    .removeSuffix("}")
+                    .plus(""","extra":${"[".repeat(levels)}${"]".repeat(levels)}}""")
+            engine(mutableListOf(), FoldSigner())
+                .read(files + (SIGNATURE_ENTRY to nested(MAX_NESTING_DEPTH - 1).encodeToByteArray()))
+                .shouldBeInstanceOf<BackupReadResult.Ready>()
+            refusalOf(files + (SIGNATURE_ENTRY to nested(MAX_NESTING_DEPTH).encodeToByteArray())) shouldBe BackupRefusal.Tampered
+        }
         should("refuse another keyId") {
             refusalOf(signedExport(FoldSigner("other"))) shouldBe BackupRefusal.Tampered
         }

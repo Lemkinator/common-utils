@@ -74,5 +74,4 @@ internal fun signatureRefusal(
     return BackupRefusal.Tampered.takeUnless { valid }
 }
 
-private fun decodeSignature(bytes: ByteArray): SignatureFile? =
-    decodeOrNull { backupJson.decodeFromString(SignatureFile.serializer(), bytes.decodeToString()) }
+private fun decodeSignature(bytes: ByteArray): SignatureFile? = bytes.decodeWithinLimits(SignatureFile.serializer())

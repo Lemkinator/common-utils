@@ -38,6 +38,14 @@ private fun ready(result: BackupReadResult): BackupReadResult.Ready = result.sho
 
 private val items = SectionInfo("items", 1, 1)
 
+// An entry with `count` values: its braces, its array and the commas of the array.
+private fun entryWithValues(count: Int): String = """{"key":[${List(count - 1) { "0" }.joinToString(",")}]}"""
+
+private fun Map<String, ByteArray>.manifestWithNestedKey(levels: Int): ByteArray =
+    getValue(
+        MANIFEST_ENTRY,
+    ).decodeToString().removeSuffix("}").plus(""","extra":${"[".repeat(levels)}${"]".repeat(levels)}}""").encodeToByteArray()
+
 class BackupReaderTest : ShouldSpec(
     {
         should("refuse a file without manifest") {
@@ -161,6 +169,58 @@ class BackupReaderTest : ShouldSpec(
         should("refuse a file whose sections are all unknown") {
             val files = backupFilesOf(SectionInfo("extra", 1, 1) to entriesJson(item("a")))
             refusal(read(files, MemorySection())) shouldBe BackupRefusal.NoKnownSection
+        }
+        should("read a section with the most entries and refuse one entry more") {
+            val atLimit = entriesJson(*Array(MAX_SECTION_ENTRIES) { """{"key":"k"}""" })
+            val overLimit = entriesJson(*Array(MAX_SECTION_ENTRIES + 1) { """{"key":"k"}""" })
+
+            ready(read(backupFilesOf(SectionInfo("items", 1, MAX_SECTION_ENTRIES) to atLimit), MemorySection()))
+                .preview.sections
+                .single()
+                .entries shouldBe MAX_SECTION_ENTRIES
+            refusal(read(backupFilesOf(SectionInfo("items", 1, MAX_SECTION_ENTRIES + 1) to overLimit), MemorySection())) shouldBe
+                BackupRefusal.TooLarge
+        }
+        should("read a section file of the most entries with twenty fields each") {
+            val fields = (1..19).joinToString("") { ""","f$it":$it""" }
+            val entry = """{"key":"k"$fields}"""
+            val text = entriesJson(*Array(MAX_SECTION_ENTRIES) { entry })
+
+            ready(read(backupFilesOf(SectionInfo("items", 1, MAX_SECTION_ENTRIES) to text), MemorySection()))
+                .preview.sections shouldContainExactly listOf(SectionPreview("items", MAX_SECTION_ENTRIES, 0))
+        }
+        should("read a section file that nests as deep as the limit and skip its entry") {
+            val levels = MAX_NESTING_DEPTH - 3
+            val nested = "[".repeat(levels) + "]".repeat(levels)
+            val ready = ready(read(backupFilesOf(items to entriesJson("""{"key":$nested}""")), MemorySection()))
+            ready.preview.sections shouldContainExactly listOf(SectionPreview("items", 0, 1))
+        }
+        should("refuse a section file that nests deeper than the limit") {
+            val levels = MAX_NESTING_DEPTH - 2
+            val nested = "[".repeat(levels) + "]".repeat(levels)
+            refusal(read(backupFilesOf(items to entriesJson("""{"key":$nested}""")), MemorySection())) shouldBe BackupRefusal.TooLarge
+        }
+        should("read an entry with the most values and refuse one with a value more") {
+            val atLimit = ready(read(backupFilesOf(items to entriesJson(entryWithValues(MAX_ENTRY_VALUES))), MemorySection()))
+            atLimit.preview.sections shouldContainExactly listOf(SectionPreview("items", 0, 1))
+            val overLimit = backupFilesOf(items to entriesJson(entryWithValues(MAX_ENTRY_VALUES + 1)))
+            refusal(read(overLimit, MemorySection())) shouldBe BackupRefusal.TooLarge
+        }
+        should("count the values of each entry on its own") {
+            val entries = Array(3) { entryWithValues(MAX_ENTRY_VALUES) }
+            val ready = ready(read(backupFilesOf(SectionInfo("items", 1, 3) to entriesJson(*entries)), MemorySection()))
+            ready.preview.sections shouldContainExactly listOf(SectionPreview("items", 0, 3))
+        }
+        should("read a manifest that nests as deep as the limit and refuse one deeper") {
+            val files = backupFilesOf(items to entriesJson(item("a")))
+            ready(read(files + (MANIFEST_ENTRY to files.manifestWithNestedKey(MAX_NESTING_DEPTH - 1)), MemorySection()))
+            refusal(read(files + (MANIFEST_ENTRY to files.manifestWithNestedKey(MAX_NESTING_DEPTH)), MemorySection())) shouldBe
+                BackupRefusal.NotABackup
+        }
+        should("count brackets, commas and escaped quotes inside a string as text") {
+            val text = "\\\"" + "[{,".repeat(MAX_NESTING_DEPTH) + "\\\\"
+            val ready = ready(read(backupFilesOf(items to entriesJson("""{"key":"$text"}""")), MemorySection()))
+            ready.preview.sections shouldContainExactly listOf(SectionPreview("items", 1, 0))
         }
         should("offer no mode without a section") {
             importModes(emptyList()) shouldBe emptySet()

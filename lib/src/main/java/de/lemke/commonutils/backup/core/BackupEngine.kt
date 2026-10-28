@@ -59,7 +59,6 @@ public class BackupEngine(
 
 private suspend fun <E : Any> exportSection(section: BackupSection<E>): Pair<SectionInfo, ByteArray> {
     val entries = section.exportEntries()
-    val file = SectionFile(entries.map { backupJson.encodeToJsonElement(section.serializer, it) })
-    return SectionInfo(section.id, section.version, entries.size) to
-        backupJson.encodeToString(SectionFile.serializer(), file).encodeToByteArray()
+    val text = sectionFileText(entries.map { backupJson.encodeToJsonElement(section.serializer, it) })
+    return SectionInfo(section.id, section.version, entries.size) to text.encodeToByteArray()
 }
