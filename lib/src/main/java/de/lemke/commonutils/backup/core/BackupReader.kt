@@ -15,13 +15,14 @@
  */
 package de.lemke.commonutils.backup.core
 
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 /**
  * Checks the manifest and, for a [signer], the signature, then the version of every known section, then decodes every
- * entry. A refusal returns before any decode. A [BackupSection.upgrade] that cannot map an entry must throw
- * an [IllegalArgumentException]; the entry is skipped.
+ * entry. A refusal returns before any decode. An entry whose [BackupSection.upgrade], decoding or
+ * [BackupSection.validate] throws is skipped and counted.
  */
 internal fun readBackup(
     files: Map<String, ByteArray>,
@@ -36,6 +37,7 @@ internal fun readBackup(
         manifestRefusal(manifest, app)
             ?: signer?.let { signatureRefusal(files, it) }
             ?: present.firstNotNullOfOrNull { (info, section) -> versionRefusal(info, section) }
+            ?: BackupRefusal.NoKnownSection.takeIf { present.isEmpty() }
     return if (refusal != null) BackupReadResult.Refused(refusal) else readSections(manifest, present, known.keys, files)
 }
 
@@ -68,10 +70,14 @@ private fun decodeSectionFile(bytes: ByteArray): SectionFile? =
         backupJson.decodeFromString(SectionFile.serializer(), bytes.decodeToString())
     }
 
+// App upgrade, validate and serializer code throws an open-ended exception set; one broken entry must not fail the import.
+@Suppress("TooGenericExceptionCaught")
 internal inline fun <T> decodeOrNull(decode: () -> T): T? =
     try {
         decode()
-    } catch (_: IllegalArgumentException) {
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
         null
     }
 

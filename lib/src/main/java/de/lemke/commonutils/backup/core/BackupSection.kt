@@ -41,7 +41,10 @@ public interface BackupSection<E : Any> {
     public val minReadableVersion: Int
     public val serializer: KSerializer<E>
 
-    /** One step: maps an entry of [fromVersion] to an entry of `fromVersion + 1`. */
+    /**
+     * One step: maps an entry of [fromVersion] to an entry of `fromVersion + 1`. A step that cannot map an entry throws;
+     * the reader skips and counts that entry.
+     */
     public fun upgrade(
         fromVersion: Int,
         entry: JsonObject,

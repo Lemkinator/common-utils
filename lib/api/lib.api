@@ -297,6 +297,14 @@ public final class de/lemke/commonutils/backup/core/BackupRefusal$NewerSection :
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class de/lemke/commonutils/backup/core/BackupRefusal$NoKnownSection : de/lemke/commonutils/backup/core/BackupRefusal {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/core/BackupRefusal$NoKnownSection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class de/lemke/commonutils/backup/core/BackupRefusal$NotABackup : de/lemke/commonutils/backup/core/BackupRefusal {
 	public static final field $stable I
 	public static final field INSTANCE Lde/lemke/commonutils/backup/core/BackupRefusal$NotABackup;

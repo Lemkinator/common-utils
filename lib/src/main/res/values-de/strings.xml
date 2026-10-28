@@ -202,6 +202,7 @@
     <string name="commonutils_backup_refused_other_app">Diese Sicherung gehört zu einer anderen App.</string>
     <string name="commonutils_backup_refused_newer">Diese Sicherung stammt von einer neueren Version der App. Bitte aktualisiere die App.</string>
     <string name="commonutils_backup_refused_too_old">Diese Sicherung ist zu alt, um importiert zu werden.</string>
+    <string name="commonutils_backup_refused_no_known_section">Diese Sicherung enthält keine Daten, die diese App-Version kennt.</string>
     <string name="commonutils_backup_refused_tampered">Diese Sicherung wurde außerhalb der App geändert.</string>
 
 </resources>

@@ -15,10 +15,13 @@
  */
 package de.lemke.commonutils.backup.core
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.time.format.DateTimeParseException
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
@@ -135,6 +138,32 @@ class BackupReaderTest : ShouldSpec(
                 )
             val ready = ready(read(backupFilesOf(SectionInfo("items", 1, 6) to text), section))
             ready.preview.sections shouldContainExactly listOf(SectionPreview("items", 2, 4))
+        }
+        should("skip and count an entry whose upgrade throws a non-argument exception") {
+            val section =
+                MemorySection(
+                    version = 2,
+                    upgradeStep = { _, entry ->
+                        if (entry["key"]?.jsonPrimitive?.content == "bad-date") throw DateTimeParseException("not a date", "x", 0)
+                        entry
+                    },
+                )
+            val text = entriesJson(item("good"), item("bad-date"))
+            val ready = ready(read(backupFilesOf(SectionInfo("items", 1, 2) to text), section))
+            ready.preview.sections shouldContainExactly listOf(SectionPreview("items", 1, 1))
+        }
+        should("let a CancellationException from an upgrade step propagate") {
+            val section = MemorySection(version = 2, upgradeStep = { _, _ -> throw CancellationException("canceled") })
+            shouldThrow<CancellationException> {
+                read(backupFilesOf(SectionInfo("items", 1, 1) to entriesJson(item("a"))), section)
+            }
+        }
+        should("refuse a file whose sections are all unknown") {
+            val files = backupFilesOf(SectionInfo("extra", 1, 1) to entriesJson(item("a")))
+            refusal(read(files, MemorySection())) shouldBe BackupRefusal.NoKnownSection
+        }
+        should("offer no mode without a section") {
+            importModes(emptyList()) shouldBe emptySet()
         }
         should("offer MERGE and REPLACE only when every present section is mergeable") {
             val files = backupFilesOf(items to entriesJson())

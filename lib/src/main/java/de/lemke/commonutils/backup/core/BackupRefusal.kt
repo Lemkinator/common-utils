@@ -28,6 +28,9 @@ public sealed interface BackupRefusal {
 
     public data class TooOldSection(val id: String, val version: Int) : BackupRefusal
 
+    /** No section of the file is known to this app version, so there is nothing to restore. */
+    public data object NoKnownSection : BackupRefusal
+
     /** A signing app got a file that is unsigned or changed since export. */
     public data object Tampered : BackupRefusal
 }

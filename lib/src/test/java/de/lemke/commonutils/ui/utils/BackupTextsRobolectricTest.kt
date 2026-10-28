@@ -105,6 +105,7 @@ class BackupTextsRobolectricTest {
         context.backupRefusalMessage(BackupRefusal.NewerSection("urls", 3)) shouldBe
             "This backup was made with a newer version of the app. Please update the app."
         context.backupRefusalMessage(BackupRefusal.TooOldSection("urls", 1)) shouldBe "This backup is too old to be imported."
+        context.backupRefusalMessage(BackupRefusal.NoKnownSection) shouldBe "This backup holds no data this app version knows."
         context.backupRefusalMessage(BackupRefusal.Tampered) shouldBe "This backup was changed outside the app."
         context.backupResultMessage(BackupResult.Refused(BackupRefusal.NotABackup)) shouldBe "This file is not a backup."
     }

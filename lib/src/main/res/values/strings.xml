@@ -243,6 +243,7 @@
     <string name="commonutils_backup_refused_other_app">This backup belongs to another app.</string>
     <string name="commonutils_backup_refused_newer">This backup was made with a newer version of the app. Please update the app.</string>
     <string name="commonutils_backup_refused_too_old">This backup is too old to be imported.</string>
+    <string name="commonutils_backup_refused_no_known_section">This backup holds no data this app version knows.</string>
     <string name="commonutils_backup_refused_tampered">This backup was changed outside the app.</string>
 
 </resources>
