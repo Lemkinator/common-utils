@@ -206,8 +206,10 @@ app without that binding exports and reads plain files, and ignores a signature 
 
 `BackupSectionContract` and `assertBackupConventions()` (testFixtures) test a section through the whole engine.
 Merge helpers `newerWins` and `higherRankWins` end in a total order, so every device keeps the same entry.
-Stamps in the file are ISO-8601 text with a UTC offset. An entry whose `upgrade`, decoding or `validate` throws any
-exception is skipped and counted; `upgrade` steps throw for an entry they cannot map. The import refuses a file with no known section.
+Stamps in the file are ISO-8601 text with a UTC offset.
+The import skips and counts an entry whose `upgrade`, decoding or `validate` throws any exception.
+An `upgrade` step throws for an entry it cannot map.
+The import refuses a file with no known section.
 It refuses a section file with more than 100,000 entries.
 It refuses a section file that nests deeper than 64 levels.
 It refuses an entry of more than 100,000 values.

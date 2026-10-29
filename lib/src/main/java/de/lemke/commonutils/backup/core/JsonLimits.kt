@@ -20,7 +20,7 @@ import kotlinx.serialization.DeserializationStrategy
 /** The deepest nesting of arrays and objects a JSON file of the backup holds. */
 internal const val MAX_NESTING_DEPTH: Int = 64
 
-/** The most bytes one entry of a section file holds, from its opening brace to its closing one. */
+/** The most bytes one entry of a section file holds, counted between two separators at the depth of the entries array. */
 internal const val MAX_ENTRY_BYTES: Int = 1024 * 1024
 
 /** The most values one entry of a section file holds; each opening bracket and each comma inside an entry counts as one. */
