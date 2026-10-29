@@ -31,7 +31,7 @@ private const val FILES_PREFIX = "files/"
 private val SECTION_NAME = Regex("sections/[a-z0-9_-]+\\.json")
 private val FILE_SEGMENT = Regex("[A-Za-z0-9._-]+")
 
-/** The largest zip file the import reads: the uncompressed cap plus the headers and the DEFLATE framing of an incompressible file. */
+/** The largest zip file the import streams: the uncompressed cap plus the headers and the DEFLATE framing of an incompressible file. */
 internal const val MAX_ARCHIVE_BYTES: Long = MAX_TOTAL_BYTES + ARCHIVE_OVERHEAD_BYTES
 
 /** What [ZipBackupContainer.read] found. */
@@ -42,7 +42,7 @@ internal sealed interface ZipRead {
     /** Not a zip, or an entry with a name the container refuses or cannot decode. */
     data object Invalid : ZipRead
 
-    /** The uncompressed bytes of a section or of the whole backup passed the cap. */
+    /** The uncompressed bytes of a section or of the whole backup, or the zip file itself, passed the cap. */
     data object TooLarge : ZipRead
 }
 
@@ -63,19 +63,38 @@ internal object ZipBackupContainer {
     }
 
     /**
-     * Reads the entries of [input]. The uncompressed bytes of every entry, a skipped `files/` entry too, count toward
-     * [maxTotalBytes]; a section entry also stays within [maxSectionBytes].
+     * Streams the entries of [input] without holding the zip file. The uncompressed bytes of every entry, a dropped
+     * `files/` entry too, count toward [maxTotalBytes]; a section entry also stays within [maxSectionBytes], and the whole
+     * of [input], trailing bytes included, within [maxArchiveBytes]. [ensureActive] runs before each entry; a throw from it
+     * ends the read.
      */
     fun read(
         input: InputStream,
         maxTotalBytes: Long = MAX_TOTAL_BYTES,
         maxSectionBytes: Long = MAX_SECTION_BYTES,
+        maxArchiveBytes: Long = MAX_ARCHIVE_BYTES,
+        ensureActive: () -> Unit = {},
     ): ZipRead =
         try {
-            val zip = ZipInputStream(input)
+            val limited = LimitedInputStream(input, maxArchiveBytes)
+            val zip = ZipInputStream(limited)
             val collector = EntryCollector(maxTotalBytes, maxSectionBytes)
-            val refusal = generateSequence { zip.nextEntry }.firstNotNullOfOrNull { collector.accept(zip, it.name) }
-            refusal ?: if (collector.files.isEmpty()) ZipRead.Invalid else ZipRead.Files(collector.files)
+            val refusal =
+                generateSequence { zip.nextEntry }
+                    .firstNotNullOfOrNull {
+                        ensureActive()
+                        collector.accept(zip, it.name)
+                    }
+            when {
+                refusal != null -> refusal
+                collector.files.isEmpty() -> ZipRead.Invalid
+                else -> {
+                    limited.dropAtMost(Long.MAX_VALUE)
+                    ZipRead.Files(collector.files)
+                }
+            }
+        } catch (_: LimitExceededException) {
+            ZipRead.TooLarge
         } catch (_: IOException) {
             ZipRead.Invalid
         } catch (_: IllegalArgumentException) {
@@ -95,22 +114,31 @@ private class EntryCollector(
         name: String,
     ): ZipRead? {
         val acceptable = isAcceptedName(name) && name !in files
-        val bytes =
-            if (acceptable) {
-                zip.readAtMost(
-                    if (SECTION_NAME.matches(name)) minOf(remaining, maxSectionBytes) else remaining,
-                )
-            } else {
-                null
-            }
+        val size = if (acceptable) take(zip, name) else null
         return when {
             !acceptable -> ZipRead.Invalid
-            bytes == null -> ZipRead.TooLarge
+            size == null -> ZipRead.TooLarge
             else -> {
-                remaining -= bytes.size
-                if (!name.startsWith(FILES_PREFIX)) files[name] = bytes
+                remaining -= size
                 null
             }
+        }
+    }
+
+    /** Keeps the bytes of the entry unless it lies under `files/`, which is counted and dropped; null once it passes its cap. */
+    private fun take(
+        zip: InputStream,
+        name: String,
+    ): Long? {
+        val limit = if (SECTION_NAME.matches(name)) minOf(remaining, maxSectionBytes) else remaining
+        return if (name.startsWith(FILES_PREFIX)) {
+            zip.dropAtMost(limit)
+        } else {
+            zip
+                .readAtMost(limit)
+                ?.also { files[name] = it }
+                ?.size
+                ?.toLong()
         }
     }
 }

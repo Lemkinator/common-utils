@@ -21,7 +21,9 @@ import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.lemke.commonutils.di.IoDispatcher
 import de.lemke.commonutils.ui.utils.deleteDocument
+import java.io.InputStream
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
@@ -42,13 +44,15 @@ public interface BackupDocuments {
     ): Boolean
 
     /**
-     * Reads the whole document at [uri], whatever MIME type its provider reports; null on any provider failure and for a
-     * document larger than [maxBytes], which it stops reading at that size.
+     * Opens the document at [uri], whatever MIME type its provider reports, and returns what [consume] makes of its
+     * stream, which is closed afterwards. The document is never held whole: a caller bounds what it takes from the stream.
+     * Null on any provider failure, including an exception [consume] throws other than a
+     * [kotlinx.coroutines.CancellationException]. Runs [consume] on the dispatcher of the implementation.
      */
-    public suspend fun read(
+    public suspend fun <T : Any> read(
         uri: Uri,
-        maxBytes: Long,
-    ): ByteArray?
+        consume: (InputStream) -> T,
+    ): T?
 
     /** Deletes the document at [uri]; a failed delete only logs. */
     public suspend fun delete(uri: Uri)
@@ -82,13 +86,15 @@ public class DefaultBackupDocuments @Inject constructor(
 
     // Providers and system services throw an open-ended exception set; every failure must return a result, not crash.
     @Suppress("TooGenericExceptionCaught")
-    override suspend fun read(
+    override suspend fun <T : Any> read(
         uri: Uri,
-        maxBytes: Long,
-    ): ByteArray? =
+        consume: (InputStream) -> T,
+    ): T? =
         withContext(io) {
             try {
-                context.contentResolver.openInputStream(uri)?.use { it.readAtMost(maxBytes) }
+                context.contentResolver.openInputStream(uri)?.use(consume)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Error reading backup", e)
                 null

@@ -35,10 +35,12 @@ import de.lemke.commonutils.backup.core.entriesJson
 import de.lemke.commonutils.backup.core.item
 import de.lemke.commonutils.ui.utils.DocumentPick
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -70,12 +72,43 @@ private class GatedDocuments(private val inner: FakeBackupDocuments, val gate: C
         bytes: ByteArray,
     ): Boolean = gate.await().let { inner.write(uri, bytes) }
 
-    override suspend fun read(
+    override suspend fun <T : Any> read(
         uri: Uri,
-        maxBytes: Long,
-    ): ByteArray? = gate.await().let { inner.read(uri, maxBytes) }
+        consume: (InputStream) -> T,
+    ): T? = gate.await().let { inner.read(uri, consume) }
 
     override suspend fun delete(uri: Uri) = inner.delete(uri)
+}
+
+private class EndlessDocuments(private val prefix: ByteArray) : BackupDocuments {
+    var served = 0L
+
+    override suspend fun write(
+        uri: Uri,
+        bytes: ByteArray,
+    ): Boolean = false
+
+    override suspend fun <T : Any> read(
+        uri: Uri,
+        consume: (InputStream) -> T,
+    ): T? =
+        consume(
+            object : InputStream() {
+                override fun read(): Int = error("The container reads in blocks")
+
+                override fun read(
+                    b: ByteArray,
+                    off: Int,
+                    len: Int,
+                ): Int {
+                    for (i in 0 until len) b[off + i] = if (served + i < prefix.size) prefix[(served + i).toInt()] else 0
+                    served += len
+                    return len
+                }
+            },
+        )
+
+    override suspend fun delete(uri: Uri) = Unit
 }
 
 private class ThrowingSection : MemorySection() {
@@ -272,6 +305,18 @@ class BackupStateHolderRobolectricTest {
             documents.files[source] = backupZip(item("a")) + ByteArray(MAX_ARCHIVE_BYTES.toInt())
             holder.onImportFilePicked(source)
             holder.state.value shouldBe readFailed
+        }
+
+    @Test
+    fun `an import stops streaming a file that never ends at the archive limit`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            val endless = EndlessDocuments(backupZip(item("a")))
+            val holder = holderOf(engineOf(MemorySection()), endless)
+
+            holder.onImportFilePicked(source)
+
+            holder.state.value shouldBe BackupState.Result(BackupResult.ReadFailed)
+            endless.served shouldBeLessThan MAX_ARCHIVE_BYTES + 16 * 1024
         }
 
     @Test

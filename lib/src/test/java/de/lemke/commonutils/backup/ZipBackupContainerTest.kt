@@ -15,16 +15,19 @@
  */
 package de.lemke.commonutils.backup
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.util.Random
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import kotlin.coroutines.cancellation.CancellationException
 
 private fun zipOf(vararg entries: Pair<String, ByteArray>): ByteArray {
     val out = ByteArrayOutputStream()
@@ -160,6 +163,48 @@ class ZipBackupContainerTest : ShouldSpec(
             val zip = zipOf("manifest.json" to ByteArray(600), "sections/a.json" to ByteArray(600))
             readFiles(zip, cap = 1000) shouldBe ZipRead.TooLarge
             filesOf(readFiles(zip, cap = 1200)).keys shouldBe setOf("manifest.json", "sections/a.json")
+        }
+        should("accept a zip file of exactly the archive limit and refuse one byte more") {
+            val zip = zipOf("manifest.json" to "M".encodeToByteArray())
+            filesOf(ZipBackupContainer.read(ByteArrayInputStream(zip), maxArchiveBytes = zip.size.toLong())).keys shouldBe
+                setOf("manifest.json")
+            ZipBackupContainer.read(ByteArrayInputStream(zip), maxArchiveBytes = zip.size - 1L) shouldBe ZipRead.TooLarge
+        }
+        should("refuse trailing bytes after the last entry that pass the archive limit") {
+            val zip = zipOf("manifest.json" to "M".encodeToByteArray())
+            ZipBackupContainer.read(ByteArrayInputStream(zip + ByteArray(5000)), maxArchiveBytes = zip.size + 4999L) shouldBe
+                ZipRead.TooLarge
+        }
+        should("stop pulling from a stream that never ends once it passes the archive limit") {
+            val zip = zipOf("manifest.json" to "M".encodeToByteArray())
+            var served = 0L
+            val endless =
+                object : InputStream() {
+                    override fun read(): Int = error("The container reads in blocks")
+
+                    override fun read(
+                        b: ByteArray,
+                        off: Int,
+                        len: Int,
+                    ): Int {
+                        check(served < 1000 + 8 * 1024) { "Read past the archive limit" }
+                        for (i in 0 until len) b[off + i] = if (served + i < zip.size) zip[(served + i).toInt()] else 0
+                        served += len
+                        return len
+                    }
+                }
+
+            ZipBackupContainer.read(endless, maxArchiveBytes = 1000) shouldBe ZipRead.TooLarge
+            (served in 1001..1000 + 8 * 1024) shouldBe true
+        }
+        should("check the job before each entry and stop at a throw") {
+            val zip = zipOf("manifest.json" to byteArrayOf(1), "sections/a.json" to byteArrayOf(2), "sections/b.json" to byteArrayOf(3))
+            var checks = 0
+
+            shouldThrow<CancellationException> {
+                ZipBackupContainer.read(ByteArrayInputStream(zip)) { if (++checks == 2) throw CancellationException("canceled") }
+            }
+            checks shouldBe 2
         }
     },
 )

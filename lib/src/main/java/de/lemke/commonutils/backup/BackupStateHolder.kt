@@ -21,12 +21,13 @@ import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.ImportMode
 import de.lemke.commonutils.ui.utils.DocumentPick
 import de.lemke.commonutils.ui.utils.runContained
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +44,8 @@ private val restoreFailed = BackupState.Result(BackupResult.RestoreFailed)
 
 /**
  * Runs the export and import of a ViewModel through [engine] and [documents] in [scope], one at a time, and holds the
- * [BackupState] of the latest one. The CPU work (zip, parse, upgrade, validate, signature) runs on [dispatcher].
+ * [BackupState] of the latest one. The CPU work (zip of an export, parse, upgrade, validate, signature) runs on
+ * [dispatcher]; an import unzips the stream of [documents] as it arrives, on the dispatcher of [documents].
  *
  * A ViewModel creates it with `viewModelScope` and exposes [state]. Only [BackupState.Working] blocks: while an export or
  * import runs, [export], [import] and the picker callbacks do nothing. A document the export picker created while
@@ -152,7 +154,8 @@ public class BackupStateHolder(
     private suspend fun zipped(): ByteArray = ByteArrayOutputStream().also { ZipBackupContainer.write(engine.export(), it) }.toByteArray()
 
     private suspend fun readFrom(uri: Uri): BackupState {
-        val zip = documents.read(uri, MAX_ARCHIVE_BYTES)?.let { ZipBackupContainer.read(ByteArrayInputStream(it)) }
+        val context = currentCoroutineContext()
+        val zip = documents.read(uri) { ZipBackupContainer.read(it, ensureActive = context::ensureActive) }
         return when (zip) {
             null, ZipRead.Invalid, ZipRead.TooLarge -> readFailed
             is ZipRead.Files -> engine.read(zip.files).toState()

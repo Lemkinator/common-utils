@@ -16,20 +16,54 @@
 package de.lemke.commonutils.backup
 
 import java.io.ByteArrayOutputStream
+import java.io.FilterInputStream
+import java.io.IOException
 import java.io.InputStream
+import java.io.OutputStream
 
 private const val BUFFER_SIZE = 8 * 1024
+private const val BYTE_MASK = 0xFF
 
 /** Reads the rest of this stream, or returns null once it passes [limit] bytes; it never holds more than [limit] plus one buffer. */
-internal fun InputStream.readAtMost(limit: Long): ByteArray? {
-    val bytes = ByteArrayOutputStream()
+internal fun InputStream.readAtMost(limit: Long): ByteArray? =
+    ByteArrayOutputStream().let { sink -> copyAtMost(limit, sink)?.let { sink.toByteArray() } }
+
+/** Counts and drops the rest of this stream, or returns null once it passes [limit] bytes; it holds one buffer. */
+internal fun InputStream.dropAtMost(limit: Long): Long? = copyAtMost(limit, null)
+
+private fun InputStream.copyAtMost(
+    limit: Long,
+    sink: OutputStream?,
+): Long? {
     val buffer = ByteArray(BUFFER_SIZE)
     var total = 0L
     var read = read(buffer)
     while (read >= 0 && total <= limit) {
         total += read
-        bytes.write(buffer, 0, read)
+        sink?.write(buffer, 0, read)
         read = read(buffer)
     }
-    return bytes.toByteArray().takeIf { total <= limit }
+    return total.takeIf { it <= limit }
+}
+
+/** Thrown by [LimitedInputStream] on the first byte past its limit. */
+internal class LimitExceededException : IOException("The stream passes its size limit")
+
+/** Passes through at most [limit] bytes of [input] and throws [LimitExceededException] on the first byte after them. */
+internal class LimitedInputStream(input: InputStream, private var limit: Long) : FilterInputStream(input) {
+    override fun read(): Int {
+        val one = ByteArray(1)
+        return if (read(one, 0, 1) < 0) -1 else one[0].toInt() and BYTE_MASK
+    }
+
+    override fun read(
+        b: ByteArray,
+        off: Int,
+        len: Int,
+    ): Int {
+        val read = super.read(b, off, len)
+        if (read > 0) limit -= read
+        if (limit < 0) throw LimitExceededException()
+        return read
+    }
 }

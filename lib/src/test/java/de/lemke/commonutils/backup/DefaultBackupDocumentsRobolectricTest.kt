@@ -25,9 +25,13 @@ import android.os.ParcelFileDescriptor
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.RecordingDocumentsProvider
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -112,8 +116,6 @@ private class OctetStreamProvider : ContentProvider() {
     ): Int = 0
 }
 
-private const val MAX_BYTES = 1024L
-
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class DefaultBackupDocumentsRobolectricTest {
@@ -131,14 +133,43 @@ class DefaultBackupDocumentsRobolectricTest {
         }
 
     @Test
-    fun `reads a document of exactly maxBytes and returns null for one byte more`(): Unit =
+    fun `hands the stream of the document to consume and returns its result`(): Unit =
         runBlocking {
             val provider = RecordingDocumentsProvider.create(context)
             val bytes = ByteArray(20_000) { it.toByte() }
             documents.write(provider.uri, bytes) shouldBe true
 
-            documents.read(provider.uri, 20_000)?.toList() shouldBe bytes.toList()
-            documents.read(provider.uri, 19_999) shouldBe null
+            documents.read(provider.uri) { it.readBytes() }?.toList() shouldBe bytes.toList()
+        }
+
+    @Test
+    fun `closes the stream after consume`(): Unit =
+        runBlocking {
+            val provider = RecordingDocumentsProvider.create(context)
+            documents.write(provider.uri, byteArrayOf(1, 2, 3)) shouldBe true
+            var stream: InputStream? = null
+
+            documents.read(provider.uri) { stream = it }
+
+            shouldThrow<IOException> { stream!!.read() }
+        }
+
+    @Test
+    fun `returns null when consume throws`(): Unit =
+        runBlocking {
+            val provider = RecordingDocumentsProvider.create(context)
+            documents.write(provider.uri, byteArrayOf(1)) shouldBe true
+
+            documents.read<Int>(provider.uri) { error("cannot parse") } shouldBe null
+        }
+
+    @Test
+    fun `rethrows a cancellation from consume`(): Unit =
+        runBlocking {
+            val provider = RecordingDocumentsProvider.create(context)
+            documents.write(provider.uri, byteArrayOf(1)) shouldBe true
+
+            shouldThrow<CancellationException> { documents.read<Int>(provider.uri) { throw CancellationException("canceled") } }
         }
 
     @Test
@@ -149,7 +180,7 @@ class DefaultBackupDocumentsRobolectricTest {
             provider.file = File(context.cacheDir, "backup.zip").apply { writeText("zip bytes") }
             context.contentResolver.getType(uri) shouldBe "application/octet-stream"
 
-            documents.read(uri, MAX_BYTES)?.decodeToString() shouldBe "zip bytes"
+            documents.read(uri) { it.readBytes().decodeToString() } shouldBe "zip bytes"
         }
 
     @Test
@@ -158,7 +189,7 @@ class DefaultBackupDocumentsRobolectricTest {
             val provider = RecordingDocumentsProvider.create(context)
             provider.file.delete()
 
-            documents.read(provider.uri, MAX_BYTES) shouldBe null
+            documents.read(provider.uri) { it.readBytes() } shouldBe null
         }
 
     @Test
@@ -166,7 +197,7 @@ class DefaultBackupDocumentsRobolectricTest {
         runBlocking {
             Robolectric.buildContentProvider(NoStreamProvider::class.java).create("no.stream.documents")
 
-            documents.read("content://no.stream.documents/document/1".toUri(), MAX_BYTES) shouldBe null
+            documents.read("content://no.stream.documents/document/1".toUri()) { it.readBytes() } shouldBe null
         }
 
     @Test

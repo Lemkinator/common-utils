@@ -16,11 +16,12 @@
 package de.lemke.commonutils.backup
 
 import android.net.Uri
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 
 /**
  * A [BackupDocuments] over memory. [files] holds the written documents. While [failWrite] is true, [write] stores
- * nothing and returns false; while [failRead] is true, [read] returns null, as it does for a document larger than
- * `maxBytes`. [deleted] lists each [delete], in order.
+ * nothing and returns false; while [failRead] is true, [read] returns null. [deleted] lists each [delete], in order.
  */
 public class FakeBackupDocuments : BackupDocuments {
     public val files: MutableMap<Uri, ByteArray> = mutableMapOf()
@@ -37,10 +38,10 @@ public class FakeBackupDocuments : BackupDocuments {
         return !failWrite
     }
 
-    override suspend fun read(
+    override suspend fun <T : Any> read(
         uri: Uri,
-        maxBytes: Long,
-    ): ByteArray? = files[uri].takeUnless { failRead }?.takeIf { it.size <= maxBytes }
+        consume: (InputStream) -> T,
+    ): T? = files[uri].takeUnless { failRead }?.let { ByteArrayInputStream(it).use(consume) }
 
     override suspend fun delete(uri: Uri) {
         files.remove(uri)
