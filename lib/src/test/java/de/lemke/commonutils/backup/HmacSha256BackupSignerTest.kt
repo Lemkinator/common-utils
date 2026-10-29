@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils.backup
 
+import de.lemke.commonutils.backup.core.mac
 import de.lemke.commonutils.backup.core.toHex
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
