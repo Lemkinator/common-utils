@@ -187,7 +187,7 @@ Export and import of an app's data to one zip file. The pure-Kotlin core (`backu
 Replace and the optional signature. `backup/` holds the Android layer: `ZipBackupContainer`, `BackupDocuments`,
 `BackupStateHolder`, `BackupViewModel`.
 
-A section id matches `[a-z0-9_-]+`; the engine refuses another id. An export that exceeds an import limit returns
+A section id matches `[a-z0-9_-]+`; the engine refuses another id. The engine also refuses an empty section set, so an app with the backup module binds at least one section. An export that exceeds an import limit returns
 `BackupExport.TooLarge` instead of files the import refuses; the holder deletes the partial document and shows
 `BackupResult.ExportTooLarge`.
 
