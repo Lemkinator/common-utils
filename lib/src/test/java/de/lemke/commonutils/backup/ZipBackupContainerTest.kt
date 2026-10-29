@@ -152,23 +152,23 @@ class ZipBackupContainerTest : ShouldSpec(
             read.shouldBeInstanceOf<ZipRead.Files>().files.mapValues { it.value.size } shouldBe
                 mapOf("sections/a.json" to 16 * MIB, "sections/b.json" to 16 * MIB)
         }
-        should("accept 64 MiB uncompressed in all by default and refuse one byte more") {
-            val atCap = zipOf("files/a.bin" to ByteArray(48 * MIB), "sections/a.json" to ByteArray(16 * MIB))
+        should("accept 32 MiB uncompressed in all by default and refuse one byte more") {
+            val atCap = zipOf("files/a.bin" to ByteArray(16 * MIB), "sections/a.json" to ByteArray(16 * MIB))
             filesOf(readFiles(atCap)).keys shouldBe setOf("sections/a.json")
-            val overCap = zipOf("files/a.bin" to ByteArray(48 * MIB + 1), "sections/a.json" to ByteArray(16 * MIB))
+            val overCap = zipOf("files/a.bin" to ByteArray(16 * MIB + 1), "sections/a.json" to ByteArray(16 * MIB))
             readFiles(overCap) shouldBe ZipRead.TooLarge
         }
-        should("refuse 64 MiB and one byte spread over four sections and a manifest") {
-            val sections = Array(4) { "sections/s$it.json" to ByteArray(16 * MIB) }
+        should("refuse 32 MiB and one byte spread over two sections and a manifest") {
+            val sections = Array(2) { "sections/s$it.json" to ByteArray(16 * MIB) }
             readFiles(zipOf(*sections, "manifest.json" to byteArrayOf(1))) shouldBe ZipRead.TooLarge
         }
         should("fit the largest accepted backup of incompressible bytes into the archive limit") {
             val random = Random(7)
-            val sections = Array(4) { "sections/s$it.json" to ByteArray(16 * MIB).also(random::nextBytes) }
+            val sections = Array(2) { "sections/s$it.json" to ByteArray(16 * MIB).also(random::nextBytes) }
             val zip = written(mapOf(*sections))
-            (zip.size > 64 * MIB) shouldBe true
+            (zip.size > 32 * MIB) shouldBe true
             (zip.size <= MAX_ARCHIVE_BYTES) shouldBe true
-            filesOf(readFiles(zip)).keys shouldBe setOf("sections/s0.json", "sections/s1.json", "sections/s2.json", "sections/s3.json")
+            filesOf(readFiles(zip)).keys shouldBe setOf("sections/s0.json", "sections/s1.json")
         }
         should("apply the section cap to sections only") {
             val zip = zipOf("manifest.json" to ByteArray(600), "sections/a.json" to ByteArray(400))

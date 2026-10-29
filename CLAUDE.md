@@ -208,17 +208,22 @@ app without that binding exports and reads plain files, and ignores a signature 
 Merge helpers `newerWins` and `higherRankWins` end in a total order, so every device keeps the same entry.
 Stamps in the file are ISO-8601 text with a UTC offset. An entry whose `upgrade`, decoding or `validate` throws any
 exception is skipped and counted; `upgrade` steps throw for an entry they cannot map. The import refuses a file with no known section.
-It refuses more than 100,000 entries in one section and a section file that nests deeper than 64 levels.
+It refuses a section file with more than 100,000 entries.
+It refuses a section file that nests deeper than 64 levels.
 It refuses an entry of more than 100,000 values.
-It refuses an entry of more than 1 MiB, from its opening brace to its closing one.
-A scan of the bytes finds these limits before any decode builds a tree.
-Size caps: 16 MiB uncompressed per section and 64 MiB in all.
+It refuses an entry of more than 1 MiB, counted between two separators.
+A scan of the bytes finds the nesting, value and entry byte limits before any decode builds a tree.
+The decode counts the entries of a section.
+Size caps: 16 MiB uncompressed per section and 32 MiB in all.
 The manifest holds at most 64 KiB, the signature file at most 4 KiB.
-The import streams at most 65 MiB of the picked document and never holds the zip file in memory.
-`BackupEngine.read` empties the map it receives; each section file leaves it when its decode starts.
+The import streams at most 33 MiB of the picked document.
+It never holds the zip file in memory.
+`BackupEngine.read` empties the map it receives.
+Each section file leaves the map when its decode starts.
 The reader decodes a section file one entry at a time.
 While a section decodes, memory holds the section files still to come.
-It also holds the text of that section, one entry tree and the typed entries so far.
+It also holds the bytes and the text of that section, one entry tree and the typed entries so far.
+Turning the bytes into text needs a temporary buffer of up to twice the section size.
 The manifest and the signature file obey the nesting limit.
 A section file over a limit shows "The file could not be read."
 
