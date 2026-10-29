@@ -72,7 +72,7 @@ public class CommonUtilsSettingsActivity : AppCompatActivity() {
         public lateinit var settings: SettingsRepository
 
         @Inject
-        public lateinit var backupScreen: Optional<BackupScreenDeps>
+        internal lateinit var backupScreen: Optional<BackupScreenDeps>
 
         override fun onCreatePreferences(
             bundle: Bundle?,

@@ -697,15 +697,12 @@ public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity$
 
 public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity$SettingsFragment : androidx/preference/PreferenceFragmentCompat {
 	public static final field $stable I
-	public field backupScreen Ljava/util/Optional;
 	public field settings Lde/lemke/commonutils/data/SettingsRepository;
 	public fun <init> ()V
-	public final fun getBackupScreen ()Ljava/util/Optional;
 	public final fun getSettings ()Lde/lemke/commonutils/data/SettingsRepository;
 	public fun onCreate (Landroid/os/Bundle;)V
 	public fun onCreatePreferences (Landroid/os/Bundle;Ljava/lang/String;)V
 	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
-	public final fun setBackupScreen (Ljava/util/Optional;)V
 	public final fun setSettings (Lde/lemke/commonutils/data/SettingsRepository;)V
 }
 
