@@ -15,35 +15,53 @@
  */
 package de.lemke.commonutils.backup
 
-import java.io.ByteArrayOutputStream
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStream
 
 private const val BUFFER_SIZE = 8 * 1024
 private const val BYTE_MASK = 0xFF
 
-/** Reads the rest of this stream, or returns null once it passes [limit] bytes; it never holds more than [limit] plus one buffer. */
-internal fun InputStream.readAtMost(limit: Long): ByteArray? =
-    ByteArrayOutputStream().let { sink -> copyAtMost(limit, sink)?.let { sink.toByteArray() } }
+/**
+ * Reads the rest of this stream, or returns null once it passes [limit] bytes. It requests at most [limit] + 1 bytes in
+ * total and keeps them as exact-size blocks that it joins once, so no buffer outgrows the bytes read.
+ */
+internal fun InputStream.readAtMost(limit: Long): ByteArray? {
+    val blocks = ArrayList<ByteArray>()
+    val size = consumeAtMost(limit) { buffer, read -> blocks += buffer.copyOf(read) }
+    return size?.let { joined(blocks, it.toInt()) }
+}
 
 /** Counts and drops the rest of this stream, or returns null once it passes [limit] bytes; it holds one buffer. */
-internal fun InputStream.dropAtMost(limit: Long): Long? = copyAtMost(limit, null)
+internal fun InputStream.dropAtMost(limit: Long): Long? = consumeAtMost(limit) { _, _ -> }
 
-private fun InputStream.copyAtMost(
+private fun joined(
+    blocks: List<ByteArray>,
+    size: Int,
+): ByteArray {
+    val joined = ByteArray(size)
+    var offset = 0
+    blocks.forEach {
+        it.copyInto(joined, offset)
+        offset += it.size
+    }
+    return joined
+}
+
+private inline fun InputStream.consumeAtMost(
     limit: Long,
-    sink: OutputStream?,
+    onBlock: (buffer: ByteArray, read: Int) -> Unit,
 ): Long? {
     val buffer = ByteArray(BUFFER_SIZE)
     var total = 0L
-    var read = read(buffer)
-    while (read >= 0 && total <= limit) {
+    while (total <= limit) {
+        val request = if (limit - total < BUFFER_SIZE) (limit - total + 1).toInt() else BUFFER_SIZE
+        val read = read(buffer, 0, request)
+        if (read < 0) return total
         total += read
-        sink?.write(buffer, 0, read)
-        read = read(buffer)
+        onBlock(buffer, read)
     }
-    return total.takeIf { it <= limit }
+    return null
 }
 
 /** Thrown by [LimitedInputStream] on the first byte past its limit. */

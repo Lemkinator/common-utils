@@ -19,14 +19,58 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import java.io.ByteArrayInputStream
+import java.io.InputStream
 
 private fun streamOf(size: Int) = ByteArrayInputStream(ByteArray(size) { it.toByte() })
+
+/** Serves zeros without end and records what the reader asks for. */
+private class EndlessStream : InputStream() {
+    var served = 0L
+    var largestRequest = 0
+
+    override fun read(): Int = error("The reader reads in blocks")
+
+    override fun read(
+        b: ByteArray,
+        off: Int,
+        len: Int,
+    ): Int {
+        largestRequest = maxOf(largestRequest, len)
+        served += len
+        return len
+    }
+}
 
 class BoundedReadTest : ShouldSpec(
     {
         should("read a stream of exactly the limit and return null for one byte more") {
             streamOf(20_000).readAtMost(20_000)?.size shouldBe 20_000
             streamOf(20_001).readAtMost(20_000) shouldBe null
+        }
+        should("request one byte past the limit and no block larger than the buffer from a stream that never ends") {
+            val read = EndlessStream()
+
+            read.readAtMost(20_000) shouldBe null
+            read.served shouldBe 20_001L
+            read.largestRequest shouldBe 8 * 1024
+
+            val drop = EndlessStream()
+            drop.dropAtMost(20_000) shouldBe null
+            drop.served shouldBe 20_001L
+        }
+        should("request only one byte for a limit of zero") {
+            val read = EndlessStream()
+
+            read.readAtMost(0) shouldBe null
+            read.served shouldBe 1L
+        }
+        should("return the bytes in order across blocks") {
+            val bytes = ByteArray(20_000) { (it * 7).toByte() }
+
+            ByteArrayInputStream(bytes).readAtMost(20_000)!!.toList() shouldBe bytes.toList()
+        }
+        should("read an empty stream as an empty array") {
+            streamOf(0).readAtMost(10)?.size shouldBe 0
         }
         should("count a stream of exactly the limit and return null for one byte more") {
             streamOf(20_000).dropAtMost(20_000) shouldBe 20_000L
