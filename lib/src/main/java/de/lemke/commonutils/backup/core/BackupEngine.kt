@@ -26,9 +26,9 @@ public sealed interface BackupExport {
 
 /**
  * Exports, reads and restores backups of [sections]. The core is pure Kotlin: [clock] returns the export time as
- * ISO-8601 text with a UTC offset, supplied by the platform layer. Section ids must match [SECTION_ID]. An export
- * that exceeds a limit of the import returns [BackupExport.TooLarge]. With a [signer], an export is signed and a read
- * refuses an unsigned file or one with a changed manifest or section file.
+ * ISO-8601 text with a UTC offset, supplied by the platform layer. [sections] holds at least one section, and ids must
+ * match [SECTION_ID]. An export that exceeds a limit of the import returns [BackupExport.TooLarge]. With a [signer], an
+ * export is signed and a read refuses an unsigned file or one with a changed manifest or section file.
  */
 public class BackupEngine(
     private val sections: Set<BackupSection<*>>,
@@ -38,6 +38,7 @@ public class BackupEngine(
     private val signer: BackupSigner? = null,
 ) {
     init {
+        require(sections.isNotEmpty()) { "A backup needs at least one section" }
         require(sections.map { it.id }.toSet().size == sections.size) { "Backup section ids must be unique" }
         val invalid = sections.map { it.id }.filterNot { SECTION_ID.matches(it) }
         require(invalid.isEmpty()) { "Backup section ids must match ${SECTION_ID.pattern}: ${invalid.joinToString()}" }

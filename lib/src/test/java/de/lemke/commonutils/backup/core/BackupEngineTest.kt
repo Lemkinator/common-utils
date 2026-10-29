@@ -106,6 +106,11 @@ class BackupEngineTest : ShouldSpec(
                 )
             manifest.sections.map { it.id } shouldContainExactly listOf("b", "a")
         }
+        should("reject an engine with no section") {
+            shouldThrow<IllegalArgumentException> {
+                BackupEngine(emptySet(), CountingTransaction(), app, { NOW })
+            }.message shouldBe "A backup needs at least one section"
+        }
         should("reject two sections with the same id") {
             shouldThrow<IllegalArgumentException> {
                 BackupEngine(setOf(MemorySection(), MemorySection()), CountingTransaction(), app, { NOW })

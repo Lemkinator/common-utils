@@ -31,6 +31,7 @@ import de.lemke.commonutils.backup.FakeBackupDocuments
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
 import de.lemke.commonutils.backup.core.BackupTransaction
+import de.lemke.commonutils.backup.core.MemorySection
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
@@ -66,7 +67,7 @@ class CommonUtilsSettingsActivityScreenshotTest {
     val backupScreen: BackupScreenDeps =
         BackupScreenDeps(
             BackupEngine(
-                emptySet(),
+                setOf(MemorySection()),
                 object : BackupTransaction {
                     override suspend fun <R> run(block: suspend () -> R): R = block()
                 },
