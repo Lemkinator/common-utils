@@ -19,6 +19,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import java.io.ByteArrayInputStream
+import java.io.FilterInputStream
 import java.io.InputStream
 
 private fun streamOf(size: Int) = ByteArrayInputStream(ByteArray(size) { it.toByte() })
@@ -38,6 +39,36 @@ private class EndlessStream : InputStream() {
         largestRequest = maxOf(largestRequest, len)
         served += len
         return len
+    }
+}
+
+/** Serves a stream of zeros one byte per read. */
+private class TrickleStream(private var remaining: Int) : InputStream() {
+    override fun read(): Int = error("The reader reads in blocks")
+
+    override fun read(
+        b: ByteArray,
+        off: Int,
+        len: Int,
+    ): Int {
+        if (remaining == 0) return -1
+        remaining--
+        b[off] = 0
+        return 1
+    }
+}
+
+/** Records the array of each block read. */
+private class RecordingStream(input: InputStream) : FilterInputStream(input) {
+    val arrays = mutableListOf<ByteArray>()
+
+    override fun read(
+        b: ByteArray,
+        off: Int,
+        len: Int,
+    ): Int {
+        arrays += b
+        return super.read(b, off, len)
     }
 }
 
@@ -69,12 +100,24 @@ class BoundedReadTest : ShouldSpec(
 
             ByteArrayInputStream(bytes).readAtMost(20_000)!!.toList() shouldBe bytes.toList()
         }
+        should("keep exact-size blocks of the bytes read, however short each read is") {
+            TrickleStream(20_000).readBlocks(20_000)?.map { it.size } shouldBe listOf(8192, 8192, 3616)
+            TrickleStream(16_384).readBlocks(20_000)?.map { it.size } shouldBe listOf(8192, 8192)
+            TrickleStream(100).readBlocks(20_000)?.map { it.size } shouldBe listOf(100)
+        }
+        should("keep no block of a stream that passes the limit") {
+            TrickleStream(20_001).readBlocks(20_000) shouldBe null
+            streamOf(0).readBlocks(10) shouldBe emptyList()
+        }
         should("read an empty stream as an empty array") {
             streamOf(0).readAtMost(10)?.size shouldBe 0
         }
         should("count a stream of exactly the limit and return null for one byte more") {
             streamOf(20_000).dropAtMost(20_000) shouldBe 20_000L
             streamOf(20_001).dropAtMost(20_000) shouldBe null
+        }
+        should("count a stream against a limit of the largest long") {
+            streamOf(20_000).dropAtMost(Long.MAX_VALUE) shouldBe 20_000L
         }
         should("pass the bytes of a limited stream up to its limit") {
             val limited = LimitedInputStream(streamOf(300), 300)
@@ -97,6 +140,14 @@ class BoundedReadTest : ShouldSpec(
             limited.skip(3) shouldBe 3L
             limited.skip(2) shouldBe 2L
             shouldThrow<LimitExceededException> { limited.skip(1) }
+        }
+        should("skip through one buffer") {
+            val recording = RecordingStream(streamOf(100))
+            val limited = LimitedInputStream(recording, 100)
+
+            limited.skip(10) shouldBe 10L
+            limited.skip(10) shouldBe 10L
+            recording.arrays.distinct().size shouldBe 1
         }
         should("skip nothing for a non-positive count and at the end of the stream") {
             val limited = LimitedInputStream(streamOf(2), 5)
