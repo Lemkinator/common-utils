@@ -16,6 +16,8 @@
 package de.lemke.commonutils.backup.core
 
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -23,9 +25,10 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Checks the manifest and, for a [signer], the signature, then the version of every known section, then decodes every
  * entry. A refusal returns before any decode. An entry whose [BackupSection.upgrade], decoding or
- * [BackupSection.validate] throws is skipped and counted.
+ * [BackupSection.validate] throws is skipped and counted. The decode checks the caller's job before each entry, so a
+ * cancellation stops a large section.
  */
-internal fun readBackup(
+internal suspend fun readBackup(
     files: Map<String, ByteArray>,
     sections: Set<BackupSection<*>>,
     app: BackupApp,
@@ -42,7 +45,7 @@ internal fun readBackup(
     return if (refusal != null) BackupReadResult.Refused(refusal) else readSections(manifest, present, known.keys, files)
 }
 
-private fun readSections(
+private suspend fun readSections(
     manifest: BackupManifest,
     present: List<Pair<SectionInfo, BackupSection<*>>>,
     knownIds: Set<String>,
@@ -110,7 +113,7 @@ private sealed interface SectionRead {
     class Refused(val reason: BackupRefusal) : SectionRead
 }
 
-private fun <E : Any> readSection(
+private suspend fun <E : Any> readSection(
     info: SectionInfo,
     section: BackupSection<E>,
     files: Map<String, ByteArray>,
@@ -123,14 +126,16 @@ private fun <E : Any> readSection(
     }
 }
 
-private fun <E : Any> decodeSection(
+private suspend fun <E : Any> decodeSection(
     bytes: ByteArray,
     info: SectionInfo,
     section: BackupSection<E>,
-): SectionRead? =
-    decodeOrNull {
+): SectionRead? {
+    val context = currentCoroutineContext()
+    return decodeOrNull {
         try {
-            SectionRead.Read(backupJson.decodeFromString(SectionDecoder(info.version, section), bytes.decodeToString()))
+            val decoder = SectionDecoder(info.version, section) { context.ensureActive() }
+            SectionRead.Read(backupJson.decodeFromString(decoder, bytes.decodeToString()))
         } catch (_: TooManyEntriesException) {
             SectionRead.Refused(BackupRefusal.TooLarge)
         } catch (e: SerializationException) {
@@ -138,6 +143,7 @@ private fun <E : Any> decodeSection(
             throw e.cause as? CancellationException ?: e
         }
     }
+}
 
 internal fun <E : Any> decodeEntry(
     element: JsonElement,

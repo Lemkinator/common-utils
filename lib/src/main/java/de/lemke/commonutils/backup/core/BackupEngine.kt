@@ -49,7 +49,7 @@ public class BackupEngine(
         return if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
     }
 
-    public fun read(files: Map<String, ByteArray>): BackupReadResult = readBackup(files, sections, app, signer)
+    public suspend fun read(files: Map<String, ByteArray>): BackupReadResult = readBackup(files, sections, app, signer)
 
     public suspend fun restore(
         ready: BackupReadResult.Ready,

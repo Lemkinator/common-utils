@@ -20,6 +20,9 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -103,6 +106,23 @@ class BackupEngineTest : ShouldSpec(
             shouldThrow<IllegalArgumentException> {
                 BackupEngine(setOf(MemorySection(), MemorySection()), CountingTransaction(), app, { NOW })
             }
+        }
+        should("stop reading the entries of a section when the calling coroutine is canceled") {
+            val job = Job()
+            val validated = mutableListOf<String>()
+            val section =
+                object : MemorySection(store = mutableListOf(Item("a", 1), Item("b", 2))) {
+                    override fun validate(entry: Item): EntryCheck {
+                        validated += entry.key
+                        job.cancel()
+                        return super.validate(entry)
+                    }
+                }
+            val engine = BackupEngine(setOf(section), CountingTransaction(), app, { NOW })
+            val files = engine.export()
+
+            shouldThrow<CancellationException> { withContext(job) { engine.read(files) } }
+            validated shouldContainExactly listOf("a")
         }
         should("offer MERGE only when every bound section is mergeable") {
             BackupEngine(setOf(MergeableMemorySection()), CountingTransaction(), app, { NOW }).modes shouldBe

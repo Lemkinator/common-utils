@@ -44,11 +44,13 @@ internal class TooManyEntriesException : SerializationException("A section holds
 /**
  * Reads a section file entry by entry: each element is decoded, upgraded from [fromVersion] and decoded to `E`, and its
  * tree is dropped before the next one, so the peak is one entry tree plus the typed list. An entry that does not decode
- * counts as skipped. It throws [TooManyEntriesException] on entry [MAX_SECTION_ENTRIES] + 1.
+ * counts as skipped. It throws [TooManyEntriesException] on entry [MAX_SECTION_ENTRIES] + 1. It calls [ensureActive]
+ * before each entry; a throw from it stops the decode.
  */
 internal class SectionDecoder<E : Any>(
     private val fromVersion: Int,
     private val section: BackupSection<E>,
+    private val ensureActive: () -> Unit,
 ) : DeserializationStrategy<ReadSection<E>> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("SectionFile") { element(ENTRIES_KEY, entriesDescriptor) }
 
@@ -72,6 +74,7 @@ internal class SectionDecoder<E : Any>(
                 var skipped = 0
                 var index = decodeElementIndex(descriptor)
                 while (index != CompositeDecoder.DECODE_DONE) {
+                    ensureActive()
                     if (entries.size + skipped == MAX_SECTION_ENTRIES) throw TooManyEntriesException()
                     val element = decodeSerializableElement(descriptor, index, JsonElement.serializer())
                     val entry = decodeEntry(element, fromVersion, section)

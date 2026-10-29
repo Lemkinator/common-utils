@@ -22,7 +22,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-private fun decoder() = SectionDecoder(1, MemorySection())
+private fun decoder(ensureActive: () -> Unit = {}) = SectionDecoder(1, MemorySection(), ensureActive)
 
 class SectionFileTest : ShouldSpec(
     {
@@ -38,6 +38,11 @@ class SectionFileTest : ShouldSpec(
             val read = backupJson.decodeFromString(decoder(), """{"entries":[{"key":"a"},5,{"key":"b","value":2}]}""")
             read.entries shouldBe listOf(Item("a", 0), Item("b", 2))
             read.skipped shouldBe 1
+        }
+        should("check the job before each entry") {
+            var checks = 0
+            backupJson.decodeFromString(decoder { checks++ }, """{"entries":[{"key":"a"},5,{"key":"b"}]}""")
+            checks shouldBe 3
         }
         should("refuse to decode a section file without entries") {
             shouldThrow<SerializationException> { backupJson.decodeFromString(decoder(), """{"deleted":[]}""") }

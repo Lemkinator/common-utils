@@ -32,7 +32,7 @@ private class SnapshotTransaction(private vararg val stores: MutableList<Item>) 
     }
 }
 
-private fun readyOf(
+private suspend fun readyOf(
     files: Map<String, ByteArray>,
     vararg sections: BackupSection<*>,
 ): BackupReadResult.Ready = readBackup(files, sections.toSet(), app, null).shouldBeInstanceOf<BackupReadResult.Ready>()

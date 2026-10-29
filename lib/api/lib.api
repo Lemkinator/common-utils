@@ -192,7 +192,7 @@ public final class de/lemke/commonutils/backup/core/BackupEngine {
 	public synthetic fun <init> (Ljava/util/Set;Lde/lemke/commonutils/backup/core/BackupTransaction;Lde/lemke/commonutils/backup/core/BackupApp;Lkotlin/jvm/functions/Function0;Lde/lemke/commonutils/backup/core/BackupSigner;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun export (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getModes ()Ljava/util/Set;
-	public final fun read (Ljava/util/Map;)Lde/lemke/commonutils/backup/core/BackupReadResult;
+	public final fun read (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun restore (Lde/lemke/commonutils/backup/core/BackupReadResult$Ready;Lde/lemke/commonutils/backup/core/ImportMode;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 

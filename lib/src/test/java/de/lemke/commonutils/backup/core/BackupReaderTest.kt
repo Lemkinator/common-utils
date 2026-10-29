@@ -27,7 +27,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 
-private fun read(
+private suspend fun read(
     files: Map<String, ByteArray>,
     vararg sections: BackupSection<*>,
 ): BackupReadResult = readBackup(files, sections.toSet(), app, null)

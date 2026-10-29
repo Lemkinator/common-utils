@@ -54,7 +54,7 @@ private fun handBuiltPayload(files: Map<String, ByteArray>): ByteArray {
     return framed("manifest.json") + framed("sections/items.json")
 }
 
-private fun refusalOf(
+private suspend fun refusalOf(
     files: Map<String, ByteArray>,
     signer: BackupSigner? = FoldSigner(),
 ): BackupRefusal = engine(mutableListOf(), signer).read(files).shouldBeInstanceOf<BackupReadResult.Refused>().reason
