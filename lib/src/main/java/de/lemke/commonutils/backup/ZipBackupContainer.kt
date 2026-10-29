@@ -24,8 +24,8 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-private const val MAX_SECTION_BYTES = 16L * 1024 * 1024
-private const val MAX_TOTAL_BYTES = 32L * 1024 * 1024
+internal const val MAX_SECTION_BYTES = 16L * 1024 * 1024
+internal const val MAX_TOTAL_BYTES = 32L * 1024 * 1024
 private const val MAX_MANIFEST_BYTES = 64L * 1024
 private const val MAX_SIGNATURE_BYTES = 4L * 1024
 private const val ARCHIVE_OVERHEAD_BYTES = 1L * 1024 * 1024
