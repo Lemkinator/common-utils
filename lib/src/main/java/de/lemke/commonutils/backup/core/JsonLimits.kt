@@ -41,8 +41,8 @@ internal fun ByteArray.withinJsonLimits(): Boolean {
 
 /**
  * Scans JSON text byte by byte. The value and byte counts restart at each separator at the depth of the entries array or
- * above: a comma, or the bracket that opens the entries array. So the byte count of an entry runs from its opening
- * brace to its closing one.
+ * above: a comma, or the bracket that opens the entries array. So the byte count of an entry runs between two
+ * separators.
  */
 internal class JsonScanner {
     private var depth = 0
