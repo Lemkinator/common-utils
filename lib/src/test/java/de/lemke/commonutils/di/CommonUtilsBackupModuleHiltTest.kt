@@ -37,6 +37,7 @@ import de.lemke.commonutils.backup.core.BackupTransaction
 import de.lemke.commonutils.backup.core.ImportMode
 import de.lemke.commonutils.backup.core.Item
 import de.lemke.commonutils.backup.core.MergeableMemorySection
+import de.lemke.commonutils.backup.exportFiles
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.shouldBe
@@ -105,14 +106,14 @@ class CommonUtilsBackupModuleHiltTest {
         runBlocking {
             sharedStore += Item("a", 1)
 
-            engine.export().keys shouldBe setOf("manifest.json", "sections/items.json")
+            engine.exportFiles().keys shouldBe setOf("manifest.json", "sections/items.json")
             engine.modes shouldBe setOf(ImportMode.MERGE, ImportMode.REPLACE)
         }
 
     @Test
     fun `an app without a signer binding exports no signature`(): Unit =
         runBlocking {
-            ("signature.json" in engine.export()) shouldBe false
+            ("signature.json" in engine.exportFiles()) shouldBe false
         }
 
     @Test
@@ -174,7 +175,7 @@ class CommonUtilsBackupModuleSignerHiltTest {
         runBlocking {
             sharedStore += Item("a", 1)
 
-            val files = engine.export()
+            val files = engine.exportFiles()
 
             files.keys shouldBe setOf("manifest.json", "sections/items.json", "signature.json")
             files.getValue("signature.json").decodeToString() shouldContain "\"keyId\":\"test-key\""

@@ -199,6 +199,10 @@ public final class de/lemke/commonutils/WhileResumed : java/lang/Enum {
 	public static fun values ()[Lde/lemke/commonutils/WhileResumed;
 }
 
+public final class de/lemke/commonutils/backup/BackupEngineExportsKt {
+	public static final fun exportFiles (Lde/lemke/commonutils/backup/core/BackupEngine;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public abstract class de/lemke/commonutils/backup/BackupSectionContract {
 	public static final field $stable I
 	public fun <init> ()V

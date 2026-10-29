@@ -74,7 +74,8 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
 - `assertBackupConventions()` — Konsist rule that each app with a backup calls on `Konsist.scopeFromProduction()`: no class
   is both `@Entity` and `@Serializable`. Needs Konsist.
 - `BackupSectionContract<E>` and `DirectBackupTransaction` — the tests every backup section runs through `BackupEngine`
-  (JUnit 4; see "Backup"), and a transaction that runs in place. `FakeBackupDocuments` fakes `BackupDocuments`.
+  (JUnit 4; see "Backup"), and a transaction that runs in place. `FakeBackupDocuments` fakes `BackupDocuments`; `BackupEngine.exportFiles()` returns the files of
+  an export and fails on `BackupExport.TooLarge`.
 - `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
   (returns the picker intent it answered),
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
@@ -186,8 +187,9 @@ Export and import of an app's data to one zip file. The pure-Kotlin core (`backu
 Replace and the optional signature. `backup/` holds the Android layer: `ZipBackupContainer`, `BackupDocuments`,
 `BackupStateHolder`, `BackupViewModel`.
 
-A section id matches `[a-z0-9_-]+`; the engine refuses another id. An export that exceeds an import limit fails instead
-of writing a file the import refuses.
+A section id matches `[a-z0-9_-]+`; the engine refuses another id. An export that exceeds an import limit returns
+`BackupExport.TooLarge` instead of files the import refuses; the holder deletes the partial document and shows
+`BackupResult.ExportTooLarge`.
 
 An app opts in with:
 

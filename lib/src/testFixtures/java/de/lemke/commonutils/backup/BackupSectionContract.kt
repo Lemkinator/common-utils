@@ -106,7 +106,7 @@ public abstract class BackupSectionContract<E : Any> {
             val engine = engineOf(section)
             inTransaction { section.clear() }
             inTransaction { section.insert(sampleEntries()) }
-            val files = engine.export()
+            val files = engine.exportFiles()
             inTransaction { section.clear() }
 
             engine.restore(engine.ready(files), ImportMode.REPLACE)
@@ -121,7 +121,7 @@ public abstract class BackupSectionContract<E : Any> {
             val engine = engineOf(section)
             inTransaction { section.clear() }
             inTransaction { section.insert(sampleEntries()) }
-            val ready = engine.ready(engine.export())
+            val ready = engine.ready(engine.exportFiles())
 
             engine.restore(ready, ImportMode.REPLACE)
             val afterFirst = section.sortedEntries()
@@ -138,7 +138,7 @@ public abstract class BackupSectionContract<E : Any> {
             val (fileOnly, localOnly) = sampleEntries().take(2)
             inTransaction { section.clear() }
             inTransaction { section.insert(listOf(fileOnly)) }
-            val files = engine.export()
+            val files = engine.exportFiles()
             inTransaction { section.clear() }
             inTransaction { section.insert(listOf(localOnly)) }
 
@@ -155,7 +155,7 @@ public abstract class BackupSectionContract<E : Any> {
             val engine = engineOf(section)
             inTransaction { section.clear() }
             inTransaction { section.insert(sampleEntries()) }
-            val ready = engine.ready(engine.export())
+            val ready = engine.ready(engine.exportFiles())
             if (ImportMode.MERGE in engine.modes) {
                 inTransaction { section.clear() }
                 engine.restore(ready, ImportMode.MERGE)
@@ -178,7 +178,7 @@ public abstract class BackupSectionContract<E : Any> {
                 val (fileOnly, localOnly) = sampleEntries().take(2)
                 inTransaction { section.clear() }
                 inTransaction { section.insert(listOf(fileOnly)) }
-                val files = engine.export()
+                val files = engine.exportFiles()
                 inTransaction { section.clear() }
                 inTransaction { section.insert(listOf(localOnly)) }
 
@@ -243,7 +243,7 @@ public abstract class BackupSectionContract<E : Any> {
             val engine = engineOf(section)
             inTransaction { section.clear() }
             inTransaction { section.insert(sampleEntries()) }
-            val files = engine.export()
+            val files = engine.exportFiles()
             val name = "sections/${section.id}.json"
             val broken = files.getValue(name).decodeToString().replaceFirst("\"entries\":[", "\"entries\":[${brokenEntryJson()},")
 
@@ -272,7 +272,7 @@ public abstract class BackupSectionContract<E : Any> {
         val engine = engineOf(section)
         inTransaction { section.clear() }
         inTransaction { section.insert(listOf(incoming)) }
-        val files = engine.export()
+        val files = engine.exportFiles()
         inTransaction { section.clear() }
         inTransaction { section.insert(listOf(local)) }
 

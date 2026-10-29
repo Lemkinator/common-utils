@@ -24,6 +24,7 @@ import de.lemke.commonutils.backup.core.BackupSection
 import de.lemke.commonutils.backup.core.BackupTransaction
 import de.lemke.commonutils.backup.core.ImportMode
 import de.lemke.commonutils.backup.core.Item
+import de.lemke.commonutils.backup.core.MAX_SECTION_ENTRIES
 import de.lemke.commonutils.backup.core.MemorySection
 import de.lemke.commonutils.backup.core.MergeableMemorySection
 import de.lemke.commonutils.backup.core.RestoreReport
@@ -195,6 +196,19 @@ class BackupStateHolderRobolectricTest {
 
             holder.state.value shouldBe BackupState.Result(BackupResult.ExportFailed)
             documents.deleted shouldContainExactly listOf(target)
+        }
+
+    @Test
+    fun `an export over a limit deletes the document and ends in ExportTooLarge`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            val tooMany = MutableList(MAX_SECTION_ENTRIES + 1) { Item("k$it") }
+            val holder = holderOf(engineOf(MemorySection(store = tooMany)), documents)
+
+            holder.onExportTargetPicked(DocumentPick.Created(target))
+
+            holder.state.value shouldBe BackupState.Result(BackupResult.ExportTooLarge)
+            documents.deleted shouldContainExactly listOf(target)
+            documents.files shouldBe emptyMap()
         }
 
     @Test

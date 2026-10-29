@@ -17,6 +17,7 @@ package de.lemke.commonutils.backup
 
 import android.net.Uri
 import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupExport
 import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.ImportMode
 import de.lemke.commonutils.ui.utils.DocumentPick
@@ -42,6 +43,14 @@ private const val TAG = "BackupStateHolder"
 /** The document of an export; [settled] once the export wrote it or began to delete it, so a later cancellation leaves it alone. */
 private class ExportTarget(val uri: Uri) {
     @Volatile var settled = false
+}
+
+private sealed interface Zipped {
+    class Bytes(val bytes: ByteArray) : Zipped
+
+    data object TooLarge : Zipped
+
+    data object Failed : Zipped
 }
 
 private val exportFailed = BackupState.Result(BackupResult.ExportFailed)
@@ -154,16 +163,24 @@ public class BackupStateHolder(
     }
 
     private suspend fun exportTo(target: ExportTarget): BackupState {
-        val bytes = runContained<ByteArray?>(TAG, "Backup export", null) { zipped() }
-        val written = bytes != null && documents.write(target.uri, bytes)
+        val result =
+            when (val zipped = runContained<Zipped>(TAG, "Backup export", Zipped.Failed) { zipped() }) {
+                Zipped.Failed -> BackupResult.ExportFailed
+                Zipped.TooLarge -> BackupResult.ExportTooLarge
+                is Zipped.Bytes -> if (documents.write(target.uri, zipped.bytes)) BackupResult.Exported else BackupResult.ExportFailed
+            }
         target.settled = true
-        if (!written) discard(target.uri)
-        return BackupState.Result(if (written) BackupResult.Exported else BackupResult.ExportFailed)
+        if (result != BackupResult.Exported) discard(target.uri)
+        return BackupState.Result(result)
     }
 
     private suspend fun discard(uri: Uri) = withContext(NonCancellable) { documents.delete(uri) }
 
-    private suspend fun zipped(): ByteArray = ByteArrayOutputStream().also { ZipBackupContainer.write(engine.export(), it) }.toByteArray()
+    private suspend fun zipped(): Zipped =
+        when (val export = engine.export()) {
+            BackupExport.TooLarge -> Zipped.TooLarge
+            is BackupExport.Files -> Zipped.Bytes(ByteArrayOutputStream().also { ZipBackupContainer.write(export.files, it) }.toByteArray())
+        }
 
     private suspend fun readFrom(uri: Uri): BackupState {
         val context = currentCoroutineContext()

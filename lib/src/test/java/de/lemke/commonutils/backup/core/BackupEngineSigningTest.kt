@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils.backup.core
 
+import de.lemke.commonutils.backup.exportFiles
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
@@ -56,7 +57,7 @@ private object DirectTransaction : BackupTransaction {
 }
 
 private suspend fun signedExport(signer: BackupSigner = FoldSigner()): Map<String, ByteArray> =
-    engine(mutableListOf(Item("a", 1)), signer).export()
+    engine(mutableListOf(Item("a", 1)), signer).exportFiles()
 
 // name, 0x00, length as 8 bytes big-endian, bytes; manifest.json first, then the section entries by name
 private fun handBuiltPayload(files: Map<String, ByteArray>): ByteArray {
@@ -84,7 +85,7 @@ class BackupEngineSigningTest : ShouldSpec(
         }
         should("hand the signer the name, separator, length and bytes of each entry as separate parts") {
             val sizes = mutableListOf<Int>()
-            val files = engine(mutableListOf(Item("a", 1)), FoldSigner(onPart = { sizes += it.size })).export()
+            val files = engine(mutableListOf(Item("a", 1)), FoldSigner(onPart = { sizes += it.size })).exportFiles()
 
             sizes shouldBe
                 listOf(
@@ -107,7 +108,7 @@ class BackupEngineSigningTest : ShouldSpec(
                     job.cancel()
                 })
 
-            shouldThrow<CancellationException> { withContext(job) { engine(mutableListOf(Item("a", 1)), signer).export() } }
+            shouldThrow<CancellationException> { withContext(job) { engine(mutableListOf(Item("a", 1)), signer).exportFiles() } }
             parts shouldBe 1
         }
         should("stop checking the signature of a read when the calling coroutine is canceled") {
@@ -124,7 +125,7 @@ class BackupEngineSigningTest : ShouldSpec(
             parts shouldBe 1
         }
         should("export without a signer writes no signature entry") {
-            (SIGNATURE_ENTRY in engine(mutableListOf(), null).export()) shouldBe false
+            (SIGNATURE_ENTRY in engine(mutableListOf(), null).exportFiles()) shouldBe false
         }
         should("a signing engine reads its own export") {
             engine(mutableListOf(), FoldSigner()).read(signedExport().toMutableMap()).shouldBeInstanceOf<BackupReadResult.Ready>()

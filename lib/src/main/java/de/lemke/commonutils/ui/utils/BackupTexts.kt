@@ -52,6 +52,7 @@ internal fun Context.backupResultMessage(result: BackupResult): String =
     when (result) {
         BackupResult.Exported -> getString(R.string.commonutils_backup_exported)
         BackupResult.ExportFailed -> getString(R.string.commonutils_backup_export_failed)
+        BackupResult.ExportTooLarge -> getString(R.string.commonutils_backup_export_too_large)
         is BackupResult.Restored -> restoredMessage(result.report)
         is BackupResult.Refused -> backupRefusalMessage(result.reason)
         BackupResult.ReadFailed -> getString(R.string.commonutils_backup_read_failed)

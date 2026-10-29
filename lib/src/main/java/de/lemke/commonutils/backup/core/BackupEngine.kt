@@ -15,10 +15,19 @@
  */
 package de.lemke.commonutils.backup.core
 
+/** What [BackupEngine.export] produced. */
+public sealed interface BackupExport {
+    /** The files of the backup by entry name. */
+    public class Files(public val files: Map<String, ByteArray>) : BackupExport
+
+    /** A section or the backup as a whole exceeds a limit of the import, so no file was produced. */
+    public data object TooLarge : BackupExport
+}
+
 /**
  * Exports, reads and restores backups of [sections]. The core is pure Kotlin: [clock] returns the export time as
  * ISO-8601 text with a UTC offset, supplied by the platform layer. Section ids must match [SECTION_ID]. An export
- * that exceeds a limit of the import throws [IllegalStateException]. With a [signer], an export is signed and a read
+ * that exceeds a limit of the import returns [BackupExport.TooLarge]. With a [signer], an export is signed and a read
  * refuses an unsigned file or one with a changed manifest or section file.
  */
 public class BackupEngine(
@@ -41,16 +50,23 @@ public class BackupEngine(
      * The files of a backup by entry name: `manifest.json`, `sections/<id>.json` and, with a signer, `signature.json`.
      * All sections are read in one transaction.
      */
-    public suspend fun export(): Map<String, ByteArray> {
-        val exported = transaction.run { sections.map { exportSection(it) } }
+    public suspend fun export(): BackupExport = transaction.run { exportSections() }?.let { assemble(it) } ?: BackupExport.TooLarge
+
+    private suspend fun assemble(exported: List<Pair<SectionInfo, ByteArray>>): BackupExport.Files? {
         val manifest = BackupManifest(BACKUP_KIND, BACKUP_FORMAT, app.id, app.versionCode, clock(), exported.map { it.first })
         val files =
             buildMap {
                 put(MANIFEST_ENTRY, backupJson.encodeToString(BackupManifest.serializer(), manifest).encodeToByteArray())
                 exported.forEach { (info, bytes) -> put(sectionEntryName(info.id), bytes) }
             }
-        check(files.values.sumOf { it.size.toLong() } <= MAX_TOTAL_BYTES) { "The backup exceeds $MAX_TOTAL_BYTES bytes" }
-        return if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
+        if (files.values.sumOf { it.size.toLong() } > MAX_TOTAL_BYTES) return null
+        return BackupExport.Files(if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer)))
+    }
+
+    private suspend fun exportSections(): List<Pair<SectionInfo, ByteArray>>? {
+        val exported = mutableListOf<Pair<SectionInfo, ByteArray>>()
+        for (section in sections) exported += exportSection(section) ?: return null
+        return exported
     }
 
     /**
@@ -65,11 +81,12 @@ public class BackupEngine(
     ): RestoreReport = restoreBackup(ready, mode, transaction)
 }
 
-private suspend fun <E : Any> exportSection(section: BackupSection<E>): Pair<SectionInfo, ByteArray> {
+private suspend fun <E : Any> exportSection(section: BackupSection<E>): Pair<SectionInfo, ByteArray>? {
     val entries = section.exportEntries()
-    check(entries.size <= MAX_SECTION_ENTRIES) { "Section ${section.id} exceeds $MAX_SECTION_ENTRIES entries" }
+    if (entries.size > MAX_SECTION_ENTRIES) return null
     val text = sectionFileText(entries.map { backupJson.encodeToJsonElement(section.serializer, it) })
-    val bytes = text.encodeToByteArray()
-    check(bytes.size <= MAX_SECTION_BYTES && bytes.withinJsonLimits()) { "Section ${section.id} exceeds the limits of an import" }
-    return SectionInfo(section.id, section.version, entries.size) to bytes
+    return text
+        .encodeToByteArray()
+        .takeIf { it.size <= MAX_SECTION_BYTES && it.withinJsonLimits() }
+        ?.let { SectionInfo(section.id, section.version, entries.size) to it }
 }

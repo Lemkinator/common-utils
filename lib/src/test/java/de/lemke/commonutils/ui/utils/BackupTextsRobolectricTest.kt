@@ -105,12 +105,19 @@ class BackupTextsRobolectricTest {
 
         context.backupResultMessage(BackupResult.Exported) shouldBe "Backup exported"
         context.backupResultMessage(BackupResult.ExportFailed) shouldBe "Error exporting backup"
+        context.backupResultMessage(BackupResult.ExportTooLarge) shouldBe "Too much data for one backup."
         context.backupResultMessage(BackupResult.Restored(merge)) shouldBe
             "Backup imported: 11 added, 22 updated, 33 kept, 44 broken entries skipped."
         context.backupResultMessage(BackupResult.Restored(replace)) shouldBe
             "Backup imported: 5 entries restored, 6 previous entries removed, 7 broken entries skipped."
         context.backupResultMessage(BackupResult.ReadFailed) shouldBe "The file could not be read."
         context.backupResultMessage(BackupResult.RestoreFailed) shouldBe "Error importing backup. Your data is unchanged."
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "de")
+    fun `the too large export message reads in German`() {
+        context.backupResultMessage(BackupResult.ExportTooLarge) shouldBe "Zu viele Daten für eine Sicherung."
     }
 
     @Test

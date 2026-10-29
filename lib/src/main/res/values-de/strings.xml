@@ -175,6 +175,7 @@
     <string name="commonutils_backup_replace_warning">Achtung: Dadurch werden die aktuellen Daten der Teile in dieser Sicherung gelöscht und durch die Sicherung ersetzt. Das kann nicht rückgängig gemacht werden.</string>
     <string name="commonutils_backup_exported">Sicherung exportiert</string>
     <string name="commonutils_backup_export_failed">Fehler beim Exportieren der Sicherung</string>
+    <string name="commonutils_backup_export_too_large">Zu viele Daten für eine Sicherung.</string>
     <string name="commonutils_backup_restored">Sicherung importiert: %1$s.</string>
     <plurals name="commonutils_backup_added">
         <item quantity="one">%d hinzugefügt</item>

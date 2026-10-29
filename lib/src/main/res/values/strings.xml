@@ -216,6 +216,7 @@
     <string name="commonutils_backup_replace_warning">Attention: This deletes the current data of the parts in this backup and replaces it with the backup. This cannot be undone.</string>
     <string name="commonutils_backup_exported">Backup exported</string>
     <string name="commonutils_backup_export_failed">Error exporting backup</string>
+    <string name="commonutils_backup_export_too_large">Too much data for one backup.</string>
     <string name="commonutils_backup_restored">Backup imported: %1$s.</string>
     <plurals name="commonutils_backup_added">
         <item quantity="one">%d added</item>

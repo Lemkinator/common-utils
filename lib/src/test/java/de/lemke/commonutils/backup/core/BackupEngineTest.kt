@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils.backup.core
 
+import de.lemke.commonutils.backup.exportFiles
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -60,7 +61,7 @@ class BackupEngineTest : ShouldSpec(
         should("export a manifest with kind backup, format 1, the app id and the clock text") {
             val store = mutableListOf(Item("a", 1))
             val engine = BackupEngine(setOf(MemorySection(store = store)), CountingTransaction(), app, { NOW })
-            val manifest = backupJson.parseToJsonElement(engine.export().getValue(MANIFEST_ENTRY).decodeToString()).jsonObject
+            val manifest = backupJson.parseToJsonElement(engine.exportFiles().getValue(MANIFEST_ENTRY).decodeToString()).jsonObject
             manifest.getValue("kind").jsonPrimitive.content shouldBe "backup"
             manifest.getValue("format").jsonPrimitive.content shouldBe "1"
             manifest.getValue("app").jsonPrimitive.content shouldBe "oneurl"
@@ -71,7 +72,7 @@ class BackupEngineTest : ShouldSpec(
         should("export each section as an object with an entries array") {
             val engine =
                 BackupEngine(setOf(MemorySection(store = mutableListOf(Item("a", 1), Item("b", 2)))), CountingTransaction(), app, { NOW })
-            engine.export().getValue("sections/items.json").decodeToString() shouldBe
+            engine.exportFiles().getValue("sections/items.json").decodeToString() shouldBe
                 """{"entries":[{"key":"a","value":1},{"key":"b","value":2}]}"""
         }
         should("export then read then replace into empty sections restores the same entries") {
@@ -79,7 +80,7 @@ class BackupEngineTest : ShouldSpec(
             val exporter = BackupEngine(setOf(MemorySection(store = source)), CountingTransaction(), app, { NOW })
             val target = mutableListOf<Item>()
             val importer = BackupEngine(setOf(MemorySection(store = target)), CountingTransaction(), app, { NOW })
-            val ready = importer.read(exporter.export().toMutableMap()).shouldBeInstanceOf<BackupReadResult.Ready>()
+            val ready = importer.read(exporter.exportFiles().toMutableMap()).shouldBeInstanceOf<BackupReadResult.Ready>()
             importer
                 .restore(ready, ImportMode.REPLACE)
                 .sections
@@ -101,7 +102,7 @@ class BackupEngineTest : ShouldSpec(
             val manifest =
                 backupJson.decodeFromString(
                     BackupManifest.serializer(),
-                    engine.export().getValue(MANIFEST_ENTRY).decodeToString(),
+                    engine.exportFiles().getValue(MANIFEST_ENTRY).decodeToString(),
                 )
             manifest.sections.map { it.id } shouldContainExactly listOf("b", "a")
         }
@@ -133,13 +134,13 @@ class BackupEngineTest : ShouldSpec(
             val store = MutableList(MAX_SECTION_ENTRIES + 1) { Item("k$it") }
             val engine = BackupEngine(setOf(MemorySection(store = store)), CountingTransaction(), app, { NOW })
 
-            shouldThrow<IllegalStateException> { engine.export() }
+            engine.export() shouldBe BackupExport.TooLarge
         }
         should("refuse to export a section larger than an import accepts") {
             val store = MutableList(SECTION_ENTRIES_OF_17_MIB) { Item("k$it".padEnd(KIB)) }
             val engine = BackupEngine(setOf(MemorySection(store = store)), CountingTransaction(), app, { NOW })
 
-            shouldThrow<IllegalStateException> { engine.export() }
+            engine.export() shouldBe BackupExport.TooLarge
         }
         should("refuse to export a section with an entry larger than an import accepts") {
             val engine =
@@ -150,7 +151,7 @@ class BackupEngineTest : ShouldSpec(
                     { NOW },
                 )
 
-            shouldThrow<IllegalStateException> { engine.export() }
+            engine.export() shouldBe BackupExport.TooLarge
         }
         should("refuse to export sections that together exceed the total an import accepts") {
             val sections =
@@ -162,7 +163,7 @@ class BackupEngineTest : ShouldSpec(
                 }
             val engine = BackupEngine(sections.toSet(), CountingTransaction(), app, { NOW })
 
-            shouldThrow<IllegalStateException> { engine.export() }
+            engine.export() shouldBe BackupExport.TooLarge
         }
         should("stop reading the entries of a section when the calling coroutine is canceled") {
             val job = Job()
@@ -176,7 +177,7 @@ class BackupEngineTest : ShouldSpec(
                     }
                 }
             val engine = BackupEngine(setOf(section), CountingTransaction(), app, { NOW })
-            val files = engine.export()
+            val files = engine.exportFiles()
 
             shouldThrow<CancellationException> { withContext(job) { engine.read(files.toMutableMap()) } }
             validated shouldContainExactly listOf("a")

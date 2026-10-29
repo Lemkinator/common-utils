@@ -85,7 +85,7 @@ class LargeBackupTest : ShouldSpec(
         should("export, zip, unzip, read and restore a section of the most entries with twenty fields each") {
             val exporting = WideSection(MutableList(MAX_SECTION_ENTRIES, ::wide))
             val exporter = BackupEngine(setOf(exporting), DirectBackupTransaction(), BackupApp("wide", 1), { "2026-10-27T14:30:00+01:00" })
-            val zip = ByteArrayOutputStream().also { ZipBackupContainer.write(exporter.export(), it) }.toByteArray()
+            val zip = ByteArrayOutputStream().also { ZipBackupContainer.write(exporter.exportFiles(), it) }.toByteArray()
 
             val files = ZipBackupContainer.read(ByteArrayInputStream(zip)).shouldBeInstanceOf<ZipRead.Files>().files
             val importing = WideSection()

@@ -15,6 +15,14 @@ public final class de/lemke/commonutils/backup/BackupResult$ExportFailed : de/le
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class de/lemke/commonutils/backup/BackupResult$ExportTooLarge : de/lemke/commonutils/backup/BackupResult {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupResult$ExportTooLarge;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class de/lemke/commonutils/backup/BackupResult$Exported : de/lemke/commonutils/backup/BackupResult {
 	public static final field $stable I
 	public static final field INSTANCE Lde/lemke/commonutils/backup/BackupResult$Exported;
@@ -194,6 +202,23 @@ public final class de/lemke/commonutils/backup/core/BackupEngine {
 	public final fun getModes ()Ljava/util/Set;
 	public final fun read (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun restore (Lde/lemke/commonutils/backup/core/BackupReadResult$Ready;Lde/lemke/commonutils/backup/core/ImportMode;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class de/lemke/commonutils/backup/core/BackupExport {
+}
+
+public final class de/lemke/commonutils/backup/core/BackupExport$Files : de/lemke/commonutils/backup/core/BackupExport {
+	public static final field $stable I
+	public fun <init> (Ljava/util/Map;)V
+	public final fun getFiles ()Ljava/util/Map;
+}
+
+public final class de/lemke/commonutils/backup/core/BackupExport$TooLarge : de/lemke/commonutils/backup/core/BackupExport {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/core/BackupExport$TooLarge;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class de/lemke/commonutils/backup/core/BackupPreview {

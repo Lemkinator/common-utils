@@ -60,6 +60,9 @@ public sealed interface BackupResult {
 
     public data object ExportFailed : BackupResult
 
+    /** The data exceeds a limit of the import, so the export wrote no backup. */
+    public data object ExportTooLarge : BackupResult
+
     public data class Restored(val report: RestoreReport) : BackupResult
 
     /** The file imports nowhere, for the reason in [reason]. Nothing was written. */
