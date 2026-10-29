@@ -80,6 +80,20 @@ private class GatedDocuments(private val inner: FakeBackupDocuments, val gate: C
     override suspend fun delete(uri: Uri) = inner.delete(uri)
 }
 
+private class CancelingDocuments(private val inner: FakeBackupDocuments, private val cancel: () -> Unit) : BackupDocuments {
+    override suspend fun write(
+        uri: Uri,
+        bytes: ByteArray,
+    ): Boolean = inner.write(uri, bytes).also { cancel() }
+
+    override suspend fun <T : Any> read(
+        uri: Uri,
+        consume: (InputStream) -> T,
+    ): T? = inner.read(uri, consume)
+
+    override suspend fun delete(uri: Uri) = inner.delete(uri)
+}
+
 private class EndlessDocuments(private val prefix: ByteArray) : BackupDocuments {
     var served = 0L
 
@@ -198,6 +212,55 @@ class BackupStateHolderRobolectricTest {
             holder.state.value shouldBe BackupState.Working
 
             exportScope.cancel()
+
+            documents.deleted shouldContainExactly listOf(target)
+        }
+
+    @Test
+    fun `canceling the scope right after a successful write keeps the document`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            val exportScope = CoroutineScope(coroutineContext + SupervisorJob(coroutineContext.job))
+            val holder =
+                BackupStateHolder(
+                    exportScope,
+                    engineOf(MemorySection()),
+                    CancelingDocuments(documents) { exportScope.cancel() },
+                    UnconfinedTestDispatcher(testScheduler),
+                )
+
+            holder.onExportTargetPicked(DocumentPick.Created(target))
+
+            documents.files.keys shouldBe setOf(target)
+            documents.deleted shouldBe emptyList()
+        }
+
+    @Test
+    fun `canceling the scope right after a failed write deletes the document once`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            documents.failWrite = true
+            val exportScope = CoroutineScope(coroutineContext + SupervisorJob(coroutineContext.job))
+            val holder =
+                BackupStateHolder(
+                    exportScope,
+                    engineOf(MemorySection()),
+                    CancelingDocuments(documents) { exportScope.cancel() },
+                    UnconfinedTestDispatcher(testScheduler),
+                )
+
+            holder.onExportTargetPicked(DocumentPick.Created(target))
+
+            documents.deleted shouldContainExactly listOf(target)
+        }
+
+    @Test
+    fun `canceling the scope before the export job is first dispatched deletes the created document`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            val exportScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob(coroutineContext.job))
+            val holder = BackupStateHolder(exportScope, engineOf(MemorySection()), documents, StandardTestDispatcher(testScheduler))
+            holder.onExportTargetPicked(DocumentPick.Created(target))
+
+            exportScope.cancel()
+            testScheduler.advanceUntilIdle()
 
             documents.deleted shouldContainExactly listOf(target)
         }

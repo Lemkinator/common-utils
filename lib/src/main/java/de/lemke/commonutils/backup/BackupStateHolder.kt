@@ -39,6 +39,11 @@ import kotlinx.coroutines.withContext
 
 private const val TAG = "BackupStateHolder"
 
+/** The document of an export; [settled] once the export wrote it or began to delete it, so a later cancellation leaves it alone. */
+private class ExportTarget(val uri: Uri) {
+    @Volatile var settled = false
+}
+
 private val exportFailed = BackupState.Result(BackupResult.ExportFailed)
 private val readFailed = BackupState.Result(BackupResult.ReadFailed)
 private val restoreFailed = BackupState.Result(BackupResult.RestoreFailed)
@@ -76,7 +81,8 @@ public class BackupStateHolder(
             DocumentPick.Canceled -> mutableState.update { if (it is BackupState.PickExportTarget) BackupState.Idle else it }
             DocumentPick.MissingUri -> publishUnlessWorking(exportFailed)
             is DocumentPick.Created -> {
-                val started = launchWork(exportFailed, discardOnCancel = pick.uri) { exportTo(pick.uri) }
+                val target = ExportTarget(pick.uri)
+                val started = launchWork(exportFailed, discardOnCancel = target) { exportTo(target) }
                 if (!started) scope.launch { documents.delete(pick.uri) }
             }
         }
@@ -130,7 +136,7 @@ public class BackupStateHolder(
 
     private fun launchWork(
         failure: BackupState.Result,
-        discardOnCancel: Uri? = null,
+        discardOnCancel: ExportTarget? = null,
         work: suspend () -> BackupState,
     ): Boolean {
         if (mutableState.getAndUpdate { BackupState.Working } == BackupState.Working) return false
@@ -140,17 +146,18 @@ public class BackupStateHolder(
                 try {
                     runContained(TAG, "Backup work", failure) { withContext(dispatcher) { work() } }
                 } catch (e: CancellationException) {
-                    discardOnCancel?.let { discard(it) }
+                    discardOnCancel?.takeUnless { it.settled }?.let { discard(it.uri) }
                     throw e
                 }
         }
         return true
     }
 
-    private suspend fun exportTo(uri: Uri): BackupState {
+    private suspend fun exportTo(target: ExportTarget): BackupState {
         val bytes = runContained<ByteArray?>(TAG, "Backup export", null) { zipped() }
-        val written = bytes != null && documents.write(uri, bytes)
-        if (!written) discard(uri)
+        val written = bytes != null && documents.write(target.uri, bytes)
+        target.settled = true
+        if (!written) discard(target.uri)
         return BackupState.Result(if (written) BackupResult.Exported else BackupResult.ExportFailed)
     }
 
