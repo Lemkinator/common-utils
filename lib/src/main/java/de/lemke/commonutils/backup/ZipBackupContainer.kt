@@ -38,8 +38,8 @@ internal const val MAX_ARCHIVE_BYTES: Long = MAX_TOTAL_BYTES + ARCHIVE_OVERHEAD_
 
 /** What [ZipBackupContainer.read] found. */
 internal sealed interface ZipRead {
-    /** The accepted entries by name. Entries under `files/` are drained and left out. */
-    data class Files(val files: Map<String, ByteArray>) : ZipRead
+    /** The accepted entries by name. Entries under `files/` are drained and left out. Its reader empties the map. */
+    data class Files(val files: MutableMap<String, ByteArray>) : ZipRead
 
     /** Not a zip, or an entry with a name the container refuses or cannot decode. */
     data object Invalid : ZipRead

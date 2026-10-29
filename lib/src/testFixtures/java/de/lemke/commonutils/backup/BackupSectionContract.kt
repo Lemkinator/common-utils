@@ -90,7 +90,7 @@ public abstract class BackupSectionContract<E : Any> {
         BackupEngine(setOf(section), transaction(), BackupApp(CONTRACT_APP, 1), { CONTRACT_TIME })
 
     private suspend fun BackupEngine.ready(files: Map<String, ByteArray>): BackupReadResult.Ready {
-        val result = read(files)
+        val result = read(files.toMutableMap())
         assertTrue("The backup must be ready, was $result", result is BackupReadResult.Ready)
         return result as BackupReadResult.Ready
     }

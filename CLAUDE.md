@@ -207,12 +207,20 @@ app without that binding exports and reads plain files, and ignores a signature 
 `BackupSectionContract` and `assertBackupConventions()` (testFixtures) test a section through the whole engine.
 Merge helpers `newerWins` and `higherRankWins` end in a total order, so every device keeps the same entry.
 Stamps in the file are ISO-8601 text with a UTC offset. An entry whose `upgrade`, decoding or `validate` throws any
-exception is skipped and counted; `upgrade` steps throw for an entry they cannot map. The import refuses a file with no
-known section, with more than 100,000 entries in one section, with a section file that nests deeper than 64 levels or
-holds an entry of more than 100,000 values, or with more than 16 MiB uncompressed in one section, 64 KiB in the manifest, 4 KiB in the signature file or 64 MiB in all, and
-streams at most 65 MiB of the picked document and never holds the zip file in memory. The reader decodes a section file one entry at a time, so memory stays at
-one entry tree plus the typed entries. The manifest and the signature file obey the nesting limit. A section file over a limit shows "The file could
-not be read."
+exception is skipped and counted; `upgrade` steps throw for an entry they cannot map. The import refuses a file with no known section.
+It refuses more than 100,000 entries in one section and a section file that nests deeper than 64 levels.
+It refuses an entry of more than 100,000 values.
+It refuses an entry of more than 1 MiB, from its opening brace to its closing one.
+A scan of the bytes finds these limits before any decode builds a tree.
+Size caps: 16 MiB uncompressed per section and 64 MiB in all.
+The manifest holds at most 64 KiB, the signature file at most 4 KiB.
+The import streams at most 65 MiB of the picked document and never holds the zip file in memory.
+`BackupEngine.read` empties the map it receives; each section file leaves it when its decode starts.
+The reader decodes a section file one entry at a time.
+While a section decodes, memory holds the section files still to come.
+It also holds the text of that section, one entry tree and the typed entries so far.
+The manifest and the signature file obey the nesting limit.
+A section file over a limit shows "The file could not be read."
 
 ## Launches and Exports
 

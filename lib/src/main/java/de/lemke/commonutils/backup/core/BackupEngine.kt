@@ -49,7 +49,11 @@ public class BackupEngine(
         return if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
     }
 
-    public suspend fun read(files: Map<String, ByteArray>): BackupReadResult = readBackup(files, sections, app, signer)
+    /**
+     * Reads the backup in [files] and empties the map, whatever the result: each section file leaves it when its decode
+     * starts, so the bytes of a finished section can be freed. Keep no other reference to the arrays.
+     */
+    public suspend fun read(files: MutableMap<String, ByteArray>): BackupReadResult = readBackup(files, sections, app, signer)
 
     public suspend fun restore(
         ready: BackupReadResult.Ready,

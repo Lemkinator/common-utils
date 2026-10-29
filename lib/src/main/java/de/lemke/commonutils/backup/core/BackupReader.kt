@@ -27,9 +27,24 @@ import kotlinx.serialization.json.JsonObject
  * entry. A refusal returns before any decode. An entry whose [BackupSection.upgrade], decoding or
  * [BackupSection.validate] throws is skipped and counted. The signature check checks the caller's job before each part
  * and the decode before each entry, so a cancellation stops a large payload or section.
+ *
+ * This consumes [files]: each section file leaves the map when its decode starts, so only the sections still to come
+ * stay in memory. The map is empty on return, whatever the result.
  */
 internal suspend fun readBackup(
-    files: Map<String, ByteArray>,
+    files: MutableMap<String, ByteArray>,
+    sections: Set<BackupSection<*>>,
+    app: BackupApp,
+    signer: BackupSigner?,
+): BackupReadResult =
+    try {
+        readFiles(files, sections, app, signer)
+    } finally {
+        files.clear()
+    }
+
+private suspend fun readFiles(
+    files: MutableMap<String, ByteArray>,
     sections: Set<BackupSection<*>>,
     app: BackupApp,
     signer: BackupSigner?,
@@ -49,13 +64,14 @@ private suspend fun readSections(
     manifest: BackupManifest,
     present: List<Pair<SectionInfo, BackupSection<*>>>,
     knownIds: Set<String>,
-    files: Map<String, ByteArray>,
+    files: MutableMap<String, ByteArray>,
 ): BackupReadResult {
+    files.keys.retainAll(present.map { (info) -> sectionEntryName(info.id) }.toSet())
     val read = mutableListOf<ReadSection<*>>()
     for ((info, section) in present) {
         when (val outcome = readSection(info, section, files)) {
             is SectionRead.Read -> read += outcome.section
-            is SectionRead.Refused -> return BackupReadResult.Refused(outcome.reason)
+            is Refused -> return BackupReadResult.Refused(outcome.reason)
         }
     }
     val preview =
@@ -109,25 +125,32 @@ private fun versionRefusal(
 
 private sealed interface SectionRead {
     class Read(val section: ReadSection<*>) : SectionRead
-
-    class Refused(val reason: BackupRefusal) : SectionRead
 }
+
+private sealed interface SectionText {
+    class Text(val value: String) : SectionText
+}
+
+private class Refused(val reason: BackupRefusal) : SectionRead, SectionText
 
 private suspend fun <E : Any> readSection(
     info: SectionInfo,
     section: BackupSection<E>,
-    files: Map<String, ByteArray>,
-): SectionRead {
-    val bytes = files[sectionEntryName(info.id)]
-    return when {
-        bytes == null -> SectionRead.Refused(BackupRefusal.NotABackup)
-        !bytes.withinJsonLimits() -> SectionRead.Refused(BackupRefusal.TooLarge)
-        else -> decodeSection(bytes, info, section) ?: SectionRead.Refused(BackupRefusal.NotABackup)
+    files: MutableMap<String, ByteArray>,
+): SectionRead =
+    when (val text = files.removeText(sectionEntryName(info.id))) {
+        is SectionText.Text -> decodeSection(text.value, info, section) ?: Refused(BackupRefusal.NotABackup)
+        is Refused -> text
     }
+
+// The bytes stay in this frame only: they are unreachable once the text exists, before its decode starts.
+private fun MutableMap<String, ByteArray>.removeText(name: String): SectionText {
+    val bytes = remove(name) ?: return Refused(BackupRefusal.NotABackup)
+    return bytes.jsonTextWithinLimits()?.let(SectionText::Text) ?: Refused(BackupRefusal.TooLarge)
 }
 
 private suspend fun <E : Any> decodeSection(
-    bytes: ByteArray,
+    text: String,
     info: SectionInfo,
     section: BackupSection<E>,
 ): SectionRead? {
@@ -135,9 +158,9 @@ private suspend fun <E : Any> decodeSection(
     return decodeOrNull {
         try {
             val decoder = SectionDecoder(info.version, section) { context.ensureActive() }
-            SectionRead.Read(backupJson.decodeFromString(decoder, bytes.decodeToString()))
+            SectionRead.Read(backupJson.decodeFromString(decoder, text))
         } catch (_: TooManyEntriesException) {
-            SectionRead.Refused(BackupRefusal.TooLarge)
+            Refused(BackupRefusal.TooLarge)
         } catch (e: SerializationException) {
             // The JSON decoder wraps what an upgrade step throws; a cancellation must still propagate.
             throw e.cause as? CancellationException ?: e

@@ -71,7 +71,7 @@ private fun handBuiltPayload(files: Map<String, ByteArray>): ByteArray {
 private suspend fun refusalOf(
     files: Map<String, ByteArray>,
     signer: BackupSigner? = FoldSigner(),
-): BackupRefusal = engine(mutableListOf(), signer).read(files).shouldBeInstanceOf<BackupReadResult.Refused>().reason
+): BackupRefusal = engine(mutableListOf(), signer).read(files.toMutableMap()).shouldBeInstanceOf<BackupReadResult.Refused>().reason
 
 class BackupEngineSigningTest : ShouldSpec(
     {
@@ -120,14 +120,14 @@ class BackupEngineSigningTest : ShouldSpec(
                     job.cancel()
                 })
 
-            shouldThrow<CancellationException> { withContext(job) { engine(mutableListOf(), signer).read(files) } }
+            shouldThrow<CancellationException> { withContext(job) { engine(mutableListOf(), signer).read(files.toMutableMap()) } }
             parts shouldBe 1
         }
         should("export without a signer writes no signature entry") {
             (SIGNATURE_ENTRY in engine(mutableListOf(), null).export()) shouldBe false
         }
         should("a signing engine reads its own export") {
-            engine(mutableListOf(), FoldSigner()).read(signedExport()).shouldBeInstanceOf<BackupReadResult.Ready>()
+            engine(mutableListOf(), FoldSigner()).read(signedExport().toMutableMap()).shouldBeInstanceOf<BackupReadResult.Ready>()
         }
         should("refuse an unsigned file with Tampered") {
             refusalOf(signedExport() - SIGNATURE_ENTRY) shouldBe BackupRefusal.Tampered
@@ -173,7 +173,7 @@ class BackupEngineSigningTest : ShouldSpec(
                     .removeSuffix("}")
                     .plus(""","extra":${"[".repeat(levels)}${"]".repeat(levels)}}""")
             engine(mutableListOf(), FoldSigner())
-                .read(files + (SIGNATURE_ENTRY to nested(MAX_NESTING_DEPTH - 1).encodeToByteArray()))
+                .read((files + (SIGNATURE_ENTRY to nested(MAX_NESTING_DEPTH - 1).encodeToByteArray())).toMutableMap())
                 .shouldBeInstanceOf<BackupReadResult.Ready>()
             refusalOf(files + (SIGNATURE_ENTRY to nested(MAX_NESTING_DEPTH).encodeToByteArray())) shouldBe BackupRefusal.Tampered
         }
@@ -208,7 +208,7 @@ class BackupEngineSigningTest : ShouldSpec(
             refusalOf(files + (MANIFEST_ENTRY to other)) shouldBe BackupRefusal.OtherApp("sudoku")
         }
         should("an engine without a signer reads a signed file") {
-            engine(mutableListOf(), null).read(signedExport()).shouldBeInstanceOf<BackupReadResult.Ready>()
+            engine(mutableListOf(), null).read(signedExport().toMutableMap()).shouldBeInstanceOf<BackupReadResult.Ready>()
         }
     },
 )

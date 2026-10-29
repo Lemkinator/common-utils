@@ -18,6 +18,7 @@ package de.lemke.commonutils.backup.core
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.time.format.DateTimeParseException
@@ -30,7 +31,7 @@ import kotlinx.serialization.json.jsonPrimitive
 private suspend fun read(
     files: Map<String, ByteArray>,
     vararg sections: BackupSection<*>,
-): BackupReadResult = readBackup(files, sections.toSet(), app, null)
+): BackupReadResult = readBackup(files.toMutableMap(), sections.toSet(), app, null)
 
 private fun refusal(result: BackupReadResult): BackupRefusal = result.shouldBeInstanceOf<BackupReadResult.Refused>().reason
 
@@ -208,6 +209,40 @@ class BackupReaderTest : ShouldSpec(
             ready(read(files + (MANIFEST_ENTRY to files.manifestWithNestedKey(MAX_NESTING_DEPTH - 1)), MemorySection()))
             refusal(read(files + (MANIFEST_ENTRY to files.manifestWithNestedKey(MAX_NESTING_DEPTH)), MemorySection())) shouldBe
                 BackupRefusal.NotABackup
+        }
+        should("read an entry of the most bytes and refuse the whole file for one byte more") {
+            fun itemOfBytes(size: Int) = item("a".repeat(size - item("").length))
+            val atLimit = ready(read(backupFilesOf(items to entriesJson(itemOfBytes(MAX_ENTRY_BYTES))), MemorySection()))
+            atLimit.preview.sections shouldContainExactly listOf(SectionPreview("items", 1, 0))
+
+            val overLimit = backupFilesOf(items to entriesJson(item("small"), itemOfBytes(MAX_ENTRY_BYTES + 1)))
+            refusal(read(overLimit, MemorySection())) shouldBe BackupRefusal.TooLarge
+        }
+        should("empty the files whatever the result") {
+            val consumed = backupFilesOf(items to entriesJson(item("a"))).toMutableMap()
+            ready(readBackup(consumed, setOf(MemorySection()), app, null))
+            consumed.shouldBeEmpty()
+
+            val refused = backupFilesOf(items to entriesJson(item("a")), appId = "sudoku").toMutableMap()
+            refusal(readBackup(refused, setOf(MemorySection()), app, null)) shouldBe BackupRefusal.OtherApp("sudoku")
+            refused.shouldBeEmpty()
+        }
+        should("drop each section file before its decode and the files no section reads before the first decode") {
+            val files =
+                (
+                    backupFilesOf(
+                        SectionInfo("first", 1, 1) to entriesJson(item("a")),
+                        SectionInfo("second", 1, 1) to entriesJson(item("b")),
+                    ) +
+                        ("sections/unknown.json" to "unknown".encodeToByteArray())
+                ).toMutableMap()
+            val seen = mutableMapOf<String, Set<String>>()
+
+            fun section(id: String) =
+                MemorySection(id = id, version = 2, upgradeStep = { _, entry -> entry.also { seen[id] = files.keys.toSet() } })
+            ready(readBackup(files, setOf(section("first"), section("second")), app, null))
+
+            seen shouldBe mapOf("first" to setOf("sections/second.json"), "second" to emptySet())
         }
         should("count brackets, commas and escaped quotes inside a string as text") {
             val text = "\\\"" + "[{,".repeat(MAX_NESTING_DEPTH) + "\\\\"

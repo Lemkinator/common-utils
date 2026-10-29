@@ -178,6 +178,6 @@ class CommonUtilsBackupModuleSignerHiltTest {
 
             files.keys shouldBe setOf("manifest.json", "sections/items.json", "signature.json")
             files.getValue("signature.json").decodeToString() shouldContain "\"keyId\":\"test-key\""
-            engine.read(files).shouldBeInstanceOf<BackupReadResult.Ready>()
+            engine.read(files.toMutableMap()).shouldBeInstanceOf<BackupReadResult.Ready>()
         }
 }

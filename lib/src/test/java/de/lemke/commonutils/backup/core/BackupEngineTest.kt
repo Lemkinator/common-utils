@@ -76,7 +76,7 @@ class BackupEngineTest : ShouldSpec(
             val exporter = BackupEngine(setOf(MemorySection(store = source)), CountingTransaction(), app, { NOW })
             val target = mutableListOf<Item>()
             val importer = BackupEngine(setOf(MemorySection(store = target)), CountingTransaction(), app, { NOW })
-            val ready = importer.read(exporter.export()).shouldBeInstanceOf<BackupReadResult.Ready>()
+            val ready = importer.read(exporter.export().toMutableMap()).shouldBeInstanceOf<BackupReadResult.Ready>()
             importer
                 .restore(ready, ImportMode.REPLACE)
                 .sections
@@ -121,7 +121,7 @@ class BackupEngineTest : ShouldSpec(
             val engine = BackupEngine(setOf(section), CountingTransaction(), app, { NOW })
             val files = engine.export()
 
-            shouldThrow<CancellationException> { withContext(job) { engine.read(files) } }
+            shouldThrow<CancellationException> { withContext(job) { engine.read(files.toMutableMap()) } }
             validated shouldContainExactly listOf("a")
         }
         should("offer MERGE only when every bound section is mergeable") {
