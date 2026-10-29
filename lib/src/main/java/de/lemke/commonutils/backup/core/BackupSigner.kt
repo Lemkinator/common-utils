@@ -23,6 +23,3 @@ public interface BackupSigner {
     /** HMAC-SHA256 of [parts] taken as one byte string, 32 bytes. An implementation consumes the parts one by one. */
     public fun mac(parts: Sequence<ByteArray>): ByteArray
 }
-
-/** HMAC-SHA256 of [payload], 32 bytes; [BackupSigner.mac] of one part. */
-internal fun BackupSigner.mac(payload: ByteArray): ByteArray = mac(sequenceOf(payload))
