@@ -101,6 +101,13 @@ class ZipBackupContainerTest : ShouldSpec(
             val text = String(zip, Charsets.ISO_8859_1).replace("sections/bb.json", "sections/aa.json")
             readFiles(text.toByteArray(Charsets.ISO_8859_1)) shouldBe ZipRead.Invalid
         }
+        should("return Invalid for an entry name that is no valid UTF-8") {
+            val zip = zipOf("sections/aa.json" to byteArrayOf(1))
+            val name = "sections/aa.json".encodeToByteArray()
+            val at = (0..zip.size - name.size).first { zip.copyOfRange(it, it + name.size).contentEquals(name) }
+            zip[at + name.size - 1] = 0xFF.toByte()
+            readFiles(zip) shouldBe ZipRead.Invalid
+        }
         should("return Invalid for a zip without entries") {
             readFiles(zipOf()) shouldBe ZipRead.Invalid
         }

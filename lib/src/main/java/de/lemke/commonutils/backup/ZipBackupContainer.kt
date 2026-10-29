@@ -39,7 +39,7 @@ internal sealed interface ZipRead {
     /** The accepted entries by name. Entries under `files/` are drained and left out. */
     data class Files(val files: Map<String, ByteArray>) : ZipRead
 
-    /** Not a zip, or an entry with a name the container refuses. */
+    /** Not a zip, or an entry with a name the container refuses or cannot decode. */
     data object Invalid : ZipRead
 
     /** The uncompressed bytes of a section or of the whole backup passed the cap. */
@@ -77,6 +77,8 @@ internal object ZipBackupContainer {
             val refusal = generateSequence { zip.nextEntry }.firstNotNullOfOrNull { collector.accept(zip, it.name) }
             refusal ?: if (collector.files.isEmpty()) ZipRead.Invalid else ZipRead.Files(collector.files)
         } catch (_: IOException) {
+            ZipRead.Invalid
+        } catch (_: IllegalArgumentException) {
             ZipRead.Invalid
         }
 }
