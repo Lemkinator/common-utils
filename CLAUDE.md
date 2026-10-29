@@ -209,7 +209,7 @@ Merge helpers `newerWins` and `higherRankWins` end in a total order, so every de
 Stamps in the file are ISO-8601 text with a UTC offset. An entry whose `upgrade`, decoding or `validate` throws any
 exception is skipped and counted; `upgrade` steps throw for an entry they cannot map. The import refuses a file with no
 known section, with more than 100,000 entries in one section, with a section file that nests deeper than 64 levels or
-holds an entry of more than 100,000 values, or with more than 16 MiB uncompressed in one section or 64 MiB in all, and
+holds an entry of more than 100,000 values, or with more than 16 MiB uncompressed in one section, 64 KiB in the manifest, 4 KiB in the signature file or 64 MiB in all, and
 streams at most 65 MiB of the picked document and never holds the zip file in memory. The reader decodes a section file one entry at a time, so memory stays at
 one entry tree plus the typed entries. The manifest and the signature file obey the nesting limit. A section file over a limit shows "The file could
 not be read."

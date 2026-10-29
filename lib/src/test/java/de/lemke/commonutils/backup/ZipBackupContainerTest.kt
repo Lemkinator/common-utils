@@ -128,6 +128,15 @@ class ZipBackupContainerTest : ShouldSpec(
             filesOf(readFiles(zipOf("sections/a.json" to ByteArray(cap)))).getValue("sections/a.json").length shouldBe cap
             readFiles(zipOf("sections/a.json" to ByteArray(cap + 1))) shouldBe ZipRead.TooLarge
         }
+        should("accept a manifest of 64 KiB and refuse one byte more") {
+            filesOf(readFiles(zipOf("manifest.json" to ByteArray(64 * 1024)))).getValue("manifest.json").length shouldBe 64 * 1024
+            readFiles(zipOf("manifest.json" to ByteArray(64 * 1024 + 1))) shouldBe ZipRead.TooLarge
+        }
+        should("accept a signature of 4 KiB and refuse one byte more") {
+            val manifest = "manifest.json" to byteArrayOf(1)
+            filesOf(readFiles(zipOf(manifest, "signature.json" to ByteArray(4 * 1024)))).getValue("signature.json").length shouldBe 4 * 1024
+            readFiles(zipOf(manifest, "signature.json" to ByteArray(4 * 1024 + 1))) shouldBe ZipRead.TooLarge
+        }
         should("read two sections of 16 MiB each") {
             val read = readFiles(zipOf("sections/a.json" to ByteArray(16 * MIB), "sections/b.json" to ByteArray(16 * MIB)))
             read.shouldBeInstanceOf<ZipRead.Files>().files.mapValues { it.value.size } shouldBe

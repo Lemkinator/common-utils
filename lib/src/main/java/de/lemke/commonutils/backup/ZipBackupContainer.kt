@@ -26,6 +26,8 @@ import java.util.zip.ZipOutputStream
 
 private const val MAX_SECTION_BYTES = 16L * 1024 * 1024
 private const val MAX_TOTAL_BYTES = 64L * 1024 * 1024
+private const val MAX_MANIFEST_BYTES = 64L * 1024
+private const val MAX_SIGNATURE_BYTES = 4L * 1024
 private const val ARCHIVE_OVERHEAD_BYTES = 1L * 1024 * 1024
 private const val FILES_PREFIX = "files/"
 private val SECTION_NAME = Regex("sections/[a-z0-9_-]+\\.json")
@@ -125,12 +127,20 @@ private class EntryCollector(
         }
     }
 
+    private fun entryCap(name: String): Long =
+        when {
+            name == MANIFEST_ENTRY -> MAX_MANIFEST_BYTES
+            name == SIGNATURE_ENTRY -> MAX_SIGNATURE_BYTES
+            SECTION_NAME.matches(name) -> maxSectionBytes
+            else -> Long.MAX_VALUE
+        }
+
     /** Keeps the bytes of the entry unless it lies under `files/`, which is counted and dropped; null once it passes its cap. */
     private fun take(
         zip: InputStream,
         name: String,
     ): Long? {
-        val limit = if (SECTION_NAME.matches(name)) minOf(remaining, maxSectionBytes) else remaining
+        val limit = minOf(remaining, entryCap(name))
         return if (name.startsWith(FILES_PREFIX)) {
             zip.dropAtMost(limit)
         } else {
