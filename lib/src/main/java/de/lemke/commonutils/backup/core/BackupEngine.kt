@@ -60,8 +60,12 @@ public class BackupEngine(
                 put(MANIFEST_ENTRY, manifestBytes)
                 exported.forEach { (info, bytes) -> put(sectionEntryName(info.id), bytes) }
             }
-        val signed = if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
-        val withinLimits = manifestBytes.size <= MAX_MANIFEST_BYTES && signed.values.sumOf { it.size.toLong() } <= MAX_TOTAL_BYTES
+        val signature = signer?.let { signatureBytes(files, it) }
+        val signed = if (signature == null) files else files + (SIGNATURE_ENTRY to signature)
+        val withinLimits =
+            manifestBytes.size <= MAX_MANIFEST_BYTES &&
+                (signature?.size ?: 0) <= MAX_SIGNATURE_BYTES &&
+                signed.values.sumOf { it.size.toLong() } <= MAX_TOTAL_BYTES
         return if (withinLimits) BackupExport.Files(signed) else null
     }
 

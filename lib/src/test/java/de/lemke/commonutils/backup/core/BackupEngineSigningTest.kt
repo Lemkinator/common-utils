@@ -154,6 +154,14 @@ class BackupEngineSigningTest : ShouldSpec(
             totalOf((missing / itemSize).toInt(), (missing % itemSize).toInt()) shouldBe MAX_TOTAL_BYTES
             engineOf((missing / itemSize).toInt(), (missing % itemSize).toInt() + 1).export() shouldBe BackupExport.TooLarge
         }
+        should("refuse a signature larger than the cap of an import and accept one at the cap") {
+            suspend fun signatureSize(keyIdLength: Int): Int =
+                engine(mutableListOf(), FoldSigner(keyId = "k".repeat(keyIdLength))).exportFiles().getValue(SIGNATURE_ENTRY).size
+            val atCap = MAX_SIGNATURE_BYTES.toInt() - signatureSize(1) + 1
+
+            signatureSize(atCap) shouldBe MAX_SIGNATURE_BYTES.toInt()
+            engine(mutableListOf(), FoldSigner(keyId = "k".repeat(atCap + 1))).export() shouldBe BackupExport.TooLarge
+        }
         should("export without a signer writes no signature entry") {
             (SIGNATURE_ENTRY in engine(mutableListOf(), null).exportFiles()) shouldBe false
         }
