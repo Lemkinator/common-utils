@@ -21,6 +21,7 @@ import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.BackupSection
 import de.lemke.commonutils.backup.core.EntryCheck
 import de.lemke.commonutils.backup.core.ImportMode
+import de.lemke.commonutils.backup.core.MAX_SECTION_ENTRIES
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -30,8 +31,6 @@ import java.io.ByteArrayOutputStream
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-
-private const val MOST_ENTRIES = 100_000
 
 @Serializable
 private data class Wide(
@@ -84,7 +83,7 @@ private class WideSection(val store: MutableList<Wide> = mutableListOf()) : Back
 class LargeBackupTest : ShouldSpec(
     {
         should("export, zip, unzip, read and restore a section of the most entries with twenty fields each") {
-            val exporting = WideSection(MutableList(MOST_ENTRIES, ::wide))
+            val exporting = WideSection(MutableList(MAX_SECTION_ENTRIES, ::wide))
             val exporter = BackupEngine(setOf(exporting), DirectBackupTransaction(), BackupApp("wide", 1), { "2026-10-27T14:30:00+01:00" })
             val zip = ByteArrayOutputStream().also { ZipBackupContainer.write(exporter.export(), it) }.toByteArray()
 
@@ -97,7 +96,7 @@ class LargeBackupTest : ShouldSpec(
             ready.preview.sections
                 .single()
                 .skipped shouldBe 0
-            importing.store shouldHaveSize MOST_ENTRIES
+            importing.store shouldHaveSize MAX_SECTION_ENTRIES
             importing.store shouldBe exporting.store
         }
     },
