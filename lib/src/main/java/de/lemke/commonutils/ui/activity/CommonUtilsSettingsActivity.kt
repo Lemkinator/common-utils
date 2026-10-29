@@ -18,15 +18,23 @@ package de.lemke.commonutils.ui.activity
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import dagger.hilt.android.AndroidEntryPoint
 import de.lemke.commonutils.R
+import de.lemke.commonutils.backup.BackupScreenDeps
+import de.lemke.commonutils.backup.BackupViewModel
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.databinding.ActivitySettingsCommonUtilsBinding
 import de.lemke.commonutils.ui.utils.addShareAppAndRateRelativeLinksCard
+import de.lemke.commonutils.ui.utils.bindBackupPreferences
 import de.lemke.commonutils.ui.utils.initCommonUtilsPreferences
 import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
+import java.util.Optional
 import javax.inject.Inject
 
 /** Pre-built settings screen backed by a [PreferenceFragmentCompat] with common-utils defaults. */
@@ -63,17 +71,30 @@ public class CommonUtilsSettingsActivity : AppCompatActivity() {
         @Inject
         public lateinit var settings: SettingsRepository
 
+        @Inject
+        internal lateinit var backupScreen: Optional<BackupScreenDeps>
+
         override fun onCreatePreferences(
             bundle: Bundle?,
             str: String?,
         ) {
             preferenceManager.preferenceDataStore = settings.preferenceDataStore()
             preferences.forEach { addPreferencesFromResource(it) }
+            if (!backupScreen.isPresent) {
+                findPreference<PreferenceCategory>(
+                    getString(R.string.commonutils_preference_key_backup),
+                )?.let { preferenceScreen.removePreference(it) }
+            }
         }
 
         override fun onCreate(bundle: Bundle?) {
             super.onCreate(bundle)
             initCommonUtilsPreferences(settings)
+            backupScreen.orElse(null)?.let { screen ->
+                val factory = viewModelFactory { initializer { BackupViewModel(screen.engine, screen.documents, screen.dispatcher) } }
+                val viewModel = ViewModelProvider(this, factory)[BackupViewModel::class.java]
+                bindBackupPreferences(screen.sectionLabels) { viewModel.backup }
+            }
         }
 
         override fun onViewCreated(

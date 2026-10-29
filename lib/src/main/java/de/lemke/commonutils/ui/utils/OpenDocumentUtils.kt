@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_OPEN_DOCUMENT
 import android.content.Intent.CATEGORY_OPENABLE
+import android.content.Intent.EXTRA_MIME_TYPES
 import android.net.Uri
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -54,32 +55,44 @@ public fun Fragment.registerForOpenDocument(onPick: (Uri?) -> Unit): SingleLaunc
     registerForSingleLaunchResult(StartActivityForResult()) { onPick(it.toPickedUri()) }
 
 /**
- * Launches the `ACTION_OPEN_DOCUMENT` picker through [launcher] to pick an existing document of [mimeType].
+ * Launches the `ACTION_OPEN_DOCUMENT` picker through [launcher] to pick an existing document of [mimeType], or of one
+ * of [alsoAccept].
  *
  * A device without a picker shows the error toast and returns [LaunchOutcome.Failed]. A launch the latch drops returns
  * [LaunchOutcome.Dropped], so the caller keeps its import pending until the activity resumes. Register [launcher] with
  * [registerForOpenDocument].
  */
+@JvmOverloads
 public fun Fragment.launchOpenDocument(
     mimeType: String,
     launcher: SingleLaunchResultLauncher<Intent>,
-): LaunchOutcome = requireContext().launchOpenDocument(mimeType, launcher)
+    alsoAccept: List<String> = emptyList(),
+): LaunchOutcome = requireContext().launchOpenDocument(mimeType, launcher, alsoAccept)
 
 /**
- * Launches the `ACTION_OPEN_DOCUMENT` picker through [launcher] to pick an existing document of [mimeType].
+ * Launches the `ACTION_OPEN_DOCUMENT` picker through [launcher] to pick an existing document of [mimeType], or of one
+ * of [alsoAccept].
  *
  * A device without a picker shows the error toast and returns [LaunchOutcome.Failed]. A launch the latch drops returns
  * [LaunchOutcome.Dropped], so the caller keeps its import pending until the activity resumes. Register [launcher] with
  * [registerForOpenDocument].
  */
+@JvmOverloads
 public fun Context.launchOpenDocument(
     mimeType: String,
     launcher: SingleLaunchResultLauncher<Intent>,
+    alsoAccept: List<String> = emptyList(),
 ): LaunchOutcome =
     // Document providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     try {
-        val launched = launcher.tryLaunch(Intent(ACTION_OPEN_DOCUMENT).addCategory(CATEGORY_OPENABLE).setType(mimeType))
+        val intent = Intent(ACTION_OPEN_DOCUMENT).addCategory(CATEGORY_OPENABLE)
+        if (alsoAccept.isEmpty()) {
+            intent.setType(mimeType)
+        } else {
+            intent.setType("*/*").putExtra(EXTRA_MIME_TYPES, (listOf(mimeType) + alsoAccept).toTypedArray())
+        }
+        val launched = launcher.tryLaunch(intent)
         if (launched) LaunchOutcome.Started else LaunchOutcome.Dropped
     } catch (e: Exception) {
         Log.e(TAG, "Error launching document picker", e)

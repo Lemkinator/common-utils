@@ -270,6 +270,12 @@ jobs:
               status=1
               continue
             fi
+            # The androidTest APK packs the testFixtures; BackupSectionContract is abstract and has no
+            # androidTest subclass, so its @Test methods are in the dex but never run.
+            contract="$module/src/testFixtures/java/de/lemke/commonutils/backup/BackupSectionContract.kt"
+            if [ -f "$contract" ]; then
+              expected=$((expected - $(grep -c '^ *@Test$' "$contract")))
+            fi
             echo "$module: Executed $executed instrumented tests (expected ≥ $expected from the test APK)"
             if [ "$expected" -eq 0 ]; then
               echo "::error::$module: no org.junit.Test methods in $apk"

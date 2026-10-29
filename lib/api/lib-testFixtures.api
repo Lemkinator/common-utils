@@ -6,6 +6,10 @@ public final class de/lemke/commonutils/ArchitectureKt {
 	public static final fun assertArchitecture (Lcom/lemonappdev/konsist/api/container/KoScope;Ljava/lang/String;)V
 }
 
+public final class de/lemke/commonutils/BackupConventionsKt {
+	public static final fun assertBackupConventions (Lcom/lemonappdev/konsist/api/container/KoScope;)V
+}
+
 public final class de/lemke/commonutils/CacheWriteUrisKt {
 	public static final fun cacheFileOf (Landroid/content/Context;Landroid/net/Uri;)Ljava/io/File;
 	public static final fun cacheWriteUriPattern (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lkotlin/text/Regex;
@@ -193,6 +197,86 @@ public final class de/lemke/commonutils/WhileResumed : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lde/lemke/commonutils/WhileResumed;
 	public static fun values ()[Lde/lemke/commonutils/WhileResumed;
+}
+
+public final class de/lemke/commonutils/backup/BackupEngineExportsKt {
+	public static final fun exportFiles (Lde/lemke/commonutils/backup/core/BackupEngine;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class de/lemke/commonutils/backup/BackupSectionContract {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun aBrokenEntryIsSkippedAndCounted ()V
+	protected abstract fun brokenEntryJson ()Ljava/lang/String;
+	protected fun clashCases ()Ljava/util/List;
+	public final fun everyClashCaseKeepsTheExpectedEntry ()V
+	public final fun everySymmetricClashCaseKeepsTheSameEntryWithSidesSwapped ()V
+	public final fun everyVersionFromMinReadableToCurrentHasAFixtureThatImports ()V
+	public final fun exportThenReplaceRestoresTheSameEntries ()V
+	protected abstract fun fixtures ()Ljava/util/Map;
+	public final fun mergeKeepsLocalOnlyEntries ()V
+	public final fun mergeTwiceChangesNothingTheSecondTime ()V
+	public final fun replaceRemovesLocalOnlyEntries ()V
+	public final fun replaceTwiceGivesTheSameEntries ()V
+	protected abstract fun sampleEntries ()Ljava/util/List;
+	protected abstract fun section ()Lde/lemke/commonutils/backup/core/BackupSection;
+	protected abstract fun transaction ()Lde/lemke/commonutils/backup/core/BackupTransaction;
+}
+
+public final class de/lemke/commonutils/backup/ClashCase {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Object;
+	public final fun component3 ()Ljava/lang/Object;
+	public final fun component4 ()Ljava/lang/Object;
+	public final fun component5 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Z)Lde/lemke/commonutils/backup/ClashCase;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/ClashCase;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;ZILjava/lang/Object;)Lde/lemke/commonutils/backup/ClashCase;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExpected ()Ljava/lang/Object;
+	public final fun getIncoming ()Ljava/lang/Object;
+	public final fun getLocal ()Ljava/lang/Object;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSymmetric ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class de/lemke/commonutils/backup/DirectBackupTransaction : de/lemke/commonutils/backup/core/BackupTransaction {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun getRuns ()I
+	public fun run (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class de/lemke/commonutils/backup/FakeBackupDocuments : de/lemke/commonutils/backup/BackupDocuments {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun delete (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getDeleted ()Ljava/util/List;
+	public final fun getFailRead ()Z
+	public final fun getFailWrite ()Z
+	public final fun getFiles ()Ljava/util/Map;
+	public fun read (Landroid/net/Uri;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setFailRead (Z)V
+	public final fun setFailWrite (Z)V
+	public fun write (Landroid/net/Uri;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class de/lemke/commonutils/backup/SectionFixture {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lde/lemke/commonutils/backup/SectionFixture;
+	public static synthetic fun copy$default (Lde/lemke/commonutils/backup/SectionFixture;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lde/lemke/commonutils/backup/SectionFixture;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntries ()Ljava/util/List;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class de/lemke/commonutils/data/FakePackageLookup : de/lemke/commonutils/data/PackageLookup {

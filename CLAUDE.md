@@ -71,6 +71,11 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
   call on `Konsist.scopeFromProduction()`. Need Konsist; built and tested against the version in `gradle/libs.versions.toml` only.
 - `assertNoMockedOwnTypes()` — Konsist rule that each app's `CodingConventionsTest` calls on `Konsist.scopeFromTest()`.
   Needs Konsist; built and tested against the version in `gradle/libs.versions.toml` only.
+- `assertBackupConventions()` — Konsist rule that each app with a backup calls on `Konsist.scopeFromProduction()`: no class
+  is both `@Entity` and `@Serializable`. Needs Konsist.
+- `BackupSectionContract<E>` and `DirectBackupTransaction` — the tests every backup section runs through `BackupEngine`
+  (JUnit 4; see "Backup"), and a transaction that runs in place. `FakeBackupDocuments` fakes `BackupDocuments`; `BackupEngine.exportFiles()` returns the files of
+  an export and fails on `BackupExport.TooLarge`.
 - `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
   (returns the picker intent it answered),
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
@@ -134,7 +139,8 @@ git config core.hooksPath .githooks
 
 ## Architecture
 
-**Single-module utility library** — ships opt-in Hilt modules and no ViewModel layer.
+**Single-module utility library** — ships opt-in Hilt modules and one ViewModel, `BackupViewModel`, which hosts
+the backup flow of the settings screen.
 Code is organized into:
 
 - **Root utilities** (`lib/src/main/java/de/lemke/commonutils/`):
@@ -174,6 +180,62 @@ this library:
 2. **Hilt version** — must match consumer apps to avoid duplicate-class errors. Renovate's `hilt`
    group bumps both repos together.
 
+## Backup
+
+Export and import of an app's data to one zip file. The pure-Kotlin core (`backup/core`, no `android.*`, `androidx.*`,
+`java.*` or `javax.*` import, guarded by `ArchitectureTest`) holds the manifest, read, upgrade, validate, Merge,
+Replace and the optional signature. `backup/` holds the Android layer: `ZipBackupContainer`, `BackupDocuments`,
+`BackupStateHolder`, `BackupViewModel`.
+
+A section id matches `[a-z0-9_-]+`; the engine refuses another id. The engine also refuses an empty section set, so an app with the backup module binds at least one section. An export that exceeds an import limit returns
+`BackupExport.TooLarge` instead of files the import refuses; the holder deletes the partial document and shows
+`BackupResult.ExportTooLarge`.
+
+An app opts in with:
+
+- one `BackupSection<E>` per data kind, bound `@Binds @IntoSet`; a `MergeableSection` adds merge rules and
+  enables Merge, otherwise the app offers Replace only. Entries are `@Serializable` DTOs, never Room entities.
+- one `BackupSectionLabel(sectionId, @StringRes label)` per section, `@Provides @IntoSet`: the import preview names the
+  section by it, or by its id if the app binds none.
+- `BackupApp`, and a `BackupTransaction` bound to its database transaction (an object expression: the interface has a
+  generic method, so no lambda).
+- `@Module(includes = [CommonUtilsBackupModule::class])` on its own module, with `CommonUtilsCoroutinesModule` bound for
+  `@DefaultDispatcher`, plus `R.xml.preferences_backup` in the preference list it passes to
+  `setupCommonUtilsSettingsActivity`, called during process start (`Application.onCreate`) because the list is static
+  and a recreated screen after process death needs it. The module binds `BackupScreenDeps`; the settings fragment injects
+  `Optional<BackupScreenDeps>` through Hilt, so it needs no static setup and works after process death. An app without
+  the module binds nothing and the screen removes the Backup category.
+
+An app that signs its backups binds `@Provides fun signer(): BackupSigner = HmacSha256BackupSigner(keyId, key)` in its
+module: its export carries `signature.json`, and its import refuses an unsigned file, or one with a changed manifest or section file, before any write. An
+app without that binding exports and reads plain files, and ignores a signature it finds. The key never enters a repo.
+
+`BackupSectionContract` and `assertBackupConventions()` (testFixtures) test a section through the whole engine.
+Merge helpers `newerWins` and `higherRankWins` end in a total order, so every device keeps the same entry, only if
+their `order` tells two different entries apart: pass `encodedOrder`, or the local entry stays on a tie.
+Stamps in the file are ISO-8601 text with a UTC offset.
+The import skips and counts an entry whose `upgrade`, decoding or `validate` throws any exception.
+An `upgrade` step throws for an entry it cannot map.
+The import refuses a file with no known section.
+It refuses a section file with more than 100,000 entries.
+It refuses a section file that nests deeper than 64 levels.
+It refuses an entry of more than 100,000 values.
+It refuses an entry of more than 1 MiB, counted between two separators.
+A scan of the bytes finds the nesting, value and entry byte limits before any decode builds a tree.
+The decode counts the entries of a section.
+Size caps: 16 MiB uncompressed per section and 32 MiB in all.
+The manifest holds at most 64 KiB, the signature file at most 4 KiB.
+The import streams at most 33 MiB of the picked document.
+It never holds the zip file in memory.
+`BackupEngine.read` empties the map it receives.
+Each section file leaves the map when its decode starts.
+The reader decodes a section file one entry at a time.
+While a section decodes, memory holds the section files still to come.
+It also holds the bytes and the text of that section, one entry tree and the typed entries so far.
+Turning the bytes into text needs a temporary buffer of up to twice the section size.
+The manifest and the signature file obey the nesting limit.
+A section file over a limit shows "The file could not be read."
+
 ## Launches and Exports
 
 Helpers that start another screen return a `LaunchOutcome`. A RESUMED collector marks its
@@ -203,9 +265,11 @@ Hilt is a same-module `implementation` dep: apps that include a module apply Hil
 does not leak its Hilt version onto their compile classpath. Qualifier annotations (`@IoDispatcher`,
 `@DefaultDispatcher`, `@MainDispatcher`, `@ApplicationScope`) ship compiled into the published AAR.
 
-No module installs itself into a consumer DI graph: a library module carries no `@InstallIn`. An opt-in module
-carries `@DisableInstallInCheck` and apps include it. `CommonUtilsCoroutinesModule` provides the four qualified
-bindings; an app opts in with:
+No binding installs itself into a consumer DI graph. An opt-in module carries `@DisableInstallInCheck` and apps include
+it. The one `@InstallIn(SingletonComponent::class)` module of the library, `BackupScreenOptionalModule`, holds only
+`@BindsOptionalOf BackupScreenDeps`: it adds no binding, so an app without a backup is unaffected.
+
+`CommonUtilsCoroutinesModule` provides the four qualified bindings; an app opts in with:
 
 ```kotlin
 @Module(includes = [CommonUtilsCoroutinesModule::class])

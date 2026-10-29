@@ -26,9 +26,16 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
+import de.lemke.commonutils.backup.BackupScreenDeps
+import de.lemke.commonutils.backup.FakeBackupDocuments
+import de.lemke.commonutils.backup.core.BackupApp
+import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupTransaction
+import de.lemke.commonutils.backup.core.MemorySection
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
+import kotlinx.coroutines.Dispatchers
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -54,6 +61,23 @@ class CommonUtilsSettingsActivityScreenshotTest {
     @BindValue
     @JvmField
     val fakeSettings: SettingsRepository = SettingsRepository(freshTestPreferences())
+
+    @BindValue
+    @JvmField
+    val backupScreen: BackupScreenDeps =
+        BackupScreenDeps(
+            BackupEngine(
+                setOf(MemorySection()),
+                object : BackupTransaction {
+                    override suspend fun <R> run(block: suspend () -> R): R = block()
+                },
+                BackupApp("screenshot", 1),
+                { "2026-10-27T14:30:00+01:00" },
+            ),
+            FakeBackupDocuments(),
+            emptySet(),
+            Dispatchers.Unconfined,
+        )
 
     @Before
     fun setUp() {
@@ -97,6 +121,23 @@ class CommonUtilsSettingsActivityScreenshotTest {
     fun settingsActivity_default_dark() {
         ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
             onView(isRoot()).captureRoboImage("src/test/screenshots/settings_default_dark.png")
+        }
+    }
+
+    @Test
+    fun settingsActivity_backup() {
+        CommonUtilsSettingsActivity.preferences = listOf(R.xml.preferences_design, R.xml.preferences_backup)
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            onView(isRoot()).captureRoboImage("src/test/screenshots/settings_backup.png")
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun settingsActivity_backup_dark() {
+        CommonUtilsSettingsActivity.preferences = listOf(R.xml.preferences_design, R.xml.preferences_backup)
+        ActivityScenario.launch(CommonUtilsSettingsActivity::class.java).use {
+            onView(isRoot()).captureRoboImage("src/test/screenshots/settings_backup_dark.png")
         }
     }
 }

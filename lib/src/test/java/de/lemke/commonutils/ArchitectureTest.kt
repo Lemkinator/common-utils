@@ -31,8 +31,17 @@ class ArchitectureTest : ShouldSpec() {
                     it.hasImport { import -> import.name.contains(".widget.internal.") }
                 }
         }
+        should("backup core imports no android, androidx, java or javax packages") {
+            codeScope.files
+                .withPackage("de.lemke.commonutils.backup.core..")
+                .assertFalse(testName = this.testCase.name.toString()) {
+                    it.hasImport { import -> PLATFORM_PREFIXES.any { prefix -> import.name.startsWith(prefix) } }
+                }
+        }
         should("follow the shared architecture rules") {
             codeScope.assertArchitecture("de.lemke.commonutils")
         }
     }
 }
+
+private val PLATFORM_PREFIXES = listOf("android.", "androidx.", "java.", "javax.")
