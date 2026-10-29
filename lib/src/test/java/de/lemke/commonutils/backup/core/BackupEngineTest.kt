@@ -111,9 +111,23 @@ class BackupEngineTest : ShouldSpec(
             }
         }
         should("reject a section id the zip reader refuses") {
-            shouldThrow<IllegalArgumentException> {
-                BackupEngine(setOf(MemorySection(id = "savedLinks")), CountingTransaction(), app, { NOW })
-            }
+            val thrown =
+                shouldThrow<IllegalArgumentException> {
+                    BackupEngine(
+                        setOf(
+                            MemorySection(id = "savedLinks"),
+                            MemorySection(id = "ok"),
+                            MemorySection(id = "a b"),
+                        ),
+                        CountingTransaction(),
+                        app,
+                        {
+                            NOW
+                        },
+                    )
+                }
+
+            thrown.message shouldBe "Backup section ids must match [a-z0-9_-]+: savedLinks, a b"
         }
         should("refuse to export a section with more entries than an import accepts") {
             val store = MutableList(MAX_SECTION_ENTRIES + 1) { Item("k$it") }

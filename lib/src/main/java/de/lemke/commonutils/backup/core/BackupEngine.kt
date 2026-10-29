@@ -30,7 +30,8 @@ public class BackupEngine(
 ) {
     init {
         require(sections.map { it.id }.toSet().size == sections.size) { "Backup section ids must be unique" }
-        require(sections.all { SECTION_ID.matches(it.id) }) { "Backup section ids must match ${SECTION_ID.pattern}" }
+        val invalid = sections.map { it.id }.filterNot { SECTION_ID.matches(it) }
+        require(invalid.isEmpty()) { "Backup section ids must match ${SECTION_ID.pattern}: ${invalid.joinToString()}" }
     }
 
     /** MERGE only when every bound section is a [MergeableSection]. */
