@@ -54,18 +54,37 @@ public class BackupEngine(
 
     private suspend fun assemble(exported: List<Pair<SectionInfo, ByteArray>>): BackupExport.Files? {
         val manifest = BackupManifest(BACKUP_KIND, BACKUP_FORMAT, app.id, app.versionCode, clock(), exported.map { it.first })
+        val manifestBytes = backupJson.encodeToString(BackupManifest.serializer(), manifest).encodeToByteArray()
         val files =
             buildMap {
-                put(MANIFEST_ENTRY, backupJson.encodeToString(BackupManifest.serializer(), manifest).encodeToByteArray())
+                put(MANIFEST_ENTRY, manifestBytes)
                 exported.forEach { (info, bytes) -> put(sectionEntryName(info.id), bytes) }
             }
-        if (files.values.sumOf { it.size.toLong() } > MAX_TOTAL_BYTES) return null
-        return BackupExport.Files(if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer)))
+        val withinLimits = manifestBytes.size <= MAX_MANIFEST_BYTES && files.values.sumOf { it.size.toLong() } <= MAX_TOTAL_BYTES
+        return if (withinLimits) {
+            BackupExport.Files(
+                if (signer ==
+                    null
+                ) {
+                    files
+                } else {
+                    files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
+                },
+            )
+        } else {
+            null
+        }
     }
 
     private suspend fun exportSections(): List<Pair<SectionInfo, ByteArray>>? {
         val exported = mutableListOf<Pair<SectionInfo, ByteArray>>()
-        for (section in sections) exported += exportSection(section) ?: return null
+        var total = 0L
+        for (section in sections) {
+            val next = exportSection(section)
+            total += next?.second?.size ?: 0
+            if (next == null || total > MAX_TOTAL_BYTES) return null
+            exported += next
+        }
         return exported
     }
 

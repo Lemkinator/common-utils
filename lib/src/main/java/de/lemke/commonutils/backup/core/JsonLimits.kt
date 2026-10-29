@@ -23,6 +23,9 @@ internal const val MAX_SECTION_BYTES: Long = 16L * 1024 * 1024
 /** The most uncompressed bytes all files of a backup hold. */
 internal const val MAX_TOTAL_BYTES: Long = 32L * 1024 * 1024
 
+/** The most uncompressed bytes `manifest.json` holds. */
+internal const val MAX_MANIFEST_BYTES: Long = 64L * 1024
+
 /** The deepest nesting of arrays and objects a JSON file of the backup holds. */
 internal const val MAX_NESTING_DEPTH: Int = 64
 

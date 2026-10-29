@@ -16,6 +16,7 @@
 package de.lemke.commonutils.backup
 
 import de.lemke.commonutils.backup.core.MANIFEST_ENTRY
+import de.lemke.commonutils.backup.core.MAX_MANIFEST_BYTES
 import de.lemke.commonutils.backup.core.MAX_SECTION_BYTES
 import de.lemke.commonutils.backup.core.MAX_TOTAL_BYTES
 import de.lemke.commonutils.backup.core.SECTION_ID
@@ -27,7 +28,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-private const val MAX_MANIFEST_BYTES = 64L * 1024
 private const val MAX_SIGNATURE_BYTES = 4L * 1024
 private const val ARCHIVE_OVERHEAD_BYTES = 1L * 1024 * 1024
 private const val FILES_PREFIX = "files/"

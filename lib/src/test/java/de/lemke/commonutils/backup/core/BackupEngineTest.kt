@@ -165,6 +165,37 @@ class BackupEngineTest : ShouldSpec(
 
             engine.export() shouldBe BackupExport.TooLarge
         }
+        should("stop exporting sections once the total passes the cap an import accepts") {
+            var laterSectionRead = false
+            val later =
+                object : MemorySection(id = "s4") {
+                    override suspend fun exportEntries(): List<Item> {
+                        laterSectionRead = true
+                        return super.exportEntries()
+                    }
+                }
+            val sections =
+                (1..3).map {
+                    MemorySection(id = "s$it", store = MutableList(ENTRIES_OF_12_MIB) { n -> Item("k$n".padEnd(KIB)) })
+                } + later
+            val engine = BackupEngine(sections.toSet(), CountingTransaction(), app, { NOW })
+
+            engine.export() shouldBe BackupExport.TooLarge
+            laterSectionRead shouldBe false
+        }
+        should("refuse a manifest larger than the cap of an import and accept one at the cap") {
+            suspend fun manifestSize(appIdLength: Int): Int =
+                BackupEngine(setOf(MemorySection()), CountingTransaction(), BackupApp("a".repeat(appIdLength), 1), { NOW })
+                    .exportFiles()
+                    .getValue(MANIFEST_ENTRY)
+                    .size
+            val base = manifestSize(1)
+            val atCap = MAX_MANIFEST_BYTES.toInt() - base + 1
+
+            manifestSize(atCap) shouldBe MAX_MANIFEST_BYTES.toInt()
+            BackupEngine(setOf(MemorySection()), CountingTransaction(), BackupApp("a".repeat(atCap + 1), 1), { NOW }).export() shouldBe
+                BackupExport.TooLarge
+        }
         should("stop reading the entries of a section when the calling coroutine is canceled") {
             val job = Job()
             val validated = mutableListOf<String>()
