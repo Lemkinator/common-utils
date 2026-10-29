@@ -20,6 +20,9 @@ import kotlinx.serialization.DeserializationStrategy
 /** The deepest nesting of arrays and objects a JSON file of the backup holds. */
 internal const val MAX_NESTING_DEPTH: Int = 64
 
+/** The most bytes one entry of a section file holds, from its opening brace to its closing one. */
+internal const val MAX_ENTRY_BYTES: Int = 1024 * 1024
+
 /** The most values one entry of a section file holds; each opening bracket and each comma inside an entry counts as one. */
 internal const val MAX_ENTRY_VALUES: Int = 100_000
 
@@ -27,25 +30,33 @@ internal const val MAX_ENTRY_VALUES: Int = 100_000
 private const val ENTRIES_DEPTH = 2
 
 /**
- * Whether the JSON text in these bytes stays within [MAX_NESTING_DEPTH] and [MAX_ENTRY_VALUES]. It scans the bytes and
- * builds no tree, so a file of 16 MiB of `[` or `0,` ends here instead of in an OutOfMemoryError while decoding. A comma
- * at the depth of the entries array starts the next entry and resets the count.
+ * Whether the JSON text in these bytes stays within [MAX_NESTING_DEPTH], [MAX_ENTRY_VALUES] and [MAX_ENTRY_BYTES]. It
+ * scans the bytes and builds no tree, so a file of 16 MiB of `[` or `0,`, or of one huge string, ends here instead of in
+ * an OutOfMemoryError while decoding.
  */
 internal fun ByteArray.withinJsonLimits(): Boolean {
     val scanner = JsonScanner()
-    return all { scanner.accept(it.toInt().toChar()) }
+    return all(scanner::accept)
 }
 
-private class JsonScanner {
+/**
+ * Scans JSON text byte by byte. The value and byte counts restart at each separator at the depth of the entries array or
+ * above: a comma, or the bracket that opens the entries array. So the byte count of an entry runs from its opening
+ * brace to its closing one.
+ */
+internal class JsonScanner {
     private var depth = 0
     private var values = 0
+    private var entryBytes = 0
     private var inString = false
     private var escaped = false
 
-    /** Reads one character of the text; false once the text exceeds a limit. */
-    fun accept(char: Char): Boolean {
+    /** Reads one byte of the text; false once the text exceeds a limit. */
+    fun accept(byte: Byte): Boolean {
+        val char = byte.toInt().toChar()
+        entryBytes++
         if (inString) readStringChar(char) else readStructureChar(char)
-        return depth <= MAX_NESTING_DEPTH && values <= MAX_ENTRY_VALUES
+        return depth <= MAX_NESTING_DEPTH && values <= MAX_ENTRY_VALUES && entryBytes <= MAX_ENTRY_BYTES
     }
 
     private fun readStringChar(char: Char) {
@@ -61,14 +72,25 @@ private class JsonScanner {
             '"' -> inString = true
             '[', '{' -> {
                 depth++
-                if (depth > ENTRIES_DEPTH) values++
+                if (depth > ENTRIES_DEPTH) values++ else entryBytes = 0
             }
-            ']', '}' -> depth--
-            ',' -> if (depth > ENTRIES_DEPTH) values++ else values = 0
+            ']', '}' -> {
+                depth--
+                if (depth < ENTRIES_DEPTH) entryBytes = 0
+            }
+            ',' -> if (depth > ENTRIES_DEPTH) values++ else startNextEntry()
         }
+    }
+
+    private fun startNextEntry() {
+        values = 0
+        entryBytes = 0
     }
 }
 
+/** The text of these bytes, or null if they exceed the JSON limits. */
+internal fun ByteArray.jsonTextWithinLimits(): String? = takeIf { it.withinJsonLimits() }?.decodeToString()
+
 /** Decodes these bytes with [strategy], or returns null if they exceed the JSON limits or do not decode. */
 internal fun <T : Any> ByteArray.decodeWithinLimits(strategy: DeserializationStrategy<T>): T? =
-    takeIf { it.withinJsonLimits() }?.let { decodeOrNull { backupJson.decodeFromString(strategy, it.decodeToString()) } }
+    jsonTextWithinLimits()?.let { text -> decodeOrNull { backupJson.decodeFromString(strategy, text) } }
