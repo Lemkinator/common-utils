@@ -79,20 +79,21 @@ internal object ZipBackupContainer {
     ): ZipRead =
         try {
             val limited = LimitedInputStream(input, maxArchiveBytes)
-            val zip = ZipInputStream(limited)
-            val collector = EntryCollector(maxTotalBytes, maxSectionBytes)
-            val refusal =
-                generateSequence { zip.nextEntry }
-                    .firstNotNullOfOrNull {
-                        ensureActive()
-                        collector.accept(zip, it.name)
+            ZipInputStream(limited).use { zip ->
+                val collector = EntryCollector(maxTotalBytes, maxSectionBytes)
+                val refusal =
+                    generateSequence { zip.nextEntry }
+                        .firstNotNullOfOrNull {
+                            ensureActive()
+                            collector.accept(zip, it.name)
+                        }
+                when {
+                    refusal != null -> refusal
+                    collector.files.isEmpty() -> ZipRead.Invalid
+                    else -> {
+                        limited.dropAtMost(Long.MAX_VALUE)
+                        ZipRead.Files(collector.files)
                     }
-            when {
-                refusal != null -> refusal
-                collector.files.isEmpty() -> ZipRead.Invalid
-                else -> {
-                    limited.dropAtMost(Long.MAX_VALUE)
-                    ZipRead.Files(collector.files)
                 }
             }
         } catch (_: LimitExceededException) {

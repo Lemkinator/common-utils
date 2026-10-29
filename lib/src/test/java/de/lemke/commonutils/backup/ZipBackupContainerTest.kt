@@ -22,6 +22,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.FilterInputStream
 import java.io.InputStream
 import java.util.Random
 import java.util.zip.ZipEntry
@@ -62,6 +63,15 @@ private fun written(files: Map<String, ByteArray>): ByteArray =
         .also {
             ZipBackupContainer.write(files, it)
         }.toByteArray()
+
+private class CloseTrackingStream(input: InputStream) : FilterInputStream(input) {
+    var closed = false
+
+    override fun close() {
+        closed = true
+        super.close()
+    }
+}
 
 class ZipBackupContainerTest : ShouldSpec(
     {
@@ -214,6 +224,21 @@ class ZipBackupContainerTest : ShouldSpec(
                 ZipBackupContainer.read(ByteArrayInputStream(zip)) { if (++checks == 2) throw CancellationException("canceled") }
             }
             checks shouldBe 2
+        }
+        should("close the input after a read, a refusal and a canceled read") {
+            val zip = zipOf("manifest.json" to byteArrayOf(1), "sections/a.json" to byteArrayOf(2))
+
+            val read = CloseTrackingStream(ByteArrayInputStream(zip))
+            ZipBackupContainer.read(read).shouldBeInstanceOf<ZipRead.Files>()
+            read.closed shouldBe true
+
+            val refused = CloseTrackingStream(ByteArrayInputStream(zip))
+            ZipBackupContainer.read(refused, maxTotalBytes = 1) shouldBe ZipRead.TooLarge
+            refused.closed shouldBe true
+
+            val canceled = CloseTrackingStream(ByteArrayInputStream(zip))
+            shouldThrow<CancellationException> { ZipBackupContainer.read(canceled) { throw CancellationException("canceled") } }
+            canceled.closed shouldBe true
         }
     },
 )
