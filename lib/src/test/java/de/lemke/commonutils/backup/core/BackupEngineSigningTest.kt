@@ -198,7 +198,7 @@ class BackupEngineSigningTest : ShouldSpec(
             refusalOf(files + (MANIFEST_ENTRY to newer), signer = null) shouldBe BackupRefusal.NewerSection("items", 2)
         }
         should("report OtherApp before the signature check") {
-            val files = (signedExport() - SIGNATURE_ENTRY)
+            val files = signedExport() - SIGNATURE_ENTRY
             val other =
                 files
                     .getValue(MANIFEST_ENTRY)

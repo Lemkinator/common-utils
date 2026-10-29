@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -75,7 +76,7 @@ public class BackupStateHolder(
             DocumentPick.Canceled -> mutableState.update { if (it is BackupState.PickExportTarget) BackupState.Idle else it }
             DocumentPick.MissingUri -> publishUnlessWorking(exportFailed)
             is DocumentPick.Created -> {
-                val started = launchWork(exportFailed) { exportTo(pick.uri) }
+                val started = launchWork(exportFailed, discardOnCancel = pick.uri) { exportTo(pick.uri) }
                 if (!started) scope.launch { documents.delete(pick.uri) }
             }
         }
@@ -129,22 +130,26 @@ public class BackupStateHolder(
 
     private fun launchWork(
         failure: BackupState.Result,
+        discardOnCancel: Uri? = null,
         work: suspend () -> BackupState,
     ): Boolean {
         if (mutableState.getAndUpdate { BackupState.Working } == BackupState.Working) return false
-        scope.launch { mutableState.value = runContained(TAG, "Backup work", failure) { withContext(dispatcher) { work() } } }
+        // ATOMIC: a job canceled before it starts must still discard its document.
+        scope.launch(start = CoroutineStart.ATOMIC) {
+            mutableState.value =
+                try {
+                    runContained(TAG, "Backup work", failure) { withContext(dispatcher) { work() } }
+                } catch (e: CancellationException) {
+                    discardOnCancel?.let { discard(it) }
+                    throw e
+                }
+        }
         return true
     }
 
     private suspend fun exportTo(uri: Uri): BackupState {
-        val written =
-            try {
-                val bytes = runContained<ByteArray?>(TAG, "Backup export", null) { zipped() }
-                bytes != null && documents.write(uri, bytes)
-            } catch (e: CancellationException) {
-                discard(uri)
-                throw e
-            }
+        val bytes = runContained<ByteArray?>(TAG, "Backup export", null) { zipped() }
+        val written = bytes != null && documents.write(uri, bytes)
         if (!written) discard(uri)
         return BackupState.Result(if (written) BackupResult.Exported else BackupResult.ExportFailed)
     }

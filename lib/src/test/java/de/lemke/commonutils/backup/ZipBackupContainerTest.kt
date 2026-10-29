@@ -15,6 +15,8 @@
  */
 package de.lemke.commonutils.backup
 
+import de.lemke.commonutils.backup.core.MAX_SECTION_BYTES
+import de.lemke.commonutils.backup.core.MAX_TOTAL_BYTES
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -114,6 +116,11 @@ class ZipBackupContainerTest : ShouldSpec(
         should("return Invalid for a duplicate entry name") {
             val zip = zipOf("sections/aa.json" to byteArrayOf(1), "sections/bb.json" to byteArrayOf(2))
             val text = String(zip, Charsets.ISO_8859_1).replace("sections/bb.json", "sections/aa.json")
+            readFiles(text.toByteArray(Charsets.ISO_8859_1)) shouldBe ZipRead.Invalid
+        }
+        should("return Invalid for a duplicate entry name under files/") {
+            val zip = zipOf("manifest.json" to byteArrayOf(1), "files/a.png" to byteArrayOf(1), "files/b.png" to byteArrayOf(2))
+            val text = String(zip, Charsets.ISO_8859_1).replace("files/b.png", "files/a.png")
             readFiles(text.toByteArray(Charsets.ISO_8859_1)) shouldBe ZipRead.Invalid
         }
         should("return Invalid for an entry name that is no valid UTF-8") {

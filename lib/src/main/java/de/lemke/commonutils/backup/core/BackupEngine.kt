@@ -17,8 +17,9 @@ package de.lemke.commonutils.backup.core
 
 /**
  * Exports, reads and restores backups of [sections]. The core is pure Kotlin: [clock] returns the export time as
- * ISO-8601 text with a UTC offset, supplied by the platform layer. With a [signer], an export is signed and a read
- * refuses an unsigned or changed file.
+ * ISO-8601 text with a UTC offset, supplied by the platform layer. Section ids must match [SECTION_ID]. An export
+ * that exceeds a limit of the import throws [IllegalStateException]. With a [signer], an export is signed and a read
+ * refuses an unsigned file or one with a changed manifest or section file.
  */
 public class BackupEngine(
     private val sections: Set<BackupSection<*>>,
@@ -29,6 +30,7 @@ public class BackupEngine(
 ) {
     init {
         require(sections.map { it.id }.toSet().size == sections.size) { "Backup section ids must be unique" }
+        require(sections.all { SECTION_ID.matches(it.id) }) { "Backup section ids must match ${SECTION_ID.pattern}" }
     }
 
     /** MERGE only when every bound section is a [MergeableSection]. */
@@ -46,6 +48,7 @@ public class BackupEngine(
                 put(MANIFEST_ENTRY, backupJson.encodeToString(BackupManifest.serializer(), manifest).encodeToByteArray())
                 exported.forEach { (info, bytes) -> put(sectionEntryName(info.id), bytes) }
             }
+        check(files.values.sumOf { it.size.toLong() } <= MAX_TOTAL_BYTES) { "The backup exceeds $MAX_TOTAL_BYTES bytes" }
         return if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
     }
 
@@ -63,6 +66,9 @@ public class BackupEngine(
 
 private suspend fun <E : Any> exportSection(section: BackupSection<E>): Pair<SectionInfo, ByteArray> {
     val entries = section.exportEntries()
+    check(entries.size <= MAX_SECTION_ENTRIES) { "Section ${section.id} exceeds $MAX_SECTION_ENTRIES entries" }
     val text = sectionFileText(entries.map { backupJson.encodeToJsonElement(section.serializer, it) })
-    return SectionInfo(section.id, section.version, entries.size) to text.encodeToByteArray()
+    val bytes = text.encodeToByteArray()
+    check(bytes.size <= MAX_SECTION_BYTES && bytes.withinJsonLimits()) { "Section ${section.id} exceeds the limits of an import" }
+    return SectionInfo(section.id, section.version, entries.size) to bytes
 }

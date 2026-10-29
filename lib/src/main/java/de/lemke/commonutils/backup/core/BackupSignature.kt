@@ -50,7 +50,7 @@ private suspend fun BackupSigner.signatureMac(files: Map<String, ByteArray>): By
 }
 
 private fun bigEndian(value: Long): ByteArray =
-    ByteArray(LENGTH_BYTES) { index -> (value shr (BITS_PER_BYTE * (LENGTH_BYTES - 1 - index))).toByte() }
+    ByteArray(LENGTH_BYTES) { index -> (value shr BITS_PER_BYTE * (LENGTH_BYTES - 1 - index)).toByte() }
 
 internal fun ByteArray.toHex(): String = joinToString("") { (it.toInt() and BYTE_MASK).toString(HEX_RADIX).padStart(2, '0') }
 

@@ -16,6 +16,9 @@
 package de.lemke.commonutils.backup
 
 import de.lemke.commonutils.backup.core.MANIFEST_ENTRY
+import de.lemke.commonutils.backup.core.MAX_SECTION_BYTES
+import de.lemke.commonutils.backup.core.MAX_TOTAL_BYTES
+import de.lemke.commonutils.backup.core.SECTION_ID
 import de.lemke.commonutils.backup.core.SIGNATURE_ENTRY
 import java.io.IOException
 import java.io.InputStream
@@ -24,13 +27,11 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-internal const val MAX_SECTION_BYTES = 16L * 1024 * 1024
-internal const val MAX_TOTAL_BYTES = 32L * 1024 * 1024
 private const val MAX_MANIFEST_BYTES = 64L * 1024
 private const val MAX_SIGNATURE_BYTES = 4L * 1024
 private const val ARCHIVE_OVERHEAD_BYTES = 1L * 1024 * 1024
 private const val FILES_PREFIX = "files/"
-private val SECTION_NAME = Regex("sections/[a-z0-9_-]+\\.json")
+private val SECTION_NAME = Regex("sections/${SECTION_ID.pattern}\\.json")
 private val FILE_SEGMENT = Regex("[A-Za-z0-9._-]+")
 
 /** The largest zip file the import streams: the uncompressed cap plus the headers and the DEFLATE framing of an incompressible file. */
@@ -110,13 +111,14 @@ private class EntryCollector(
     private val maxSectionBytes: Long,
 ) {
     val files = linkedMapOf<String, ByteArray>()
+    private val seen = hashSetOf<String>()
 
     /** Takes the entry [name] that [zip] is positioned on; returns the refusal, or null if the entry is fine. */
     fun accept(
         zip: InputStream,
         name: String,
     ): ZipRead? {
-        val acceptable = isAcceptedName(name) && name !in files
+        val acceptable = isAcceptedName(name) && seen.add(name)
         val size = if (acceptable) take(zip, name) else null
         return when {
             !acceptable -> ZipRead.Invalid

@@ -95,17 +95,19 @@ public abstract class BackupSectionContract<E : Any> {
         return result as BackupReadResult.Ready
     }
 
-    private suspend fun BackupSection<E>.sortedEntries(): List<E> = exportEntries().sortedWith(encodedOrder(serializer))
+    private suspend fun <R> inTransaction(block: suspend () -> R): R = transaction().run(block)
+
+    private suspend fun BackupSection<E>.sortedEntries(): List<E> = inTransaction { exportEntries() }.sortedWith(encodedOrder(serializer))
 
     @Test
     public fun exportThenReplaceRestoresTheSameEntries(): Unit =
         runBlocking {
             val section = section()
             val engine = engineOf(section)
-            section.clear()
-            section.insert(sampleEntries())
+            inTransaction { section.clear() }
+            inTransaction { section.insert(sampleEntries()) }
             val files = engine.export()
-            section.clear()
+            inTransaction { section.clear() }
 
             engine.restore(engine.ready(files), ImportMode.REPLACE)
 
@@ -117,8 +119,8 @@ public abstract class BackupSectionContract<E : Any> {
         runBlocking {
             val section = section()
             val engine = engineOf(section)
-            section.clear()
-            section.insert(sampleEntries())
+            inTransaction { section.clear() }
+            inTransaction { section.insert(sampleEntries()) }
             val ready = engine.ready(engine.export())
 
             engine.restore(ready, ImportMode.REPLACE)
@@ -134,11 +136,11 @@ public abstract class BackupSectionContract<E : Any> {
             val section = section()
             val engine = engineOf(section)
             val (fileOnly, localOnly) = sampleEntries().take(2)
-            section.clear()
-            section.insert(listOf(fileOnly))
+            inTransaction { section.clear() }
+            inTransaction { section.insert(listOf(fileOnly)) }
             val files = engine.export()
-            section.clear()
-            section.insert(listOf(localOnly))
+            inTransaction { section.clear() }
+            inTransaction { section.insert(listOf(localOnly)) }
 
             val report = engine.restore(engine.ready(files), ImportMode.REPLACE).sections.single()
 
@@ -151,11 +153,11 @@ public abstract class BackupSectionContract<E : Any> {
         runBlocking {
             val section = section()
             val engine = engineOf(section)
-            section.clear()
-            section.insert(sampleEntries())
+            inTransaction { section.clear() }
+            inTransaction { section.insert(sampleEntries()) }
             val ready = engine.ready(engine.export())
             if (ImportMode.MERGE in engine.modes) {
-                section.clear()
+                inTransaction { section.clear() }
                 engine.restore(ready, ImportMode.MERGE)
                 val afterFirst = section.sortedEntries()
 
@@ -174,11 +176,11 @@ public abstract class BackupSectionContract<E : Any> {
             val engine = engineOf(section)
             if (ImportMode.MERGE in engine.modes) {
                 val (fileOnly, localOnly) = sampleEntries().take(2)
-                section.clear()
-                section.insert(listOf(fileOnly))
+                inTransaction { section.clear() }
+                inTransaction { section.insert(listOf(fileOnly)) }
                 val files = engine.export()
-                section.clear()
-                section.insert(listOf(localOnly))
+                inTransaction { section.clear() }
+                inTransaction { section.insert(listOf(localOnly)) }
 
                 val report = engine.restore(engine.ready(files), ImportMode.MERGE).sections.single()
 
@@ -214,7 +216,7 @@ public abstract class BackupSectionContract<E : Any> {
                 val fixture = fixtures()[version]
                 assertNotNull("The section needs a fixture for version $version", fixture)
                 assertTrue("The fixture of version $version must expect an entry", fixture!!.entries.isNotEmpty())
-                section.clear()
+                inTransaction { section.clear() }
 
                 val ready = engine.ready(fileOf(section.id, version, fixture.text))
 
@@ -239,8 +241,8 @@ public abstract class BackupSectionContract<E : Any> {
         runBlocking {
             val section = section()
             val engine = engineOf(section)
-            section.clear()
-            section.insert(sampleEntries())
+            inTransaction { section.clear() }
+            inTransaction { section.insert(sampleEntries()) }
             val files = engine.export()
             val name = "sections/${section.id}.json"
             val broken = files.getValue(name).decodeToString().replaceFirst("\"entries\":[", "\"entries\":[${brokenEntryJson()},")
@@ -268,15 +270,15 @@ public abstract class BackupSectionContract<E : Any> {
         val section = this
         assertTrue("A clash case needs a mergeable section", section is MergeableSection<*, *>)
         val engine = engineOf(section)
-        section.clear()
-        section.insert(listOf(incoming))
+        inTransaction { section.clear() }
+        inTransaction { section.insert(listOf(incoming)) }
         val files = engine.export()
-        section.clear()
-        section.insert(listOf(local))
+        inTransaction { section.clear() }
+        inTransaction { section.insert(listOf(local)) }
 
         engine.restore(engine.ready(files), ImportMode.MERGE)
 
-        return section.exportEntries()
+        return inTransaction { section.exportEntries() }
     }
 
     private fun fileOf(

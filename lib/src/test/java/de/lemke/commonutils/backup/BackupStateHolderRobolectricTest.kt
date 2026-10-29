@@ -203,6 +203,37 @@ class BackupStateHolderRobolectricTest {
         }
 
     @Test
+    fun `canceling the scope during an import deletes no document`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            val importScope = CoroutineScope(coroutineContext + SupervisorJob(coroutineContext.job))
+            val holder =
+                BackupStateHolder(
+                    importScope,
+                    engineOf(MemorySection()),
+                    GatedDocuments(documents, CompletableDeferred()),
+                    UnconfinedTestDispatcher(testScheduler),
+                )
+            holder.onImportFilePicked(source)
+
+            importScope.cancel()
+
+            documents.deleted shouldContainExactly emptyList()
+        }
+
+    @Test
+    fun `canceling the scope before the export work starts deletes the created document`(): Unit =
+        runTest(UnconfinedTestDispatcher()) {
+            val exportScope = CoroutineScope(coroutineContext + SupervisorJob(coroutineContext.job))
+            val holder = BackupStateHolder(exportScope, engineOf(MemorySection()), documents, StandardTestDispatcher(testScheduler))
+            holder.onExportTargetPicked(DocumentPick.Created(target))
+
+            exportScope.cancel()
+            testScheduler.advanceUntilIdle()
+
+            documents.deleted shouldContainExactly listOf(target)
+        }
+
+    @Test
     fun `the work runs on the injected dispatcher`(): Unit =
         runTest(UnconfinedTestDispatcher()) {
             documents.files[source] = backupZip(item("a"))

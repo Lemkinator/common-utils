@@ -50,6 +50,9 @@ private class ObservingSection(id: String, private val transaction: CountingTran
     override suspend fun exportEntries(): List<Item> = super.exportEntries().also { exportedInsideTransaction += transaction.active }
 }
 
+private const val KIB = 1024
+private const val SECTION_ENTRIES_OF_17_MIB = 17 * 1024
+private const val ENTRIES_OF_12_MIB = 12 * 1024
 private const val NOW = "2026-10-27T14:30:00+01:00"
 
 class BackupEngineTest : ShouldSpec(
@@ -106,6 +109,46 @@ class BackupEngineTest : ShouldSpec(
             shouldThrow<IllegalArgumentException> {
                 BackupEngine(setOf(MemorySection(), MemorySection()), CountingTransaction(), app, { NOW })
             }
+        }
+        should("reject a section id the zip reader refuses") {
+            shouldThrow<IllegalArgumentException> {
+                BackupEngine(setOf(MemorySection(id = "savedLinks")), CountingTransaction(), app, { NOW })
+            }
+        }
+        should("refuse to export a section with more entries than an import accepts") {
+            val store = MutableList(MAX_SECTION_ENTRIES + 1) { Item("k$it") }
+            val engine = BackupEngine(setOf(MemorySection(store = store)), CountingTransaction(), app, { NOW })
+
+            shouldThrow<IllegalStateException> { engine.export() }
+        }
+        should("refuse to export a section larger than an import accepts") {
+            val store = MutableList(SECTION_ENTRIES_OF_17_MIB) { Item("k$it".padEnd(KIB)) }
+            val engine = BackupEngine(setOf(MemorySection(store = store)), CountingTransaction(), app, { NOW })
+
+            shouldThrow<IllegalStateException> { engine.export() }
+        }
+        should("refuse to export a section with an entry larger than an import accepts") {
+            val engine =
+                BackupEngine(
+                    setOf(MemorySection(store = mutableListOf(Item("k".padEnd(MAX_ENTRY_BYTES + 1))))),
+                    CountingTransaction(),
+                    app,
+                    { NOW },
+                )
+
+            shouldThrow<IllegalStateException> { engine.export() }
+        }
+        should("refuse to export sections that together exceed the total an import accepts") {
+            val sections =
+                (1..3).map {
+                    MemorySection(
+                        id = "s$it",
+                        store = MutableList(ENTRIES_OF_12_MIB) { n -> Item("k$n".padEnd(KIB)) },
+                    )
+                }
+            val engine = BackupEngine(sections.toSet(), CountingTransaction(), app, { NOW })
+
+            shouldThrow<IllegalStateException> { engine.export() }
         }
         should("stop reading the entries of a section when the calling coroutine is canceled") {
             val job = Job()

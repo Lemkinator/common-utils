@@ -186,6 +186,9 @@ Export and import of an app's data to one zip file. The pure-Kotlin core (`backu
 Replace and the optional signature. `backup/` holds the Android layer: `ZipBackupContainer`, `BackupDocuments`,
 `BackupStateHolder`, `BackupViewModel`.
 
+A section id matches `[a-z0-9_-]+`; the engine refuses another id. An export that exceeds an import limit fails instead
+of writing a file the import refuses.
+
 An app opts in with:
 
 - one `BackupSection<E>` per data kind, bound `@Binds @IntoSet`; a `MergeableSection` adds merge rules and
@@ -196,16 +199,18 @@ An app opts in with:
   generic method, so no lambda).
 - `@Module(includes = [CommonUtilsBackupModule::class])` on its own module, with `CommonUtilsCoroutinesModule` bound for
   `@DefaultDispatcher`, plus `R.xml.preferences_backup` in the preference list it passes to
-  `setupCommonUtilsSettingsActivity`. The module binds `BackupScreenDeps`; the settings fragment injects
+  `setupCommonUtilsSettingsActivity`, called during process start (`Application.onCreate`) because the list is static
+  and a recreated screen after process death needs it. The module binds `BackupScreenDeps`; the settings fragment injects
   `Optional<BackupScreenDeps>` through Hilt, so it needs no static setup and works after process death. An app without
   the module binds nothing and the screen removes the Backup category.
 
 An app that signs its backups binds `@Provides fun signer(): BackupSigner = HmacSha256BackupSigner(keyId, key)` in its
-module: its export carries `signature.json`, and its import refuses an unsigned or changed file before any write. An
+module: its export carries `signature.json`, and its import refuses an unsigned file, or one with a changed manifest or section file, before any write. An
 app without that binding exports and reads plain files, and ignores a signature it finds. The key never enters a repo.
 
 `BackupSectionContract` and `assertBackupConventions()` (testFixtures) test a section through the whole engine.
-Merge helpers `newerWins` and `higherRankWins` end in a total order, so every device keeps the same entry.
+Merge helpers `newerWins` and `higherRankWins` end in a total order, so every device keeps the same entry, only if
+their `order` tells two different entries apart: pass `encodedOrder`, or the local entry stays on a tie.
 Stamps in the file are ISO-8601 text with a UTC offset.
 The import skips and counts an entry whose `upgrade`, decoding or `validate` throws any exception.
 An `upgrade` step throws for an entry it cannot map.

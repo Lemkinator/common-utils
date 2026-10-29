@@ -23,6 +23,9 @@ internal const val BACKUP_FORMAT: Int = 1
 internal const val MANIFEST_ENTRY: String = "manifest.json"
 internal const val SIGNATURE_ENTRY: String = "signature.json"
 
+/** The ids the zip reader accepts as the name of a section file. */
+internal val SECTION_ID: Regex = Regex("[a-z0-9_-]+")
+
 internal fun sectionEntryName(id: String): String = "sections/$id.json"
 
 internal val backupJson: Json =
