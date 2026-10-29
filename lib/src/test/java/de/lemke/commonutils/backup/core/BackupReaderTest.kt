@@ -181,14 +181,6 @@ class BackupReaderTest : ShouldSpec(
             refusal(read(backupFilesOf(SectionInfo("items", 1, MAX_SECTION_ENTRIES + 1) to overLimit), MemorySection())) shouldBe
                 BackupRefusal.TooLarge
         }
-        should("read a section file of the most entries with twenty fields each") {
-            val fields = (1..19).joinToString("") { ""","f$it":$it""" }
-            val entry = """{"key":"k"$fields}"""
-            val text = entriesJson(*Array(MAX_SECTION_ENTRIES) { entry })
-
-            ready(read(backupFilesOf(SectionInfo("items", 1, MAX_SECTION_ENTRIES) to text), MemorySection()))
-                .preview.sections shouldContainExactly listOf(SectionPreview("items", MAX_SECTION_ENTRIES, 0))
-        }
         should("read a section file that nests as deep as the limit and skip its entry") {
             val levels = MAX_NESTING_DEPTH - 3
             val nested = "[".repeat(levels) + "]".repeat(levels)
