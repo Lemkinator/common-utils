@@ -70,7 +70,7 @@ public class BackupEngine(
         var total = 0L
         for (section in sections) {
             val next = exportSection(section)
-            total += next?.second?.size ?: 0
+            if (next != null) total += next.second.size
             if (next == null || total > MAX_TOTAL_BYTES) return null
             exported += next
         }
