@@ -28,6 +28,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
+private const val SIGNED_BULK_ITEMS = 15
+private const val SIGNED_BULK_PAD = 1_000_000
+private const val SIGNED_PAD = 500_000
+
 private class FoldSigner(
     override val keyId: String = "test",
     private val onPart: (ByteArray) -> Unit = {},
@@ -123,6 +127,32 @@ class BackupEngineSigningTest : ShouldSpec(
 
             shouldThrow<CancellationException> { withContext(job) { engine(mutableListOf(), signer).read(files.toMutableMap()) } }
             parts shouldBe 1
+        }
+        should("count the signature toward the total an import accepts") {
+            fun engineOf(
+                tunerItems: Int,
+                extra: Int,
+            ): BackupEngine {
+                val tuner = MutableList(tunerItems) { Item("k$it".padEnd(SIGNED_PAD, 'x')) } + Item("t".padEnd(SIGNED_PAD + extra, 'x'))
+                val sections =
+                    listOf(
+                        MemorySection(id = "a", store = MutableList(SIGNED_BULK_ITEMS) { Item("k$it".padEnd(SIGNED_BULK_PAD, 'x')) }),
+                        MemorySection(id = "b", store = MutableList(SIGNED_BULK_ITEMS) { Item("k$it".padEnd(SIGNED_BULK_PAD, 'x')) }),
+                        MemorySection(id = "c", store = tuner.toMutableList()),
+                    )
+                return BackupEngine(sections.toSet(), DirectTransaction, app, { "2026-10-27T14:30:00+01:00" }, FoldSigner())
+            }
+
+            suspend fun totalOf(
+                tunerItems: Int,
+                extra: Int,
+            ): Long = engineOf(tunerItems, extra).exportFiles().values.sumOf { it.size.toLong() }
+            val base = totalOf(0, 0)
+            val itemSize = totalOf(1, 0) - base
+            val missing = MAX_TOTAL_BYTES - base
+
+            totalOf((missing / itemSize).toInt(), (missing % itemSize).toInt()) shouldBe MAX_TOTAL_BYTES
+            engineOf((missing / itemSize).toInt(), (missing % itemSize).toInt() + 1).export() shouldBe BackupExport.TooLarge
         }
         should("export without a signer writes no signature entry") {
             (SIGNATURE_ENTRY in engine(mutableListOf(), null).exportFiles()) shouldBe false

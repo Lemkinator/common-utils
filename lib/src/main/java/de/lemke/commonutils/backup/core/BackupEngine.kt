@@ -60,20 +60,9 @@ public class BackupEngine(
                 put(MANIFEST_ENTRY, manifestBytes)
                 exported.forEach { (info, bytes) -> put(sectionEntryName(info.id), bytes) }
             }
-        val withinLimits = manifestBytes.size <= MAX_MANIFEST_BYTES && files.values.sumOf { it.size.toLong() } <= MAX_TOTAL_BYTES
-        return if (withinLimits) {
-            BackupExport.Files(
-                if (signer ==
-                    null
-                ) {
-                    files
-                } else {
-                    files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
-                },
-            )
-        } else {
-            null
-        }
+        val signed = if (signer == null) files else files + (SIGNATURE_ENTRY to signatureBytes(files, signer))
+        val withinLimits = manifestBytes.size <= MAX_MANIFEST_BYTES && signed.values.sumOf { it.size.toLong() } <= MAX_TOTAL_BYTES
+        return if (withinLimits) BackupExport.Files(signed) else null
     }
 
     private suspend fun exportSections(): List<Pair<SectionInfo, ByteArray>>? {
