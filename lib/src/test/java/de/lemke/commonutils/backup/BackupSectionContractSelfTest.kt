@@ -58,7 +58,7 @@ private open class ListSection<E : Any>(
     }
 }
 
-private class MergeListSection<E : Any>(
+private open class MergeListSection<E : Any>(
     id: String,
     serializer: KSerializer<E>,
     version: Int,
@@ -222,6 +222,21 @@ private class NoClearNoteSection(store: MutableList<Note>) : ListSection<Note>("
     }
 }
 
+/** A Merge whose insert wipes the store first, so the entries only the phone holds vanish. */
+private class WipingInsertNoteSection(store: MutableList<Note>) :
+    MergeListSection<Note>("notes", Note.serializer(), version = 1, store, { it.id }, { local, _ -> local }) {
+    override suspend fun insert(entries: List<Note>) {
+        store.clear()
+        store += entries
+    }
+}
+
+/** A Merge that finds no local counterpart, so it inserts every incoming entry again. */
+private class BlindLocalEntriesNoteSection(store: MutableList<Note>) :
+    MergeListSection<Note>("notes", Note.serializer(), version = 1, store, { it.id }, { local, _ -> local }) {
+    override suspend fun localEntries(keys: Set<String>): Map<String, Note> = emptyMap()
+}
+
 class BackupSectionContractNegativeSelfTest {
     @Test
     fun `a local-wins rule marked symmetric fails the swapped-sides check`() {
@@ -268,5 +283,40 @@ class BackupSectionContractNegativeSelfTest {
         val contract = contractOf(::NoClearNoteSection, noteSamples, noteFixtures)
 
         assertThrows(AssertionError::class.java) { contract.replaceRemovesLocalOnlyEntries() }
+    }
+
+    @Test
+    fun `a Merge that wipes the store on insert fails the local-only check`() {
+        val contract = contractOf(::WipingInsertNoteSection, noteSamples, noteFixtures)
+
+        assertThrows(AssertionError::class.java) { contract.mergeKeepsLocalOnlyEntries() }
+    }
+
+    @Test
+    fun `a Merge that finds no local entries fails the second-merge check`() {
+        val contract = contractOf(::BlindLocalEntriesNoteSection, noteSamples, noteFixtures)
+
+        assertThrows(AssertionError::class.java) { contract.mergeTwiceChangesNothingTheSecondTime() }
+    }
+
+    @Test
+    fun `a broken entry that decodes fine fails the skip check`() {
+        val contract =
+            object : BackupSectionContract<Note>() {
+                private val store = mutableListOf<Note>()
+                private val transaction = DirectBackupTransaction()
+
+                override fun section(): BackupSection<Note> = localWinsNoteSection(store)
+
+                override fun transaction(): BackupTransaction = transaction
+
+                override fun sampleEntries(): List<Note> = noteSamples
+
+                override fun fixtures(): Map<Int, SectionFixture<Note>> = noteFixtures
+
+                override fun brokenEntryJson(): String = """{"id":"z","title":"fine","starred":false}"""
+            }
+
+        assertThrows(AssertionError::class.java) { contract.aBrokenEntryIsSkippedAndCounted() }
     }
 }
