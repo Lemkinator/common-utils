@@ -84,4 +84,10 @@ internal class LimitedInputStream(input: InputStream, private var limit: Long) :
         if (limit < 0) throw LimitExceededException()
         return read
     }
+
+    override fun skip(n: Long): Long {
+        if (n <= 0) return 0
+        val skipped = read(ByteArray(minOf(n, BUFFER_SIZE.toLong()).toInt()))
+        return maxOf(skipped, 0).toLong()
+    }
 }

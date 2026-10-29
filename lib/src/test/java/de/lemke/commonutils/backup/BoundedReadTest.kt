@@ -91,6 +91,21 @@ class BoundedReadTest : ShouldSpec(
 
             shouldThrow<LimitExceededException> { LimitedInputStream(streamOf(10), 9).read(ByteArray(10)) }
         }
+        should("count skipped bytes toward the limit") {
+            val limited = LimitedInputStream(streamOf(10), 5)
+
+            limited.skip(3) shouldBe 3L
+            limited.skip(2) shouldBe 2L
+            shouldThrow<LimitExceededException> { limited.skip(1) }
+        }
+        should("skip nothing for a non-positive count and at the end of the stream") {
+            val limited = LimitedInputStream(streamOf(2), 5)
+
+            limited.skip(0) shouldBe 0L
+            limited.skip(-4) shouldBe 0L
+            limited.skip(10) shouldBe 2L
+            limited.skip(10) shouldBe 0L
+        }
         should("end a limited empty stream without throwing") {
             LimitedInputStream(streamOf(0), 0).read(ByteArray(4)) shouldBe -1
         }
