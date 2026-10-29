@@ -168,6 +168,7 @@ public final class de/lemke/commonutils/backup/HmacSha256BackupSigner : de/lemke
 	public static final field $stable I
 	public fun <init> (Ljava/lang/String;[B)V
 	public fun getKeyId ()Ljava/lang/String;
+	public fun mac (Lkotlin/sequences/Sequence;)[B
 	public fun mac ([B)[B
 	public fun toString ()Ljava/lang/String;
 }
@@ -337,7 +338,12 @@ public abstract interface class de/lemke/commonutils/backup/core/BackupSection {
 
 public abstract interface class de/lemke/commonutils/backup/core/BackupSigner {
 	public abstract fun getKeyId ()Ljava/lang/String;
-	public abstract fun mac ([B)[B
+	public abstract fun mac (Lkotlin/sequences/Sequence;)[B
+	public fun mac ([B)[B
+}
+
+public final class de/lemke/commonutils/backup/core/BackupSigner$DefaultImpls {
+	public static fun mac (Lde/lemke/commonutils/backup/core/BackupSigner;[B)[B
 }
 
 public abstract interface class de/lemke/commonutils/backup/core/BackupTransaction {

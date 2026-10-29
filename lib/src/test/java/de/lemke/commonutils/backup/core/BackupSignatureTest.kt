@@ -18,6 +18,8 @@ package de.lemke.commonutils.backup.core
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 
+private fun payloadOf(files: Map<String, ByteArray>): ByteArray = signedParts(files).fold(ByteArray(0)) { all, part -> all + part }
+
 class BackupSignatureTest : ShouldSpec(
     {
         should("order payload entries by name and frame each with its length") {
@@ -25,7 +27,7 @@ class BackupSignatureTest : ShouldSpec(
             val expected =
                 "manifest.json".encodeToByteArray() + 0.toByte() + byteArrayOf(0, 0, 0, 0, 0, 0, 0, 2) + "MM".encodeToByteArray() +
                     "sections/b.json".encodeToByteArray() + 0.toByte() + byteArrayOf(0, 0, 0, 0, 0, 0, 0, 1) + "B".encodeToByteArray()
-            signedPayload(files).toHex() shouldBe expected.toHex()
+            payloadOf(files).toHex() shouldBe expected.toHex()
         }
         should("leave out files/ entries and signature.json of the payload") {
             val files =
@@ -35,10 +37,10 @@ class BackupSignatureTest : ShouldSpec(
                     "files/photo.png" to "P".encodeToByteArray(),
                     "sections/notes.txt" to "N".encodeToByteArray(),
                 )
-            signedPayload(files).toHex() shouldBe signedPayload(mapOf(MANIFEST_ENTRY to "M".encodeToByteArray())).toHex()
+            payloadOf(files).toHex() shouldBe payloadOf(mapOf(MANIFEST_ENTRY to "M".encodeToByteArray())).toHex()
         }
         should("frame a length above one byte as big-endian") {
-            val payload = signedPayload(mapOf(MANIFEST_ENTRY to ByteArray(258)))
+            val payload = payloadOf(mapOf(MANIFEST_ENTRY to ByteArray(258)))
             payload.sliceArray(14 until 22).toHex() shouldBe "0000000000000102"
         }
         should("write lowercase hex with leading zeros") {

@@ -37,10 +37,11 @@ public class HmacSha256BackupSigner(
         require(key.isNotEmpty()) { "The signing key must not be empty" }
     }
 
-    override fun mac(payload: ByteArray): ByteArray =
+    override fun mac(parts: Sequence<ByteArray>): ByteArray =
         Mac.getInstance(ALGORITHM).run {
             init(SecretKeySpec(key, ALGORITHM))
-            doFinal(payload)
+            parts.forEach { update(it) }
+            doFinal()
         }
 
     override fun toString(): String = "HmacSha256BackupSigner(keyId=$keyId)"

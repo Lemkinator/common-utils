@@ -15,6 +15,8 @@
  */
 package de.lemke.commonutils.backup.core
 
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.Serializable
 
 internal const val SIGNATURE_ALG: String = "HMAC-SHA256"
@@ -29,23 +31,22 @@ private const val BYTE_MASK = 0xFF
 internal data class SignatureFile(val alg: String, val keyId: String, val mac: String)
 
 /**
- * The bytes a signature covers: the `manifest.json` entry and every section entry sorted by name, each as its UTF-8 name,
- * a 0x00 byte, its length as 8 bytes big-endian, then its bytes. The length framing stops bytes from moving between
- * entries unnoticed. `files/` entries and `signature.json` stay out.
+ * The parts a signature covers, in order: the `manifest.json` entry and every section entry sorted by name, each as its
+ * UTF-8 name, a 0x00 byte, its length as 8 bytes big-endian, then its bytes. The length framing stops bytes from moving
+ * between entries unnoticed. `files/` entries and `signature.json` stay out. The parts are lazy, so a signer feeds them one by
+ * one and never holds the whole payload.
  */
-internal fun signedPayload(files: Map<String, ByteArray>): ByteArray {
-    val parts =
-        files.entries
-            .filter { (name) -> name == MANIFEST_ENTRY || (name.startsWith(SECTIONS_PREFIX) && name.endsWith(".json")) }
-            .sortedBy { it.key }
-            .flatMap { (name, bytes) -> listOf(name.encodeToByteArray(), byteArrayOf(0), bigEndian(bytes.size.toLong()), bytes) }
-    val payload = ByteArray(parts.sumOf { it.size })
-    var offset = 0
-    parts.forEach { part ->
-        part.copyInto(payload, offset)
-        offset += part.size
-    }
-    return payload
+internal fun signedParts(files: Map<String, ByteArray>): Sequence<ByteArray> =
+    files.entries
+        .filter { (name) -> name == MANIFEST_ENTRY || (name.startsWith(SECTIONS_PREFIX) && name.endsWith(".json")) }
+        .sortedBy { it.key }
+        .asSequence()
+        .flatMap { (name, bytes) -> sequenceOf(name.encodeToByteArray(), byteArrayOf(0), bigEndian(bytes.size.toLong()), bytes) }
+
+/** The MAC over [signedParts], checking the caller's job before each part so a cancellation stops a large payload. */
+private suspend fun BackupSigner.signatureMac(files: Map<String, ByteArray>): ByteArray {
+    val context = currentCoroutineContext()
+    return mac(signedParts(files).onEach { context.ensureActive() })
 }
 
 private fun bigEndian(value: Long): ByteArray =
@@ -58,21 +59,21 @@ internal fun constantTimeEquals(
     b: ByteArray,
 ): Boolean = a.size == b.size && a.indices.fold(0) { difference, index -> difference or (a[index].toInt() xor b[index].toInt()) } == 0
 
-internal fun signatureBytes(
+internal suspend fun signatureBytes(
     files: Map<String, ByteArray>,
     signer: BackupSigner,
 ): ByteArray {
-    val signature = SignatureFile(SIGNATURE_ALG, signer.keyId, signer.mac(signedPayload(files)).toHex())
+    val signature = SignatureFile(SIGNATURE_ALG, signer.keyId, signer.signatureMac(files).toHex())
     return backupJson.encodeToString(SignatureFile.serializer(), signature).encodeToByteArray()
 }
 
 /** [BackupRefusal.Tampered] unless `signature.json` parses and carries this signer's alg, key id and MAC. */
-internal fun signatureRefusal(
+internal suspend fun signatureRefusal(
     files: Map<String, ByteArray>,
     signer: BackupSigner,
 ): BackupRefusal? {
     val signature = files[SIGNATURE_ENTRY]?.let(::decodeSignature)
-    val expected = signer.mac(signedPayload(files)).toHex().encodeToByteArray()
+    val expected = signer.signatureMac(files).toHex().encodeToByteArray()
     val valid =
         signature != null &&
             signature.alg == SIGNATURE_ALG &&

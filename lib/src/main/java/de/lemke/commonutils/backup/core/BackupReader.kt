@@ -25,8 +25,8 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Checks the manifest and, for a [signer], the signature, then the version of every known section, then decodes every
  * entry. A refusal returns before any decode. An entry whose [BackupSection.upgrade], decoding or
- * [BackupSection.validate] throws is skipped and counted. The decode checks the caller's job before each entry, so a
- * cancellation stops a large section.
+ * [BackupSection.validate] throws is skipped and counted. The signature check checks the caller's job before each part
+ * and the decode before each entry, so a cancellation stops a large payload or section.
  */
 internal suspend fun readBackup(
     files: Map<String, ByteArray>,

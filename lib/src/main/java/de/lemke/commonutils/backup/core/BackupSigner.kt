@@ -20,6 +20,9 @@ public interface BackupSigner {
     /** Names the key, so a file signed with another key is refused by name. */
     public val keyId: String
 
+    /** HMAC-SHA256 of [parts] taken as one byte string, 32 bytes. An implementation consumes the parts one by one. */
+    public fun mac(parts: Sequence<ByteArray>): ByteArray
+
     /** HMAC-SHA256 of [payload], 32 bytes. */
-    public fun mac(payload: ByteArray): ByteArray
+    public fun mac(payload: ByteArray): ByteArray = mac(sequenceOf(payload))
 }

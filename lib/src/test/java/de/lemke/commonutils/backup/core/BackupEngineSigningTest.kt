@@ -15,18 +15,32 @@
  */
 package de.lemke.commonutils.backup.core
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-private class FoldSigner(override val keyId: String = "test") : BackupSigner {
-    override fun mac(payload: ByteArray): ByteArray {
+private class FoldSigner(
+    override val keyId: String = "test",
+    private val onPart: (ByteArray) -> Unit = {},
+) : BackupSigner {
+    override fun mac(parts: Sequence<ByteArray>): ByteArray {
         val out = ByteArray(32)
-        payload.forEachIndexed { index, byte -> out[index % 32] = (out[index % 32] + byte * (index % 251 + 1)).toByte() }
+        var index = 0
+        parts.forEach { part ->
+            onPart(part)
+            part.forEach { byte ->
+                out[index % 32] = (out[index % 32] + byte * (index % 251 + 1)).toByte()
+                index++
+            }
+        }
         return out
     }
 }
@@ -67,6 +81,47 @@ class BackupEngineSigningTest : ShouldSpec(
             signature.getValue("alg").jsonPrimitive.content shouldBe "HMAC-SHA256"
             signature.getValue("keyId").jsonPrimitive.content shouldBe "test"
             signature.getValue("mac").jsonPrimitive.content shouldBe FoldSigner().mac(handBuiltPayload(files)).toHex()
+        }
+        should("hand the signer the name, separator, length and bytes of each entry as separate parts") {
+            val sizes = mutableListOf<Int>()
+            val files = engine(mutableListOf(Item("a", 1)), FoldSigner(onPart = { sizes += it.size })).export()
+
+            sizes shouldBe
+                listOf(
+                    13,
+                    1,
+                    8,
+                    files.getValue(MANIFEST_ENTRY).size,
+                    19,
+                    1,
+                    8,
+                    files.getValue("sections/items.json").size,
+                )
+        }
+        should("stop signing an export when the calling coroutine is canceled") {
+            val job = Job()
+            var parts = 0
+            val signer =
+                FoldSigner(onPart = {
+                    parts++
+                    job.cancel()
+                })
+
+            shouldThrow<CancellationException> { withContext(job) { engine(mutableListOf(Item("a", 1)), signer).export() } }
+            parts shouldBe 1
+        }
+        should("stop checking the signature of a read when the calling coroutine is canceled") {
+            val files = signedExport()
+            val job = Job()
+            var parts = 0
+            val signer =
+                FoldSigner(onPart = {
+                    parts++
+                    job.cancel()
+                })
+
+            shouldThrow<CancellationException> { withContext(job) { engine(mutableListOf(), signer).read(files) } }
+            parts shouldBe 1
         }
         should("export without a signer writes no signature entry") {
             (SIGNATURE_ENTRY in engine(mutableListOf(), null).export()) shouldBe false

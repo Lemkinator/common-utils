@@ -29,6 +29,12 @@ class HmacSha256BackupSignerTest : ShouldSpec(
             signer.mac("what do ya want for nothing?".encodeToByteArray()).toHex() shouldBe
                 "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
         }
+        should("match RFC 4231 test case 2 when the payload arrives in parts") {
+            val signer = HmacSha256BackupSigner("test", "Jefe".encodeToByteArray())
+            val parts = sequenceOf("what do ya ", "want ", "", "for nothing?").map { it.encodeToByteArray() }
+
+            signer.mac(parts).toHex() shouldBe "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"
+        }
         should("reject an empty key") {
             shouldThrow<IllegalArgumentException> { HmacSha256BackupSigner("test", ByteArray(0)) }
         }
