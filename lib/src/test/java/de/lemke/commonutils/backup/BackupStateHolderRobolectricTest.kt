@@ -140,8 +140,9 @@ private fun zip(files: Map<String, ByteArray>): ByteArray =
 private fun engineOf(
     vararg sections: BackupSection<*>,
     transaction: BackupTransaction = DirectTransaction,
+    extension: String = ".oneurl",
 ): BackupEngine =
-    BackupEngine(sections.toSet(), transaction, BackupApp("oneurl", 100, BackupFileExtension(".oneurl")), {
+    BackupEngine(sections.toSet(), transaction, BackupApp("oneurl", 100, BackupFileExtension(extension)), {
         "2026-10-27T14:30:00+01:00"
     })
 
@@ -158,13 +159,13 @@ class BackupStateHolderRobolectricTest {
     private fun backupZip(vararg lines: String) = zip(backupFilesOf(SectionInfo("items", 1, lines.size) to entriesJson(*lines)))
 
     @Test
-    fun `export moves Idle to PickExportTarget with the base file name`(): Unit =
+    fun `export moves Idle to PickExportTarget with the base file name and the engine extension`(): Unit =
         runTest(UnconfinedTestDispatcher()) {
-            val holder = holderOf(engineOf(MemorySection()), documents)
+            val holder = holderOf(engineOf(MemorySection(), extension = ".sudoku"), documents)
 
             holder.export("Notes")
 
-            holder.state.value shouldBe BackupState.PickExportTarget("Notes_backup", BackupFileExtension(".oneurl"))
+            holder.state.value shouldBe BackupState.PickExportTarget("Notes_backup", BackupFileExtension(".sudoku"))
         }
 
     @Test
