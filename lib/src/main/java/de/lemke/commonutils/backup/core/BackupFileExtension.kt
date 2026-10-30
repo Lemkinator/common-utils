@@ -15,16 +15,16 @@
  */
 package de.lemke.commonutils.backup.core
 
-private val EXTENSION_FORM = Regex("[.][a-z0-9]+")
+private val EXTENSION_FORM = Regex("[.][a-z0-9]{1,16}")
 
 /**
- * The file extension under which an app saves its backups, a dot and lowercase letters or digits, such as `".oneurl"`.
+ * The file extension under which an app saves its backups, a dot and 1 to 16 lowercase letters or digits, such as `".oneurl"`.
  * The content stays a zip; the extension only names the file.
  */
 @JvmInline
 public value class BackupFileExtension(public val value: String) {
     init {
-        require(EXTENSION_FORM.matches(value)) { "A backup file extension is a dot and lowercase letters or digits, was '$value'" }
+        require(EXTENSION_FORM.matches(value)) { "A backup file extension is a dot and 1 to 16 lowercase letters or digits, was '$value'" }
     }
 
     override fun toString(): String = value

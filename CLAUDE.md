@@ -182,7 +182,7 @@ this library:
 
 ## Backup
 
-Export and import of an app's data to one file under the app's own extension (`.oneurl`); the content is a zip. The pure-Kotlin core (`backup/core`, no `android.*`, `androidx.*`,
+Export and import of an app's data to one file under the app's own extension, such as `.oneurl`; the content is a zip. The pure-Kotlin core (`backup/core`, no `android.*`, `androidx.*`,
 `java.*` or `javax.*` import, guarded by `ArchitectureTest`) holds the manifest, read, upgrade, validate, Merge,
 Replace and the optional signature. `backup/` holds the Android layer: `ZipBackupContainer`, `BackupDocuments`,
 `BackupStateHolder`, `BackupViewModel`.
@@ -197,7 +197,7 @@ An app opts in with:
   enables Merge, otherwise the app offers Replace only. Entries are `@Serializable` DTOs, never Room entities.
 - one `BackupSectionLabel(sectionId, @StringRes label)` per section, `@Provides @IntoSet`: the import preview names the
   section by it, or by its id if the app binds none.
-- `BackupApp(id, versionCode, BackupFileExtension(".oneurl"))`, whose extension (a dot, lowercase letters or digits, no default)
+- `BackupApp(id, versionCode, BackupFileExtension(".oneurl"))`, whose extension (a dot, 1 to 16 lowercase letters or digits, no default)
   names the saved file `<App>_backup_yyyy_MM_dd_HH_mm_ss.<ext>`, and a `BackupTransaction` bound to its database transaction (an object expression: the interface has a
   generic method, so no lambda).
 - `@Module(includes = [CommonUtilsBackupModule::class])` on its own module, with `CommonUtilsCoroutinesModule` bound for

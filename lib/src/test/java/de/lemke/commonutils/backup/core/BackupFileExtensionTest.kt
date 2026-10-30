@@ -25,12 +25,13 @@ class BackupFileExtensionTest : ShouldSpec(
             BackupFileExtension(".oneurl").value shouldBe ".oneurl"
             BackupFileExtension(".sudoku").toString() shouldBe ".sudoku"
             BackupFileExtension(".v2").value shouldBe ".v2"
+            BackupFileExtension(".abcdefghij012345").value shouldBe ".abcdefghij012345"
         }
 
-        listOf("", ".", "zip", ".Zip", ".a.b", ".a b", "..zip", ".zip.", ".ü").forEach { invalid ->
+        listOf("", ".", "zip", ".Zip", ".a.b", ".a b", "..zip", ".zip.", ".ü", ".abcdefghij0123456").forEach { invalid ->
             should("refuse '$invalid'") {
                 shouldThrow<IllegalArgumentException> { BackupFileExtension(invalid) }.message shouldBe
-                    "A backup file extension is a dot and lowercase letters or digits, was '$invalid'"
+                    "A backup file extension is a dot and 1 to 16 lowercase letters or digits, was '$invalid'"
             }
         }
     },
