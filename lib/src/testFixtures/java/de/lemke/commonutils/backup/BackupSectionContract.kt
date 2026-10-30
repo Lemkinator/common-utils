@@ -17,6 +17,7 @@ package de.lemke.commonutils.backup
 
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupFileExtension
 import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.BackupSection
 import de.lemke.commonutils.backup.core.BackupTransaction
@@ -87,7 +88,7 @@ public abstract class BackupSectionContract<E : Any> {
     protected open fun clashCases(): List<ClashCase<E>> = emptyList()
 
     private fun engineOf(section: BackupSection<E>) =
-        BackupEngine(setOf(section), transaction(), BackupApp(CONTRACT_APP, 1), { CONTRACT_TIME })
+        BackupEngine(setOf(section), transaction(), BackupApp(CONTRACT_APP, 1, BackupFileExtension(CONTRACT_EXTENSION)), { CONTRACT_TIME })
 
     private suspend fun BackupEngine.ready(files: Map<String, ByteArray>): BackupReadResult.Ready {
         val result = read(files.toMutableMap())
@@ -316,4 +317,5 @@ public abstract class BackupSectionContract<E : Any> {
 private const val KIND = "backup"
 private const val FORMAT = 1
 private const val CONTRACT_APP = "contract"
+private const val CONTRACT_EXTENSION = ".contract"
 private const val CONTRACT_TIME = "2026-10-27T14:30:00+01:00"

@@ -79,7 +79,7 @@ internal class MergeableMemorySection(
     }
 }
 
-internal val app = BackupApp("oneurl", 100)
+internal val app = BackupApp("oneurl", 100, BackupFileExtension(".oneurl"))
 
 internal fun entriesJson(vararg entries: String): String = """{"entries":[${entries.joinToString(",")}]}"""
 

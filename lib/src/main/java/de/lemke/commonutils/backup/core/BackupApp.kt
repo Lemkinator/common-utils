@@ -15,5 +15,8 @@
  */
 package de.lemke.commonutils.backup.core
 
-/** Identifies the app that writes and reads a backup. [id] stays stable across builds; it is not the application id. */
-public data class BackupApp(val id: String, val versionCode: Long)
+/**
+ * Identifies the app that writes and reads a backup. [id] stays stable across builds; it is not the application id.
+ * [fileExtension] names the files the app saves.
+ */
+public data class BackupApp(val id: String, val versionCode: Long, val fileExtension: BackupFileExtension)

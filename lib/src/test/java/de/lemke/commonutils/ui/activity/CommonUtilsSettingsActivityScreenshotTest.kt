@@ -30,6 +30,7 @@ import de.lemke.commonutils.backup.BackupScreenDeps
 import de.lemke.commonutils.backup.FakeBackupDocuments
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupFileExtension
 import de.lemke.commonutils.backup.core.BackupTransaction
 import de.lemke.commonutils.backup.core.MemorySection
 import de.lemke.commonutils.data.SettingsRepository
@@ -71,7 +72,7 @@ class CommonUtilsSettingsActivityScreenshotTest {
                 object : BackupTransaction {
                     override suspend fun <R> run(block: suspend () -> R): R = block()
                 },
-                BackupApp("screenshot", 1),
+                BackupApp("screenshot", 1, BackupFileExtension(".oneurl")),
                 { "2026-10-27T14:30:00+01:00" },
             ),
             FakeBackupDocuments(),

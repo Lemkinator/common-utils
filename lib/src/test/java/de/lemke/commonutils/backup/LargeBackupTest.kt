@@ -17,6 +17,7 @@ package de.lemke.commonutils.backup
 
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupFileExtension
 import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.BackupSection
 import de.lemke.commonutils.backup.core.EntryCheck
@@ -84,12 +85,18 @@ class LargeBackupTest : ShouldSpec(
     {
         should("export, zip, unzip, read and restore a section of the most entries with twenty fields each") {
             val exporting = WideSection(MutableList(MAX_SECTION_ENTRIES, ::wide))
-            val exporter = BackupEngine(setOf(exporting), DirectBackupTransaction(), BackupApp("wide", 1), { "2026-10-27T14:30:00+01:00" })
+            val exporter =
+                BackupEngine(setOf(exporting), DirectBackupTransaction(), BackupApp("wide", 1, BackupFileExtension(".oneurl")), {
+                    "2026-10-27T14:30:00+01:00"
+                })
             val zip = ByteArrayOutputStream().also { ZipBackupContainer.write(exporter.exportFiles(), it) }.toByteArray()
 
             val files = ZipBackupContainer.read(ByteArrayInputStream(zip)).shouldBeInstanceOf<ZipRead.Files>().files
             val importing = WideSection()
-            val importer = BackupEngine(setOf(importing), DirectBackupTransaction(), BackupApp("wide", 1), { "2026-10-27T14:30:00+01:00" })
+            val importer =
+                BackupEngine(setOf(importing), DirectBackupTransaction(), BackupApp("wide", 1, BackupFileExtension(".oneurl")), {
+                    "2026-10-27T14:30:00+01:00"
+                })
             val ready = importer.read(files).shouldBeInstanceOf<BackupReadResult.Ready>()
             importer.restore(ready, ImportMode.REPLACE)
 

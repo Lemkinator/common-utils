@@ -45,6 +45,7 @@ import de.lemke.commonutils.backup.ZipBackupContainer
 import de.lemke.commonutils.backup.ZipRead
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupFileExtension
 import de.lemke.commonutils.backup.core.BackupSection
 import de.lemke.commonutils.backup.core.BackupTransaction
 import de.lemke.commonutils.backup.core.Item
@@ -85,8 +86,15 @@ private object DirectTransaction : BackupTransaction {
     override suspend fun <R> run(block: suspend () -> R): R = block()
 }
 
-private fun engineOf(vararg sections: BackupSection<*>) =
-    BackupEngine(sections.toSet(), DirectTransaction, BackupApp("oneurl", 100), { "2026-10-27T14:30:00+01:00" })
+private fun engineOf(
+    vararg sections: BackupSection<*>,
+    extension: String = ".oneurl",
+) = BackupEngine(
+    sections.toSet(),
+    DirectTransaction,
+    BackupApp("oneurl", 100, BackupFileExtension(extension)),
+    { "2026-10-27T14:30:00+01:00" },
+)
 
 private fun zip(files: Map<String, ByteArray>): ByteArray =
     ByteArrayOutputStream()
@@ -178,13 +186,15 @@ class BackupPreferencesRobolectricTest {
     }
 
     @Test
-    fun `export click opens the create-document picker with a zip name`() {
+    fun `export click opens the create-document picker with an octet-stream type and the app extension`() {
+        backupScreen = screenOf(engineOf(MergeableMemorySection(store = store), extension = ".sudoku"))
         launch { activity ->
             activity.click(R.string.commonutils_preference_key_export_backup)
             val picker = activity.receivePickerResult(Activity.RESULT_CANCELED, null)
             picker.action shouldBe Intent.ACTION_CREATE_DOCUMENT
-            picker.type shouldBe "application/zip"
-            picker.getStringExtra(Intent.EXTRA_TITLE)!! shouldMatch Regex(".*_backup_\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}\\.zip")
+            picker.type shouldBe "application/octet-stream"
+            picker.getStringExtra(Intent.EXTRA_TITLE)!! shouldMatch
+                Regex("CommonUtils_backup_\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}" + Regex.escape(".sudoku"))
         }
     }
 
@@ -310,9 +320,17 @@ class BackupPreferencesRobolectricTest {
         val signer = HmacSha256BackupSigner("test", "Jefe".encodeToByteArray())
         backupScreen =
             screenOf(
-                BackupEngine(setOf(MergeableMemorySection(store = store)), DirectTransaction, BackupApp("oneurl", 100), {
-                    "2026-10-27T14:30:00+01:00"
-                }, signer),
+                BackupEngine(
+                    setOf(
+                        MergeableMemorySection(store = store),
+                    ),
+                    DirectTransaction,
+                    BackupApp("oneurl", 100, BackupFileExtension(".oneurl")),
+                    {
+                        "2026-10-27T14:30:00+01:00"
+                    },
+                    signer,
+                ),
             )
         store += Item("a", 1)
         launch { activity ->
@@ -425,7 +443,7 @@ class BackupPreferencesRobolectricTest {
             holder.cancel()
             holder.export("Notes")
             idle()
-            holder.state.value shouldBe BackupState.PickExportTarget("Notes_backup")
+            holder.state.value shouldBe BackupState.PickExportTarget("Notes_backup", BackupFileExtension(".oneurl"))
         }
     }
 

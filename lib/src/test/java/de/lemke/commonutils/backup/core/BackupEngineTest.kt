@@ -190,15 +190,28 @@ class BackupEngineTest : ShouldSpec(
         }
         should("refuse a manifest larger than the cap of an import and accept one at the cap") {
             suspend fun manifestSize(appIdLength: Int): Int =
-                BackupEngine(setOf(MemorySection()), CountingTransaction(), BackupApp("a".repeat(appIdLength), 1), { NOW })
-                    .exportFiles()
+                BackupEngine(
+                    setOf(MemorySection()),
+                    CountingTransaction(),
+                    BackupApp("a".repeat(appIdLength), 1, BackupFileExtension(".oneurl")),
+                    { NOW },
+                ).exportFiles()
                     .getValue(MANIFEST_ENTRY)
                     .size
             val base = manifestSize(1)
             val atCap = MAX_MANIFEST_BYTES.toInt() - base + 1
 
             manifestSize(atCap) shouldBe MAX_MANIFEST_BYTES.toInt()
-            BackupEngine(setOf(MemorySection()), CountingTransaction(), BackupApp("a".repeat(atCap + 1), 1), { NOW }).export() shouldBe
+            BackupEngine(
+                setOf(
+                    MemorySection(),
+                ),
+                CountingTransaction(),
+                BackupApp("a".repeat(atCap + 1), 1, BackupFileExtension(".oneurl")),
+                {
+                    NOW
+                },
+            ).export() shouldBe
                 BackupExport.TooLarge
         }
         should("stop reading the entries of a section when the calling coroutine is canceled") {

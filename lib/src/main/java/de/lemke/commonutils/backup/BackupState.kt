@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils.backup
 
+import de.lemke.commonutils.backup.core.BackupFileExtension
 import de.lemke.commonutils.backup.core.BackupPreview
 import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.BackupRefusal
@@ -33,8 +34,8 @@ public sealed interface BackupState {
     /** An export or import runs; the holder ignores new ones until it finishes. */
     public data object Working : BackupState
 
-    /** The screen opens the create-document picker for a zip named after [fileName]; the picker adds the timestamp and extension. */
-    public data class PickExportTarget(val fileName: String) : BackupState
+    /** The screen opens the create-document picker for a file named after [fileName] with [extension], and adds the timestamp. */
+    public data class PickExportTarget(val fileName: String, val extension: BackupFileExtension) : BackupState
 
     /** The screen opens the open-document picker. */
     public data object PickImportFile : BackupState
