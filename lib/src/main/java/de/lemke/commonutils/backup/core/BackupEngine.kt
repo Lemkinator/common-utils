@@ -44,6 +44,9 @@ public class BackupEngine(
         require(invalid.isEmpty()) { "Backup section ids must match ${SECTION_ID.pattern}: ${invalid.joinToString()}" }
     }
 
+    /** The extension under which the app saves an export. */
+    public val fileExtension: BackupFileExtension = app.fileExtension
+
     /** MERGE only when every bound section is a [MergeableSection]. */
     public val modes: Set<ImportMode> = importModes(sections)
 

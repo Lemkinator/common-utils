@@ -30,6 +30,7 @@ import de.lemke.commonutils.backup.DefaultBackupDocuments
 import de.lemke.commonutils.backup.HmacSha256BackupSigner
 import de.lemke.commonutils.backup.core.BackupApp
 import de.lemke.commonutils.backup.core.BackupEngine
+import de.lemke.commonutils.backup.core.BackupFileExtension
 import de.lemke.commonutils.backup.core.BackupReadResult
 import de.lemke.commonutils.backup.core.BackupSection
 import de.lemke.commonutils.backup.core.BackupSigner
@@ -69,7 +70,7 @@ class CommonUtilsBackupModuleHiltTest {
             fun section(): BackupSection<*> = MergeableMemorySection(store = sharedStore)
 
             @Provides
-            fun app(): BackupApp = BackupApp("oneurl", 100)
+            fun app(): BackupApp = BackupApp("oneurl", 100, BackupFileExtension(".oneurl"))
 
             @Provides
             fun transaction(): BackupTransaction =
@@ -141,7 +142,7 @@ class CommonUtilsBackupModuleSignerHiltTest {
             fun section(): BackupSection<*> = MergeableMemorySection(store = sharedStore)
 
             @Provides
-            fun app(): BackupApp = BackupApp("oneurl", 100)
+            fun app(): BackupApp = BackupApp("oneurl", 100, BackupFileExtension(".oneurl"))
 
             @Provides
             fun transaction(): BackupTransaction =

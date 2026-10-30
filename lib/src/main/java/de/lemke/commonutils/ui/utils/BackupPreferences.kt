@@ -34,7 +34,6 @@ import dev.oneuiproject.oneui.design.R as designR
 private const val TAG = "BackupPreferences"
 private const val MIME_ZIP = "application/zip"
 private const val MIME_OCTET_STREAM = "application/octet-stream"
-private const val EXTENSION_ZIP = ".zip"
 private const val PREVIEW_DIALOG_TAG = "commonutils_backup_preview"
 private const val REPLACE_DIALOG_TAG = "commonutils_backup_replace"
 private const val RESULT_DIALOG_TAG = "commonutils_backup_result"
@@ -69,7 +68,9 @@ public fun PreferenceFragmentCompat.bindBackupPreferences(
                 when (state) {
                     BackupState.Idle, BackupState.Working -> Unit
                     is BackupState.PickExportTarget ->
-                        if (launchCreateDocument(state.fileName, MIME_ZIP, EXTENSION_ZIP, exportPicker).isSettled) holder().onHandled(state)
+                        if (launchCreateDocument(state.fileName, MIME_OCTET_STREAM, state.extension.value, exportPicker).isSettled) {
+                            holder().onHandled(state)
+                        }
                     BackupState.PickImportFile ->
                         if (launchOpenDocument(MIME_ZIP, importPicker, listOf(MIME_OCTET_STREAM)).isSettled) holder().onHandled(state)
                     is BackupState.Preview -> showPreview(state, labels, holder())

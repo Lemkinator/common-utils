@@ -79,9 +79,9 @@ public class BackupStateHolder(
     /** The state of the latest export or import. */
     public val state: StateFlow<BackupState> = mutableState.asStateFlow()
 
-    /** Asks for the target of a zip named after [appLabel]; ends in [BackupState.PickExportTarget]. */
+    /** Asks for the target of a backup named after [appLabel]; ends in [BackupState.PickExportTarget]. */
     public fun export(appLabel: String) {
-        publishUnlessWorking(BackupState.PickExportTarget("${appLabel}_backup"))
+        publishUnlessWorking(BackupState.PickExportTarget("${appLabel}_backup", engine.fileExtension))
     }
 
     /** Writes the export into the document of [pick], the result of the picker that [BackupState.PickExportTarget] opened. */

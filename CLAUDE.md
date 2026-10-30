@@ -182,7 +182,7 @@ this library:
 
 ## Backup
 
-Export and import of an app's data to one zip file. The pure-Kotlin core (`backup/core`, no `android.*`, `androidx.*`,
+Export and import of an app's data to one file under the app's own extension (`.oneurl`); the content is a zip. The pure-Kotlin core (`backup/core`, no `android.*`, `androidx.*`,
 `java.*` or `javax.*` import, guarded by `ArchitectureTest`) holds the manifest, read, upgrade, validate, Merge,
 Replace and the optional signature. `backup/` holds the Android layer: `ZipBackupContainer`, `BackupDocuments`,
 `BackupStateHolder`, `BackupViewModel`.
@@ -197,7 +197,8 @@ An app opts in with:
   enables Merge, otherwise the app offers Replace only. Entries are `@Serializable` DTOs, never Room entities.
 - one `BackupSectionLabel(sectionId, @StringRes label)` per section, `@Provides @IntoSet`: the import preview names the
   section by it, or by its id if the app binds none.
-- `BackupApp`, and a `BackupTransaction` bound to its database transaction (an object expression: the interface has a
+- `BackupApp(id, versionCode, BackupFileExtension(".oneurl"))`, whose extension (a dot, lowercase letters or digits, no default)
+  names the saved file `<App>_backup_yyyy_MM_dd_HH_mm_ss.<ext>`, and a `BackupTransaction` bound to its database transaction (an object expression: the interface has a
   generic method, so no lambda).
 - `@Module(includes = [CommonUtilsBackupModule::class])` on its own module, with `CommonUtilsCoroutinesModule` bound for
   `@DefaultDispatcher`, plus `R.xml.preferences_backup` in the preference list it passes to
@@ -205,6 +206,9 @@ An app opts in with:
   and a recreated screen after process death needs it. The module binds `BackupScreenDeps`; the settings fragment injects
   `Optional<BackupScreenDeps>` through Hilt, so it needs no static setup and works after process death. An app without
   the module binds nothing and the screen removes the Backup category.
+
+The save picker uses `application/octet-stream`, because SAF appends `.zip` to a title when the type is `application/zip`;
+the open picker accepts `application/zip` and `application/octet-stream`, and the import trusts only the manifest.
 
 An app that signs its backups binds `@Provides fun signer(): BackupSigner = HmacSha256BackupSigner(keyId, key)` in its
 module: its export carries `signature.json`, and its import refuses an unsigned file, or one with a changed manifest or section file, before any write. An
