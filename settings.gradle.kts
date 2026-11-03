@@ -28,3 +28,4 @@ plugins {
 
 rootProject.name = "Common Utils"
 include(":lib")
+include(":transitions")

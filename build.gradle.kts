@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 import com.android.build.api.dsl.CommonExtension
+import com.diffplug.gradle.spotless.SpotlessExtension
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.extensions.DetektExtension
+import kotlinx.validation.KotlinApiBuildTask
+import kotlinx.validation.KotlinApiCompareTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.util.Properties
 
 plugins {
@@ -24,6 +31,7 @@ plugins {
     alias(libs.plugins.spotless)
     alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.binary.compatibility.validator) apply false
+    alias(libs.plugins.detekt) apply false
     alias(libs.plugins.roborazzi) apply false
 }
 
@@ -114,6 +122,9 @@ fun getProperty(key: String): String =
         ?: System.getenv(key.toEnvVarStyle())
         ?: throw GradleException("Property $key not found")
 
+val commonUtilsVersion =
+    libs.versions.common.utils
+        .get()
 val githubUsername = getProperty("ghUsername")
 val githubAccessToken = getProperty("ghAccessToken")
 
@@ -139,7 +150,34 @@ subprojects {
                 targetCompatibility = JavaVersion.toVersion(libs.versions.jvmTarget.get())
             }
 
+            compileSdk {
+                version =
+                    release(
+                        libs.versions.compileSdk
+                            .get()
+                            .toInt(),
+                    ) {
+                        minorApiLevel =
+                            libs.versions.compileSdkMinor
+                                .get()
+                                .toInt()
+                    }
+            }
+            defaultConfig.minSdk = 26
+
             lint.informational += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
+            lint.warningsAsErrors = true
+            // checkDependencies = false: private AAR deps surface
+            // hundreds of unactionable warnings; flip to true once in-project surface is clean
+            lint.checkDependencies = false
+            // Explicit: pins intent against future AGP default changes.
+            lint.checkReleaseBuilds = true
+            lint.abortOnError = true
+
+            testOptions.animationsDisabled = true
+
+            packaging.resources.excludes +=
+                setOf("META-INF/AL2.0", "META-INF/LGPL2.1", "META-INF/LICENSE*", "META-INF/licenses/**")
 
             @Suppress("UnstableApiUsage")
             testOptions.managedDevices.localDevices {
@@ -200,6 +238,112 @@ subprojects {
             }
         }
     }
+    group = "io.github.lemkinator"
+    version = commonUtilsVersion
+
+    // Neither the Kotlin Gradle plugin's ABI validation nor the kotlinx plugin registers tasks for an Android
+    // library on built-in Kotlin, so the kotlinx task types run against the release compilation.
+    plugins.withId("com.android.library") {
+        val abiValidationRuntime by configurations.creating {
+            isCanBeConsumed = false
+            isCanBeResolved = true
+        }
+        dependencies {
+            abiValidationRuntime(rootProject.libs.abi.asm)
+            abiValidationRuntime(rootProject.libs.abi.asm.tree)
+            abiValidationRuntime(rootProject.libs.abi.kotlin.metadata.jvm)
+        }
+
+        fun registerApiBuild(
+            taskName: String,
+            compilationName: String,
+            dumpName: String,
+        ): TaskProvider<KotlinApiBuildTask> {
+            val build =
+                tasks.register<KotlinApiBuildTask>(taskName) {
+                    description = "Builds the public ABI dump of the $compilationName compilation."
+                    runtimeClasspath.from(abiValidationRuntime)
+                    outputApiFile.set(layout.buildDirectory.file("api/$dumpName.api"))
+                }
+            extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
+                if (name == compilationName) {
+                    build.configure {
+                        inputClassesDirs.from(compileTaskProvider.flatMap { (it as KotlinJvmCompile).destinationDirectory })
+                    }
+                }
+            }
+            return build
+        }
+
+        fun registerApiCompare(
+            taskName: String,
+            dumpName: String,
+            build: TaskProvider<KotlinApiBuildTask>,
+        ): TaskProvider<KotlinApiCompareTask> =
+            tasks.register<KotlinApiCompareTask>(taskName) {
+                group = "verification"
+                description = "Checks the public ABI against the committed api/$dumpName.api dump."
+                projectApiFile.set(layout.projectDirectory.file("api/$dumpName.api"))
+                generatedApiFile.set(build.flatMap { it.outputApiFile })
+            }
+
+        val apiBuild = registerApiBuild("apiBuild", "release", project.name)
+        val apiBuildTestFixtures = registerApiBuild("apiBuildTestFixtures", "releaseTestFixtures", "${project.name}-testFixtures")
+        val apiCheck = registerApiCompare("apiCheck", project.name, apiBuild)
+        val apiCheckTestFixtures = registerApiCompare("apiCheckTestFixtures", "${project.name}-testFixtures", apiBuildTestFixtures)
+        apiCheck.configure { dependsOn(apiCheckTestFixtures) }
+
+        tasks.register<Copy>("apiDump") {
+            group = "other"
+            description = "Overwrites api/${project.name}.api and api/${project.name}-testFixtures.api with the current public ABI."
+            from(apiBuild.flatMap { it.outputApiFile })
+            from(apiBuildTestFixtures.flatMap { it.outputApiFile })
+            into(layout.projectDirectory.dir("api"))
+        }
+
+        tasks.named("check") { dependsOn(apiCheck) }
+    }
+
+    pluginManager.withPlugin("com.diffplug.spotless") {
+        extensions.configure<SpotlessExtension> {
+            kotlin {
+                target("src/**/*.kt")
+                licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.kt"))
+                ktlint(libs.versions.ktlint.get())
+                trimTrailingWhitespace()
+                endWithNewline()
+            }
+            format("xml") {
+                target("src/**/*.xml")
+                licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.xml"), "(<[^!?])")
+                trimTrailingWhitespace()
+                endWithNewline()
+            }
+        }
+    }
+
+    pluginManager.withPlugin("dev.detekt") {
+        extensions.configure<DetektExtension> {
+            toolVersion = libs.versions.detekt.get()
+            config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+            buildUponDefaultConfig = true
+            parallel = true
+            autoCorrect = false
+            source.setFrom(
+                listOf("main", "test", "testFixtures", "androidTest", "testShared").flatMap { sourceSet ->
+                    listOf("java", "kotlin").map { "src/$sourceSet/$it" }
+                },
+            )
+        }
+        tasks.withType<Detekt>().configureEach {
+            jvmTarget = libs.versions.jvmTarget.get()
+            reports {
+                html.required.set(true)
+                sarif.required.set(true)
+            }
+        }
+    }
+
     afterEvaluate {
         if (!project.plugins.hasPlugin(
                 libs.plugins.maven.publish
@@ -209,12 +353,27 @@ subprojects {
         ) {
             return@afterEvaluate
         }
-        val artifact = "common-utils"
-        group = "io.github.lemkinator"
-        version =
-            libs.versions.common.utils
-                .get()
+        val artifact = project.extra["artifactId"] as String
+        val moduleDescription = requireNotNull(project.description) { "Set description in ${project.path}" }
         println("Evaluated $group:$artifact:$version")
+
+        // AGP derives a testFixtures configuration's published capability from the Gradle project name, not from the
+        // artifactId below, so consumers doing testFixtures(libs.common.utils) can't resolve it without this.
+        // Capabilities are additive, so add the correct one alongside AGP's rather than renaming the project (which
+        // would also silently rename every task path).
+        configurations
+            .matching {
+                it.name in
+                    setOf(
+                        "releaseTestFixturesApiElements",
+                        "releaseTestFixturesRuntimeElements",
+                        "releaseTestFixturesVariantReleaseApiPublication",
+                        "releaseTestFixturesVariantReleaseRuntimePublication",
+                    )
+            }.configureEach {
+                outgoing.capability("$group:$artifact-test-fixtures:$version")
+            }
+
         project.extensions.configure<PublishingExtension>("publishing") {
             publications {
                 create<MavenPublication>("mavenJava") {
@@ -224,7 +383,7 @@ subprojects {
                     }
                     pom {
                         name = artifact
-                        description = "A collection of common utility functions and classes for my Android projects."
+                        description = moduleDescription
                         url = "https://github.com/Lemkinator/common-utils"
                         developers {
                             developer {
