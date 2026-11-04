@@ -28,6 +28,18 @@ This lib consists of common utils that I use in my Android Apps.
 
 <br><br>
 
+## Modules
+
+| Artifact | Content |
+| --- | --- |
+| `io.github.lemkinator:common-utils` | Everything: screens, settings, backup, sharing and the rest. Depends on `common-utils-transitions` with `api`. |
+| `io.github.lemkinator:common-utils-transitions` | Android-only screen-change helpers: splash exit, container transform between activities, predictive-back animation, the launch latch (`singleLaunch`), and the Play in-app review. It needs `oneui-design` and `core-splashscreen`, nothing else of this library. |
+
+An app that needs only the transitions depends on `common-utils-transitions`. Both artifacts share one version, and the
+packages are the same in both.
+
+<br><br>
+
 ## Hilt coroutine bindings
 
 The library ships the qualifiers `@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher` and `@ApplicationScope`.
@@ -43,8 +55,8 @@ An app that includes it must drop its own bindings for `@IoDispatcher`, `@Defaul
 `@ApplicationScope` (a duplicate binding is a Dagger compile error), and its Dagger/Hilt version must be at least the
 library's.
 
-`CommonUtilsInAppReviewModule` binds `InAppReview` to `PlayInAppReview` the same way; it needs a `SettingsRepository`
-binding:
+`CommonUtilsInAppReviewModule` provides `InAppReview` as `PlayInAppReview(settings)` the same way; it needs a
+`SettingsRepository` binding:
 
 ```kotlin
 @Module(includes = [CommonUtilsInAppReviewModule::class])
@@ -54,7 +66,8 @@ interface InAppReviewModule
 
 The app keeps its own `@InstallIn` wrapper module that includes `CommonUtilsInAppReviewModule`; tests replace that wrapper
 with `@TestInstallIn(replaces = [InAppReviewModule::class])` and bind `FakeInAppReview`. The app must drop its own
-`@Binds` for `InAppReview` (a duplicate binding fails compilation).
+binding for `InAppReview` (a duplicate binding fails compilation). An app without `common-utils` builds
+`PlayInAppReview(cooldown)` over its own `InAppReviewCooldown`.
 
 <br><br>
 

@@ -6,8 +6,27 @@ with code in this repository.
 ## Overview
 
 Android utility library published to GitHub Packages as
-`io.github.lemkinator:common-utils`. Single `:lib` module.
+`io.github.lemkinator:common-utils`. Two modules: `:lib` and `:transitions`.
 See `gradle/libs.versions.toml` for SDK and language versions.
+
+## Modules
+
+- `:transitions` (`io.github.lemkinator:common-utils-transitions`, same version): the Android-only helpers for
+  screen changes. It holds `SplashUtils.kt`, `TransformationUtils.kt`, `TransformToActivityUtils.kt`,
+  `PredictiveBackGestureUtils.kt`, `SingleLaunchUtils.kt` (the launch latch), the in-app review (`InAppReview`,
+  `PlayInAppReview`, `InAppReviewCooldown`, the Play `review` dependency), `NoCoverage`, their resources and tests.
+  Its packages are the same as before the split, so an import does not change. It depends on `oneui-design` and
+  `core-splashscreen`, not on `:lib`.
+- `:lib`: everything else. It re-exports `:transitions` with `api(project(":transitions"))`, so an app that depends on
+  `common-utils` needs no code change.
+- `:lib` uses `launchGated`, `singleLaunchOrNull`, `admitsLaunchPreparation` and `NoCoverage` from `:transitions`; they are
+  public with `@RestrictTo(LIBRARY_GROUP)`.
+- `SettingsRepository` implements `InAppReviewCooldown`, the narrow interface `:transitions` reads and writes
+  `lastInAppReview` through. `CommonUtilsInAppReviewModule` in `:lib` builds `PlayInAppReview(settings)`.
+- The root `build.gradle.kts` holds the Android, lint, Spotless, Detekt, ABI and publishing config for both modules; each
+  module sets `description` and `extra["artifactId"]`. The `unitTests.all` block stays in each module's build file.
+- Each module has its own ABI dump (`lib/api`, `transitions/api`) and Kover floor. Moved declarations appear in
+  `transitions/api` unchanged.
 
 ## Build Commands
 
@@ -18,12 +37,12 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 ./gradlew assembleRelease
 ./gradlew test           # Run unit tests
 ./gradlew koverVerifyDebug    # Check coverage floor (debug variant only)
-./gradlew apiCheck       # Compare the public ABI with lib/api/lib.api
-./gradlew apiDump        # Rewrite lib/api/lib.api after an intended API change
+./gradlew apiCheck       # Compare the public ABI of each module with its api/<module>.api dump
+./gradlew apiDump        # Rewrite the api dumps after an intended API change
 ./gradlew buildHealth    # Dependency analysis report and gate
 ```
 
-Tests live under `lib/src/test/java/de/lemke/commonutils/`.
+Tests live under `lib/src/test/java/de/lemke/commonutils/` and `transitions/src/test/java/de/lemke/commonutils/`.
 
 **Test stack**: Kotest 6 (`ShouldSpec` style) for pure Kotlin tests; plain JUnit 4
 (`@RunWith(RobolectricTestRunner::class)`) for every Android/Robolectric test. Konsist
@@ -81,7 +100,8 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
 - `Context.cacheWriteUriPattern(pathName, directoryName, fileName)` and `Context.cacheFileOf` — the content URI layout of a
   cache write; `directoryName` is `share` or `clipboard`.
-- `FakeInAppReview(available)` (`canShow()` returns `available`; records `showIfPossible`/`showOrFinish` calls; `showOrFinish` finishes the activity) — the fake of the `InAppReview` interface that `PlayInAppReview(settings)` implements.
+- `FakeInAppReview(available)` (`canShow()` returns `available`; records `showIfPossible`/`showOrFinish` calls; `showOrFinish` finishes the activity) — the fake of the `InAppReview` interface that `PlayInAppReview(cooldown)` implements. `FakeInAppReviewCooldown(lastInAppReview)` is the in-memory `InAppReviewCooldown`.
+- `DestroyActivitiesRule` (with `ActivityController.track`), `DrainMainLooperRule`, `LatchTestActivity` and `LatchTestFragment` — Robolectric rules and launch-latch probes. A test manifest that uses the activity registers `de.lemke.commonutils.LatchTestActivity`.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
 - `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.
@@ -139,7 +159,7 @@ git config core.hooksPath .githooks
 
 ## Architecture
 
-**Single-module utility library** — ships opt-in Hilt modules and one ViewModel, `BackupViewModel`, which hosts
+**Two-module utility library** (`:lib`, plus `:transitions` that it re-exports) — ships opt-in Hilt modules and one ViewModel, `BackupViewModel`, which hosts
 the backup flow of the settings screen.
 Code is organized into:
 
@@ -285,7 +305,7 @@ An app that includes it must drop its own bindings for `@IoDispatcher`, `@Defaul
 `@ApplicationScope` (a duplicate binding is a Dagger compile error), and its Dagger/Hilt version must be at least the
 library's.
 
-`CommonUtilsInAppReviewModule` binds `InAppReview` to `PlayInAppReview` (needs a `SettingsRepository` binding); an app
+`CommonUtilsInAppReviewModule` provides `InAppReview` as `PlayInAppReview(settings)` (needs a `SettingsRepository` binding); an app
 includes it from its own `InAppReviewModule`, which a test replaces with `@TestInstallIn` to bind `FakeInAppReview`. The app must drop its own `@Binds` for `InAppReview`, because a duplicate binding fails compilation.
 
 Hilt modules need no ProGuard/R8 keep rules.
@@ -294,8 +314,8 @@ Hilt modules need no ProGuard/R8 keep rules.
 
 - Version catalog: `gradle/libs.versions.toml`
 - Build config: configuration cache enabled, JVM max heap 2048m
-- Maven artifact: `io.github.lemkinator:common-utils` at version defined
-  in `libs.versions.toml`
+- Maven artifacts: `io.github.lemkinator:common-utils` and `io.github.lemkinator:common-utils-transitions` at the
+  version defined in `libs.versions.toml`
 - Package namespace: `de.lemke.commonutils`
 
 ## Releases
