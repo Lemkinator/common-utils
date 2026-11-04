@@ -17,11 +17,11 @@ import com.android.build.api.dsl.CommonExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.extensions.DetektExtension
+import java.util.Properties
 import kotlinx.validation.KotlinApiBuildTask
 import kotlinx.validation.KotlinApiCompareTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.library) apply false
