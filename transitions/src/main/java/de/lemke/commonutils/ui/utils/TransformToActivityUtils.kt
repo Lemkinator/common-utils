@@ -20,7 +20,7 @@ import android.app.ActivityOptions
 import android.content.Intent
 import android.view.View
 import androidx.annotation.IdRes
-import de.lemke.commonutils.NoCoverage
+import de.lemke.commonutils.transitions.NoCoverage
 import dev.oneuiproject.oneui.ktx.activity
 
 private const val STATE_ANIMATOR_RESTORE_DELAY_MS = 1_000L

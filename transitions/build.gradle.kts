@@ -93,7 +93,7 @@ kover {
                     // SplashUtils: exit-animation lambda drives real ObjectAnimators + lifecycleScope, untestable on JVM.
                     "*SplashUtilsKt*",
                 )
-                annotatedBy("de.lemke.commonutils.NoCoverage")
+                annotatedBy("de.lemke.commonutils.transitions.NoCoverage")
             }
         }
         variant("debug") {

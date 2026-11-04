@@ -37,8 +37,8 @@ import androidx.core.view.animation.PathInterpolatorCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.data.InAppReviewCooldown
+import de.lemke.commonutils.transitions.NoCoverage
 import de.lemke.commonutils.transitions.R
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest

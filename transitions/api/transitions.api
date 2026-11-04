@@ -1,6 +1,3 @@
-public abstract interface annotation class de/lemke/commonutils/NoCoverage : java/lang/annotation/Annotation {
-}
-
 public abstract interface class de/lemke/commonutils/data/InAppReviewCooldown {
 	public abstract fun getLastInAppReview ()J
 	public abstract fun setLastInAppReview (J)V

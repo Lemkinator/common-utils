@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
-
-import androidx.annotation.RestrictTo
+package de.lemke.commonutils.transitions
 
 /**
  * Marks a function, property getter, or class that Kover cannot instrument, e.g. `inline fun` whose bytecode is copied to each call site.
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.PROPERTY_GETTER)
 @Retention(AnnotationRetention.BINARY)
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public annotation class NoCoverage
+internal annotation class NoCoverage
