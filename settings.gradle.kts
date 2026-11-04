@@ -30,3 +30,4 @@ plugins {
 rootProject.name = "Common Utils"
 include(":lib")
 include(":transitions")
+include(":test-support")

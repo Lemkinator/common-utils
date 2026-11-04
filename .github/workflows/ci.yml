@@ -44,6 +44,7 @@ jobs:
           path: |
             lib/build/reports/detekt/
             transitions/build/reports/detekt/
+            test-support/build/reports/detekt/
       - name: Upload dependency analysis report
         if: always()
         uses: actions/upload-artifact@v7
@@ -81,6 +82,7 @@ jobs:
           path: |
             lib/build/reports/lint-results-*
             transitions/build/reports/lint-results-*
+            test-support/build/reports/lint-results-*
 
   local-tests:
     runs-on: ubuntu-26.04

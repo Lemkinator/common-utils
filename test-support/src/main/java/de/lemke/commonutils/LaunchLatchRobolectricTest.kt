@@ -21,6 +21,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Looper
 import androidx.lifecycle.LifecycleRegistry
+import de.lemke.commonutils.ui.utils.LAUNCH_LATCH_LEAVING_TIMEOUT
 import de.lemke.commonutils.ui.utils.singleLaunch
 import de.lemke.commonutils.ui.utils.singleLaunchActivity
 import de.lemke.commonutils.ui.utils.singleLaunchSuspending
@@ -34,8 +35,6 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.shadows.ShadowActivity.IntentForResult
 import org.robolectric.shadows.ShadowLooper
-
-private const val LATCH_TIMEOUT_MILLIS = 1000L
 
 /** Rules and helpers that drive the launch latch of a [LatchTestActivity]. */
 public abstract class LaunchLatchRobolectricTest {
@@ -87,7 +86,7 @@ public abstract class LaunchLatchRobolectricTest {
     }
 
     protected fun LatchTestActivity.shouldSettleAfterOneSecond() {
-        shadowLooper.idleFor(Duration.ofMillis(LATCH_TIMEOUT_MILLIS - 1))
+        shadowLooper.idleFor(Duration.ofMillis(LAUNCH_LATCH_LEAVING_TIMEOUT.inWholeMilliseconds - 1))
         assertFalse(singleLaunch {})
         shadowLooper.idleFor(Duration.ofMillis(1))
         assertTrue(singleLaunch {})

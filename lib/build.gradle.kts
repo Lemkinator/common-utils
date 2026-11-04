@@ -112,6 +112,7 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.bundles.robolectric.test)
     testImplementation(testFixtures(project(":lib")))
+    testImplementation(project(":test-support"))
 
     testFixturesApi(testFixtures(project(":transitions")))
     testFixturesApi(libs.androidx.test.core)

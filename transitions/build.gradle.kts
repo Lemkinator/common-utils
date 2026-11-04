@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.review)
 
     testImplementation(testFixtures(project(":transitions")))
+    testImplementation(project(":test-support"))
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.mockk)
@@ -70,9 +71,6 @@ dependencies {
     testRuntimeOnly(libs.junit.vintage.engine)
 
     testFixturesApi(libs.androidx.test.core)
-    testFixturesCompileOnly(libs.oneui.design)
-    testFixturesCompileOnly(libs.robolectric)
-    testFixturesCompileOnly(libs.junit4)
 }
 
 kover {
