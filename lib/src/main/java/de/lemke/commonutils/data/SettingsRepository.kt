@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.stateIn
 /** SharedPreferences-backed repository for common-utils app settings; open so apps can add their own fields via subclassing. */
 public open class SettingsRepository(
     protected val preferences: SharedPreferences,
-) {
+) : InAppReviewCooldown {
     /** Whether dark mode is explicitly enabled (stored as `"1"`/`"0"` for legacy `HorizontalRadioPreference` compatibility). */
     public var darkMode: Boolean by preferences.delegates.darkMode(false)
 
@@ -57,8 +57,8 @@ public open class SettingsRepository(
     /** The preferred location for exported images. */
     public var imageSaveLocation: SaveLocation by preferences.delegates.saveLocation(SaveLocation.default)
 
-    /** Epoch millis of the last in-app review request; `0` until [canShowInAppReview] seeds it on first launch. */
-    public var lastInAppReview: Long by preferences.delegates.long(0L)
+    /** Epoch millis of the last in-app review request; `0` until the first cooldown check seeds it on first launch. */
+    final override var lastInAppReview: Long by preferences.delegates.long(0L)
 
     /**
      * Binds a `PreferenceFragmentCompat` to this repository's store — assign it to

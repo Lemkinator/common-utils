@@ -1,0 +1,91 @@
+public abstract interface class de/lemke/commonutils/data/InAppReviewCooldown {
+	public abstract fun getLastInAppReview ()J
+	public abstract fun setLastInAppReview (J)V
+}
+
+public abstract interface annotation class de/lemke/commonutils/transitions/InternalCommonUtilsApi : java/lang/annotation/Annotation {
+}
+
+public abstract interface class de/lemke/commonutils/ui/utils/InAppReview {
+	public abstract fun canShow ()Z
+	public abstract fun showIfPossible (Landroidx/appcompat/app/AppCompatActivity;)V
+	public abstract fun showOrFinish (Landroidx/appcompat/app/AppCompatActivity;)V
+}
+
+public final class de/lemke/commonutils/ui/utils/InAppReviewUtilsKt {
+	public static final fun showInAppReviewIfPossible (Landroidx/appcompat/app/AppCompatActivity;Lde/lemke/commonutils/data/InAppReviewCooldown;)V
+	public static final fun showInAppReviewOrFinish (Landroidx/appcompat/app/AppCompatActivity;Lde/lemke/commonutils/data/InAppReviewCooldown;)V
+}
+
+public final class de/lemke/commonutils/ui/utils/PlayInAppReview : de/lemke/commonutils/ui/utils/InAppReview {
+	public fun <init> (Lde/lemke/commonutils/data/InAppReviewCooldown;)V
+	public fun canShow ()Z
+	public fun showIfPossible (Landroidx/appcompat/app/AppCompatActivity;)V
+	public fun showOrFinish (Landroidx/appcompat/app/AppCompatActivity;)V
+}
+
+public final class de/lemke/commonutils/ui/utils/PredictiveBackGestureUtilsKt {
+	public static final fun addOnBackLogic (Landroidx/fragment/app/Fragment;Lkotlinx/coroutines/flow/StateFlow;Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun addOnBackLogic$default (Landroidx/fragment/app/Fragment;Lkotlinx/coroutines/flow/StateFlow;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public static final fun getDefaultWindowBackground (Landroidx/appcompat/app/AppCompatActivity;)I
+	public static final fun getGestureInterpolator ()Landroid/view/animation/Interpolator;
+	public static final fun setCustomBackAnimation (Landroidx/appcompat/app/AppCompatActivity;Landroid/view/View;Lkotlinx/coroutines/flow/StateFlow;Lde/lemke/commonutils/data/InAppReviewCooldown;)V
+	public static final fun setCustomBackAnimation (Landroidx/appcompat/app/AppCompatActivity;Landroid/view/View;Lkotlinx/coroutines/flow/StateFlow;Lde/lemke/commonutils/ui/utils/InAppReview;)V
+	public static synthetic fun setCustomBackAnimation$default (Landroidx/appcompat/app/AppCompatActivity;Landroid/view/View;Lkotlinx/coroutines/flow/StateFlow;Lde/lemke/commonutils/data/InAppReviewCooldown;ILjava/lang/Object;)V
+	public static synthetic fun setCustomBackAnimation$default (Landroidx/appcompat/app/AppCompatActivity;Landroid/view/View;Lkotlinx/coroutines/flow/StateFlow;Lde/lemke/commonutils/ui/utils/InAppReview;ILjava/lang/Object;)V
+	public static final fun setWindowTransparent (Landroidx/appcompat/app/AppCompatActivity;Z)V
+}
+
+public abstract class de/lemke/commonutils/ui/utils/SingleLaunchResultLauncher : androidx/activity/result/ActivityResultLauncher {
+	public fun <init> ()V
+	public final fun launch (Ljava/lang/Object;Landroidx/core/app/ActivityOptionsCompat;)V
+	public abstract fun tryLaunch (Ljava/lang/Object;Landroidx/core/app/ActivityOptionsCompat;)Z
+	public static synthetic fun tryLaunch$default (Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;Ljava/lang/Object;Landroidx/core/app/ActivityOptionsCompat;ILjava/lang/Object;)Z
+}
+
+public final class de/lemke/commonutils/ui/utils/SingleLaunchUtilsKt {
+	public static final fun onSingleLaunchClick (Landroid/view/View;Lkotlin/jvm/functions/Function1;)V
+	public static final fun onSingleLaunchClick (Landroidx/preference/Preference;Lkotlin/jvm/functions/Function1;)Landroidx/preference/Preference;
+	public static final fun registerForSingleLaunchResult (Landroidx/activity/ComponentActivity;Landroidx/activity/result/contract/ActivityResultContract;Landroidx/activity/result/ActivityResultCallback;)Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;
+	public static final fun registerForSingleLaunchResult (Landroidx/fragment/app/Fragment;Landroidx/activity/result/contract/ActivityResultContract;Landroidx/activity/result/ActivityResultCallback;)Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;
+	public static final fun singleLaunch (Landroid/content/Context;Lkotlin/jvm/functions/Function0;)Z
+	public static final fun singleLaunch (Landroidx/fragment/app/Fragment;Lkotlin/jvm/functions/Function0;)Z
+	public static final fun singleLaunchActivity (Landroid/content/Context;Landroid/content/Intent;Landroid/os/Bundle;)Z
+	public static synthetic fun singleLaunchActivity$default (Landroid/content/Context;Landroid/content/Intent;Landroid/os/Bundle;ILjava/lang/Object;)Z
+	public static final fun singleLaunchMenuItem (Landroid/content/Context;Lkotlin/jvm/functions/Function0;)Z
+	public static final fun singleLaunchSuspending (Landroidx/activity/ComponentActivity;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;)Z
+	public static final fun singleLaunchSuspending (Landroidx/fragment/app/Fragment;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;)Z
+}
+
+public final class de/lemke/commonutils/ui/utils/SplashUtilsKt {
+	public static final fun configureCommonUtilsSplashScreen (Landroidx/appcompat/app/AppCompatActivity;Landroidx/core/splashscreen/SplashScreen;Landroid/view/View;Landroidx/core/splashscreen/SplashScreen$KeepOnScreenCondition;)V
+	public static synthetic fun configureCommonUtilsSplashScreen$default (Landroidx/appcompat/app/AppCompatActivity;Landroidx/core/splashscreen/SplashScreen;Landroid/view/View;Landroidx/core/splashscreen/SplashScreen$KeepOnScreenCondition;ILjava/lang/Object;)V
+}
+
+public final class de/lemke/commonutils/ui/utils/TransformToActivityUtilsKt {
+	public static final fun transformToActivity (Landroid/app/Activity;ILandroid/content/Intent;Ljava/lang/String;JI)Z
+	public static final fun transformToActivity (Landroid/app/Activity;ILjava/lang/Class;Ljava/lang/String;JI)Z
+	public static final fun transformToActivity (Landroid/app/Activity;Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;JI)Z
+	public static final fun transformToActivity (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;JI)Z
+	public static final fun transformToActivity (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;JI)Z
+	public static synthetic fun transformToActivity$default (Landroid/app/Activity;ILandroid/content/Intent;Ljava/lang/String;JIILjava/lang/Object;)Z
+	public static synthetic fun transformToActivity$default (Landroid/app/Activity;ILjava/lang/Class;Ljava/lang/String;JIILjava/lang/Object;)Z
+	public static synthetic fun transformToActivity$default (Landroid/app/Activity;Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;JIILjava/lang/Object;)Z
+	public static synthetic fun transformToActivity$default (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;JIILjava/lang/Object;)Z
+	public static synthetic fun transformToActivity$default (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;JIILjava/lang/Object;)Z
+}
+
+public final class de/lemke/commonutils/ui/utils/TransformationUtilsKt {
+	public static final field DEFAULT_DURATION J
+	public static final field DEFAULT_FADE_MODE I
+	public static final field DEFAULT_TRANSITION_NAME Ljava/lang/String;
+	public static final fun finishWithFade (Landroid/app/Activity;)V
+	public static final fun getTransitionContainerTransform (Landroid/app/Activity;)Lcom/google/android/material/transition/platform/MaterialContainerTransform;
+	public static final fun overrideFadeOpenTransition (Landroid/app/Activity;)V
+	public static final fun prepareActivityTransformationBetween (Landroid/app/Activity;)V
+	public static final fun prepareActivityTransformationFrom (Landroid/app/Activity;)V
+	public static final fun prepareActivityTransformationTo (Landroid/app/Activity;)V
+	public static final fun transformTo (Landroid/view/View;Landroid/view/View;JI)V
+	public static synthetic fun transformTo$default (Landroid/view/View;Landroid/view/View;JIILjava/lang/Object;)V
+}
+

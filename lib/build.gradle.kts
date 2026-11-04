@@ -18,62 +18,33 @@
 
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import kotlinx.validation.KotlinApiBuildTask
-import kotlinx.validation.KotlinApiCompareTask
-import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
-    alias(libs.plugins.android.library)
+    id("commonutils.publishing")
+    id("commonutils.api-validation")
+    id("commonutils.coverage")
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.maven.publish)
-    alias(libs.plugins.signing)
-    alias(libs.plugins.detekt)
-    alias(libs.plugins.spotless)
-    alias(libs.plugins.kover)
-    alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.roborazzi)
     id("kotlin-parcelize")
 }
 
+description = "A collection of common utility functions and classes for my Android projects."
+commonUtilsPublishing {
+    artifactId = "common-utils"
+}
+
 android {
     namespace = "de.lemke.commonutils"
-    compileSdk {
-        version =
-            release(
-                libs.versions.compileSdk
-                    .get()
-                    .toInt(),
-            ) {
-                minorApiLevel =
-                    libs.versions.compileSdkMinor
-                        .get()
-                        .toInt()
-            }
-    }
     defaultConfig {
-        minSdk = 26
         testInstrumentationRunner = "de.lemke.commonutils.HiltTestRunner"
-    }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
-        }
     }
     buildFeatures {
         viewBinding = true
     }
     lint {
-        warningsAsErrors = true
-        // checkDependencies = false: private AAR deps surface
-        // hundreds of unactionable warnings; flip to true once in-project surface is clean
-        checkDependencies = false
-        // Explicit: pins intent against future AGP default changes.
-        checkReleaseBuilds = true
-        abortOnError = true
         baseline = file("lint-baseline.xml")
         // Why: the two display_help_* illustrations ship at a single fixed density
         // (drawable-xxhdpi) on purpose — static help-screen art, not a scaled icon.
@@ -102,15 +73,6 @@ android {
                 test.systemProperty("roborazzi.test.verify", project.findProperty("roborazzi.verify") ?: "true")
             }
         }
-        animationsDisabled = true
-    }
-    packaging {
-        resources {
-            excludes += "META-INF/AL2.0"
-            excludes += "META-INF/LGPL2.1"
-            excludes += "META-INF/LICENSE*"
-            excludes += "META-INF/licenses/**"
-        }
     }
     sourceSets {
         listOf("test", "androidTest").forEach { name ->
@@ -124,24 +86,6 @@ android {
     }
 }
 
-// AGP derives a testFixtures configuration's published capability from the Gradle project name
-// (":lib"), not from this module's "common-utils" artifactId override below — so consumers doing
-// testFixtures(libs.common.utils) can't resolve it without this. Capabilities are additive, so add
-// the correct one alongside AGP's rather than renaming the project (which would also silently
-// rename every :lib:* task to :common-utils:*).
-configurations
-    .matching {
-        it.name in
-            setOf(
-                "releaseTestFixturesApiElements",
-                "releaseTestFixturesRuntimeElements",
-                "releaseTestFixturesVariantReleaseApiPublication",
-                "releaseTestFixturesVariantReleaseRuntimePublication",
-            )
-    }.configureEach {
-        outgoing.capability("io.github.lemkinator:common-utils-test-fixtures:${libs.versions.common.utils.get()}")
-    }
-
 roborazzi {
     outputDir.set(layout.projectDirectory.dir("src/test/screenshots"))
     compare {
@@ -150,14 +94,13 @@ roborazzi {
 }
 
 dependencies {
+    api(project(":transitions"))
     api(libs.oneui.design)
     implementation(libs.oneui.icons)
     implementation(libs.app.update)
-    implementation(libs.review)
     implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
-    api(libs.core.splashscreen)
     api(libs.kotlinx.serialization.json)
     api(libs.lottie)
     implementation(libs.hilt.android)
@@ -169,7 +112,9 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.bundles.robolectric.test)
     testImplementation(testFixtures(project(":lib")))
+    testImplementation(project(":test-support"))
 
+    testFixturesApi(testFixtures(project(":transitions")))
     testFixturesApi(libs.androidx.test.core)
     // Compose compiler plugin applies to every Kotlin compile task in this module, including
     // testFixtures — it fails outright if no Compose runtime is on that classpath, even though
@@ -209,43 +154,6 @@ dependencies {
     kspAndroidTest(libs.hilt.compiler)
 }
 
-spotless {
-    kotlin {
-        target("src/**/*.kt")
-        licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.kt"))
-        ktlint(libs.versions.ktlint.get())
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    format("xml") {
-        target("src/**/*.xml")
-        licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.xml"), "(<[^!?])")
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-}
-
-detekt {
-    toolVersion = libs.versions.detekt.get()
-    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
-    buildUponDefaultConfig = true
-    parallel = true
-    autoCorrect = false
-    source.setFrom(
-        listOf("main", "test", "testFixtures", "androidTest", "testShared").flatMap { sourceSet ->
-            listOf("java", "kotlin").map { "src/$sourceSet/$it" }
-        },
-    )
-}
-
-tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-    jvmTarget = libs.versions.jvmTarget.get()
-    reports {
-        html.required.set(true)
-        sarif.required.set(true)
-    }
-}
-
 kover {
     reports {
         filters {
@@ -263,9 +171,6 @@ kover {
                     "*.di.*",
                     // Play Core: requires live device + Play Store; SAM lambdas slip past annotatedBy.
                     "*AppUpdateManagerUtilsKt*",
-                    "*InAppReviewUtilsKt*",
-                    // SplashUtils: exit-animation lambda drives real ObjectAnimators + lifecycleScope, untestable on JVM.
-                    "*SplashUtilsKt*",
                     // TipPopupUtils: requires OneUI TipPopup widget + real decorView root, can't instantiate under Robolectric.
                     "*TipPopupUtilsKt*",
                     // PreferenceUtilsKt: OneUI listView extension lambda, can't exercise under Robolectric.
@@ -293,85 +198,9 @@ kover {
                 annotatedBy("de.lemke.commonutils.NoCoverage")
             }
         }
-        variant("debug") {
-            verify {
-                rule {
-                    minBound(100, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.INSTRUCTION)
-                    minBound(100, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH)
-                }
-            }
-        }
     }
 }
 
-kotlin {
-    explicitApi()
+tasks.named<KotlinApiBuildTask>("apiBuild") {
+    ignoredClasses.add("de.lemke.commonutils.ui.activity.ComposableSingletons\$CommonUtilsLibsActivityKt")
 }
-
-// Neither the Kotlin Gradle plugin's ABI validation nor the kotlinx plugin registers tasks for an Android
-// library on built-in Kotlin, so the kotlinx task types run against the release compilation.
-val abiValidationRuntime: Configuration by configurations.creating {
-    isCanBeConsumed = false
-    isCanBeResolved = true
-}
-
-dependencies {
-    abiValidationRuntime(libs.abi.asm)
-    abiValidationRuntime(libs.abi.asm.tree)
-    abiValidationRuntime(libs.abi.kotlin.metadata.jvm)
-}
-
-fun registerApiBuild(
-    taskName: String,
-    compilationName: String,
-    dumpName: String,
-    configure: KotlinApiBuildTask.() -> Unit = {},
-): TaskProvider<KotlinApiBuildTask> {
-    val build =
-        tasks.register<KotlinApiBuildTask>(taskName) {
-            description = "Builds the public ABI dump of the $compilationName compilation."
-            runtimeClasspath.from(abiValidationRuntime)
-            outputApiFile.set(layout.buildDirectory.file("api/$dumpName.api"))
-            configure()
-        }
-    extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
-        if (name == compilationName) {
-            build.configure {
-                inputClassesDirs.from(compileTaskProvider.flatMap { (it as KotlinJvmCompile).destinationDirectory })
-            }
-        }
-    }
-    return build
-}
-
-fun registerApiCompare(
-    taskName: String,
-    dumpName: String,
-    build: TaskProvider<KotlinApiBuildTask>,
-): TaskProvider<KotlinApiCompareTask> =
-    tasks.register<KotlinApiCompareTask>(taskName) {
-        group = "verification"
-        description = "Checks the public ABI against the committed api/$dumpName.api dump."
-        projectApiFile.set(layout.projectDirectory.file("api/$dumpName.api"))
-        generatedApiFile.set(build.flatMap { it.outputApiFile })
-    }
-
-val apiBuild =
-    registerApiBuild("apiBuild", "release", project.name) {
-        ignoredClasses.add("de.lemke.commonutils.ui.activity.ComposableSingletons\$CommonUtilsLibsActivityKt")
-    }
-val apiBuildTestFixtures = registerApiBuild("apiBuildTestFixtures", "releaseTestFixtures", "${project.name}-testFixtures")
-
-val apiCheck = registerApiCompare("apiCheck", project.name, apiBuild)
-val apiCheckTestFixtures = registerApiCompare("apiCheckTestFixtures", "${project.name}-testFixtures", apiBuildTestFixtures)
-apiCheck.configure { dependsOn(apiCheckTestFixtures) }
-
-tasks.register<Copy>("apiDump") {
-    group = "other"
-    description = "Overwrites api/${project.name}.api and api/${project.name}-testFixtures.api with the current public ABI."
-    from(apiBuild.flatMap { it.outputApiFile })
-    from(apiBuildTestFixtures.flatMap { it.outputApiFile })
-    into(layout.projectDirectory.dir("api"))
-}
-
-tasks.named("check") { dependsOn(apiCheck) }

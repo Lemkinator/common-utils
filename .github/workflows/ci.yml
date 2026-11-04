@@ -41,7 +41,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: detekt-report
-          path: lib/build/reports/detekt/
+          path: |
+            lib/build/reports/detekt/
+            transitions/build/reports/detekt/
+            test-support/build/reports/detekt/
       - name: Upload dependency analysis report
         if: always()
         uses: actions/upload-artifact@v7
@@ -76,7 +79,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: lint-report
-          path: lib/build/reports/lint-results-*
+          path: |
+            lib/build/reports/lint-results-*
+            transitions/build/reports/lint-results-*
+            test-support/build/reports/lint-results-*
 
   local-tests:
     runs-on: ubuntu-26.04
@@ -101,24 +107,26 @@ jobs:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       - name: Strip zero-instruction lines from coverage report
-        run: python3 .github/scripts/strip-zero-instruction-lines.py lib/build/reports/kover/reportDebug.xml
+        run: python3 .github/scripts/strip-zero-instruction-lines.py lib/build/reports/kover/reportDebug.xml transitions/build/reports/kover/reportDebug.xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
-          files: lib/build/reports/kover/reportDebug.xml
+          files: lib/build/reports/kover/reportDebug.xml,transitions/build/reports/kover/reportDebug.xml
           flags: unittests
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
-          files: lib/build/test-results/testDebugUnitTest/*.xml
+          files: lib/build/test-results/testDebugUnitTest/*.xml,transitions/build/test-results/testDebugUnitTest/*.xml
           flags: unittests
       - name: Upload coverage report on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: kover-coverage-report
-          path: lib/build/reports/kover/htmlDebug/
+          path: |
+            lib/build/reports/kover/htmlDebug/
+            transitions/build/reports/kover/htmlDebug/
       - name: Upload roborazzi diff on failure
         if: failure()
         uses: actions/upload-artifact@v7
@@ -134,6 +142,8 @@ jobs:
           path: |
             lib/build/reports/tests/testDebugUnitTest/
             lib/build/test-results/testDebugUnitTest/
+            transitions/build/reports/tests/testDebugUnitTest/
+            transitions/build/test-results/testDebugUnitTest/
 
   instrumented-tests:
     runs-on: ubuntu-26.04

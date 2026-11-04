@@ -15,9 +15,10 @@
  */
 package de.lemke.commonutils.di
 
-import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
+import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.ui.utils.InAppReview
 import de.lemke.commonutils.ui.utils.PlayInAppReview
 
@@ -35,6 +36,8 @@ import de.lemke.commonutils.ui.utils.PlayInAppReview
 @Module
 @DisableInstallInCheck
 public interface CommonUtilsInAppReviewModule {
-    @Binds
-    public fun bindInAppReview(review: PlayInAppReview): InAppReview
+    public companion object {
+        @Provides
+        public fun provideInAppReview(settings: SettingsRepository): InAppReview = PlayInAppReview(settings)
+    }
 }

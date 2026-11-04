@@ -6,8 +6,37 @@ with code in this repository.
 ## Overview
 
 Android utility library published to GitHub Packages as
-`io.github.lemkinator:common-utils`. Single `:lib` module.
+`io.github.lemkinator:common-utils`. Three modules: `:lib`, `:transitions` and the unpublished `:test-support`.
 See `gradle/libs.versions.toml` for SDK and language versions.
+
+## Modules
+
+- `:transitions` (`io.github.lemkinator:common-utils-transitions`, same version): the Android-only helpers for
+  screen changes. It holds `SplashUtils.kt`, `TransformationUtils.kt`, `TransformToActivityUtils.kt`,
+  `PredictiveBackGestureUtils.kt`, `SingleLaunchUtils.kt` (the launch latch), the in-app review (`InAppReview`,
+  `PlayInAppReview`, `InAppReviewCooldown`, the Play `review` dependency), their resources and tests. It depends on
+  `oneui-design` and `core-splashscreen`, not on `:lib`.
+- `:lib`: everything else. It re-exports `:transitions` with `api(project(":transitions"))`, so an app that depends on
+  `common-utils` also gets the transitions classes.
+- `:test-support`: an Android library that no publication includes. It holds the Robolectric helpers that the tests of
+  `:lib` and `:transitions` share: `DestroyActivitiesRule`, `DrainMainLooperRule`, `LatchTestActivity` (registered in
+  its manifest), `LatchTestFragment`, `LaunchLatchRobolectricTest`, `StartActivityFailingContext` and
+  `FakeInAppReviewCooldown`. Both modules add it with `testImplementation(project(":test-support"))`. Put a helper
+  that only these tests use there; put one that apps call in the testFixtures of the module that owns the type.
+- `launchGated`, `singleLaunchOrNull` and `admitsLaunchPreparation` are public in
+  `:transitions` so that `:lib` and `:test-support` can call them. They carry `@InternalCommonUtilsApi`, a
+  `RequiresOptIn(ERROR)` marker: the build opts every module in through the Kotlin compiler options, an app that calls
+  one fails to compile, and the ABI validation lists the marker as a non-public marker, so they are not in the dump.
+- `SettingsRepository` implements `InAppReviewCooldown`, the narrow interface `:transitions` reads and writes
+  `lastInAppReview` through. `PlayInAppReview` and the `showInAppReview*` functions take an `InAppReviewCooldown`.
+  `CommonUtilsInAppReviewModule` in `:lib` provides `PlayInAppReview(settings)`.
+- `build-logic/` is an included build with the convention plugins: `commonutils.android-library` (Android, lint,
+  Spotless, Detekt, explicit API, opt-in marker, SESL exclusions), `commonutils.publishing` (the Maven publication; a
+  module sets `description` and `commonUtilsPublishing { artifactId }`), `commonutils.api-validation` (the `apiBuild`,
+  `apiCheck` and `apiDump` tasks), `commonutils.coverage` (the 100 % Kover floor of the debug variant) and
+  `commonutils.root`. The `unitTests.all` block stays in each module's build file.
+- Each published module has its own ABI dump (`lib/api`, `transitions/api`) and Kover floor, and its own internal
+  `NoCoverage` annotation in its own package.
 
 ## Build Commands
 
@@ -18,12 +47,13 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 ./gradlew assembleRelease
 ./gradlew test           # Run unit tests
 ./gradlew koverVerifyDebug    # Check coverage floor (debug variant only)
-./gradlew apiCheck       # Compare the public ABI with lib/api/lib.api
-./gradlew apiDump        # Rewrite lib/api/lib.api after an intended API change
+./gradlew apiCheck       # Compare the public ABI of each module with its api/<module>.api dump
+./gradlew apiDump        # Rewrite the api dumps after an intended API change
 ./gradlew buildHealth    # Dependency analysis report and gate
 ```
 
-Tests live under `lib/src/test/java/de/lemke/commonutils/`.
+Tests live under `lib/src/test/java/de/lemke/commonutils/` and `transitions/src/test/java/de/lemke/commonutils/`; their shared
+helpers live in `test-support/src/main/java/de/lemke/commonutils/`.
 
 **Test stack**: Kotest 6 (`ShouldSpec` style) for pure Kotlin tests; plain JUnit 4
 (`@RunWith(RobolectricTestRunner::class)`) for every Android/Robolectric test. Konsist
@@ -81,7 +111,7 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
 - `Context.cacheWriteUriPattern(pathName, directoryName, fileName)` and `Context.cacheFileOf` — the content URI layout of a
   cache write; `directoryName` is `share` or `clipboard`.
-- `FakeInAppReview(available)` (`canShow()` returns `available`; records `showIfPossible`/`showOrFinish` calls; `showOrFinish` finishes the activity) — the fake of the `InAppReview` interface that `PlayInAppReview(settings)` implements.
+- `FakeInAppReview(available)` (`canShow()` returns `available`; records `showIfPossible`/`showOrFinish` calls; `showOrFinish` finishes the activity) — the fake of the `InAppReview` interface that `PlayInAppReview(cooldown)` implements.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
 - `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.
@@ -110,7 +140,7 @@ singleton after each test, not just defensively before it — for pending main-L
 add `@get:Rule val drainMainLooper = DrainMainLooperRule()` rather than hand-rolling an
 `@After` method per test class.
 
-**`@NoCoverage` on `inline fun`**: Kover maps inline call-site coverage back to the original
+**`@NoCoverage` on `inline fun`** (each module declares its own internal `NoCoverage`): Kover maps inline call-site coverage back to the original
 definition via JaCoCo SMAP data. This requires `@NoCoverage` on all `inline fun` that are
 never called non-inline, and unconditionally on `crossinline` default-value lambdas (the
 default compiles to a definition-site private static method that's never invoked, since the
@@ -139,7 +169,7 @@ git config core.hooksPath .githooks
 
 ## Architecture
 
-**Single-module utility library** — ships opt-in Hilt modules and one ViewModel, `BackupViewModel`, which hosts
+**Multi-module utility library** (`:lib`, plus `:transitions` that it re-exports and the unpublished `:test-support`) — ships opt-in Hilt modules and one ViewModel, `BackupViewModel`, which hosts
 the backup flow of the settings screen.
 Code is organized into:
 
@@ -162,7 +192,7 @@ selectively. View Binding is enabled.
 screen), Play Core (in-app updates + reviews), Splashscreen.
 
 **Dependency exclusions**: Many AndroidX libraries are excluded in the
-root `build.gradle.kts` to avoid version conflicts with OneUI Design's
+`commonutils.android-library` convention plugin to avoid version conflicts with OneUI Design's
 bundled dependencies — be careful when adding new dependencies.
 
 ## Preference XML ↔ Settings Binding Convention
@@ -285,7 +315,7 @@ An app that includes it must drop its own bindings for `@IoDispatcher`, `@Defaul
 `@ApplicationScope` (a duplicate binding is a Dagger compile error), and its Dagger/Hilt version must be at least the
 library's.
 
-`CommonUtilsInAppReviewModule` binds `InAppReview` to `PlayInAppReview` (needs a `SettingsRepository` binding); an app
+`CommonUtilsInAppReviewModule` provides `InAppReview` as `PlayInAppReview(settings)` (needs a `SettingsRepository` binding); an app
 includes it from its own `InAppReviewModule`, which a test replaces with `@TestInstallIn` to bind `FakeInAppReview`. The app must drop its own `@Binds` for `InAppReview`, because a duplicate binding fails compilation.
 
 Hilt modules need no ProGuard/R8 keep rules.
@@ -294,8 +324,8 @@ Hilt modules need no ProGuard/R8 keep rules.
 
 - Version catalog: `gradle/libs.versions.toml`
 - Build config: configuration cache enabled, JVM max heap 2048m
-- Maven artifact: `io.github.lemkinator:common-utils` at version defined
-  in `libs.versions.toml`
+- Maven artifacts: `io.github.lemkinator:common-utils` and `io.github.lemkinator:common-utils-transitions` at the
+  version defined in `libs.versions.toml`
 - Package namespace: `de.lemke.commonutils`
 
 ## Releases

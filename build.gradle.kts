@@ -13,18 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.android.build.api.dsl.CommonExtension
-import java.util.Properties
-
 plugins {
-    alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
-    alias(libs.plugins.kotlin.serialization) apply false
-    alias(libs.plugins.spotless)
-    alias(libs.plugins.dependency.analysis)
-    alias(libs.plugins.binary.compatibility.validator) apply false
-    alias(libs.plugins.roborazzi) apply false
+    id("commonutils.root")
 }
 
 spotless {
@@ -37,6 +27,13 @@ spotless {
         )
         licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.kt"), "(^(?![\\/ ]\\*).*$)")
         ktlint(libs.versions.ktlint.get())
+    }
+    kotlin {
+        target("build-logic/src/**/*.kt")
+        licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.kt"))
+        ktlint(libs.versions.ktlint.get())
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }
 
@@ -57,6 +54,10 @@ dependencyAnalysis {
             onCompileOnly { severity("warn") }
             onRedundantPlugins { severity("warn") }
             onDuplicateClassWarnings { severity("warn") }
+        }
+        project(":lib") {
+            // testFixtures(common-utils) re-exports the transitions fixtures to consumers.
+            onUnusedDependencies { exclude(":transitions") }
         }
     }
     structure {
@@ -81,189 +82,6 @@ dependencyAnalysis {
         bundle("robolectric") {
             primary(libs.robolectric)
             include("^org[.]robolectric:(annotations|shadows-framework)$")
-        }
-    }
-}
-
-/**
- * Converts a camelCase or mixedCase string to ENV_VAR_STYLE (uppercase with underscores).
- * Example: githubAccessToken -> GITHUB_ACCESS_TOKEN
- */
-fun String.toEnvVarStyle(): String = replace(Regex("([a-z])([A-Z])"), "$1_$2").uppercase()
-
-/**
- * Note: To configure GitHub credentials, you have to generate an access token with at least `read:packages` scope at
- * https://github.com/settings/tokens/new and then add it to any of the following:
- *
- * - Add `ghUsername` and `ghAccessToken` to Global Gradle Properties
- * - Set `GH_USERNAME` and `GH_ACCESS_TOKEN` in your environment variables or
- * - Create a `github.properties` file in your project folder with the following content:
- *      ghUsername=&lt;YOUR_GITHUB_USERNAME&gt;
- *      ghAccessToken=&lt;YOUR_GITHUB_ACCESS_TOKEN&gt;
- */
-fun getProperty(key: String): String =
-    Properties()
-        .apply {
-            rootProject
-                .file("github.properties")
-                .takeIf { it.exists() }
-                ?.inputStream()
-                ?.use { load(it) }
-        }.getProperty(key)
-        ?: rootProject.findProperty(key)?.toString()
-        ?: System.getenv(key.toEnvVarStyle())
-        ?: throw GradleException("Property $key not found")
-
-val githubUsername = getProperty("ghUsername")
-val githubAccessToken = getProperty("ghAccessToken")
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven("https://jitpack.io")
-        maven("https://maven.pkg.github.com/tribalfs/oneui-design") {
-            credentials {
-                username = githubUsername
-                password = githubAccessToken
-            }
-        }
-    }
-}
-
-subprojects {
-    plugins.withId("com.android.base") {
-        project.extensions.findByType(CommonExtension::class.java)?.apply {
-            compileOptions.apply {
-                sourceCompatibility = JavaVersion.toVersion(libs.versions.jvmTarget.get())
-                targetCompatibility = JavaVersion.toVersion(libs.versions.jvmTarget.get())
-            }
-
-            lint.informational += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
-
-            @Suppress("UnstableApiUsage")
-            testOptions.managedDevices.localDevices {
-                register("pixel9Api35") {
-                    device = "Pixel 9"
-                    apiLevel = 35
-                    systemImageSource = "aosp"
-                    testedAbi = "x86_64"
-                }
-            }
-
-            // oneui-design replaces these AOSP AndroidX modules with Samsung's SESL forks, which
-            // keep the original package names — exclude the AOSP originals everywhere to prevent
-            // shadowing.
-            listOf("com.android.application", "com.android.library").forEach { pluginId ->
-                plugins.withId(pluginId) {
-                    configurations.configureEach {
-                        exclude(group = "androidx.core", module = "core")
-                        exclude(group = "androidx.core", module = "core-ktx")
-                        exclude(group = "androidx.customview", module = "customview")
-                        exclude(group = "androidx.coordinatorlayout", module = "coordinatorlayout")
-                        exclude(group = "androidx.drawerlayout", module = "drawerlayout")
-                        exclude(group = "androidx.viewpager2", module = "viewpager2")
-                        exclude(group = "androidx.viewpager", module = "viewpager")
-                        exclude(group = "androidx.appcompat", module = "appcompat")
-                        exclude(group = "androidx.fragment", module = "fragment")
-                        exclude(group = "androidx.fragment", module = "fragment-ktx")
-                        exclude(group = "androidx.preference", module = "preference")
-                        exclude(group = "androidx.recyclerview", module = "recyclerview")
-                        exclude(group = "androidx.slidingpanelayout", module = "slidingpanelayout")
-                        exclude(group = "androidx.swiperefreshlayout", module = "swiperefreshlayout")
-                        exclude(group = "com.google.android.material", module = "material")
-                    }
-
-                    // exclude() alone is unreliable for androidx.core/core-ktx: several real,
-                    // non-SESL-forked libraries (activity, compose.ui, emoji2, autofill, window,
-                    // graphics, savedstate) each pull a different real core version, and once
-                    // enough conflicting real versions are in one graph, Gradle stops honoring the
-                    // exclude rule for this pair. Declaring the SESL fork as an alternate provider
-                    // of the real capability, then selecting it, closes that gap.
-                    dependencies {
-                        components {
-                            withModule("sesl.androidx.core:core") {
-                                allVariants { withCapabilities { addCapability("androidx.core", "core", id.version) } }
-                            }
-                            withModule("sesl.androidx.core:core-ktx") {
-                                allVariants { withCapabilities { addCapability("androidx.core", "core-ktx", id.version) } }
-                            }
-                        }
-                    }
-                    configurations.configureEach {
-                        resolutionStrategy.capabilitiesResolution {
-                            withCapability("androidx.core:core") { select(candidates.first { it.id.toString().startsWith("sesl.") }) }
-                            withCapability("androidx.core:core-ktx") { select(candidates.first { it.id.toString().startsWith("sesl.") }) }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    afterEvaluate {
-        if (!project.plugins.hasPlugin(
-                libs.plugins.maven.publish
-                    .get()
-                    .pluginId,
-            )
-        ) {
-            return@afterEvaluate
-        }
-        val artifact = "common-utils"
-        group = "io.github.lemkinator"
-        version =
-            libs.versions.common.utils
-                .get()
-        println("Evaluated $group:$artifact:$version")
-        project.extensions.configure<PublishingExtension>("publishing") {
-            publications {
-                create<MavenPublication>("mavenJava") {
-                    artifactId = artifact
-                    afterEvaluate {
-                        from(components["release"])
-                    }
-                    pom {
-                        name = artifact
-                        description = "A collection of common utility functions and classes for my Android projects."
-                        url = "https://github.com/Lemkinator/common-utils"
-                        developers {
-                            developer {
-                                id = "Lemkinator"
-                                name = "Leonard Lemke"
-                                email = "leo@leonard-lemke.com"
-                                url = "https://www.leonard-lemke.com"
-                                timezone = "Europe/Berlin"
-                            }
-                        }
-                        scm {
-                            connection = "scm:git:git://github.com/Lemkinator/common-utils.git"
-                            developerConnection = "scm:git:ssh://github.com/Lemkinator/common-utils.git"
-                            url = "https://github.com/Lemkinator/common-utils"
-                        }
-                        issueManagement {
-                            system = "GitHub Issues"
-                            url = "https://github.com/Lemkinator/common-utils/issues"
-                        }
-                        licenses {
-                            license {
-                                name = "Apache-2.0"
-                                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
-                                distribution = "repo"
-                            }
-                        }
-                    }
-                }
-            }
-            repositories {
-                maven {
-                    name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/lemkinator/common-utils")
-                    credentials {
-                        username = githubUsername
-                        password = githubAccessToken
-                    }
-                }
-            }
         }
     }
 }

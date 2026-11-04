@@ -37,6 +37,4 @@
     <!--color name="commonutils_filled_background_color">#e2e2e2</color-->
     <!--color name="commonutils_filled_background_color">#fcfcff</color>
     <color name="commonutils_filled_background_color_themed">@color/oui_des_background_color</color-->
-
-    <color name="commonutils_transparent_window_bg_color">#3B000000</color>
 </resources>
