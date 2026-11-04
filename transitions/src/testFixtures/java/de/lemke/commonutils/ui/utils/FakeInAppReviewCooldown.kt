@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.lemke.commonutils
+package de.lemke.commonutils.ui.utils
 
-/**
- * Marks a function, property getter, or class that Kover cannot instrument, e.g. `inline fun` whose bytecode is copied to each call site.
- */
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.PROPERTY_GETTER)
-@Retention(AnnotationRetention.BINARY)
-internal annotation class NoCoverage
+import de.lemke.commonutils.data.InAppReviewCooldown
+
+/** In-memory [InAppReviewCooldown] that starts at [lastInAppReview]. */
+public class FakeInAppReviewCooldown(
+    override var lastInAppReview: Long = 0L,
+) : InAppReviewCooldown

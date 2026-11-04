@@ -22,11 +22,17 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 private const val TAG = "InAppReviewCooldown"
 private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
 
+/** Stores when the last in-app review was requested, so [de.lemke.commonutils.ui.utils.PlayInAppReview] can keep its cooldown across launches. */
+public interface InAppReviewCooldown {
+    /** Epoch millis of the last in-app review request; `0` until the first check seeds it on first launch. */
+    public var lastInAppReview: Long
+}
+
 /**
- * `true` once 14 days have passed since [SettingsRepository.lastInAppReview]. A never-set timestamp is seeded with the
+ * `true` once 14 days have passed since [InAppReviewCooldown.lastInAppReview]. A never-set timestamp is seeded with the
  * current time, so the cooldown starts at first launch instead of surfacing a review request immediately.
  */
-internal fun SettingsRepository.canShowInAppReview(): Boolean {
+internal fun InAppReviewCooldown.canShowInAppReview(): Boolean {
     if (lastInAppReview == 0L) lastInAppReview = currentTimeMillis()
     val daysSinceLastReview = MILLISECONDS.toDays(currentTimeMillis() - lastInAppReview)
     Log.d(TAG, "Days since last review: $daysSinceLastReview")
@@ -34,6 +40,6 @@ internal fun SettingsRepository.canShowInAppReview(): Boolean {
 }
 
 /** Restarts the cooldown from now. */
-internal fun SettingsRepository.markInAppReviewRequested() {
+internal fun InAppReviewCooldown.markInAppReviewRequested() {
     lastInAppReview = currentTimeMillis()
 }

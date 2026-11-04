@@ -103,14 +103,13 @@ roborazzi {
 }
 
 dependencies {
+    api(project(":transitions"))
     api(libs.oneui.design)
     implementation(libs.oneui.icons)
     implementation(libs.app.update)
-    implementation(libs.review)
     implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
-    api(libs.core.splashscreen)
     api(libs.kotlinx.serialization.json)
     api(libs.lottie)
     implementation(libs.hilt.android)
@@ -123,6 +122,7 @@ dependencies {
     testImplementation(libs.bundles.robolectric.test)
     testImplementation(testFixtures(project(":lib")))
 
+    testFixturesApi(testFixtures(project(":transitions")))
     testFixturesApi(libs.androidx.test.core)
     // Compose compiler plugin applies to every Kotlin compile task in this module, including
     // testFixtures — it fails outright if no Compose runtime is on that classpath, even though
@@ -179,9 +179,6 @@ kover {
                     "*.di.*",
                     // Play Core: requires live device + Play Store; SAM lambdas slip past annotatedBy.
                     "*AppUpdateManagerUtilsKt*",
-                    "*InAppReviewUtilsKt*",
-                    // SplashUtils: exit-animation lambda drives real ObjectAnimators + lifecycleScope, untestable on JVM.
-                    "*SplashUtilsKt*",
                     // TipPopupUtils: requires OneUI TipPopup widget + real decorView root, can't instantiate under Robolectric.
                     "*TipPopupUtilsKt*",
                     // PreferenceUtilsKt: OneUI listView extension lambda, can't exercise under Robolectric.

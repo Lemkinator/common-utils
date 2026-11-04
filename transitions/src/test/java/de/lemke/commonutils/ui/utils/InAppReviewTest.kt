@@ -17,8 +17,6 @@ package de.lemke.commonutils.ui.utils
 
 import androidx.appcompat.app.AppCompatActivity
 import de.lemke.commonutils.DestroyActivitiesRule
-import de.lemke.commonutils.data.SettingsRepository
-import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.track
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -41,7 +39,7 @@ class InAppReviewTest {
     val destroyActivities = DestroyActivitiesRule()
 
     private lateinit var activity: AppCompatActivity
-    private val settings = SettingsRepository(freshTestPreferences())
+    private val cooldown = FakeInAppReviewCooldown()
 
     @Before
     fun setUp() {
@@ -55,25 +53,25 @@ class InAppReviewTest {
 
     @Test
     fun `PlayInAppReview showIfPossible within the cooldown seeds it and leaves the activity open`() {
-        PlayInAppReview(settings).showIfPossible(activity)
+        PlayInAppReview(cooldown).showIfPossible(activity)
 
-        settings.lastInAppReview shouldBeGreaterThan 0L
+        cooldown.lastInAppReview shouldBeGreaterThan 0L
         activity.isFinishing.shouldBeFalse()
     }
 
     @Test
     fun `PlayInAppReview showOrFinish within the cooldown finishes the activity`() {
-        PlayInAppReview(settings).showOrFinish(activity)
+        PlayInAppReview(cooldown).showOrFinish(activity)
 
         activity.isFinishing.shouldBeTrue()
     }
 
     @Test
     fun `PlayInAppReview canShow is false on a fresh install and true after the cooldown`() {
-        val review = PlayInAppReview(settings)
+        val review = PlayInAppReview(cooldown)
 
         review.canShow().shouldBeFalse()
-        settings.lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
+        cooldown.lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
         review.canShow().shouldBeTrue()
     }
 

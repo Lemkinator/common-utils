@@ -25,17 +25,20 @@ import androidx.activity.result.contract.ActivityResultContracts.RequestPermissi
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import de.lemke.commonutils.ui.utils.SingleLaunchResultLauncher
 import de.lemke.commonutils.ui.utils.registerForSingleLaunchResult
 
 /** Activity whose `onResume`, `onNewIntent` and result launchers drive the launch latch in tests. */
-class LatchTestActivity : AppCompatActivity() {
-    var onResumeAction: () -> Unit = {}
-    var onResult: (ActivityResult) -> Unit = {}
-    var onOtherResult: (ActivityResult) -> Unit = {}
-    var onPermissionResult: (Boolean) -> Unit = {}
-    val launcher = registerForSingleLaunchResult(StartActivityForResult()) { onResult(it) }
-    val otherLauncher = registerForSingleLaunchResult(StartActivityForResult()) { onOtherResult(it) }
-    val permissionLauncher = registerForSingleLaunchResult(RequestPermission()) { onPermissionResult(it) }
+public class LatchTestActivity : AppCompatActivity() {
+    public var onResumeAction: () -> Unit = {}
+    public var onResult: (ActivityResult) -> Unit = {}
+    public var onOtherResult: (ActivityResult) -> Unit = {}
+    public var onPermissionResult: (Boolean) -> Unit = {}
+    public val launcher: SingleLaunchResultLauncher<Intent> = registerForSingleLaunchResult(StartActivityForResult()) { onResult(it) }
+    public val otherLauncher: SingleLaunchResultLauncher<Intent> =
+        registerForSingleLaunchResult(StartActivityForResult()) { onOtherResult(it) }
+    public val permissionLauncher: SingleLaunchResultLauncher<String> =
+        registerForSingleLaunchResult(RequestPermission()) { onPermissionResult(it) }
 
     override fun onResume() {
         super.onResume()
@@ -43,15 +46,15 @@ class LatchTestActivity : AppCompatActivity() {
     }
 
     /** Delivers [intent] the way API 29+ does for a singleTop activity: without a pause. */
-    fun deliverNewIntent(intent: Intent) = onNewIntent(intent)
+    public fun deliverNewIntent(intent: Intent): Unit = onNewIntent(intent)
 }
 
 /** Fragment with a view whose `onResume`, `onDestroyView` and result launcher drive the launch latch in tests. */
-class LatchTestFragment : Fragment() {
-    var onResumeAction: () -> Unit = {}
-    var onDestroyViewAction: () -> Unit = {}
-    var onResult: (ActivityResult) -> Unit = {}
-    val launcher = registerForSingleLaunchResult(StartActivityForResult()) { onResult(it) }
+public class LatchTestFragment : Fragment() {
+    public var onResumeAction: () -> Unit = {}
+    public var onDestroyViewAction: () -> Unit = {}
+    public var onResult: (ActivityResult) -> Unit = {}
+    public val launcher: SingleLaunchResultLauncher<Intent> = registerForSingleLaunchResult(StartActivityForResult()) { onResult(it) }
 
     override fun onCreateView(
         inflater: LayoutInflater,

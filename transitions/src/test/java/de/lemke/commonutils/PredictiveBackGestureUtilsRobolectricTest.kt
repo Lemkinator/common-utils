@@ -18,8 +18,9 @@ package de.lemke.commonutils
 import android.view.View
 import androidx.activity.BackEventCompat
 import androidx.appcompat.app.AppCompatActivity
-import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.data.InAppReviewCooldown
 import de.lemke.commonutils.ui.utils.FakeInAppReview
+import de.lemke.commonutils.ui.utils.FakeInAppReviewCooldown
 import de.lemke.commonutils.ui.utils.defaultWindowBackground
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import de.lemke.commonutils.ui.utils.setWindowTransparent
@@ -173,21 +174,18 @@ class PredictiveBackGestureUtilsRobolectricTest {
     }
 
     @Test
-    fun `deprecated setCustomBackAnimation with settings restarts the cooldown on back`() {
+    fun `deprecated setCustomBackAnimation with a cooldown restarts the cooldown on back`() {
         val view = View(activity)
-        val settings =
-            SettingsRepository(freshTestPreferences()).apply {
-                lastInAppReview = System.currentTimeMillis() - DAYS.toMillis(15)
-            }
-        val lastInAppReviewBeforeBackPress = settings.lastInAppReview
-        activity.setCustomBackAnimation(view, inAppReview = settings)
+        val cooldown = FakeInAppReviewCooldown(System.currentTimeMillis() - DAYS.toMillis(15))
+        val lastInAppReviewBeforeBackPress = cooldown.lastInAppReview
+        activity.setCustomBackAnimation(view, inAppReview = cooldown)
         activity.onBackPressedDispatcher.onBackPressed()
-        settings.lastInAppReview shouldNotBe lastInAppReviewBeforeBackPress
+        cooldown.lastInAppReview shouldNotBe lastInAppReviewBeforeBackPress
     }
 
     @Test
-    fun `deprecated setCustomBackAnimation with null settings finishes the activity`() {
-        activity.setCustomBackAnimation(View(activity), inAppReview = null as SettingsRepository?)
+    fun `deprecated setCustomBackAnimation with a null cooldown finishes the activity`() {
+        activity.setCustomBackAnimation(View(activity), inAppReview = null as InAppReviewCooldown?)
         activity.onBackPressedDispatcher.onBackPressed()
         activity.isFinishing.shouldBeTrue()
     }

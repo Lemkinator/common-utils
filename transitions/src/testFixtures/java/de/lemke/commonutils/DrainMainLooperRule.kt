@@ -29,7 +29,7 @@ import org.robolectric.Shadows.shadowOf
  * left it. Add `@get:Rule val drainMainLooper = DrainMainLooperRule()` to any Robolectric test
  * that drives such a singleton so no test leaves state behind for the next one.
  */
-class DrainMainLooperRule : ExternalResource() {
+public class DrainMainLooperRule : ExternalResource() {
     override fun after() {
         val shadow = shadowOf(Looper.getMainLooper())
         while (shadow.lastScheduledTaskTime != Duration.ZERO) {

@@ -16,9 +16,8 @@
 package de.lemke.commonutils.ui.utils
 
 import androidx.appcompat.app.AppCompatActivity
-import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.data.InAppReviewCooldown
 import de.lemke.commonutils.data.canShowInAppReview
-import javax.inject.Inject
 
 /**
  * Requests the Play in-app review flow for an activity.
@@ -36,13 +35,13 @@ public interface InAppReview {
     public fun showOrFinish(activity: AppCompatActivity)
 }
 
-/** The [InAppReview] over [showInAppReviewIfPossible] and [showInAppReviewOrFinish], with the cooldown kept in [settings]. */
-public class PlayInAppReview @Inject constructor(
-    private val settings: SettingsRepository,
+/** The [InAppReview] over [showInAppReviewIfPossible] and [showInAppReviewOrFinish], with the cooldown kept in [cooldown]. */
+public class PlayInAppReview(
+    private val cooldown: InAppReviewCooldown,
 ) : InAppReview {
-    override fun canShow(): Boolean = settings.canShowInAppReview()
+    override fun canShow(): Boolean = cooldown.canShowInAppReview()
 
-    override fun showIfPossible(activity: AppCompatActivity): Unit = activity.showInAppReviewIfPossible(settings)
+    override fun showIfPossible(activity: AppCompatActivity): Unit = activity.showInAppReviewIfPossible(cooldown)
 
-    override fun showOrFinish(activity: AppCompatActivity): Unit = activity.showInAppReviewOrFinish(settings)
+    override fun showOrFinish(activity: AppCompatActivity): Unit = activity.showInAppReviewOrFinish(cooldown)
 }

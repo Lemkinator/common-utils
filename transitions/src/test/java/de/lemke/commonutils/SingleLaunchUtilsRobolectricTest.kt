@@ -61,6 +61,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowActivity.IntentForResult
+import dev.oneuiproject.oneui.design.R as designR
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -108,7 +109,7 @@ class SingleLaunchUtilsRobolectricTest : LaunchLatchRobolectricTest() {
     @Test
     fun `theme wrapper around the activity shares its latch`() {
         val activity = resumed().get()
-        val wrapper = ContextThemeWrapper(activity, R.style.CommonUtils_AppTheme)
+        val wrapper = ContextThemeWrapper(activity, designR.style.OneUITheme)
 
         wrapper.launchScreen().shouldBeTrue()
 

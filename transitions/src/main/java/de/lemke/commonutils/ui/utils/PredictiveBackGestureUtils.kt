@@ -38,8 +38,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import de.lemke.commonutils.NoCoverage
-import de.lemke.commonutils.R
-import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.data.InAppReviewCooldown
+import de.lemke.commonutils.transitions.R
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -185,7 +185,7 @@ public fun AppCompatActivity.setCustomBackAnimation(
 public fun AppCompatActivity.setCustomBackAnimation(
     animatedView: View,
     backEnabled: StateFlow<Boolean>? = null,
-    inAppReview: SettingsRepository?,
+    inAppReview: InAppReviewCooldown?,
 ) {
     setCustomBackAnimation(animatedView, backEnabled, inAppReview?.let(::PlayInAppReview))
 }

@@ -21,11 +21,11 @@ import android.content.Intent
 import android.os.Bundle
 
 /** Records a copy of every intent passed to [startActivity], as it was at the call, then throws [failure]. */
-internal class StartActivityFailingContext(
+public class StartActivityFailingContext(
     base: Context,
     private val failure: RuntimeException,
 ) : ContextWrapper(base) {
-    val startedIntents = mutableListOf<Intent>()
+    public val startedIntents: MutableList<Intent> = mutableListOf<Intent>()
 
     override fun startActivity(intent: Intent) {
         startedIntents += Intent(intent)

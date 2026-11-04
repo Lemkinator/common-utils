@@ -62,7 +62,9 @@ android {
 dependencies {
     api(libs.oneui.design)
     api(libs.core.splashscreen)
+    implementation(libs.review)
 
+    testImplementation(testFixtures(project(":transitions")))
     testImplementation(libs.bundles.unit.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
@@ -81,7 +83,13 @@ kover {
     reports {
         filters {
             excludes {
-                classes("*.BuildConfig")
+                classes(
+                    "*.BuildConfig",
+                    // Play Core: requires live device + Play Store; SAM lambdas slip past annotatedBy.
+                    "*InAppReviewUtilsKt*",
+                    // SplashUtils: exit-animation lambda drives real ObjectAnimators + lifecycleScope, untestable on JVM.
+                    "*SplashUtilsKt*",
+                )
                 annotatedBy("de.lemke.commonutils.NoCoverage")
             }
         }

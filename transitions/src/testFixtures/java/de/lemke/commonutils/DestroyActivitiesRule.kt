@@ -29,7 +29,7 @@ import org.robolectric.android.controller.ActivityController
  * `ActivityScenario.launch()`. Add `@get:Rule val destroyActivities = DestroyActivitiesRule()` and
  * chain `.track(destroyActivities)` onto every `Robolectric.buildActivity(...).setup()` call.
  */
-class DestroyActivitiesRule : ExternalResource() {
+public class DestroyActivitiesRule : ExternalResource() {
     private val controllers = mutableListOf<ActivityController<*>>()
 
     internal fun register(controller: ActivityController<*>) {
@@ -47,4 +47,4 @@ class DestroyActivitiesRule : ExternalResource() {
 }
 
 /** Registers this controller with [rule] so [DestroyActivitiesRule.after] destroys it. */
-fun <T : Activity> ActivityController<T>.track(rule: DestroyActivitiesRule): ActivityController<T> = also { rule.register(it) }
+public fun <T : Activity> ActivityController<T>.track(rule: DestroyActivitiesRule): ActivityController<T> = also { rule.register(it) }

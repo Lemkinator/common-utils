@@ -31,6 +31,8 @@ import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.annotation.MainThread
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Consumer
 import androidx.fragment.app.Fragment
@@ -298,19 +300,22 @@ internal fun Context?.inputViewsCurrent(): Boolean = launchLatch?.inputViewsCurr
  * [singleLaunchSuspending] input; true otherwise.
  */
 @MainThread
-internal suspend fun Context.admitsLaunchPreparation(): Boolean =
+@RestrictTo(LIBRARY_GROUP)
+public suspend fun Context.admitsLaunchPreparation(): Boolean =
     (activity as? ComponentActivity)?.let(launchLatches::get)?.admitsLaunchFrom(currentCoroutineContext()) != false
 
 /** Runs [action] as an input and returns its result, or null if the latch dropped it; see [Context.singleLaunch]. */
 @MainThread
-internal fun <R : Any> Context?.singleLaunchOrNull(action: () -> R): R? = if (launchLatch?.admitsInput == false) null else action()
+@RestrictTo(LIBRARY_GROUP)
+public fun <R : Any> Context?.singleLaunchOrNull(action: () -> R): R? = if (launchLatch?.admitsInput == false) null else action()
 
 /**
  * Runs [start] as a gated launch of this context's activity; [owner] is the result launcher that launches, if any.
  * @return true if [start] ran, false if the latch dropped it.
  */
 @MainThread
-internal fun Context?.launchGated(
+@RestrictTo(LIBRARY_GROUP)
+public fun Context?.launchGated(
     owner: ActivityResultLauncher<*>? = null,
     start: () -> Unit,
 ): Boolean =

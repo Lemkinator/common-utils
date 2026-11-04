@@ -21,30 +21,30 @@ import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
-import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.data.InAppReviewCooldown
 import de.lemke.commonutils.data.canShowInAppReview
 import de.lemke.commonutils.data.markInAppReviewRequested
 
 private const val TAG = "InAppReviewUtils"
 
 /** Attempts to show the in-app review flow; finishes the activity whether the review is shown or skipped. */
-public fun AppCompatActivity.showInAppReviewOrFinish(settings: SettingsRepository): Unit =
+public fun AppCompatActivity.showInAppReviewOrFinish(cooldown: InAppReviewCooldown): Unit =
     showInAppReview(
-        settings,
+        cooldown,
         onNotAllowed = { finishAfterTransition() },
         onCompleted = { finishAfterTransition() },
     )
 
 /** Requests the in-app review flow if the cooldown period has elapsed; silently skips otherwise. */
-public fun AppCompatActivity.showInAppReviewIfPossible(settings: SettingsRepository): Unit = showInAppReview(settings)
+public fun AppCompatActivity.showInAppReviewIfPossible(cooldown: InAppReviewCooldown): Unit = showInAppReview(cooldown)
 
 @Suppress("TooGenericExceptionCaught")
 private fun AppCompatActivity.showInAppReview(
-    settings: SettingsRepository,
+    cooldown: InAppReviewCooldown,
     onNotAllowed: () -> Unit = {},
     onCompleted: () -> Unit = {},
 ) {
-    if (!settings.canShowInAppReview()) {
+    if (!cooldown.canShowInAppReview()) {
         Log.d(TAG, "In app review requested recently, skipping")
         onNotAllowed()
         return
@@ -52,7 +52,7 @@ private fun AppCompatActivity.showInAppReview(
     Log.d(TAG, "trying to show in app review")
     // Stamp the cooldown before launching the flow so repeated rapid calls or process restarts
     // during the request do not hammer Play Core. The 14-day window is intentionally pessimistic.
-    settings.markInAppReviewRequested()
+    cooldown.markInAppReviewRequested()
     try {
         val manager = ReviewManagerFactory.create(this)
         manager.requestReviewFlow().addOnCompleteListener { task ->
