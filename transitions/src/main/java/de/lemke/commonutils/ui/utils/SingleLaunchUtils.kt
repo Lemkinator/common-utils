@@ -56,8 +56,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 
 /** How long a gated launch holds the latch before it settles without a pause. */
-@InternalCommonUtilsApi
-public val LAUNCH_LATCH_LEAVING_TIMEOUT: Duration = 1.seconds
+private val LAUNCH_LATCH_LEAVING_TIMEOUT: Duration = 1.seconds
 
 private val launchLatches = hashMapOf<Activity, LaunchLatch>()
 

@@ -23,7 +23,7 @@ See `gradle/libs.versions.toml` for SDK and language versions.
   its manifest), `LatchTestFragment`, `LaunchLatchRobolectricTest`, `StartActivityFailingContext` and
   `FakeInAppReviewCooldown`. Both modules add it with `testImplementation(project(":test-support"))`. Put a helper
   that only these tests use there; put one that apps call in the testFixtures of the module that owns the type.
-- `launchGated`, `singleLaunchOrNull`, `admitsLaunchPreparation` and `LAUNCH_LATCH_LEAVING_TIMEOUT` are public in
+- `launchGated`, `singleLaunchOrNull` and `admitsLaunchPreparation` are public in
   `:transitions` so that `:lib` and `:test-support` can call them. They carry `@InternalCommonUtilsApi`, a
   `RequiresOptIn(ERROR)` marker: the build opts every module in through the Kotlin compiler options, an app that calls
   one fails to compile, and the ABI validation lists the marker as a non-public marker, so they are not in the dump.
