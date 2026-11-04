@@ -20,34 +20,26 @@ import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import kotlinx.validation.KotlinApiBuildTask
 
 plugins {
-    alias(libs.plugins.android.library)
+    id("commonutils.publishing")
+    id("commonutils.api-validation")
+    id("commonutils.coverage")
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.maven.publish)
-    alias(libs.plugins.signing)
-    alias(libs.plugins.detekt)
-    alias(libs.plugins.spotless)
-    alias(libs.plugins.kover)
-    alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.roborazzi)
     id("kotlin-parcelize")
 }
 
 description = "A collection of common utility functions and classes for my Android projects."
-extra["artifactId"] = "common-utils"
+commonUtilsPublishing {
+    artifactId = "common-utils"
+}
 
 android {
     namespace = "de.lemke.commonutils"
     defaultConfig {
         testInstrumentationRunner = "de.lemke.commonutils.HiltTestRunner"
-    }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
-        }
     }
     buildFeatures {
         viewBinding = true
@@ -81,7 +73,6 @@ android {
                 test.systemProperty("roborazzi.test.verify", project.findProperty("roborazzi.verify") ?: "true")
             }
         }
-        animationsDisabled = true
     }
     sourceSets {
         listOf("test", "androidTest").forEach { name ->
@@ -206,19 +197,7 @@ kover {
                 annotatedBy("de.lemke.commonutils.NoCoverage")
             }
         }
-        variant("debug") {
-            verify {
-                rule {
-                    minBound(100, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.INSTRUCTION)
-                    minBound(100, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH)
-                }
-            }
-        }
     }
-}
-
-kotlin {
-    explicitApi()
 }
 
 tasks.named<KotlinApiBuildTask>("apiBuild") {

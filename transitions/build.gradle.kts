@@ -15,25 +15,18 @@
  */
 
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.maven.publish)
-    alias(libs.plugins.detekt)
-    alias(libs.plugins.spotless)
-    alias(libs.plugins.kover)
-    alias(libs.plugins.dependency.analysis)
+    id("commonutils.publishing")
+    id("commonutils.api-validation")
+    id("commonutils.coverage")
 }
 
 description = "Android-only activity transitions, splash exit and predictive-back helpers for my Android projects."
-extra["artifactId"] = "common-utils-transitions"
+commonUtilsPublishing {
+    artifactId = "common-utils-transitions"
+}
 
 android {
     namespace = "de.lemke.commonutils.transitions"
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
-        }
-    }
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.all { test ->
@@ -87,7 +80,6 @@ kover {
         filters {
             excludes {
                 classes(
-                    "*.BuildConfig",
                     // Play Core: requires live device + Play Store; SAM lambdas slip past annotatedBy.
                     "*InAppReviewUtilsKt*",
                     // SplashUtils: exit-animation lambda drives real ObjectAnimators + lifecycleScope, untestable on JVM.
@@ -96,17 +88,5 @@ kover {
                 annotatedBy("de.lemke.commonutils.transitions.NoCoverage")
             }
         }
-        variant("debug") {
-            verify {
-                rule {
-                    minBound(100, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.INSTRUCTION)
-                    minBound(100, coverageUnits = kotlinx.kover.gradle.plugin.dsl.CoverageUnit.BRANCH)
-                }
-            }
-        }
     }
-}
-
-kotlin {
-    explicitApi()
 }
