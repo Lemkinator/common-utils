@@ -16,10 +16,13 @@
 package de.lemke.commonutils
 
 import android.graphics.Outline
+import android.graphics.Rect
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.BackAnimationOutlineProvider
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.floats.shouldBeExactly
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -57,12 +60,15 @@ class BackAnimationOutlineProviderTest {
     }
 
     @Test
-    fun `getOutline calls setRoundRect with current radius`() {
+    fun `getOutline rounds the view bounds with the current radius`() {
         val provider = BackAnimationOutlineProvider()
         provider.progress = 0.5f
-        val view = View(ApplicationProvider.getApplicationContext())
+        val view = View(ApplicationProvider.getApplicationContext()).apply { layout(0, 0, 200, 300) }
         val outline = Outline()
         provider.getOutline(view, outline)
-        // Outline was modified; just verify no exception thrown
+        val bounds = Rect()
+        outline.getRect(bounds).shouldBeTrue()
+        bounds shouldBe Rect(0, 0, 200, 300)
+        outline.radius shouldBeExactly 50f
     }
 }
