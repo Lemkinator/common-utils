@@ -332,8 +332,9 @@ Hilt modules need no ProGuard/R8 keep rules.
 
 Releases are a manual owner step. A push to main that changes the
 `common-utils` version in `gradle/libs.versions.toml` publishes.
-Agents never bump the version or release. Every release bumps only the patch
-number, breaking changes included.
+Agents never bump the version or release. A release bumps the patch number,
+or the minor number when compiled callers break (changed or removed public
+signatures).
 
 ## First-Run Flow
 
