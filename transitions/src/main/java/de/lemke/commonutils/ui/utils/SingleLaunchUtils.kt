@@ -31,8 +31,6 @@ import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.annotation.MainThread
-import androidx.annotation.RestrictTo
-import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Consumer
 import androidx.fragment.app.Fragment
@@ -43,6 +41,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withResumed
 import androidx.preference.Preference
+import de.lemke.commonutils.transitions.InternalCommonUtilsApi
 import dev.oneuiproject.oneui.ktx.activity
 import dev.oneuiproject.oneui.ktx.onClick
 import java.util.Collections
@@ -50,12 +49,15 @@ import java.util.EnumSet
 import java.util.WeakHashMap
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 
-private val LEAVING_TIMEOUT = 1.seconds
+/** How long a gated launch holds the latch before it settles without a pause. */
+@InternalCommonUtilsApi
+public val LAUNCH_LATCH_LEAVING_TIMEOUT: Duration = 1.seconds
 
 private val launchLatches = hashMapOf<Activity, LaunchLatch>()
 
@@ -232,7 +234,7 @@ private class LaunchLatch(
 
     private fun armLeavingTimeout() {
         handler.removeCallbacks(leavingTimeout)
-        handler.postDelayed(leavingTimeout, LEAVING_TIMEOUT.inWholeMilliseconds)
+        handler.postDelayed(leavingTimeout, LAUNCH_LATCH_LEAVING_TIMEOUT.inWholeMilliseconds)
     }
 
     private fun settle() {
@@ -300,13 +302,13 @@ internal fun Context?.inputViewsCurrent(): Boolean = launchLatch?.inputViewsCurr
  * [singleLaunchSuspending] input; true otherwise.
  */
 @MainThread
-@RestrictTo(LIBRARY_GROUP)
+@InternalCommonUtilsApi
 public suspend fun Context.admitsLaunchPreparation(): Boolean =
     (activity as? ComponentActivity)?.let(launchLatches::get)?.admitsLaunchFrom(currentCoroutineContext()) != false
 
 /** Runs [action] as an input and returns its result, or null if the latch dropped it; see [Context.singleLaunch]. */
 @MainThread
-@RestrictTo(LIBRARY_GROUP)
+@InternalCommonUtilsApi
 public fun <R : Any> Context?.singleLaunchOrNull(action: () -> R): R? = if (launchLatch?.admitsInput == false) null else action()
 
 /**
@@ -314,7 +316,7 @@ public fun <R : Any> Context?.singleLaunchOrNull(action: () -> R): R? = if (laun
  * @return true if [start] ran, false if the latch dropped it.
  */
 @MainThread
-@RestrictTo(LIBRARY_GROUP)
+@InternalCommonUtilsApi
 public fun Context?.launchGated(
     owner: ActivityResultLauncher<*>? = null,
     start: () -> Unit,

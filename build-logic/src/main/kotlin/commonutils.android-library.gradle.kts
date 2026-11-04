@@ -84,6 +84,7 @@ extensions.configure<LibraryExtension> {
 
 extensions.configure<KotlinAndroidProjectExtension> {
     explicitApi()
+    compilerOptions.optIn.add(INTERNAL_API_MARKER)
 }
 
 // oneui-design replaces these AOSP AndroidX modules with Samsung's SESL forks, which

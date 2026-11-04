@@ -24,3 +24,6 @@ internal val Project.catalog: VersionCatalog
 internal fun VersionCatalog.version(alias: String): String = findVersion(alias).get().requiredVersion
 
 internal fun VersionCatalog.library(alias: String) = findLibrary(alias).get()
+
+/** The opt-in marker of the API that the common-utils modules share but do not publish; see `InternalCommonUtilsApi`. */
+internal const val INTERNAL_API_MARKER = "de.lemke.commonutils.transitions.InternalCommonUtilsApi"

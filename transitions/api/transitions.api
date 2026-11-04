@@ -3,6 +3,9 @@ public abstract interface class de/lemke/commonutils/data/InAppReviewCooldown {
 	public abstract fun setLastInAppReview (J)V
 }
 
+public abstract interface annotation class de/lemke/commonutils/transitions/InternalCommonUtilsApi : java/lang/annotation/Annotation {
+}
+
 public abstract interface class de/lemke/commonutils/ui/utils/InAppReview {
 	public abstract fun canShow ()Z
 	public abstract fun showIfPossible (Landroidx/appcompat/app/AppCompatActivity;)V
@@ -41,9 +44,6 @@ public abstract class de/lemke/commonutils/ui/utils/SingleLaunchResultLauncher :
 }
 
 public final class de/lemke/commonutils/ui/utils/SingleLaunchUtilsKt {
-	public static final fun admitsLaunchPreparation (Landroid/content/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static final fun launchGated (Landroid/content/Context;Landroidx/activity/result/ActivityResultLauncher;Lkotlin/jvm/functions/Function0;)Z
-	public static synthetic fun launchGated$default (Landroid/content/Context;Landroidx/activity/result/ActivityResultLauncher;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Z
 	public static final fun onSingleLaunchClick (Landroid/view/View;Lkotlin/jvm/functions/Function1;)V
 	public static final fun onSingleLaunchClick (Landroidx/preference/Preference;Lkotlin/jvm/functions/Function1;)Landroidx/preference/Preference;
 	public static final fun registerForSingleLaunchResult (Landroidx/activity/ComponentActivity;Landroidx/activity/result/contract/ActivityResultContract;Landroidx/activity/result/ActivityResultCallback;)Lde/lemke/commonutils/ui/utils/SingleLaunchResultLauncher;
@@ -53,7 +53,6 @@ public final class de/lemke/commonutils/ui/utils/SingleLaunchUtilsKt {
 	public static final fun singleLaunchActivity (Landroid/content/Context;Landroid/content/Intent;Landroid/os/Bundle;)Z
 	public static synthetic fun singleLaunchActivity$default (Landroid/content/Context;Landroid/content/Intent;Landroid/os/Bundle;ILjava/lang/Object;)Z
 	public static final fun singleLaunchMenuItem (Landroid/content/Context;Lkotlin/jvm/functions/Function0;)Z
-	public static final fun singleLaunchOrNull (Landroid/content/Context;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
 	public static final fun singleLaunchSuspending (Landroidx/activity/ComponentActivity;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;)Z
 	public static final fun singleLaunchSuspending (Landroidx/fragment/app/Fragment;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;)Z
 }

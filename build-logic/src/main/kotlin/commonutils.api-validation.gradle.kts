@@ -43,6 +43,7 @@ fun registerApiBuild(
         tasks.register<KotlinApiBuildTask>(taskName) {
             description = "Builds the public ABI dump of the $compilationName compilation."
             runtimeClasspath.from(abiValidationRuntime)
+            nonPublicMarkers.add(INTERNAL_API_MARKER)
             outputApiFile.set(layout.buildDirectory.file("api/$dumpName.api"))
         }
     extensions.getByType<KotlinAndroidProjectExtension>().target.compilations.configureEach {
