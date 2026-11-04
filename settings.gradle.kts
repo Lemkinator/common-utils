@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.io.StringReader
+import java.util.Properties
+
 pluginManagement {
     includeBuild("build-logic")
     repositories {
@@ -25,6 +28,35 @@ pluginManagement {
 }
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
+val githubProperties =
+    providers.fileContents(layout.rootDirectory.file("github.properties")).asText.map { text ->
+        Properties().apply { load(StringReader(text)) }
+    }
+
+// Same lookup order as githubProperty in build-logic: github.properties, Gradle property, environment variable.
+fun githubProperty(key: String): String =
+    githubProperties
+        .map { it.getProperty(key) }
+        .orElse(providers.gradleProperty(key))
+        .orElse(providers.environmentVariable(key.replace(Regex("([a-z])([A-Z])"), "$1_$2").uppercase()))
+        .orNull
+        ?: throw GradleException("Property $key not found")
+
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+        maven("https://maven.pkg.github.com/tribalfs/oneui-design") {
+            credentials {
+                username = githubProperty("ghUsername")
+                password = githubProperty("ghAccessToken")
+            }
+        }
+    }
 }
 
 rootProject.name = "Common Utils"

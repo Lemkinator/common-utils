@@ -29,18 +29,6 @@ plugins {
 group = "io.github.lemkinator"
 version = catalog.version("common-utils")
 
-repositories {
-    google()
-    mavenCentral()
-    maven("https://jitpack.io")
-    maven("https://maven.pkg.github.com/tribalfs/oneui-design") {
-        credentials {
-            username = githubProperty("ghUsername")
-            password = githubProperty("ghAccessToken")
-        }
-    }
-}
-
 extensions.configure<LibraryExtension> {
     compileOptions {
         sourceCompatibility = JavaVersion.toVersion(catalog.version("jvmTarget"))

@@ -17,7 +17,3 @@ plugins {
     id("com.diffplug.spotless")
     id("com.autonomousapps.dependency-analysis")
 }
-
-repositories {
-    mavenCentral()
-}
