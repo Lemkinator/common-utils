@@ -31,36 +31,34 @@ extensions.configure<LibraryExtension> {
     }
 }
 
-// AGP builds the release component, and the test-fixtures configurations below, after evaluation.
-afterEvaluate {
-    val artifact = commonUtilsPublishing.artifactId.get()
-    val moduleDescription = requireNotNull(project.description) { "Set description in ${project.path}" }
+// AGP derives a testFixtures configuration's published capability from the Gradle project name, not from the
+// artifactId, so consumers doing testFixtures(libs.common.utils) can't resolve it without this.
+// Capabilities are additive, so add the correct one alongside AGP's rather than renaming the project (which
+// would also silently rename every task path).
+configurations
+    .matching {
+        it.name in
+            setOf(
+                "releaseTestFixturesApiElements",
+                "releaseTestFixturesRuntimeElements",
+                "releaseTestFixturesVariantReleaseApiPublication",
+                "releaseTestFixturesVariantReleaseRuntimePublication",
+            )
+    }.configureEach {
+        outgoing.capability("$group:${commonUtilsPublishing.artifactId.get()}-test-fixtures:$version")
+    }
 
-    // AGP derives a testFixtures configuration's published capability from the Gradle project name, not from the
-    // artifactId, so consumers doing testFixtures(libs.common.utils) can't resolve it without this.
-    // Capabilities are additive, so add the correct one alongside AGP's rather than renaming the project (which
-    // would also silently rename every task path).
-    configurations
-        .matching {
-            it.name in
-                setOf(
-                    "releaseTestFixturesApiElements",
-                    "releaseTestFixturesRuntimeElements",
-                    "releaseTestFixturesVariantReleaseApiPublication",
-                    "releaseTestFixturesVariantReleaseRuntimePublication",
-                )
-        }.configureEach {
-            outgoing.capability("$group:$artifact-test-fixtures:$version")
-        }
-
-    extensions.configure<PublishingExtension> {
+extensions.configure<PublishingExtension> {
+    components.matching { it.name == "release" }.configureEach {
+        val release = this
         publications {
             create<MavenPublication>("mavenJava") {
+                val artifact = commonUtilsPublishing.artifactId.get()
                 artifactId = artifact
-                from(components["release"])
+                from(release)
                 pom {
                     name = artifact
-                    description = moduleDescription
+                    description = requireNotNull(project.description) { "Set description in ${project.path}" }
                     url = "https://github.com/Lemkinator/common-utils"
                     developers {
                         developer {
@@ -90,14 +88,14 @@ afterEvaluate {
                 }
             }
         }
-        repositories {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/lemkinator/common-utils")
-                credentials {
-                    username = githubProperty("ghUsername")
-                    password = githubProperty("ghAccessToken")
-                }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/lemkinator/common-utils")
+            credentials {
+                username = githubProperty("ghUsername")
+                password = githubProperty("ghAccessToken")
             }
         }
     }
