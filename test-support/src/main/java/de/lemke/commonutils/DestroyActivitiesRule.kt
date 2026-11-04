@@ -32,10 +32,6 @@ import org.robolectric.android.controller.ActivityController
 public class DestroyActivitiesRule : ExternalResource() {
     private val controllers = mutableListOf<ActivityController<*>>()
 
-    internal fun register(controller: ActivityController<*>) {
-        controllers += controller
-    }
-
     override fun after() {
         val firstFailure =
             controllers
@@ -43,6 +39,10 @@ public class DestroyActivitiesRule : ExternalResource() {
                 .firstOrNull()
         controllers.clear()
         if (firstFailure != null) throw firstFailure
+    }
+
+    internal fun register(controller: ActivityController<*>) {
+        controllers += controller
     }
 }
 
