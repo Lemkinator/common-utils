@@ -134,14 +134,14 @@ configurations.configureEach {
 extensions.configure<SpotlessExtension> {
     kotlin {
         target("src/**/*.kt")
-        licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.kt"))
+        licenseHeaderFile(isolated.rootProject.projectDirectory.file("config/spotless/apache-2.0.kt"))
         ktlint(catalog.version("ktlint"))
         trimTrailingWhitespace()
         endWithNewline()
     }
     format("xml") {
         target("src/**/*.xml")
-        licenseHeaderFile(rootProject.file("config/spotless/apache-2.0.xml"), "(<[^!?])")
+        licenseHeaderFile(isolated.rootProject.projectDirectory.file("config/spotless/apache-2.0.xml"), "(<[^!?])")
         trimTrailingWhitespace()
         endWithNewline()
     }
@@ -149,7 +149,7 @@ extensions.configure<SpotlessExtension> {
 
 extensions.configure<DetektExtension> {
     toolVersion = catalog.version("detekt")
-    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    config.setFrom(isolated.rootProject.projectDirectory.file("config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
     parallel = true
     autoCorrect = false

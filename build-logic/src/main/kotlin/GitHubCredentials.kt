@@ -25,7 +25,7 @@ import org.gradle.api.Project
  * The token needs at least the `read:packages` scope: https://github.com/settings/tokens/new
  */
 internal fun Project.githubProperty(key: String): String {
-    val file = rootProject.layout.projectDirectory.file("github.properties")
+    val file = isolated.rootProject.projectDirectory.file("github.properties")
     val fromFile =
         providers.fileContents(file).asText.map { text ->
             Properties().apply { load(StringReader(text)) }.getProperty(key)
