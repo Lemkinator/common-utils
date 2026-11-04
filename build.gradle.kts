@@ -66,6 +66,10 @@ dependencyAnalysis {
             onRedundantPlugins { severity("warn") }
             onDuplicateClassWarnings { severity("warn") }
         }
+        project(":lib") {
+            // testFixtures(common-utils) re-exports the transitions fixtures to consumers.
+            onUnusedDependencies { exclude(":transitions") }
+        }
     }
     structure {
         bundle("hilt") {

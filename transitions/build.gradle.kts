@@ -65,7 +65,10 @@ dependencies {
     implementation(libs.review)
 
     testImplementation(testFixtures(project(":transitions")))
-    testImplementation(libs.bundles.unit.test)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.junit4)

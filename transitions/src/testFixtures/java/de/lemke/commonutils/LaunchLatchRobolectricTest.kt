@@ -35,6 +35,8 @@ import org.robolectric.android.controller.ActivityController
 import org.robolectric.shadows.ShadowActivity.IntentForResult
 import org.robolectric.shadows.ShadowLooper
 
+private const val LATCH_TIMEOUT_MILLIS = 1000L
+
 /** Rules and helpers that drive the launch latch of a [LatchTestActivity]. */
 public abstract class LaunchLatchRobolectricTest {
     @get:Rule
@@ -85,7 +87,7 @@ public abstract class LaunchLatchRobolectricTest {
     }
 
     protected fun LatchTestActivity.shouldSettleAfterOneSecond() {
-        shadowLooper.idleFor(Duration.ofMillis(999))
+        shadowLooper.idleFor(Duration.ofMillis(LATCH_TIMEOUT_MILLIS - 1))
         assertFalse(singleLaunch {})
         shadowLooper.idleFor(Duration.ofMillis(1))
         assertTrue(singleLaunch {})

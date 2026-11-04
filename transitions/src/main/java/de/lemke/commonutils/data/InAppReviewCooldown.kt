@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 private const val TAG = "InAppReviewCooldown"
 private const val MIN_DAYS_BETWEEN_REVIEWS = 14L
 
-/** Stores when the last in-app review was requested, so [de.lemke.commonutils.ui.utils.PlayInAppReview] can keep its cooldown across launches. */
+/** Stores when the last in-app review was requested, so `PlayInAppReview` can keep its cooldown across launches. */
 public interface InAppReviewCooldown {
     /** Epoch millis of the last in-app review request; `0` until the first check seeds it on first launch. */
     public var lastInAppReview: Long
