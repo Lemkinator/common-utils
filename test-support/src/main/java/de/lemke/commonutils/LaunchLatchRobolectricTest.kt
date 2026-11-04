@@ -46,6 +46,9 @@ public abstract class LaunchLatchRobolectricTest {
 
     protected val shadowLooper: ShadowLooper get() = shadowOf(Looper.getMainLooper())
 
+    protected val ActivityController<LatchTestActivity>.observerCount: Int
+        get() = (get().lifecycle as LifecycleRegistry).observerCount
+
     protected fun resumed(): ActivityController<LatchTestActivity> = untrackedResumed().track(destroyActivities)
 
     protected fun untrackedResumed(): ActivityController<LatchTestActivity> =
@@ -64,9 +67,6 @@ public abstract class LaunchLatchRobolectricTest {
             assertTrue(it.get().launchScreen())
             it.pause()
         }
-
-    protected val ActivityController<LatchTestActivity>.observerCount: Int
-        get() = (get().lifecycle as LifecycleRegistry).observerCount
 
     protected fun Context.launchScreen(): Boolean = singleLaunchActivity(Intent(this, Activity::class.java))
 
