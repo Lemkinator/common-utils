@@ -239,7 +239,12 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
     @Test
     fun `a throwing pop-over launch reopens the latch`() {
         oneUi(true)
-        val activity = Robolectric.buildActivity(FailingStartActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(FailingStartActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         val view = activity.attachedView()
 
         shouldThrow<ActivityNotFoundException> { view.launchDrawerPage(Activity::class.java) }
@@ -250,7 +255,12 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
     @Test
     fun `the condition reads the resources of the launching activity`() {
         oneUi(true)
-        val activity = Robolectric.buildActivity(NarrowActivity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(NarrowActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         activity.resources.configuration.smallestScreenWidthDp shouldBe NARROW_SMALLEST_WIDTH_DP
         activity.applicationContext.resources.configuration.smallestScreenWidthDp shouldBe 600
 
