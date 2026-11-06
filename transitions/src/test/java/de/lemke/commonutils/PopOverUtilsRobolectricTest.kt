@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import android.app.Activity
 import android.content.Intent
+import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import de.lemke.commonutils.ui.utils.singleLaunchPopOverActivity
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -30,7 +31,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36], qualifiers = "w1280dp-h800dp-land-xhdpi")
+@Config(sdk = [36], qualifiers = RobolectricDeviceQualifiers.MediumTablet)
 class PopOverUtilsRobolectricTest : LaunchLatchRobolectricTest() {
     @Test
     fun `class overload starts the component with the single top flag and no options off One UI`() {
@@ -52,7 +53,19 @@ class PopOverUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         activity.singleLaunchPopOverActivity(intent).shouldBeTrue()
 
         intent.flags shouldBe 0
-        shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull()
+        val started = shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull()
+        started.intent.component?.className shouldBe Activity::class.java.name
+        (started.intent.flags and Intent.FLAG_ACTIVITY_SINGLE_TOP) shouldBe Intent.FLAG_ACTIVITY_SINGLE_TOP
+    }
+
+    @Test
+    fun `reified overload starts the component with the single top flag`() {
+        val activity = resumed().get()
+
+        activity.singleLaunchPopOverActivity<Activity>().shouldBeTrue()
+
+        val started = shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull()
+        started.intent.component?.className shouldBe Activity::class.java.name
     }
 
     @Test

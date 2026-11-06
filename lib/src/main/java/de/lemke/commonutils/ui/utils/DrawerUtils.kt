@@ -15,6 +15,7 @@
  */
 package de.lemke.commonutils.ui.utils
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
@@ -87,7 +88,12 @@ public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
 
 @NoCoverage
 private fun View.openAboutActivity() {
-    context.activity?.singleLaunchPopOverActivity(CommonUtilsAboutActivity::class.java)
+    val activity = context.activity
+    if (activity != null) {
+        activity.singleLaunchPopOverActivity<CommonUtilsAboutActivity>()
+    } else {
+        context.singleLaunchActivity(Intent(context, CommonUtilsAboutActivity::class.java))
+    }
 }
 
 /**

@@ -18,6 +18,7 @@ package de.lemke.commonutils.ui.utils
 import android.app.Activity
 import android.content.Intent
 import androidx.annotation.MainThread
+import de.lemke.commonutils.transitions.NoCoverage
 import dev.oneuiproject.oneui.ktx.startPopOverActivity
 import dev.oneuiproject.oneui.popover.PopOverOptions
 
@@ -30,6 +31,16 @@ public fun Activity.singleLaunchPopOverActivity(
     cls: Class<*>,
     popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(this),
 ): Boolean = singleLaunchPopOverActivity(Intent(this, cls), popOverOptions)
+
+/**
+ * Starts [T] as a pop-over with [popOverOptions] and [Intent.FLAG_ACTIVITY_SINGLE_TOP]; see the [Intent] overload.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
+ */
+@NoCoverage
+@MainThread
+public inline fun <reified T : Activity> Activity.singleLaunchPopOverActivity(
+    popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(this),
+): Boolean = singleLaunchPopOverActivity(Intent(this, T::class.java), popOverOptions)
 
 /**
  * Starts [intent] as a pop-over with [popOverOptions] and [Intent.FLAG_ACTIVITY_SINGLE_TOP], as a gated launch.

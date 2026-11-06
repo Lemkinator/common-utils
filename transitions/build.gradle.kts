@@ -64,6 +64,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.junit4)
     testRuntimeOnly(libs.junit.jupiter.engine)
