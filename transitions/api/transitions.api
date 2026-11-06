@@ -7,10 +7,14 @@ public abstract interface annotation class de/lemke/commonutils/transitions/Inte
 }
 
 public final class de/lemke/commonutils/ui/utils/DrawerPageUtilsKt {
-	public static final fun launchDrawerPage (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;)Z
-	public static final fun launchDrawerPage (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;)Z
-	public static synthetic fun launchDrawerPage$default (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;ILjava/lang/Object;)Z
-	public static synthetic fun launchDrawerPage$default (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;ILjava/lang/Object;)Z
+	public static final fun launchDrawerPage (Landroid/app/Activity;ILandroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
+	public static final fun launchDrawerPage (Landroid/app/Activity;ILjava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
+	public static final fun launchDrawerPage (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
+	public static final fun launchDrawerPage (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
+	public static synthetic fun launchDrawerPage$default (Landroid/app/Activity;ILandroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
+	public static synthetic fun launchDrawerPage$default (Landroid/app/Activity;ILjava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
+	public static synthetic fun launchDrawerPage$default (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
+	public static synthetic fun launchDrawerPage$default (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
 }
 
 public abstract interface class de/lemke/commonutils/ui/utils/InAppReview {

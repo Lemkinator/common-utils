@@ -18,6 +18,7 @@ package de.lemke.commonutils.ui.utils
 import android.app.Activity
 import android.content.Intent
 import android.view.View
+import androidx.annotation.IdRes
 import androidx.annotation.MainThread
 import androidx.reflect.DeviceInfo
 import de.lemke.commonutils.transitions.NoCoverage
@@ -28,6 +29,8 @@ import dev.oneuiproject.oneui.utils.DeviceLayoutUtil
 
 /**
  * Opens the page of [cls] from this drawer item or header button; see the [Intent] overload.
+ * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
+ * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @MainThread
@@ -35,10 +38,14 @@ public fun View.launchDrawerPage(
     cls: Class<*>,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(context),
-): Boolean = launchDrawerPage(Intent(context, cls), transitionName, popOverOptions)
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE,
+): Boolean = launchDrawerPage(Intent(context, cls), transitionName, popOverOptions, duration, fadeMode)
 
 /**
  * Opens the page of [T] from this drawer item or header button; see the [Intent] overload.
+ * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
+ * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @NoCoverage
@@ -46,7 +53,9 @@ public fun View.launchDrawerPage(
 public inline fun <reified T : Activity> View.launchDrawerPage(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(context),
-): Boolean = launchDrawerPage(Intent(context, T::class.java), transitionName, popOverOptions)
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE,
+): Boolean = launchDrawerPage(Intent(context, T::class.java), transitionName, popOverOptions, duration, fadeMode)
 
 /**
  * Opens the page of [intent] from this drawer item or header button, as a gated launch.
@@ -55,6 +64,8 @@ public inline fun <reified T : Activity> View.launchDrawerPage(
  * with [popOverOptions] and [Intent.FLAG_ACTIVITY_SINGLE_TOP]. Every other device, phones and non-One UI large
  * screens included, gets the container transform of [transformToActivity] with [transitionName]. [intent] stays
  * unchanged by the pop-over launch.
+ * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
+ * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @MainThread
@@ -62,16 +73,77 @@ public fun View.launchDrawerPage(
     intent: Intent,
     transitionName: String = DEFAULT_TRANSITION_NAME,
     popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(context),
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean {
     val activity = context.activity
     return if (activity != null && activity.showsPopOver()) {
-        activity.launchGated {
-            activity.startPopOverActivity(Intent(intent).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), popOverOptions)
-        }
+        activity.launchPopOver(intent, popOverOptions)
     } else {
-        transformToActivity(intent, transitionName)
+        transformToActivity(intent, transitionName, duration, fadeMode)
     }
 }
+
+/**
+ * Opens the page of [cls] from the view identified by [viewId]; see the [Intent] overload.
+ * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
+ * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
+ */
+@MainThread
+public fun Activity.launchDrawerPage(
+    @IdRes viewId: Int,
+    cls: Class<*>,
+    transitionName: String = DEFAULT_TRANSITION_NAME,
+    popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(this),
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE,
+): Boolean = launchDrawerPage(viewId, Intent(this, cls), transitionName, popOverOptions, duration, fadeMode)
+
+/**
+ * Opens the page of [T] from the view identified by [viewId]; see the [Intent] overload.
+ * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
+ * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
+ */
+@NoCoverage
+@MainThread
+public inline fun <reified T : Activity> Activity.launchDrawerPage(
+    @IdRes viewId: Int,
+    transitionName: String = DEFAULT_TRANSITION_NAME,
+    popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(this),
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE,
+): Boolean = launchDrawerPage(viewId, Intent(this, T::class.java), transitionName, popOverOptions, duration, fadeMode)
+
+/**
+ * Opens the page of [intent] from the view identified by [viewId], as a gated launch.
+ *
+ * The pop-over condition of the [View] overload reads this activity's resources. Without a pop-over, the page gets
+ * the container transform of [transformToActivity], which launches without a transition if the view is not found.
+ * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
+ * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
+ * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
+ */
+@MainThread
+public fun Activity.launchDrawerPage(
+    @IdRes viewId: Int,
+    intent: Intent,
+    transitionName: String = DEFAULT_TRANSITION_NAME,
+    popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(this),
+    duration: Long = DEFAULT_DURATION,
+    fadeMode: Int = DEFAULT_FADE_MODE,
+): Boolean =
+    if (showsPopOver()) {
+        launchPopOver(intent, popOverOptions)
+    } else {
+        transformToActivity(viewId, intent, transitionName, duration, fadeMode)
+    }
+
+private fun Activity.launchPopOver(
+    intent: Intent,
+    popOverOptions: PopOverOptions,
+): Boolean = launchGated { startPopOverActivity(Intent(intent).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), popOverOptions) }
 
 // One UI starts a pop-over only in a task whose smallest width is at least 600dp.
 private fun Activity.showsPopOver(): Boolean = DeviceInfo.isOneUI() && DeviceLayoutUtil.isTabletLayout(resources)
