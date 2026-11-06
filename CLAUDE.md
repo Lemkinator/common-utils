@@ -13,7 +13,7 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 
 - `:transitions` (`io.github.lemkinator:common-utils-transitions`, same version): the Android-only helpers for
   screen changes. It holds `SplashUtils.kt`, `TransformationUtils.kt`, `TransformToActivityUtils.kt`,
-  `PredictiveBackGestureUtils.kt`, `SingleLaunchUtils.kt` (the launch latch), the in-app review (`InAppReview`,
+  `PredictiveBackGestureUtils.kt`, `SingleLaunchUtils.kt` (the launch latch), `PopOverUtils.kt`, the in-app review (`InAppReview`,
   `PlayInAppReview`, `InAppReviewCooldown`, the Play `review` dependency), their resources and tests. It depends on
   `oneui-design` and `core-splashscreen`, not on `:lib`.
 - `:lib`: everything else. It re-exports `:transitions` with `api(project(":transitions"))`, so an app that depends on

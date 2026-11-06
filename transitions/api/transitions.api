@@ -24,6 +24,13 @@ public final class de/lemke/commonutils/ui/utils/PlayInAppReview : de/lemke/comm
 	public fun showOrFinish (Landroidx/appcompat/app/AppCompatActivity;)V
 }
 
+public final class de/lemke/commonutils/ui/utils/PopOverUtilsKt {
+	public static final fun singleLaunchPopOverActivity (Landroid/app/Activity;Landroid/content/Intent;Ldev/oneuiproject/oneui/popover/PopOverOptions;)Z
+	public static final fun singleLaunchPopOverActivity (Landroid/app/Activity;Ljava/lang/Class;Ldev/oneuiproject/oneui/popover/PopOverOptions;)Z
+	public static synthetic fun singleLaunchPopOverActivity$default (Landroid/app/Activity;Landroid/content/Intent;Ldev/oneuiproject/oneui/popover/PopOverOptions;ILjava/lang/Object;)Z
+	public static synthetic fun singleLaunchPopOverActivity$default (Landroid/app/Activity;Ljava/lang/Class;Ldev/oneuiproject/oneui/popover/PopOverOptions;ILjava/lang/Object;)Z
+}
+
 public final class de/lemke/commonutils/ui/utils/PredictiveBackGestureUtilsKt {
 	public static final fun addOnBackLogic (Landroidx/fragment/app/Fragment;Lkotlinx/coroutines/flow/StateFlow;Lkotlin/jvm/functions/Function0;)V
 	public static synthetic fun addOnBackLogic$default (Landroidx/fragment/app/Fragment;Lkotlinx/coroutines/flow/StateFlow;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
