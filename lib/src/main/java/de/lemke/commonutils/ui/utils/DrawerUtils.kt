@@ -15,14 +15,12 @@
  */
 package de.lemke.commonutils.ui.utils
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
-import dev.oneuiproject.oneui.ktx.activity
 import dev.oneuiproject.oneui.layout.Badge
 import dev.oneuiproject.oneui.layout.NavDrawerLayout
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
@@ -73,7 +71,10 @@ public inline fun Bundle?.restoreSearchAndActionMode(
     }
 }
 
-/** Sets up the drawer header button with an info icon opening [CommonUtilsAboutActivity] as a pop-over and configures the nav rail. */
+/**
+ * Sets up the drawer header button with an info icon that opens [CommonUtilsAboutActivity] through [launchDrawerPage]
+ * and configures the nav rail.
+ */
 @NoCoverage
 public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
@@ -88,12 +89,7 @@ public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
 
 @NoCoverage
 private fun View.openAboutActivity() {
-    val activity = context.activity
-    if (activity != null) {
-        activity.singleLaunchPopOverActivity<CommonUtilsAboutActivity>()
-    } else {
-        context.singleLaunchActivity(Intent(context, CommonUtilsAboutActivity::class.java))
-    }
+    launchDrawerPage<CommonUtilsAboutActivity>(transitionName = "CommonUtilsAboutAppTransition")
 }
 
 /**
