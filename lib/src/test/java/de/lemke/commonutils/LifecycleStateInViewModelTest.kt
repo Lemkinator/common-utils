@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 
 class LifecycleStateInViewModelTest : ShouldSpec(
     {
@@ -36,13 +37,13 @@ class LifecycleStateInViewModelTest : ShouldSpec(
         }
 
         should("stateInViewModel emits upstream value after subscription") {
-            val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-            flowOf(42).stateInViewModel(scope, 0).test {
-                skipItems(1) // skip initial value 0
-                awaitItem() shouldBe 42
-                cancelAndIgnoreRemainingEvents()
+            runTest {
+                flowOf(42).stateInViewModel(backgroundScope, 0).test {
+                    awaitItem() shouldBe 0
+                    awaitItem() shouldBe 42
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
-            scope.cancel()
         }
     },
 )
