@@ -22,8 +22,13 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 class LifecycleStateInViewModelTest : ShouldSpec(
@@ -31,7 +36,6 @@ class LifecycleStateInViewModelTest : ShouldSpec(
         should("stateInViewModel initial value returned before upstream emits") {
             val scope = CoroutineScope(Dispatchers.Unconfined + SupervisorJob())
             val state = flowOf(99).stateInViewModel(scope, 0)
-            // WhileSubscribed: upstream never starts without a subscriber, so initial-value read is race-free.
             state.value shouldBe 0
             scope.cancel()
         }
@@ -43,6 +47,46 @@ class LifecycleStateInViewModelTest : ShouldSpec(
                     awaitItem() shouldBe 42
                     cancelAndIgnoreRemainingEvents()
                 }
+            }
+        }
+
+        should("stateInViewModel keeps the upstream for the stop timeout after the last subscriber leaves and restarts it later") {
+            runTest {
+                var starts = 0
+                var active = false
+                val upstream =
+                    flow {
+                        starts++
+                        active = true
+                        try {
+                            emit(1)
+                            awaitCancellation()
+                        } finally {
+                            active = false
+                        }
+                    }
+                val state = upstream.stateInViewModel(backgroundScope, 0)
+
+                val first = launch { state.collect {} }
+                runCurrent()
+                starts shouldBe 1
+                active shouldBe true
+
+                first.cancel()
+                runCurrent()
+                advanceTimeBy(4_999)
+                runCurrent()
+                active shouldBe true
+
+                advanceTimeBy(2)
+                runCurrent()
+                active shouldBe false
+
+                val second = launch { state.collect {} }
+                runCurrent()
+                starts shouldBe 2
+                active shouldBe true
+                second.cancel()
             }
         }
     },
