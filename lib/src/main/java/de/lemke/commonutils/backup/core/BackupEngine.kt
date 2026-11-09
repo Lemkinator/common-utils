@@ -77,9 +77,8 @@ public class BackupEngine(
         val exported = mutableListOf<Pair<SectionInfo, ByteArray>>()
         var total = 0L
         for (section in sections) {
-            val next = exportSection(section)
-            if (next != null) total += next.second.size
-            if (next == null || total > MAX_TOTAL_BYTES) return null
+            val next = exportSection(section)?.takeIf { total + it.second.size <= MAX_TOTAL_BYTES } ?: return null
+            total += next.second.size
             exported += next
         }
         return exported
