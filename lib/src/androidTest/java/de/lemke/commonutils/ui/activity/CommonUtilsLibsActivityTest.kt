@@ -28,6 +28,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.rule.IntentsRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import org.junit.Rule
 import org.junit.Test
@@ -55,9 +56,12 @@ class CommonUtilsLibsActivityTest {
         composeRule.onNodeWithText("Fixture Sudoku").performClick()
         composeRule.onNodeWithText("Source").performClick()
 
-        composeRule.waitUntil(conditionDescription = "VIEW intent to https://github.com/sfuhrm/sudoku", timeoutMillis = 5_000) {
-            getIntents().any { it.data?.toString() == "https://github.com/sfuhrm/sudoku" }
+        val sourceUrl = "https://github.com/sfuhrm/sudoku"
+        composeRule.waitUntil(conditionDescription = "VIEW intent to $sourceUrl", timeoutMillis = 5_000) {
+            getIntents().any { it.data?.toString() == sourceUrl }
         }
+        composeRule.waitForIdle()
+        getIntents().filter { it.data?.toString() == sourceUrl } shouldHaveSize 1
         composeRule.activityRule.scenario.state shouldBe Lifecycle.State.RESUMED
     }
 }
