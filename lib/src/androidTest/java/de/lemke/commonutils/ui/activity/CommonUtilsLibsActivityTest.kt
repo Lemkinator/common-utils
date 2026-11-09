@@ -22,10 +22,9 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.Lifecycle
-import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.Intents.getIntents
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasData
 import androidx.test.espresso.intent.rule.IntentsRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -56,7 +55,7 @@ class CommonUtilsLibsActivityTest {
         composeRule.onNodeWithText("Fixture Sudoku").performClick()
         composeRule.onNodeWithText("Source").performClick()
 
-        intended(hasData("https://github.com/sfuhrm/sudoku"))
+        composeRule.waitUntil { getIntents().any { it.data?.toString() == "https://github.com/sfuhrm/sudoku" } }
         composeRule.activityRule.scenario.state shouldBe Lifecycle.State.RESUMED
     }
 }
