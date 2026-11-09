@@ -112,6 +112,9 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
 - `Context.cacheWriteUriPattern(pathName, directoryName, fileName)` and `Context.cacheFileOf` — the content URI layout of a
   cache write; `directoryName` is `share` or `clipboard`.
 - `FakeInAppReview(available)` (`canShow()` returns `available`; records `showIfPossible`/`showOrFinish` calls; `showOrFinish` finishes the activity) — the fake of the `InAppReview` interface that `PlayInAppReview(cooldown)` implements.
+- `Intent.shouldBeContainerTransformTo(transitionName, duration, fadeMode)` and `Intent.shouldHaveNoContainerTransform()` — assert
+  the container transform that `View.transformToActivity` puts on a launch intent. They live in the transitions testFixtures;
+  the `:lib` testFixtures re-export them.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
 - `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.
