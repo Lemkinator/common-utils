@@ -55,7 +55,9 @@ class CommonUtilsLibsActivityTest {
         composeRule.onNodeWithText("Fixture Sudoku").performClick()
         composeRule.onNodeWithText("Source").performClick()
 
-        composeRule.waitUntil { getIntents().any { it.data?.toString() == "https://github.com/sfuhrm/sudoku" } }
+        composeRule.waitUntil(conditionDescription = "VIEW intent to https://github.com/sfuhrm/sudoku", timeoutMillis = 5_000) {
+            getIntents().any { it.data?.toString() == "https://github.com/sfuhrm/sudoku" }
+        }
         composeRule.activityRule.scenario.state shouldBe Lifecycle.State.RESUMED
     }
 }
