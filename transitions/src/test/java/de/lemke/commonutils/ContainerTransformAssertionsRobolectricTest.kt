@@ -71,6 +71,30 @@ class ContainerTransformAssertionsRobolectricTest {
     }
 
     @Test
+    fun `missing duration fails even when the expected duration equals the former sentinel`() {
+        val intent =
+            Intent()
+                .putExtra("commonUtilsTransitionNameKey", "shared")
+                .putExtra("commonUtilsFadeModeKey", FADE_MODE_CROSS)
+
+        val error = shouldThrow<AssertionError> { intent.shouldBeContainerTransformTo("shared", duration = -1L) }
+
+        error.message shouldContain "lasting null ms"
+    }
+
+    @Test
+    fun `missing fade mode fails even when the expected fade mode equals the former sentinel`() {
+        val intent =
+            Intent()
+                .putExtra("commonUtilsTransitionNameKey", "shared")
+                .putExtra("commonUtilsDurationKey", 400L)
+
+        val error = shouldThrow<AssertionError> { intent.shouldBeContainerTransformTo("shared", fadeMode = -1) }
+
+        error.message shouldContain "fade mode null"
+    }
+
+    @Test
     fun `intent without a transform passes the no transform assertion`() {
         Intent().putExtra("unrelated", 1).shouldHaveNoContainerTransform()
     }

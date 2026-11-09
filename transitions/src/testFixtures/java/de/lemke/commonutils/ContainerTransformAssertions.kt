@@ -22,8 +22,6 @@ import de.lemke.commonutils.ui.utils.DURATION_KEY
 import de.lemke.commonutils.ui.utils.FADE_MODE_KEY
 import de.lemke.commonutils.ui.utils.TRANSITION_NAME_KEY
 
-private const val UNSET = -1L
-
 /**
  * Fails unless this launch intent carries the container transform that `View.transformToActivity` adds for
  * [transitionName], [duration] and [fadeMode].
@@ -34,8 +32,8 @@ public fun Intent.shouldBeContainerTransformTo(
     fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
     val actualName = getStringExtra(TRANSITION_NAME_KEY)
-    val actualDuration = getLongExtra(DURATION_KEY, UNSET)
-    val actualFadeMode = getIntExtra(FADE_MODE_KEY, UNSET.toInt())
+    val actualDuration = getLongExtra(DURATION_KEY, 0L).takeIf { hasExtra(DURATION_KEY) }
+    val actualFadeMode = getIntExtra(FADE_MODE_KEY, 0).takeIf { hasExtra(FADE_MODE_KEY) }
     if (actualName != transitionName || actualDuration != duration || actualFadeMode != fadeMode) {
         throw AssertionError(
             "Expected a container transform to <$transitionName> lasting $duration ms with fade mode $fadeMode " +
