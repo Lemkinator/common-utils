@@ -70,7 +70,7 @@ public fun Activity.getTransitionContainerTransform(): MaterialContainerTransfor
 
 /**
  * Prepares the activity for a shared element transition from this activity.
- * Call in `onCreate`, after `super.onCreate`.
+ * Call in `onCreate`, before `super.onCreate`: the window feature can only be requested before the content is added.
  * @receiver The activity to prepare.
  */
 public fun Activity.prepareActivityTransformationFrom() {
@@ -97,7 +97,7 @@ public fun Activity.prepareActivityTransformationFrom() {
 
 /**
  * Prepares the activity for a shared element transition to this activity.
- * Call in `onCreate`, after `super.onCreate`.
+ * Call in `onCreate`, before `super.onCreate`: the window feature can only be requested before the content is added.
  * @receiver The activity to prepare.
  */
 public fun Activity.prepareActivityTransformationTo() {
@@ -131,7 +131,7 @@ public fun Activity.prepareActivityTransformationTo() {
 
 /**
  * Prepares the activity for a shared element transition both from and to this activity.
- * Call in `onCreate`, after `super.onCreate`.
+ * Call in `onCreate`, before `super.onCreate`: the window feature can only be requested before the content is added.
  * @receiver The activity to prepare.
  */
 public fun Activity.prepareActivityTransformationBetween() {
