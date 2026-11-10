@@ -28,7 +28,7 @@ import dev.oneuiproject.oneui.popover.PopOverOptions
 import dev.oneuiproject.oneui.utils.DeviceLayoutUtil
 
 /**
- * Opens [cls] with this view as the pop-over or transform origin; see the [Intent] overload.
+ * Opens [cls] as a pop-over or container transform; see the [Intent] overload.
  * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
  * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
@@ -43,7 +43,7 @@ public fun View.popOverOrTransformToActivity(
 ): Boolean = popOverOrTransformToActivity(Intent(context, cls), transitionName, popOverOptions, duration, fadeMode)
 
 /**
- * Opens [T] with this view as the pop-over or transform origin; see the [Intent] overload.
+ * Opens [T] as a pop-over or container transform; see the [Intent] overload.
  * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
  * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
@@ -58,7 +58,8 @@ public inline fun <reified T : Activity> View.popOverOrTransformToActivity(
 ): Boolean = popOverOrTransformToActivity(Intent(context, T::class.java), transitionName, popOverOptions, duration, fadeMode)
 
 /**
- * Opens [intent] with this view as the pop-over or transform origin, as a gated launch.
+ * Opens [intent] as a gated launch.
+ * This view is the container transform origin; the pop-over position comes from [popOverOptions].
  *
  * On a One UI device whose launching activity has a smallest width of at least 600dp, the activity starts as a pop-over
  * with [popOverOptions] and [Intent.FLAG_ACTIVITY_SINGLE_TOP]. Every other device, phones and non-One UI large
@@ -85,7 +86,7 @@ public fun View.popOverOrTransformToActivity(
 }
 
 /**
- * Opens [cls] with the view identified by [viewId] as the origin; see the [Intent] overload.
+ * Opens [cls] as a pop-over or container transform, with [viewId] as the transform origin; see the [Intent] overload.
  * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
  * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
@@ -101,7 +102,7 @@ public fun Activity.popOverOrTransformToActivity(
 ): Boolean = popOverOrTransformToActivity(viewId, Intent(this, cls), transitionName, popOverOptions, duration, fadeMode)
 
 /**
- * Opens [T] with the view identified by [viewId] as the origin; see the [Intent] overload.
+ * Opens [T] as a pop-over or container transform, with [viewId] as the transform origin; see the [Intent] overload.
  * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
  * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
@@ -117,7 +118,8 @@ public inline fun <reified T : Activity> Activity.popOverOrTransformToActivity(
 ): Boolean = popOverOrTransformToActivity(viewId, Intent(this, T::class.java), transitionName, popOverOptions, duration, fadeMode)
 
 /**
- * Opens [intent] with the view identified by [viewId] as the pop-over or transform origin, as a gated launch.
+ * Opens [intent] as a gated launch.
+ * The view identified by [viewId] is the container transform origin; the pop-over position comes from [popOverOptions].
  *
  * The pop-over condition of the [View] overload reads this activity's resources. Without a pop-over, the activity gets
  * the container transform of [transformToActivity], which launches without a transition if the view is not found.
