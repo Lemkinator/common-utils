@@ -2,6 +2,12 @@ public final class de/lemke/commonutils/ActivityScenarioReadKt {
 	public static final fun read (Landroidx/test/core/app/ActivityScenario;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 }
 
+public final class de/lemke/commonutils/ContainerTransformAssertionsKt {
+	public static final fun shouldBeContainerTransformTo (Landroid/content/Intent;Ljava/lang/String;JI)V
+	public static synthetic fun shouldBeContainerTransformTo$default (Landroid/content/Intent;Ljava/lang/String;JIILjava/lang/Object;)V
+	public static final fun shouldHaveNoContainerTransform (Landroid/content/Intent;)V
+}
+
 public final class de/lemke/commonutils/LaunchLatchScenarioKt {
 	public static final fun returnFromLaunchedScreen (Landroidx/test/core/app/ActivityScenario;)V
 }

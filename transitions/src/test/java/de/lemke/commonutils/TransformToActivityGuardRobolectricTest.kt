@@ -18,7 +18,6 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.content.Intent
 import android.view.View
-import de.lemke.commonutils.ui.utils.TRANSITION_NAME_KEY
 import de.lemke.commonutils.ui.utils.singleLaunch
 import de.lemke.commonutils.ui.utils.singleLaunchSuspending
 import de.lemke.commonutils.ui.utils.transformToActivity
@@ -53,14 +52,14 @@ class TransformToActivityGuardRobolectricTest : LaunchLatchRobolectricTest() {
     private fun LatchTestActivity.startedLaunch(): IntentForResult = shadowOf(this).nextStartedActivityForResult.shouldNotBeNull()
 
     private fun IntentForResult.shouldUseTheTransition(view: View) {
-        intent.getStringExtra(TRANSITION_NAME_KEY) shouldBe "shared"
+        intent.shouldBeContainerTransformTo("shared")
         options.shouldNotBeNull()
         view.transitionName shouldBe "shared"
     }
 
     private fun IntentForResult.shouldSkipTheTransition(view: View) {
         intent.component?.className shouldBe Activity::class.java.name
-        intent.hasExtra(TRANSITION_NAME_KEY) shouldBe false
+        intent.shouldHaveNoContainerTransform()
         options.shouldBeNull()
         view.transitionName.shouldBeNull()
     }

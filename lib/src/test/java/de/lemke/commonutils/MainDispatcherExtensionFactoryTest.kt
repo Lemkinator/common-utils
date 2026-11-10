@@ -20,6 +20,7 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,7 +54,7 @@ class MainDispatcherExtensionFactoryTest : ShouldSpec(
 
             var ranOnTestDispatcher = false
             shouldThrow<IllegalStateException> {
-                CoroutineScope(Dispatchers.Main).launch { ranOnTestDispatcher = true }
+                Dispatchers.Main.dispatch(EmptyCoroutineContext, Runnable { ranOnTestDispatcher = true })
             }.message shouldContain "Dispatchers.Main was accessed"
             created.forEach { it.scheduler.runCurrent() }
             ranOnTestDispatcher shouldBe false

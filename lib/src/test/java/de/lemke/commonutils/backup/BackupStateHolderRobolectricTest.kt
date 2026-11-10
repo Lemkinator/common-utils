@@ -272,7 +272,7 @@ class BackupStateHolderRobolectricTest {
         }
 
     @Test
-    fun `canceling the scope before the export job is first dispatched deletes the created document`(): Unit =
+    fun `canceling a scope that has not yet dispatched the export launch deletes the created document`(): Unit =
         runTest(UnconfinedTestDispatcher()) {
             val exportScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob(coroutineContext.job))
             val holder = BackupStateHolder(exportScope, engineOf(MemorySection()), documents, StandardTestDispatcher(testScheduler))
@@ -303,7 +303,7 @@ class BackupStateHolderRobolectricTest {
         }
 
     @Test
-    fun `canceling the scope before the export work starts deletes the created document`(): Unit =
+    fun `canceling the scope while the work dispatcher has not yet run the export deletes the created document`(): Unit =
         runTest(UnconfinedTestDispatcher()) {
             val exportScope = CoroutineScope(coroutineContext + SupervisorJob(coroutineContext.job))
             val holder = BackupStateHolder(exportScope, engineOf(MemorySection()), documents, StandardTestDispatcher(testScheduler))
