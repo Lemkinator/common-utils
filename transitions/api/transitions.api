@@ -6,17 +6,6 @@ public abstract interface class de/lemke/commonutils/data/InAppReviewCooldown {
 public abstract interface annotation class de/lemke/commonutils/transitions/InternalCommonUtilsApi : java/lang/annotation/Annotation {
 }
 
-public final class de/lemke/commonutils/ui/utils/DrawerPageUtilsKt {
-	public static final fun launchDrawerPage (Landroid/app/Activity;ILandroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
-	public static final fun launchDrawerPage (Landroid/app/Activity;ILjava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
-	public static final fun launchDrawerPage (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
-	public static final fun launchDrawerPage (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
-	public static synthetic fun launchDrawerPage$default (Landroid/app/Activity;ILandroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
-	public static synthetic fun launchDrawerPage$default (Landroid/app/Activity;ILjava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
-	public static synthetic fun launchDrawerPage$default (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
-	public static synthetic fun launchDrawerPage$default (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
-}
-
 public abstract interface class de/lemke/commonutils/ui/utils/InAppReview {
 	public abstract fun canShow ()Z
 	public abstract fun showIfPossible (Landroidx/appcompat/app/AppCompatActivity;)V
@@ -33,6 +22,17 @@ public final class de/lemke/commonutils/ui/utils/PlayInAppReview : de/lemke/comm
 	public fun canShow ()Z
 	public fun showIfPossible (Landroidx/appcompat/app/AppCompatActivity;)V
 	public fun showOrFinish (Landroidx/appcompat/app/AppCompatActivity;)V
+}
+
+public final class de/lemke/commonutils/ui/utils/PopOverOrTransformUtilsKt {
+	public static final fun popOverOrTransformToActivity (Landroid/app/Activity;ILandroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
+	public static final fun popOverOrTransformToActivity (Landroid/app/Activity;ILjava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
+	public static final fun popOverOrTransformToActivity (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
+	public static final fun popOverOrTransformToActivity (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JI)Z
+	public static synthetic fun popOverOrTransformToActivity$default (Landroid/app/Activity;ILandroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
+	public static synthetic fun popOverOrTransformToActivity$default (Landroid/app/Activity;ILjava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
+	public static synthetic fun popOverOrTransformToActivity$default (Landroid/view/View;Landroid/content/Intent;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
+	public static synthetic fun popOverOrTransformToActivity$default (Landroid/view/View;Ljava/lang/Class;Ljava/lang/String;Ldev/oneuiproject/oneui/popover/PopOverOptions;JIILjava/lang/Object;)Z
 }
 
 public final class de/lemke/commonutils/ui/utils/PredictiveBackGestureUtilsKt {

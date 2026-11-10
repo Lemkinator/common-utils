@@ -28,7 +28,7 @@ import androidx.reflect.DeviceInfo
 import de.lemke.commonutils.ui.utils.DURATION_KEY
 import de.lemke.commonutils.ui.utils.FADE_MODE_KEY
 import de.lemke.commonutils.ui.utils.TRANSITION_NAME_KEY
-import de.lemke.commonutils.ui.utils.launchDrawerPage
+import de.lemke.commonutils.ui.utils.popOverOrTransformToActivity
 import de.lemke.commonutils.ui.utils.singleLaunch
 import dev.oneuiproject.oneui.popover.PopOverOptions
 import io.kotest.assertions.throwables.shouldThrow
@@ -52,7 +52,7 @@ import org.robolectric.shadows.ShadowActivity.IntentForResult
 
 private const val TABLET = "sw600dp-w600dp-h1024dp"
 private const val LARGE_PHONE = "sw599dp-w599dp-h1024dp"
-private const val DRAWER_ITEM_ID = 4242
+private const val ANCHOR_VIEW_ID = 4242
 private const val ANIM_TYPE_KEY = "android:activity.animType"
 private const val ANIM_SCENE_TRANSITION = 5
 private const val NARROW_SMALLEST_WIDTH_DP = 500
@@ -76,7 +76,7 @@ class FailingStartActivity : AppCompatActivity() {
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], qualifiers = TABLET)
-class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
+class PopOverOrTransformUtilsRobolectricTest : LaunchLatchRobolectricTest() {
     @After
     fun unmockDeviceInfo() {
         unmockkStatic(DeviceInfo::class)
@@ -87,7 +87,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         every { DeviceInfo.isOneUI() } returns isOneUi
     }
 
-    private fun Activity.attachedView(): View = View(this).apply { id = DRAWER_ITEM_ID }.also(::setContentView)
+    private fun Activity.attachedView(): View = View(this).apply { id = ANCHOR_VIEW_ID }.also(::setContentView)
 
     private fun LatchTestActivity.startedLaunch(): IntentForResult = shadowOf(this).nextStartedActivityForResult.shouldNotBeNull()
 
@@ -110,7 +110,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         oneUi(true)
         val activity = resumed().get()
 
-        activity.attachedView().launchDrawerPage(Activity::class.java).shouldBeTrue()
+        activity.attachedView().popOverOrTransformToActivity(Activity::class.java).shouldBeTrue()
 
         activity.startedLaunch().shouldBePopOver()
     }
@@ -123,7 +123,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
 
         activity
             .attachedView()
-            .launchDrawerPage(intent, "shared", PopOverOptions.topCenterAnchored(activity))
+            .popOverOrTransformToActivity(intent, "shared", PopOverOptions.topCenterAnchored(activity))
             .shouldBeTrue()
 
         intent.flags shouldBe 0
@@ -135,7 +135,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         oneUi(true)
         val activity = resumed().get()
 
-        activity.attachedView().launchDrawerPage<Activity>().shouldBeTrue()
+        activity.attachedView().popOverOrTransformToActivity<Activity>().shouldBeTrue()
 
         activity.startedLaunch().shouldBePopOver()
     }
@@ -146,7 +146,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         oneUi(true)
         val activity = resumed().get()
 
-        activity.attachedView().launchDrawerPage(Activity::class.java, "shared").shouldBeTrue()
+        activity.attachedView().popOverOrTransformToActivity(Activity::class.java, "shared").shouldBeTrue()
 
         activity.startedLaunch().shouldBeZoom("shared")
     }
@@ -156,7 +156,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         oneUi(false)
         val activity = resumed().get()
 
-        activity.attachedView().launchDrawerPage(Activity::class.java, "shared").shouldBeTrue()
+        activity.attachedView().popOverOrTransformToActivity(Activity::class.java, "shared").shouldBeTrue()
 
         activity.startedLaunch().shouldBeZoom("shared")
     }
@@ -166,7 +166,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         oneUi(false)
         val activity = resumed().get()
 
-        activity.attachedView().launchDrawerPage<Activity>().shouldBeTrue()
+        activity.attachedView().popOverOrTransformToActivity<Activity>().shouldBeTrue()
 
         activity.startedLaunch().shouldBeZoom("commonUtilsActivityTransitionName")
     }
@@ -178,7 +178,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
 
         val intent = Intent(activity.applicationContext, Activity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        View(activity.applicationContext).launchDrawerPage(intent).shouldBeTrue()
+        View(activity.applicationContext).popOverOrTransformToActivity(intent).shouldBeTrue()
 
         val started = shadowOf(activity.application).nextStartedActivity.shouldNotBeNull()
         started.component?.className shouldBe Activity::class.java.name
@@ -191,8 +191,8 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         val activity = resumed().get()
         val view = activity.attachedView()
 
-        view.launchDrawerPage(Activity::class.java).shouldBeTrue()
-        view.launchDrawerPage(Activity::class.java).shouldBeFalse()
+        view.popOverOrTransformToActivity(Activity::class.java).shouldBeTrue()
+        view.popOverOrTransformToActivity(Activity::class.java).shouldBeFalse()
 
         shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull()
         shadowOf(activity).nextStartedActivityForResult.shouldBeNull()
@@ -204,8 +204,8 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         val activity = resumed().get()
         val view = activity.attachedView()
 
-        view.launchDrawerPage(Activity::class.java).shouldBeTrue()
-        view.launchDrawerPage(Activity::class.java).shouldBeFalse()
+        view.popOverOrTransformToActivity(Activity::class.java).shouldBeTrue()
+        view.popOverOrTransformToActivity(Activity::class.java).shouldBeFalse()
 
         shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull()
         shadowOf(activity).nextStartedActivityForResult.shouldBeNull()
@@ -216,7 +216,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         oneUi(false)
         val activity = resumed().get()
 
-        activity.attachedView().launchDrawerPage(Activity::class.java, "shared", duration = 123L, fadeMode = 2).shouldBeTrue()
+        activity.attachedView().popOverOrTransformToActivity(Activity::class.java, "shared", duration = 123L, fadeMode = 2).shouldBeTrue()
 
         val started = activity.startedLaunch()
         started.shouldBeZoom("shared")
@@ -231,7 +231,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         activity.attachedView()
         val view = View(ContextThemeWrapper(activity, android.R.style.Theme))
 
-        view.launchDrawerPage(Activity::class.java).shouldBeTrue()
+        view.popOverOrTransformToActivity(Activity::class.java).shouldBeTrue()
 
         activity.startedLaunch().shouldBePopOver()
     }
@@ -247,7 +247,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
                 .get()
         val view = activity.attachedView()
 
-        shouldThrow<ActivityNotFoundException> { view.launchDrawerPage(Activity::class.java) }
+        shouldThrow<ActivityNotFoundException> { view.popOverOrTransformToActivity(Activity::class.java) }
 
         activity.singleLaunch {}.shouldBeTrue()
     }
@@ -264,7 +264,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         activity.resources.configuration.smallestScreenWidthDp shouldBe NARROW_SMALLEST_WIDTH_DP
         activity.applicationContext.resources.configuration.smallestScreenWidthDp shouldBe 600
 
-        activity.attachedView().launchDrawerPage(Activity::class.java, "shared").shouldBeTrue()
+        activity.attachedView().popOverOrTransformToActivity(Activity::class.java, "shared").shouldBeTrue()
 
         shadowOf(activity).nextStartedActivityForResult.shouldNotBeNull().shouldBeZoom("shared")
     }
@@ -275,7 +275,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         val activity = resumed().get()
         activity.attachedView()
 
-        activity.launchDrawerPage(DRAWER_ITEM_ID, Activity::class.java).shouldBeTrue()
+        activity.popOverOrTransformToActivity(ANCHOR_VIEW_ID, Activity::class.java).shouldBeTrue()
 
         activity.startedLaunch().shouldBePopOver()
     }
@@ -286,7 +286,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         val activity = resumed().get()
         val intent = Intent(activity, Activity::class.java)
 
-        activity.launchDrawerPage(DRAWER_ITEM_ID, intent).shouldBeTrue()
+        activity.popOverOrTransformToActivity(ANCHOR_VIEW_ID, intent).shouldBeTrue()
 
         intent.flags shouldBe 0
         activity.startedLaunch().shouldBePopOver()
@@ -298,7 +298,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         val activity = resumed().get()
         activity.attachedView()
 
-        activity.launchDrawerPage<Activity>(DRAWER_ITEM_ID).shouldBeTrue()
+        activity.popOverOrTransformToActivity<Activity>(ANCHOR_VIEW_ID).shouldBeTrue()
 
         activity.startedLaunch().shouldBePopOver()
     }
@@ -309,7 +309,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         val activity = resumed().get()
         activity.attachedView()
 
-        activity.launchDrawerPage(DRAWER_ITEM_ID, Activity::class.java, "shared", duration = 123L, fadeMode = 2).shouldBeTrue()
+        activity.popOverOrTransformToActivity(ANCHOR_VIEW_ID, Activity::class.java, "shared", duration = 123L, fadeMode = 2).shouldBeTrue()
 
         val started = activity.startedLaunch()
         started.shouldBeZoom("shared")
@@ -322,7 +322,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         oneUi(false)
         val activity = resumed().get()
 
-        activity.launchDrawerPage(DRAWER_ITEM_ID, Activity::class.java, "shared").shouldBeTrue()
+        activity.popOverOrTransformToActivity(ANCHOR_VIEW_ID, Activity::class.java, "shared").shouldBeTrue()
 
         val started = activity.startedLaunch()
         started.intent.component?.className shouldBe Activity::class.java.name
@@ -336,7 +336,7 @@ class DrawerPageUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         val activity = resumed().get()
         activity.attachedView()
 
-        activity.launchDrawerPage(DRAWER_ITEM_ID, Activity::class.java, "shared").shouldBeTrue()
+        activity.popOverOrTransformToActivity(ANCHOR_VIEW_ID, Activity::class.java, "shared").shouldBeTrue()
 
         activity.startedLaunch().shouldBeZoom("shared")
     }
