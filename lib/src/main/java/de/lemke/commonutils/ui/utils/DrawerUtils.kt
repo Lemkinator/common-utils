@@ -72,7 +72,7 @@ public inline fun Bundle?.restoreSearchAndActionMode(
 }
 
 /**
- * Sets up the drawer header button with an info icon that opens [CommonUtilsAboutActivity] through [launchDrawerPage]
+ * Sets up the drawer header button with an info icon that opens [CommonUtilsAboutActivity] through [popOverOrTransformToActivity]
  * and configures the nav rail.
  */
 @NoCoverage
@@ -89,7 +89,7 @@ public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
 
 @NoCoverage
 private fun View.openAboutActivity() {
-    launchDrawerPage<CommonUtilsAboutActivity>(transitionName = "CommonUtilsAboutAppTransition")
+    popOverOrTransformToActivity<CommonUtilsAboutActivity>(transitionName = "CommonUtilsAboutAppTransition")
 }
 
 /**
