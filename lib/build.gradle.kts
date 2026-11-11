@@ -111,6 +111,9 @@ dependencies {
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.bundles.robolectric.test)
+    testImplementation(libs.roborazzi.core)
+    testImplementation(libs.hamcrest.core)
+    testImplementation(libs.androidx.lifecycle.viewmodel.savedstate)
     testImplementation(testFixtures(project(":lib")))
     testImplementation(project(":test-support"))
 
@@ -147,7 +150,11 @@ dependencies {
 
     androidTestImplementation(testFixtures(project(":lib")))
     androidTestImplementation(libs.bundles.android.test)
+    androidTestImplementation(libs.androidx.compose.ui.test)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.lifecycle.viewmodel.savedstate)
+    androidTestImplementation(libs.androidx.test.monitor)
+    androidTestImplementation(libs.hamcrest.core)
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.junit4)
     androidTestImplementation(libs.kotest.assertions.core)

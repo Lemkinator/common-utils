@@ -25,8 +25,12 @@ android {
 
 dependencies {
     api(project(":transitions"))
+    api(libs.androidx.activity)
     api(libs.oneui.design)
     api(libs.robolectric)
     api(libs.junit4)
     api(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.lifecycle.common)
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel)
 }
