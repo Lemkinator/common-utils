@@ -1,0 +1,49 @@
+Processing 'classes14.dex'...
+Opened 'classes14.dex', DEX version '038'
+Class #0 annotations:
+Annotations on method #57 'assumeResolvesOnThisPlatform'
+  VISIBILITY_RUNTIME Lorg/junit/Before;
+Annotations on method #59 'clearFileProviderCache'
+  VISIBILITY_RUNTIME Lorg/junit/After;
+Annotations on method #62 'getTypeDerivesTheMimeTypeFromTheFileExtension'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #63 'getTypeFallsBackToOctetStreamWithoutAnExtension'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #64 'openFileDescriptorInRwModeCreatesAMissingFile'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #65 'openFileDescriptorInRwModeOverwritesInPlaceWithoutTruncating'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #66 'openFileDescriptorInRwtModeTruncatesTheExistingFile'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #67 'openFileDescriptorWithAnUnknownModeThrowsIllegalArgumentException'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #68 'openInputStreamReadsAFileUnderANestedRoot'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #69 'openOutputStreamInWaModeAppendsToTheExistingFile'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #70 'openOutputStreamInWtModeTruncatesTheExistingFile'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #71 'openOutputStreamThenOpenInputStreamRoundTripsTheBytes'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #72 'openOutputStreamTruncatesTheExistingFile'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #73 'queryReportsTheDisplayNameAndSizeOfTheFile'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+Annotations on method #74 'queryReportsTheDisplayNameParameterAndDropsUnknownProjectionColumns'
+  VISIBILITY_RUNTIME Lorg/junit/Test;
+
+Class #0            -
+  Class descriptor  : 'Lde/lemke/commonutils/FileProviderContentContract;'
+  Access flags      : 0x0401 (PUBLIC ABSTRACT)
+  Superclass        : 'Ljava/lang/Object;'
+
+Class #25 annotations:
+Annotations on class
+  VISIBILITY_RUNTIME Landroidx/test/filters/MediumTest;
+  VISIBILITY_RUNTIME Lorg/junit/runner/RunWith; value=Landroidx/test/ext/junit/runners/AndroidJUnit4;
+
+Class #25            -
+  Class descriptor  : 'Lde/lemke/commonutils/StockFileProviderInstrumentedTest;'
+  Access flags      : 0x0011 (PUBLIC FINAL)
+  Superclass        : 'Lde/lemke/commonutils/FileProviderContentContract;'
+
