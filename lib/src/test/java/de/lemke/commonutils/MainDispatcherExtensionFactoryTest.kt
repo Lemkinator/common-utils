@@ -24,6 +24,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
@@ -37,13 +38,18 @@ class MainDispatcherExtensionFactoryTest : ShouldSpec(
 
         repeat(2) { index ->
             should("install a fresh dispatcher the factory returns in root test $index") {
-                var launched = false
-                CoroutineScope(Dispatchers.Main).launch { launched = true }
-                launched shouldBe false
-                val dispatcher = created.last()
-                dispatcher.scheduler.runCurrent()
-                launched shouldBe true
-                installed += dispatcher
+                val scope = CoroutineScope(Dispatchers.Main)
+                try {
+                    var launched = false
+                    scope.launch { launched = true }
+                    launched shouldBe false
+                    val dispatcher = created.last()
+                    dispatcher.scheduler.runCurrent()
+                    launched shouldBe true
+                    installed += dispatcher
+                } finally {
+                    scope.cancel()
+                }
             }
         }
 
