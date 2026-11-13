@@ -24,6 +24,7 @@ plugins {
     id("commonutils.publishing")
     id("commonutils.api-validation")
     id("commonutils.coverage")
+    id("commonutils.robolectric")
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
@@ -31,6 +32,8 @@ plugins {
     alias(libs.plugins.roborazzi)
     id("kotlin-parcelize")
 }
+
+val syncRobolectricJars = tasks.named<Sync>("syncRobolectricJars")
 
 description = "A collection of common utility functions and classes for my Android projects."
 commonUtilsPublishing {
@@ -70,6 +73,7 @@ android {
                     "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
                 )
                 test.testLogging.exceptionFormat = TestExceptionFormat.FULL
+                test.jvmArgumentProviders += RobolectricDependencyDir(layout.dir(syncRobolectricJars.map { it.destinationDir }))
                 test.systemProperty("robolectric.graphicsMode", "NATIVE")
                 test.systemProperty("roborazzi.test.record", project.findProperty("roborazzi.record") ?: "false")
                 test.systemProperty("roborazzi.test.verify", project.findProperty("roborazzi.verify") ?: "true")

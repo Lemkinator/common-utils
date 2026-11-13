@@ -21,7 +21,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.process.CommandLineArgumentProvider
 
 /** Points Robolectric at the synced jar directory; it then reads only that directory and never downloads. */
-internal class RobolectricDependencyDir(
+class RobolectricDependencyDir(
     @get:InputDirectory @get:PathSensitive(PathSensitivity.NAME_ONLY) val dir: Provider<Directory>,
 ) : CommandLineArgumentProvider {
     override fun asArguments() = listOf("-Drobolectric.dependency.dir=${dir.get().asFile}")

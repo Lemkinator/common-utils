@@ -33,7 +33,7 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 - `build-logic/` is an included build with the convention plugins: `commonutils.android-library` (Android, lint,
   Spotless, Detekt, explicit API, opt-in marker, SESL exclusions), `commonutils.publishing` (the Maven publication; a
   module sets `description` and `commonUtilsPublishing { artifactId }`), `commonutils.api-validation` (the `apiBuild`,
-  `apiCheck` and `apiDump` tasks), `commonutils.coverage` (the 100 % Kover floor of the debug variant) and
+  `apiCheck` and `apiDump` tasks), `commonutils.coverage` (the 100 % Kover floor of the debug variant), `commonutils.robolectric` (the jar sync task) and
   `commonutils.root`. The `unitTests.all` block stays in each module's build file.
 - Each published module has its own ABI dump (`lib/api`, `transitions/api`) and Kover floor, and its own internal
   `NoCoverage` annotation in its own package.
@@ -160,9 +160,9 @@ be unnecessary; treat that as an open follow-up, not a settled fact.
 ## Robolectric jars
 
 Gradle resolves the `android-all-instrumented` jars (catalog entries `robolectric-android-all-<api>`, one per SDK level the
-tests use: 28, 29, 32, 33, 34, 36 and 37, the last being the target SDK that tests without `@Config(sdk)` fall back to) into
-`<module>/build/robolectric-jars` through `syncRobolectricJars`. The unit-test tasks of every module pass that directory as
-`robolectric.dependency.dir`; the `commonutils.android-library` plugin wires it. Unit tests run without network access. After
+tests use: 28, 29, 32, 33, 34, 36 and 37, the last being the target SDK that tests without `@Config(sdk)` fall back to) into `<module>/build/robolectric-jars` through `syncRobolectricJars`. The
+`commonutils.robolectric` plugin registers that task; `:lib` and `:transitions` apply it and pass the directory as
+`robolectric.dependency.dir` in their `unitTests.all` block. `:test-support` runs no tests and does not apply it. Unit tests run without network access. After
 a Robolectric bump or a new `@Config(sdk)`, update the catalog coordinates to the jar names Robolectric's
 `DefaultSdkProvider` lists; a stale or missing entry fails the test with "Path is not a file". Failed tests print the full
 exception on every run.
