@@ -24,6 +24,7 @@ import com.google.android.material.transition.platform.MaterialContainerTransfor
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -37,10 +38,18 @@ class TargetActivity : Activity()
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class LaunchAssertionsRobolectricTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
     private val plainOptions: Bundle = ActivityOptions.makeBasic().toBundle()
 
     private val sceneOptions: Bundle by lazy {
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val activity =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
         ActivityOptions.makeSceneTransitionAnimation(activity, View(activity), "shared").toBundle()
     }
 
