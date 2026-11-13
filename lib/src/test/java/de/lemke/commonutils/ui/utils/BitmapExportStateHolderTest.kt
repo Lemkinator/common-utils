@@ -26,6 +26,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -427,7 +428,7 @@ class BitmapExportStateHolderTest {
     @Test
     fun `a canceled export rethrows the cancellation and publishes no failure`() =
         runTest {
-            val job = Job()
+            val job = Job(coroutineContext.job)
             val holder = BitmapExportStateHolder(CoroutineScope(coroutineContext + job), exporter)
             exporter.gate = CompletableDeferred()
             holder.copy(bitmap)

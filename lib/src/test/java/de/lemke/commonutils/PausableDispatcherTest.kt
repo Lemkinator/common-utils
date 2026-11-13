@@ -216,22 +216,25 @@ class PausableDispatcherTest : ShouldSpec(
                         }
                     }
 
-                started.await(WAIT_SECONDS, TimeUnit.SECONDS) shouldBe true
-                repeat(CYCLES) {
-                    ran.clear()
-                    dispatcher.pause()
-                    scope.launch { ran += "first" }
-                    scope.launch { ran += "second" }
-                    phase.incrementAndGet()
-                    dispatcher.resume()
-                    scope.launch { ran += "third" }
-                    phase.incrementAndGet()
-                    delegate.held.forEach(Runnable::run)
-                    delegate.held.clear()
-                    ran shouldBe listOf("first", "second", "third")
+                try {
+                    started.await(WAIT_SECONDS, TimeUnit.SECONDS) shouldBe true
+                    repeat(CYCLES) {
+                        ran.clear()
+                        dispatcher.pause()
+                        scope.launch { ran += "first" }
+                        scope.launch { ran += "second" }
+                        phase.incrementAndGet()
+                        dispatcher.resume()
+                        scope.launch { ran += "third" }
+                        phase.incrementAndGet()
+                        delegate.held.forEach(Runnable::run)
+                        delegate.held.clear()
+                        ran shouldBe listOf("first", "second", "third")
+                    }
+                } finally {
+                    stop.set(true)
+                    observer.join(TimeUnit.SECONDS.toMillis(WAIT_SECONDS))
                 }
-                stop.set(true)
-                observer.join(TimeUnit.SECONDS.toMillis(WAIT_SECONDS))
 
                 observer.isAlive shouldBe false
                 overtook.get() shouldBe 0
