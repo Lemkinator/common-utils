@@ -272,16 +272,18 @@ class BackupStateHolderRobolectricTest {
         }
 
     @Test
-    fun `canceling a scope that has not yet dispatched the export launch deletes the created document`(): Unit =
+    fun `canceling the scope before its dispatcher starts the export launch deletes the created document`(): Unit =
         runTest(UnconfinedTestDispatcher()) {
             val exportScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob(coroutineContext.job))
             val holder = BackupStateHolder(exportScope, engineOf(MemorySection()), documents, StandardTestDispatcher(testScheduler))
             holder.onExportTargetPicked(DocumentPick.Created(target))
+            documents.deleted shouldBe emptyList()
 
             exportScope.cancel()
             testScheduler.advanceUntilIdle()
 
             documents.deleted shouldContainExactly listOf(target)
+            documents.files shouldBe emptyMap()
         }
 
     @Test
@@ -303,16 +305,19 @@ class BackupStateHolderRobolectricTest {
         }
 
     @Test
-    fun `canceling the scope while the work dispatcher has not yet run the export deletes the created document`(): Unit =
+    fun `canceling the scope after the launch started but before the work dispatcher runs the export deletes the created document`(): Unit =
         runTest(UnconfinedTestDispatcher()) {
             val exportScope = CoroutineScope(coroutineContext + SupervisorJob(coroutineContext.job))
             val holder = BackupStateHolder(exportScope, engineOf(MemorySection()), documents, StandardTestDispatcher(testScheduler))
             holder.onExportTargetPicked(DocumentPick.Created(target))
+            holder.state.value shouldBe BackupState.Working
+            documents.deleted shouldBe emptyList()
 
             exportScope.cancel()
             testScheduler.advanceUntilIdle()
 
             documents.deleted shouldContainExactly listOf(target)
+            documents.files shouldBe emptyMap()
         }
 
     @Test

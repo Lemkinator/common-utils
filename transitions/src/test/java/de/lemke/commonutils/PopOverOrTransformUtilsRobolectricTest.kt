@@ -25,8 +25,6 @@ import android.view.ContextThemeWrapper
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.reflect.DeviceInfo
-import de.lemke.commonutils.ui.utils.DURATION_KEY
-import de.lemke.commonutils.ui.utils.FADE_MODE_KEY
 import de.lemke.commonutils.ui.utils.TRANSITION_NAME_KEY
 import de.lemke.commonutils.ui.utils.popOverOrTransformToActivity
 import de.lemke.commonutils.ui.utils.singleLaunch
@@ -37,7 +35,6 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -53,8 +50,6 @@ import org.robolectric.shadows.ShadowActivity.IntentForResult
 private const val TABLET = "sw600dp-w600dp-h1024dp"
 private const val LARGE_PHONE = "sw599dp-w599dp-h1024dp"
 private const val ANCHOR_VIEW_ID = 4242
-private const val ANIM_TYPE_KEY = "android:activity.animType"
-private const val ANIM_SCENE_TRANSITION = 5
 private const val NARROW_SMALLEST_WIDTH_DP = 500
 
 /** An activity whose own resources report a phone width while the application stays at a tablet width. */
@@ -91,19 +86,10 @@ class PopOverOrTransformUtilsRobolectricTest : LaunchLatchRobolectricTest() {
 
     private fun LatchTestActivity.startedLaunch(): IntentForResult = shadowOf(this).nextStartedActivityForResult.shouldNotBeNull()
 
-    private fun IntentForResult.shouldBePopOver() {
-        intent.component?.className shouldBe Activity::class.java.name
-        (intent.flags and Intent.FLAG_ACTIVITY_SINGLE_TOP) shouldBe Intent.FLAG_ACTIVITY_SINGLE_TOP
-        intent.hasExtra(TRANSITION_NAME_KEY).shouldBeFalse()
-        options.shouldNotBeNull().getInt(ANIM_TYPE_KEY) shouldNotBe ANIM_SCENE_TRANSITION
-    }
+    private fun IntentForResult.shouldBePopOver() = intent.shouldBePopOverTo(Activity::class.java, options)
 
-    private fun IntentForResult.shouldBeZoom(transitionName: String) {
-        intent.component?.className shouldBe Activity::class.java.name
-        intent.getStringExtra(TRANSITION_NAME_KEY) shouldBe transitionName
-        (intent.flags and Intent.FLAG_ACTIVITY_SINGLE_TOP) shouldBe 0
-        options.shouldNotBeNull().getInt(ANIM_TYPE_KEY) shouldBe ANIM_SCENE_TRANSITION
-    }
+    private fun IntentForResult.shouldBeZoom(transitionName: String) =
+        intent.shouldBeContainerTransformTo(Activity::class.java, options, transitionName)
 
     @Test
     fun `class overload pops over on One UI at 600dp smallest width`() {
@@ -219,9 +205,7 @@ class PopOverOrTransformUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         activity.attachedView().popOverOrTransformToActivity(Activity::class.java, "shared", duration = 123L, fadeMode = 2).shouldBeTrue()
 
         val started = activity.startedLaunch()
-        started.shouldBeZoom("shared")
-        started.intent.getLongExtra(DURATION_KEY, 0L) shouldBe 123L
-        started.intent.getIntExtra(FADE_MODE_KEY, -1) shouldBe 2
+        started.intent.shouldBeContainerTransformTo(Activity::class.java, started.options, "shared", 123L, 2)
     }
 
     @Test
@@ -312,9 +296,7 @@ class PopOverOrTransformUtilsRobolectricTest : LaunchLatchRobolectricTest() {
         activity.popOverOrTransformToActivity(ANCHOR_VIEW_ID, Activity::class.java, "shared", duration = 123L, fadeMode = 2).shouldBeTrue()
 
         val started = activity.startedLaunch()
-        started.shouldBeZoom("shared")
-        started.intent.getLongExtra(DURATION_KEY, 0L) shouldBe 123L
-        started.intent.getIntExtra(FADE_MODE_KEY, -1) shouldBe 2
+        started.intent.shouldBeContainerTransformTo(Activity::class.java, started.options, "shared", 123L, 2)
     }
 
     @Test

@@ -35,9 +35,9 @@ class LifecycleStateInViewModelTest : ShouldSpec(
     {
         should("stateInViewModel initial value returned before upstream emits") {
             val scope = CoroutineScope(Dispatchers.Unconfined + SupervisorJob())
+            autoClose(AutoCloseable { scope.cancel() })
             val state = flowOf(99).stateInViewModel(scope, 0)
             state.value shouldBe 0
-            scope.cancel()
         }
 
         should("stateInViewModel emits upstream value after subscription") {

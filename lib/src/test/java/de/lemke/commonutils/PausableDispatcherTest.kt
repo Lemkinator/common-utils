@@ -26,8 +26,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 private const val WAIT_SECONDS = 10L
@@ -35,13 +37,22 @@ private const val CYCLES = 20_000
 
 class PausableDispatcherTest : ShouldSpec(
     {
+        val scopes = mutableListOf<CoroutineScope>()
+
+        fun scopeOf(dispatcher: CoroutineDispatcher): CoroutineScope = CoroutineScope(dispatcher + Job()).also(scopes::add)
+
+        afterEach {
+            scopes.forEach(CoroutineScope::cancel)
+            scopes.clear()
+        }
+
         context("by default") {
             should("hand a launched block to the delegate instead of running it") {
                 val delegate = HeldDispatcher()
                 val dispatcher = PausableDispatcher(delegate)
                 val ran = mutableListOf<String>()
 
-                CoroutineScope(dispatcher + Job()).launch { ran += "block" }
+                scopeOf(dispatcher).launch { ran += "block" }
 
                 ran.shouldBeEmpty()
                 delegate.held shouldHaveSize 1
@@ -57,7 +68,7 @@ class PausableDispatcherTest : ShouldSpec(
                     val delegate = HeldDispatcher()
                     val dispatcher = PausableDispatcher(delegate, mode)
                     val ran = mutableListOf<String>()
-                    val scope = CoroutineScope(dispatcher + Job())
+                    val scope = scopeOf(dispatcher)
 
                     dispatcher.pause()
                     scope.launch { ran += "first" }
@@ -79,7 +90,7 @@ class PausableDispatcherTest : ShouldSpec(
                     val delegate = HeldDispatcher()
                     val dispatcher = PausableDispatcher(delegate, mode)
                     val ran = mutableListOf<String>()
-                    val scope = CoroutineScope(dispatcher + Job())
+                    val scope = scopeOf(dispatcher)
 
                     dispatcher.pause()
                     scope.launch { ran += "first" }
@@ -150,7 +161,7 @@ class PausableDispatcherTest : ShouldSpec(
                 val delegate = HeldDispatcher()
                 val ran = mutableListOf<String>()
 
-                CoroutineScope(PausableDispatcher(delegate, WhileResumed.RunInPlace) + Job()).launch { ran += "block" }
+                scopeOf(PausableDispatcher(delegate, WhileResumed.RunInPlace)).launch { ran += "block" }
 
                 ran shouldBe listOf("block")
                 delegate.held.shouldBeEmpty()
@@ -160,7 +171,7 @@ class PausableDispatcherTest : ShouldSpec(
                 val delegate = HeldDispatcher()
                 val dispatcher = PausableDispatcher(delegate, WhileResumed.RunInPlace)
                 val ran = mutableListOf<String>()
-                val scope = CoroutineScope(dispatcher + Job())
+                val scope = scopeOf(dispatcher)
 
                 dispatcher.pause()
                 scope.launch { ran += "held" }
@@ -189,7 +200,7 @@ class PausableDispatcherTest : ShouldSpec(
             should("never let a concurrent coroutine overtake blocks released by resume") {
                 val delegate = HeldDispatcher()
                 val dispatcher = PausableDispatcher(delegate, WhileResumed.RunInPlace)
-                val scope = CoroutineScope(dispatcher + Job())
+                val scope = scopeOf(dispatcher)
                 val ran = mutableListOf<String>()
                 val phase = AtomicInteger()
                 val stop = AtomicBoolean()
@@ -205,22 +216,25 @@ class PausableDispatcherTest : ShouldSpec(
                         }
                     }
 
-                started.await(WAIT_SECONDS, TimeUnit.SECONDS) shouldBe true
-                repeat(CYCLES) {
-                    ran.clear()
-                    dispatcher.pause()
-                    scope.launch { ran += "first" }
-                    scope.launch { ran += "second" }
-                    phase.incrementAndGet()
-                    dispatcher.resume()
-                    scope.launch { ran += "third" }
-                    phase.incrementAndGet()
-                    delegate.held.forEach(Runnable::run)
-                    delegate.held.clear()
-                    ran shouldBe listOf("first", "second", "third")
+                try {
+                    started.await(WAIT_SECONDS, TimeUnit.SECONDS) shouldBe true
+                    repeat(CYCLES) {
+                        ran.clear()
+                        dispatcher.pause()
+                        scope.launch { ran += "first" }
+                        scope.launch { ran += "second" }
+                        phase.incrementAndGet()
+                        dispatcher.resume()
+                        scope.launch { ran += "third" }
+                        phase.incrementAndGet()
+                        delegate.held.forEach(Runnable::run)
+                        delegate.held.clear()
+                        ran shouldBe listOf("first", "second", "third")
+                    }
+                } finally {
+                    stop.set(true)
+                    observer.join(TimeUnit.SECONDS.toMillis(WAIT_SECONDS))
                 }
-                stop.set(true)
-                observer.join(TimeUnit.SECONDS.toMillis(WAIT_SECONDS))
 
                 observer.isAlive shouldBe false
                 overtook.get() shouldBe 0
