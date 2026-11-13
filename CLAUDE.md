@@ -160,7 +160,7 @@ be unnecessary; treat that as an open follow-up, not a settled fact.
 ## Robolectric jars
 
 Gradle resolves the `android-all-instrumented` jars (catalog entries `robolectric-android-all-<api>`, one per SDK level the
-tests use: 28, 29, 32, 33, 34 and 36) into `<module>/build/robolectric-jars` through `syncRobolectricJars`. The
+tests use: 28, 29, 32, 33, 34, 36 and 37, the last being the compile SDK, whose jar `Robolectric.buildAttributeSet` reads for compile-time resources) into `<module>/build/robolectric-jars` through `syncRobolectricJars`. The
 `commonutils.robolectric` plugin registers that task; `:lib` and `:transitions` apply it and pass the directory as
 `robolectric.dependency.dir` in their `unitTests.all` block. `:test-support` runs no tests and does not apply it. Unit tests run without network access. After
 a Robolectric bump or a new `@Config(sdk)`, update the catalog coordinates to the jar names Robolectric's
