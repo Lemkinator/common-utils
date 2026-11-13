@@ -170,9 +170,11 @@ exception on every run.
 ## Dependency Analysis
 
 `./gradlew buildHealth` runs in the `check-formatting` CI job. It fails on unused dependencies, incorrect
-configurations and unused annotation processors; other advice warns. The `dependencyAnalysis {}` block in the root
-`build.gradle.kts` holds the facade bundles, the narrow guava exclude and the `hilt-android` exclude. Each bundle
-names its primary and only the transitive internals the report lists, so it never masks a declared artifact.
+configurations and unused annotation processors; other advice warns. Advice about used transitive dependencies is
+ignored: do not declare a transitive artifact only to satisfy it, and keep no version-less catalog entry for one. The
+`dependencyAnalysis {}` block in the root `build.gradle.kts` holds the `oneui` and `robolectric` facade bundles and the
+`hilt-android` exclude. Each bundle names its primary and only the transitive internals the report lists, so it never
+masks a declared artifact; add a bundle only when `buildHealth` reports advice that one fixes.
 `hilt-android` is excluded from the incorrect-configuration check: the plugin reads the types Hilt generates into the
 module as public API, while the library keeps Hilt `implementation` (see Hilt). `oneui-design` and the testFixtures
 `androidx.test:core` are `api` because their types appear in the public API. Report:
