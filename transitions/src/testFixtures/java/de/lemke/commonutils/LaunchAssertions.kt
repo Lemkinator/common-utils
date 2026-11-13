@@ -21,15 +21,18 @@ import de.lemke.commonutils.ui.utils.DEFAULT_DURATION
 import de.lemke.commonutils.ui.utils.DEFAULT_FADE_MODE
 import de.lemke.commonutils.ui.utils.DEFAULT_TRANSITION_NAME
 
+// Hidden ActivityOptions bundle key and its scene-transition value (ANIM_SCENE_TRANSITION); no public API reads them.
 private const val ANIM_TYPE_KEY = "android:activity.animType"
 private const val ANIM_SCENE_TRANSITION = 5
 
 private val Bundle?.startsSceneTransition: Boolean get() = this?.getInt(ANIM_TYPE_KEY) == ANIM_SCENE_TRANSITION
 
 /**
- * Fails unless this started intent and its [options] are the pop-over launch of `popOverOrTransformToActivity` for [cls]:
- * single-top, no container transform and no scene transition. A Robolectric test passes the `intent` and `options` of
- * the `ShadowActivity.IntentForResult` it reads.
+ * Fails unless this started intent and its [options] match the pop-over launch of `popOverOrTransformToActivity` for [cls]:
+ * single-top, no container transform, and non-null options without a scene transition. The pop-over position and size
+ * are not checked: One UI stores them through a hidden call that leaves nothing a JVM test can read, so any plain
+ * options bundle passes. A Robolectric test passes the `intent` and `options` of the `ShadowActivity.IntentForResult`
+ * it reads.
  */
 public fun Intent.shouldBePopOverTo(
     cls: Class<*>,
@@ -50,6 +53,8 @@ public fun Intent.shouldBePopOverTo(
  * non-pop-over arm of `popOverOrTransformToActivity`, to [cls]: [transitionName], [duration] and [fadeMode] as extras, no
  * single-top flag and a scene transition in the options. The defaults are those of the launch functions. A Robolectric
  * test passes the `intent` and `options` of the `ShadowActivity.IntentForResult` it reads.
+ *
+ * Unlike the overload without [cls], this one defaults [transitionName] to the library default name.
  */
 public fun Intent.shouldBeContainerTransformTo(
     cls: Class<*>,

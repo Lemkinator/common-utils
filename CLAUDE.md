@@ -119,7 +119,8 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
   — assert the started intent and its options bundle (the `intent` and `options` of Robolectric's `IntentForResult`) after
   `popOverOrTransformToActivity` or `transformToActivity`: the target class, the single-top flag, the container transform
   extras and the scene transition. The transform overload defaults to the library's own transition name, duration and fade
-  mode, so an app test needs no library constant and no local helper. They live in the transitions testFixtures too.
+  mode, so an app test needs no library constant for them. They do not check the transition name of the source view or the
+  pop-over position. They live in the transitions testFixtures too.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
 - `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.

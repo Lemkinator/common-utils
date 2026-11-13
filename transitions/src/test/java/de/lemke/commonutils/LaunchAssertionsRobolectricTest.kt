@@ -23,6 +23,7 @@ import android.view.View
 import com.google.android.material.transition.platform.MaterialContainerTransform.FADE_MODE_THROUGH
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -79,23 +80,33 @@ class LaunchAssertionsRobolectricTest {
 
     @Test
     fun `a pop-over that carries a container transform fails`() {
-        shouldThrow<AssertionError> {
-            launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).withTransform().shouldBePopOverTo(TargetActivity::class.java, plainOptions)
-        }
+        val error =
+            shouldThrow<AssertionError> {
+                launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).withTransform().shouldBePopOverTo(TargetActivity::class.java, plainOptions)
+            }
+
+        error.message shouldContain "Expected no container transform but the intent carries"
     }
 
     @Test
     fun `a pop-over without options fails`() {
-        shouldThrow<AssertionError> {
-            launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).shouldBePopOverTo(TargetActivity::class.java, null)
-        }
+        val error =
+            shouldThrow<AssertionError> {
+                launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).shouldBePopOverTo(TargetActivity::class.java, null)
+            }
+
+        error.message shouldContain "with plain activity options but options were null"
     }
 
     @Test
     fun `a pop-over with a scene transition fails`() {
-        shouldThrow<AssertionError> {
-            launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).shouldBePopOverTo(TargetActivity::class.java, sceneOptions)
-        }
+        val error =
+            shouldThrow<AssertionError> {
+                launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).shouldBePopOverTo(TargetActivity::class.java, sceneOptions)
+            }
+
+        error.message shouldContain "with plain activity options but options were"
+        error.message shouldNotContain "options were null"
     }
 
     @Test
@@ -111,10 +122,14 @@ class LaunchAssertionsRobolectricTest {
     }
 
     @Test
-    fun `a transform launch of another class fails`() {
-        shouldThrow<AssertionError> {
-            launch().withTransform().shouldBeContainerTransformTo(Activity::class.java, sceneOptions)
-        }
+    fun `a transform launch of another class fails and names both classes`() {
+        val error =
+            shouldThrow<AssertionError> {
+                launch().withTransform().shouldBeContainerTransformTo(Activity::class.java, sceneOptions)
+            }
+
+        error.message shouldContain "<android.app.Activity>"
+        error.message shouldContain "<$TARGET>"
     }
 
     @Test
@@ -130,24 +145,34 @@ class LaunchAssertionsRobolectricTest {
 
     @Test
     fun `a transform launch with the single-top flag fails`() {
-        shouldThrow<AssertionError> {
-            launch(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .withTransform()
-                .shouldBeContainerTransformTo(TargetActivity::class.java, sceneOptions)
-        }
+        val error =
+            shouldThrow<AssertionError> {
+                launch(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    .withTransform()
+                    .shouldBeContainerTransformTo(TargetActivity::class.java, sceneOptions)
+            }
+
+        error.message shouldContain "without a single-top flag"
     }
 
     @Test
     fun `a transform launch with plain options fails`() {
-        shouldThrow<AssertionError> {
-            launch().withTransform().shouldBeContainerTransformTo(TargetActivity::class.java, plainOptions)
-        }
+        val error =
+            shouldThrow<AssertionError> {
+                launch().withTransform().shouldBeContainerTransformTo(TargetActivity::class.java, plainOptions)
+            }
+
+        error.message shouldContain "with a scene transition but options were"
+        error.message shouldNotContain "options were null"
     }
 
     @Test
     fun `a transform launch without options fails`() {
-        shouldThrow<AssertionError> {
-            launch().withTransform().shouldBeContainerTransformTo(TargetActivity::class.java, null)
-        }
+        val error =
+            shouldThrow<AssertionError> {
+                launch().withTransform().shouldBeContainerTransformTo(TargetActivity::class.java, null)
+            }
+
+        error.message shouldContain "with a scene transition but options were null"
     }
 }
