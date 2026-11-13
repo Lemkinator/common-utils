@@ -18,6 +18,7 @@
 
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import kotlinx.validation.KotlinApiBuildTask
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
     id("commonutils.publishing")
@@ -68,10 +69,7 @@ android {
                     "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
                     "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
                 )
-                if (System.getenv("CI") != null) {
-                    test.testLogging { events("started", "failed", "standard_out", "standard_error") }
-                    test.systemProperty("robolectric.logging.enabled", "true")
-                }
+                test.testLogging.exceptionFormat = TestExceptionFormat.FULL
                 test.systemProperty("robolectric.graphicsMode", "NATIVE")
                 test.systemProperty("roborazzi.test.record", project.findProperty("roborazzi.record") ?: "false")
                 test.systemProperty("roborazzi.test.verify", project.findProperty("roborazzi.verify") ?: "true")

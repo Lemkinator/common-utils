@@ -70,6 +70,24 @@ extensions.configure<LibraryExtension> {
     }
 }
 
+// One configuration per jar: the jars share a module, so a single configuration would keep only the newest.
+val robolectricAndroidAllJars =
+    catalog
+        .findBundle("robolectric-android-all")
+        .get()
+        .get()
+        .map { jar -> configurations.detachedConfiguration(dependencies.create(jar)).apply { isTransitive = false } }
+val syncRobolectricJars =
+    tasks.register<Sync>("syncRobolectricJars") {
+        from(robolectricAndroidAllJars)
+        into(layout.buildDirectory.dir("robolectric-jars"))
+    }
+extensions.configure<LibraryExtension> {
+    testOptions.unitTests.all { test ->
+        test.jvmArgumentProviders += RobolectricDependencyDir(layout.dir(syncRobolectricJars.map { it.destinationDir }))
+    }
+}
+
 extensions.configure<KotlinAndroidProjectExtension> {
     explicitApi()
     compilerOptions.optIn.add(INTERNAL_API_MARKER)

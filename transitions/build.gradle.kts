@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     id("commonutils.publishing")
     id("commonutils.api-validation")
@@ -43,10 +45,7 @@ android {
                 "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
                 "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
             )
-            if (System.getenv("CI") != null) {
-                test.testLogging { events("started", "failed", "standard_out", "standard_error") }
-                test.systemProperty("robolectric.logging.enabled", "true")
-            }
+            test.testLogging.exceptionFormat = TestExceptionFormat.FULL
             test.systemProperty("robolectric.graphicsMode", "NATIVE")
         }
     }
