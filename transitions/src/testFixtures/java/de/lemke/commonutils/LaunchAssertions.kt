@@ -50,9 +50,9 @@ public fun Intent.shouldBePopOverTo(
 
 /**
  * Fails unless this started intent and its [options] are the container transform of `View.transformToActivity`, or the
- * non-pop-over arm of `popOverOrTransformToActivity`, to [cls]: [transitionName], [duration] and [fadeMode] as extras, no
- * single-top flag and a scene transition in the options. The defaults are those of the launch functions. A Robolectric
- * test passes the `intent` and `options` of the `ShadowActivity.IntentForResult` it reads.
+ * non-pop-over arm of `popOverOrTransformToActivity`, to [cls]: [transitionName], [duration] and [fadeMode] as extras and a
+ * scene transition in the options. The intent flags are not checked: the caller owns them. The defaults are those of
+ * the launch functions. A Robolectric test passes the `intent` and `options` of the `ShadowActivity.IntentForResult` it reads.
  *
  * Unlike the overload without [cls], this one defaults [transitionName] to the library default name.
  */
@@ -65,9 +65,6 @@ public fun Intent.shouldBeContainerTransformTo(
 ) {
     shouldTarget(cls)
     shouldBeContainerTransformTo(transitionName, duration, fadeMode)
-    if (flags and Intent.FLAG_ACTIVITY_SINGLE_TOP != 0) {
-        throw AssertionError("Expected a container transform to <${cls.name}> without a single-top flag but the intent flags are $flags")
-    }
     if (!options.startsSceneTransition) {
         throw AssertionError("Expected a container transform to <${cls.name}> with a scene transition but options were $options")
     }

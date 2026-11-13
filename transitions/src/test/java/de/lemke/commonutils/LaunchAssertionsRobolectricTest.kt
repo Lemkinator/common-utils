@@ -153,15 +153,19 @@ class LaunchAssertionsRobolectricTest {
     }
 
     @Test
-    fun `a transform launch with the single-top flag fails`() {
+    fun `a transform launch with a caller-supplied single-top flag passes`() {
+        launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).withTransform().shouldBeContainerTransformTo(TargetActivity::class.java, sceneOptions)
+    }
+
+    @Test
+    fun `a pop-over launch fails the container transform assertion`() {
         val error =
             shouldThrow<AssertionError> {
-                launch(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    .withTransform()
-                    .shouldBeContainerTransformTo(TargetActivity::class.java, sceneOptions)
+                launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).shouldBeContainerTransformTo(TargetActivity::class.java, plainOptions)
             }
 
-        error.message shouldContain "without a single-top flag"
+        error.message shouldContain "Expected a container transform to <commonUtilsActivityTransitionName>"
+        error.message shouldContain "but was <null>"
     }
 
     @Test
