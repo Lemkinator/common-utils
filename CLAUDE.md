@@ -157,6 +157,16 @@ default is inlined at every call site regardless of runner). These annotations p
 JUnit 4 migration above and haven't been re-audited against the new runner — some may now
 be unnecessary; treat that as an open follow-up, not a settled fact.
 
+## Robolectric jars
+
+Gradle resolves the `android-all-instrumented` jars (catalog entries `robolectric-android-all-<api>`, one per SDK level the
+tests use: 28, 29, 32, 33, 34, 36 and 37, the last being the target SDK that tests without `@Config(sdk)` fall back to) into
+`<module>/build/robolectric-jars` through `syncRobolectricJars`. The unit-test tasks of every module pass that directory as
+`robolectric.dependency.dir`; the `commonutils.android-library` plugin wires it. Unit tests run without network access. After
+a Robolectric bump or a new `@Config(sdk)`, update the catalog coordinates to the jar names Robolectric's
+`DefaultSdkProvider` lists; a stale or missing entry fails the test with "Path is not a file". Failed tests print the full
+exception on every run.
+
 ## Dependency Analysis
 
 `./gradlew buildHealth` runs in the `check-formatting` CI job. It fails on unused dependencies, incorrect
