@@ -33,7 +33,7 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 - `build-logic/` is an included build with the convention plugins: `commonutils.android-library` (Android, lint,
   Spotless, Detekt, explicit API, opt-in marker, SESL exclusions), `commonutils.publishing` (the Maven publication; a
   module sets `description` and `commonUtilsPublishing { artifactId }`), `commonutils.api-validation` (the `apiBuild`,
-  `apiCheck` and `apiDump` tasks), `commonutils.coverage` (the 100 % Kover floor of the debug variant) and
+  `apiCheck` and `apiDump` tasks), `commonutils.coverage` (the 100 % Kover floor of the debug variant), `commonutils.robolectric` (the jar sync task) and
   `commonutils.root`. The `unitTests.all` block stays in each module's build file.
 - Each published module has its own ABI dump (`lib/api`, `transitions/api`) and Kover floor, and its own internal
   `NoCoverage` annotation in its own package.
@@ -157,12 +157,27 @@ default is inlined at every call site regardless of runner). These annotations p
 JUnit 4 migration above and haven't been re-audited against the new runner — some may now
 be unnecessary; treat that as an open follow-up, not a settled fact.
 
+## Robolectric jars
+
+Gradle resolves the `android-all-instrumented` jars (catalog entries `robolectric-android-all-<api>`, one per SDK level the
+tests use: 28, 29, 32, 33, 34 and 36) into `<module>/build/robolectric-jars` through `syncRobolectricJars`. API 37, the
+compile SDK, is also synced: `Robolectric.buildAttributeSet` reads that jar for compile-time resources. The
+`commonutils.robolectric` plugin registers the task; `:lib` and `:transitions` apply it and pass the directory as
+`robolectric.dependency.dir` in their `unitTests.all` block. `:test-support` runs no tests and does not apply it. Unit
+tests run without network access. After a Robolectric bump or a new `@Config(sdk)`, update the catalog coordinates to the
+jar names Robolectric's `DefaultSdkProvider` lists; a stale or missing entry fails the test with "Path is not a file".
+Failed tests print the full exception on every run.
+
 ## Dependency Analysis
 
 `./gradlew buildHealth` runs in the `check-formatting` CI job. It fails on unused dependencies, incorrect
-configurations and unused annotation processors; other advice warns. The `dependencyAnalysis {}` block in the root
-`build.gradle.kts` holds the facade bundles, the narrow guava exclude and the `hilt-android` exclude. Each bundle
-names its primary and only the transitive internals the report lists, so it never masks a declared artifact.
+configurations and unused annotation processors; other advice warns. Advice about used transitive dependencies is
+ignored: do not declare a transitive artifact only to satisfy it, and keep no version-less catalog entry for one. The
+`dependencyAnalysis {}` block in the root `build.gradle.kts` holds the `oneui` and `robolectric` facade bundles and the
+`hilt-android` exclude. The `oneui` bundle silences "remove `api(libs.oneui.design)`" and the `robolectric` bundle silences "change
+`libs.robolectric` from `api` to `implementation`", both advice for `:test-support`. Each bundle names its primary and only the
+transitive internals the report lists, so it never masks a declared artifact; add a bundle only when `buildHealth` reports
+advice that one fixes.
 `hilt-android` is excluded from the incorrect-configuration check: the plugin reads the types Hilt generates into the
 module as public API, while the library keeps Hilt `implementation` (see Hilt). `oneui-design` and the testFixtures
 `androidx.test:core` are `api` because their types appear in the public API. Report:
