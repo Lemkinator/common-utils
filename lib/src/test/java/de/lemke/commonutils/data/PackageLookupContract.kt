@@ -27,6 +27,7 @@ import de.lemke.commonutils.registerFakeLauncherApp
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -38,28 +39,31 @@ import org.robolectric.annotation.Config
 /** Behaviour every [PackageLookup] shares, so [FakePackageLookup] stays true to [DefaultPackageLookup]. */
 abstract class PackageLookupContract {
     /** Returns a lookup on which exactly [installedPackage] is installed among the packages these tests query. */
-    abstract fun createLookup(installedPackage: String): PackageLookup
+    abstract fun createLookup(
+        scheduler: TestCoroutineScheduler,
+        installedPackage: String,
+    ): PackageLookup
 
     /** Returns a lookup on which [FAKE_LAUNCHER_APP] is an installed launcher app. */
-    abstract fun createLookupWithLauncherApp(): PackageLookup
+    abstract fun createLookupWithLauncherApp(scheduler: TestCoroutineScheduler): PackageLookup
 
     @Test
     fun `installedApps lists an installed launcher app with its launcher activity`() =
         runTest {
-            createLookupWithLauncherApp().installedApps().map { ComponentName(it.packageName, it.activityName) } shouldContain
+            createLookupWithLauncherApp(testScheduler).installedApps().map { ComponentName(it.packageName, it.activityName) } shouldContain
                 FAKE_LAUNCHER_APP
         }
 
     @Test
     fun `applicationInfo of an installed package carries its package name`() =
         runTest {
-            createLookup(INSTALLED_PACKAGE).applicationInfo(INSTALLED_PACKAGE)?.packageName shouldBe INSTALLED_PACKAGE
+            createLookup(testScheduler, INSTALLED_PACKAGE).applicationInfo(INSTALLED_PACKAGE)?.packageName shouldBe INSTALLED_PACKAGE
         }
 
     @Test
     fun `applicationInfo of a missing package is null`() =
         runTest {
-            createLookup(INSTALLED_PACKAGE).applicationInfo(MISSING_PACKAGE) shouldBe null
+            createLookup(testScheduler, INSTALLED_PACKAGE).applicationInfo(MISSING_PACKAGE) shouldBe null
         }
 
     private companion object {
@@ -72,26 +76,31 @@ abstract class PackageLookupContract {
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class DefaultPackageLookupContractTest : PackageLookupContract() {
-    override fun createLookup(installedPackage: String): PackageLookup {
+    override fun createLookup(
+        scheduler: TestCoroutineScheduler,
+        installedPackage: String,
+    ): PackageLookup {
         val context = ApplicationProvider.getApplicationContext<Context>()
         shadowOf(context.packageManager).installPackage(PackageInfo().also { it.packageName = installedPackage })
-        return DefaultPackageLookup(context, UnconfinedTestDispatcher())
+        return DefaultPackageLookup(context, UnconfinedTestDispatcher(scheduler))
     }
 
-    override fun createLookupWithLauncherApp(): PackageLookup {
+    override fun createLookupWithLauncherApp(scheduler: TestCoroutineScheduler): PackageLookup {
         val context = ApplicationProvider.getApplicationContext<Context>()
         registerFakeLauncherApp(context)
-        return DefaultPackageLookup(context, UnconfinedTestDispatcher())
+        return DefaultPackageLookup(context, UnconfinedTestDispatcher(scheduler))
     }
 }
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class FakePackageLookupContractTest : PackageLookupContract() {
-    override fun createLookup(installedPackage: String): PackageLookup =
-        FakePackageLookup(ApplicationInfo().also { it.packageName = installedPackage })
+    override fun createLookup(
+        scheduler: TestCoroutineScheduler,
+        installedPackage: String,
+    ): PackageLookup = FakePackageLookup(ApplicationInfo().also { it.packageName = installedPackage })
 
-    override fun createLookupWithLauncherApp(): PackageLookup =
+    override fun createLookupWithLauncherApp(scheduler: TestCoroutineScheduler): PackageLookup =
         FakePackageLookup().apply {
             installedAppsResult =
                 Result.success(listOf(AppInfoData(AppInfo(FAKE_LAUNCHER_APP.packageName, FAKE_LAUNCHER_APP.className))))
