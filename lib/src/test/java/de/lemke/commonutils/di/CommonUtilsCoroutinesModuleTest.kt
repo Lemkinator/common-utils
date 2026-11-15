@@ -22,14 +22,14 @@ import io.kotest.matchers.shouldBe
 import kotlin.coroutines.ContinuationInterceptor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 class CommonUtilsCoroutinesModuleTest :
     ShouldSpec({
         should("run the application scope on the dispatcher it is given") {
-            val dispatcher: CoroutineDispatcher = Dispatchers.Unconfined
+            val dispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()
 
             val scope = CommonUtilsCoroutinesModule.provideApplicationScope(dispatcher)
 
@@ -37,7 +37,7 @@ class CommonUtilsCoroutinesModuleTest :
         }
 
         should("keep the application scope active when a child coroutine fails") {
-            val scope = CommonUtilsCoroutinesModule.provideApplicationScope(Dispatchers.Unconfined)
+            val scope = CommonUtilsCoroutinesModule.provideApplicationScope(UnconfinedTestDispatcher())
             val failing = scope.launch(CoroutineExceptionHandler { _, _ -> }) { error("boom") }
 
             failing.isCancelled.shouldBeTrue()

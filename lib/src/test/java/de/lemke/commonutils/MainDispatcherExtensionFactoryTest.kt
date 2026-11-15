@@ -62,7 +62,7 @@ class MainDispatcherExtensionFactoryTest : ShouldSpec(
             shouldThrow<IllegalStateException> {
                 Dispatchers.Main.dispatch(EmptyCoroutineContext, Runnable { ranOnTestDispatcher = true })
             }.message shouldContain "Dispatchers.Main was accessed"
-            created.forEach { it.scheduler.runCurrent() }
+            created.forEach { dispatcher -> dispatcher.scheduler.runCurrent() }
             ranOnTestDispatcher shouldBe false
         }
     },

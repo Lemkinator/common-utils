@@ -38,7 +38,7 @@ import org.robolectric.shadows.ShadowLooper
 private const val LEAVING_TIMEOUT_MILLIS = 1000L
 
 /** Rules and helpers that drive the launch latch of a [LatchTestActivity]. */
-public abstract class LaunchLatchRobolectricTest {
+public open class LaunchLatchRobolectricTest {
     @get:Rule
     public val destroyActivities: DestroyActivitiesRule = DestroyActivitiesRule()
 

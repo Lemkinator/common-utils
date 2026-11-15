@@ -25,7 +25,7 @@ import de.lemke.commonutils.data.SaveLocation
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -93,7 +93,7 @@ abstract class BitmapExporterContract {
 class DefaultBitmapExporterContractTest : BitmapExporterContract() {
     private val provider by lazy { RecordingDocumentsProvider.create(ctx) }
 
-    override fun exporter(): BitmapExporter = DefaultBitmapExporter(ctx, Dispatchers.Unconfined, "label", "test.png")
+    override fun exporter(): BitmapExporter = DefaultBitmapExporter(ctx, UnconfinedTestDispatcher(), "label", "test.png")
 
     override fun createdDocument(): Uri = provider.uri
 

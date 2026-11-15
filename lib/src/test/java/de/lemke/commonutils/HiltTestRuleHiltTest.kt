@@ -24,7 +24,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -59,7 +58,7 @@ class HiltTestRuleHiltTest {
     fun `injects the test instance`() {
         hiltRule.inject()
 
-        io shouldBe Dispatchers.IO
+        io.toString() shouldBe "Dispatchers.IO"
     }
 
     @Test
