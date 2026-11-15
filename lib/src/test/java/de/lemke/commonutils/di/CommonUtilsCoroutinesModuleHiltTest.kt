@@ -25,7 +25,6 @@ import dagger.hilt.components.SingletonComponent
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeSameInstanceAs
 import javax.inject.Inject
 import kotlin.coroutines.ContinuationInterceptor
 import kotlinx.coroutines.CoroutineDispatcher
@@ -81,14 +80,14 @@ class CommonUtilsCoroutinesModuleHiltTest {
 
     @Test
     fun `an app that includes the module gets each qualified dispatcher`() {
-        io.toString() shouldBe "Dispatchers.IO"
-        defaultDispatcher.toString() shouldBe "Dispatchers.Default"
+        io shouldBe Dispatchers.IO
+        defaultDispatcher shouldBe Dispatchers.Default
         main shouldBe Dispatchers.Main
     }
 
     @Test
     fun `an app that includes the module gets one application scope on the default dispatcher`() {
         applicationScope shouldBe sameApplicationScope
-        applicationScope.coroutineContext[ContinuationInterceptor] shouldBeSameInstanceAs defaultDispatcher
+        applicationScope.coroutineContext[ContinuationInterceptor] shouldBe Dispatchers.Default
     }
 }
