@@ -23,6 +23,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.time.format.DateTimeParseException
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
@@ -166,6 +168,22 @@ class BackupReaderTest : ShouldSpec(
             shouldThrow<CancellationException> {
                 read(backupFilesOf(SectionInfo("items", 1, 1) to entriesJson(item("a"))), section)
             }
+        }
+        should("stop reading a section when its coroutine is canceled between entries") {
+            val job = Job()
+            var upgraded = 0
+            val section =
+                MemorySection(
+                    version = 2,
+                    upgradeStep = { _, entry ->
+                        upgraded++
+                        job.cancel()
+                        entry
+                    },
+                )
+            val files = backupFilesOf(SectionInfo("items", 1, 2) to entriesJson(item("a"), item("b")))
+            shouldThrow<CancellationException> { withContext(job) { read(files, section) } }
+            upgraded shouldBe 1
         }
         should("refuse a file whose sections are all unknown") {
             val files = backupFilesOf(SectionInfo("extra", 1, 1) to entriesJson(item("a")))
