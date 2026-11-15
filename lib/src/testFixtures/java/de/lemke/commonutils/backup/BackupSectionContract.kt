@@ -29,7 +29,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -214,9 +213,8 @@ public abstract class BackupSectionContract<E : Any> {
             val section = section()
             val engine = engineOf(section)
             for (version in section.minReadableVersion..section.version) {
-                val fixture = fixtures()[version]
-                assertNotNull("The section needs a fixture for version $version", fixture)
-                assertTrue("The fixture of version $version must expect an entry", fixture!!.entries.isNotEmpty())
+                val fixture = fixtures()[version] ?: throw AssertionError("The section needs a fixture for version $version")
+                assertTrue("The fixture of version $version must expect an entry", fixture.entries.isNotEmpty())
                 inTransaction { section.clear() }
 
                 val ready = engine.ready(fileOf(section.id, version, fixture.text))

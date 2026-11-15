@@ -33,12 +33,18 @@ internal enum class Probe {
 /** How long the main thread gets to answer the final probe before it counts as stalled. */
 internal val STALL_GRACE = 1.seconds
 
+/** The time source and the sleep of [pollUntil]; tests replace both. */
+internal class PollClock(
+    val timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
+    val sleep: (Duration) -> Unit = { TimeUnit.NANOSECONDS.sleep(it.inWholeNanoseconds) },
+)
+
 /**
  * Settles, then probes [condition], every [poll] until it is [Probe.Met]. [settle] returns false when it did not finish
  * in the time it is given. Once no time is left, or a step runs out of time, one final probe decides. It gets the
- * larger of [poll] and [stallGrace] to answer: [Probe.Met] returns, [Probe.NotMet] throws "condition not met", and
+ * larger of [poll] and [STALL_GRACE] to answer: [Probe.Met] returns, [Probe.NotMet] throws "condition not met", and
  * [Probe.TimedOut] throws a message naming [stalled]. Every call probes at least once. A step must return within the
- * time it is given. [timeSource] and [sleep] are replaced by tests.
+ * time it is given.
  */
 internal fun pollUntil(
     timeout: Duration,
@@ -46,15 +52,13 @@ internal fun pollUntil(
     stalled: String,
     settle: (budget: Duration) -> Boolean,
     condition: (budget: Duration) -> Probe,
-    stallGrace: Duration = STALL_GRACE,
-    timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
-    sleep: (Duration) -> Unit = { TimeUnit.NANOSECONDS.sleep(it.inWholeNanoseconds) },
+    clock: PollClock = PollClock(),
 ) {
-    val round = PollRound(timeSource.markNow() + timeout, poll, settle, condition, sleep)
+    val round = PollRound(clock.timeSource.markNow() + timeout, poll, settle, condition, clock.sleep)
     var probe = Probe.NotMet
     while (probe == Probe.NotMet) probe = round.run()
     if (probe == Probe.Met) return
-    when (condition(maxOf(poll, stallGrace))) {
+    when (condition(maxOf(poll, STALL_GRACE))) {
         Probe.Met -> Unit
         Probe.NotMet -> error("condition not met within $timeout")
         Probe.TimedOut -> error("$stalled within $timeout")

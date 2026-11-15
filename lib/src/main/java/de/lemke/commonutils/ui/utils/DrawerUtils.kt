@@ -66,7 +66,7 @@ public inline fun Bundle?.restoreSearchAndActionMode(
             onSearchMode()
         }
         if (getBoolean(COMMONUTILS_KEY_IS_ACTION_MODE)) {
-            onActionMode(getLongArray(COMMONUTILS_KEY_SELECTED_IDS)?.toSet() ?: emptySet())
+            onActionMode(getLongArray(COMMONUTILS_KEY_SELECTED_IDS)?.toSet().orEmpty())
         }
     }
 }
@@ -78,7 +78,7 @@ public inline fun Bundle?.restoreSearchAndActionMode(
 @NoCoverage
 public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
-        icon = AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)!!,
+        icon = checkNotNull(AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)) { "Missing info icon drawable" },
         tooltipText = aboutApp,
         listener = View::openAboutActivity,
     )
