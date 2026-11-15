@@ -18,7 +18,6 @@ package de.lemke.commonutils.backup.core
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
@@ -161,9 +160,6 @@ private suspend fun <E : Any> decodeSection(
             SectionRead.Read(backupJson.decodeFromString(decoder, text))
         } catch (_: TooManyEntriesException) {
             Refused(BackupRefusal.TooLarge)
-        } catch (e: SerializationException) {
-            // The JSON decoder wraps what an upgrade step throws; a cancellation must still propagate.
-            throw e.cause as? CancellationException ?: e
         }
     }
 }
