@@ -182,7 +182,9 @@ class BackupReaderTest : ShouldSpec(
                     },
                 )
             val files = backupFilesOf(SectionInfo("items", 1, 2) to entriesJson(item("a"), item("b")))
-            shouldThrow<CancellationException> { withContext(job) { read(files, section) } }
+            var outcome: Throwable? = null
+            runCatching { withContext(job) { outcome = runCatching { read(files, section) }.exceptionOrNull() } }
+            outcome.shouldBeInstanceOf<CancellationException>()
             upgraded shouldBe 1
         }
         should("refuse a file whose sections are all unknown") {
