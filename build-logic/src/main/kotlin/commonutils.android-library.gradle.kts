@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.variant.AndroidTest
+import com.android.build.api.variant.Component
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.extensions.DetektExtension
+import java.io.File
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("com.android.library")
@@ -154,3 +161,45 @@ tasks.withType<Detekt>().configureEach {
         sarif.required.set(true)
     }
 }
+
+tasks.named("check") {
+    setDependsOn(dependsOn.filterNot { it is TaskProvider<*> && it.name == "detekt" })
+    dependsOn("detektMain", "detektTest")
+}
+
+extensions.configure<LibraryAndroidComponentsExtension> {
+    val referenceBuildType = "debug"
+    val referenceSourceDirs = objects.listProperty<File>()
+    val sharedTestDir = layout.projectDirectory.dir("src/testShared").asFile
+    onVariants { variant ->
+        val components = listOf(variant) + variant.nestedComponents
+        if (variant.buildType == referenceBuildType) components.forEach { referenceSourceDirs.addAll(it.sourceDirs()) }
+        components.forEach { component ->
+            tasks
+                .withType<Detekt>()
+                .named { it == "detekt${component.name.replaceFirstChar(Char::uppercase)}" }
+                .configureEach {
+                    val kotlinc = tasks.named<KotlinCompile>(component.computeTaskName("compile", "Kotlin"))
+                    val javac = tasks.named<JavaCompile>(component.computeTaskName("compile", "JavaWithJavac"))
+                    // from() discards the plugin's default classpath (compile libraries and classes dirs), so both are added back.
+                    classpath.from(
+                        kotlinc.map { it.libraries },
+                        kotlinc.flatMap { it.destinationDirectory },
+                        javac.flatMap { it.destinationDirectory },
+                    )
+                    if (variant.buildType != referenceBuildType) {
+                        exclude { element -> referenceSourceDirs.get().any { element.file.startsWith(it) } }
+                    }
+                    // src/testShared is in the unit-test and the androidTest source sets; the unit-test task analyzes it.
+                    if (component is AndroidTest) {
+                        exclude { element -> element.file.startsWith(sharedTestDir) }
+                    }
+                }
+        }
+    }
+}
+
+fun Component.sourceDirs(): Provider<Set<File>> =
+    listOfNotNull(sources.java, sources.kotlin)
+        .map { it.static.map { dirs -> dirs.map(Directory::getAsFile).toSet() } }
+        .reduce { acc, dirs -> acc.zip(dirs) { a, b -> a + b } }
