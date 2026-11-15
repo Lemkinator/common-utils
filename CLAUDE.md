@@ -50,6 +50,7 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 ./gradlew apiCheck       # Compare the public ABI of each module with its api/<module>.api dump
 ./gradlew apiDump        # Rewrite the api dumps after an intended API change
 ./gradlew buildHealth    # Dependency analysis report and gate
+./gradlew detektMain detektTest  # Detekt with type resolution; check and CI run these
 ```
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/` and `transitions/src/test/java/de/lemke/commonutils/`; their shared
@@ -190,6 +191,17 @@ Enable local static-analysis checks before every commit:
 ```bash
 git config core.hooksPath .githooks
 ```
+
+Detekt runs with type resolution through `./gradlew detektMain detektTest`: together they analyze every source set once.
+The `release` tasks skip the source sets `debug` already analyzes. `build-logic/src/main/kotlin/commonutils.android-library.gradle.kts`
+adds each component's javac output to its task classpath, so generated view binding, `BuildConfig` and Hilt classes
+resolve. Each report's `number of kt files` line counts the analyzed files. The androidTest task skips `src/testShared`,
+which the unit-test task analyzes. `check` depends on, and CI runs, `detektMain` and `detektTest`, not the plain `detekt`
+task, which has no type resolution, so rules that need it stay silent. The pre-commit hook runs plain `detekt` only, so
+type-aware rules run in `check` and CI. The hook does not replace `./gradlew detektMain detektTest`; run it before you push.
+
+The hook runs `spotlessCheck detekt` and exits 1 with a `./gradlew spotlessApply` reminder on failure. It also fails fast
+with a targeted message if `core.autocrlf=true` is detected.
 
 ## Architecture
 
