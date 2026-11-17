@@ -30,7 +30,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.launch
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner

@@ -36,7 +36,7 @@ import de.lemke.commonutils.backup.core.MemorySection
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsSettingsActivity
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -77,7 +77,7 @@ class CommonUtilsSettingsActivityScreenshotTest {
             ),
             FakeBackupDocuments(),
             emptySet(),
-            Dispatchers.Unconfined,
+            UnconfinedTestDispatcher(),
         )
 
     @Before

@@ -34,8 +34,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -54,7 +53,11 @@ class LaunchLatchBitmapRobolectricTest : LaunchLatchRobolectricTest() {
         activity
             .singleLaunchSuspending(
                 work = {
-                    activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
+                    activity.createBitmapShareFile(
+                        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
+                        "shared.png",
+                        UnconfinedTestDispatcher(),
+                    )
                 },
                 then = { activity.shareBitmap(it) shouldBe LaunchOutcome.Started },
             ).shouldBeTrue()
@@ -119,7 +122,7 @@ class LaunchLatchBitmapRobolectricTest : LaunchLatchRobolectricTest() {
         activity.singleLaunchSuspending(
             work = {
                 work.await()
-                activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", Dispatchers.Unconfined)
+                activity.createBitmapShareFile(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), "shared.png", UnconfinedTestDispatcher())
             },
             then = { files += it },
         )

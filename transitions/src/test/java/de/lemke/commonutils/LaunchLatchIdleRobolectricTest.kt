@@ -19,7 +19,6 @@ import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import androidx.fragment.app.Fragment
 import de.lemke.commonutils.ui.utils.singleLaunch
 import de.lemke.commonutils.ui.utils.singleLaunchSuspending
 import io.kotest.assertions.throwables.shouldThrow
@@ -31,7 +30,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.time.Duration
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.launch
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner

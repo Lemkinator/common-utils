@@ -63,11 +63,14 @@ private class PollingRun(
             clock += minOf(answer.cost, budget)
             if (answer.cost > budget) Probe.TimedOut else answer.probe
         },
-        timeSource = clock,
-        sleep = {
-            sleeps += it
-            clock += it
-        },
+        clock =
+            PollClock(
+                timeSource = clock,
+                sleep = {
+                    sleeps += it
+                    clock += it
+                },
+            ),
     )
 
     fun shouldFailWith(

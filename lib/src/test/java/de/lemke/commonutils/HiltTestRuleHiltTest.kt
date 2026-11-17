@@ -19,12 +19,13 @@ import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.data.SettingsRepository
+import de.lemke.commonutils.di.CommonUtilsCoroutinesModule
 import de.lemke.commonutils.di.IoDispatcher
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -59,7 +60,7 @@ class HiltTestRuleHiltTest {
     fun `injects the test instance`() {
         hiltRule.inject()
 
-        io shouldBe Dispatchers.IO
+        io shouldBeSameInstanceAs CommonUtilsCoroutinesModule.provideIoDispatcher()
     }
 
     @Test

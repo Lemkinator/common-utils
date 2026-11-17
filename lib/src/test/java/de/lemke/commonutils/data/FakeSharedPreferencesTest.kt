@@ -30,7 +30,7 @@ class FakeSharedPreferencesTest : ShouldSpec(
             )
 
         lateinit var prefs: FakeSharedPreferences
-        lateinit var notifiedKeys: MutableList<String?>
+        val notifiedKeys = mutableListOf<String?>()
 
         // Android's order of per-key notifications is undocumented; only the clear's null key comes first.
         fun notifiedClearThen(vararg keys: String) {
@@ -45,7 +45,7 @@ class FakeSharedPreferencesTest : ShouldSpec(
                 .putString("old", "o")
                 .putString("removed", "r")
                 .commit()
-            notifiedKeys = mutableListOf()
+            notifiedKeys.clear()
             prefs.registerOnSharedPreferenceChangeListener { _, key -> notifiedKeys += key }
         }
 

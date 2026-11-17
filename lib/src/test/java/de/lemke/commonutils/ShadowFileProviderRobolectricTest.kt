@@ -19,15 +19,11 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.XmlResourceParser
 import android.net.Uri
-import android.os.ParcelFileDescriptor
-import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.test.R
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -38,8 +34,6 @@ import io.mockk.spyk
 import java.io.File
 import java.io.IOException
 import org.junit.After
-import org.junit.Assume.assumeTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner

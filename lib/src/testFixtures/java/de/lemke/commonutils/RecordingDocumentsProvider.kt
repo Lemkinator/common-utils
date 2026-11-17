@@ -49,7 +49,15 @@ public class RecordingDocumentsProvider : ContentProvider() {
         extras: Bundle?,
     ): Bundle? {
         if (method == METHOD_DELETE_DOCUMENT) {
-            deleted += BundleCompat.getParcelable(extras!!, EXTRA_DOCUMENT_URI, Uri::class.java)!!
+            val documentUri =
+                BundleCompat.getParcelable(
+                    checkNotNull(extras) {
+                        "deleteDocument call without extras"
+                    },
+                    EXTRA_DOCUMENT_URI,
+                    Uri::class.java,
+                )
+            deleted += checkNotNull(documentUri) { "deleteDocument call without a document uri" }
             deleteFailure?.let { throw it }
             file.delete()
         }

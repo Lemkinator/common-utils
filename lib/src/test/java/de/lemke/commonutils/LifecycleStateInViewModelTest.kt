@@ -20,13 +20,13 @@ import de.lemke.commonutils.ui.utils.stateInViewModel
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -34,7 +34,7 @@ import kotlinx.coroutines.test.runTest
 class LifecycleStateInViewModelTest : ShouldSpec(
     {
         should("stateInViewModel initial value returned before upstream emits") {
-            val scope = CoroutineScope(Dispatchers.Unconfined + SupervisorJob())
+            val scope = CoroutineScope(UnconfinedTestDispatcher() + SupervisorJob())
             autoClose(AutoCloseable { scope.cancel() })
             val state = flowOf(99).stateInViewModel(scope, 0)
             state.value shouldBe 0

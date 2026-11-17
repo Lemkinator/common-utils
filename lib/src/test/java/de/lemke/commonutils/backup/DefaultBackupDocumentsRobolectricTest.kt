@@ -32,8 +32,8 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -120,7 +120,7 @@ private class OctetStreamProvider : ContentProvider() {
 @Config(sdk = [36])
 class DefaultBackupDocumentsRobolectricTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
-    private val documents get() = DefaultBackupDocuments(context, Dispatchers.Unconfined)
+    private val documents get() = DefaultBackupDocuments(context, UnconfinedTestDispatcher())
 
     @Test
     fun `writes the bytes into the provider file`(): Unit =

@@ -72,12 +72,18 @@ private class GatedDocuments(private val inner: FakeBackupDocuments, val gate: C
     override suspend fun write(
         uri: Uri,
         bytes: ByteArray,
-    ): Boolean = gate.await().let { inner.write(uri, bytes) }
+    ): Boolean {
+        gate.await()
+        return inner.write(uri, bytes)
+    }
 
     override suspend fun <T : Any> read(
         uri: Uri,
         consume: (InputStream) -> T,
-    ): T? = gate.await().let { inner.read(uri, consume) }
+    ): T? {
+        gate.await()
+        return inner.read(uri, consume)
+    }
 
     override suspend fun delete(uri: Uri) = inner.delete(uri)
 }

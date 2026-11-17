@@ -25,16 +25,21 @@ class AppStartTest : ShouldSpec() {
         versionCode: Int = 10,
         versionName: String = "1.0",
         lastVersionCode: Int = 9,
-        lastVersionName: String = "0.9",
         tosVersion: Int = 1,
         acceptedTosVersion: Int = 1,
-        result: AppStartResult =
-            when {
-                lastVersionCode == -1 -> AppStartResult.FIRST_TIME
-                lastVersionCode < versionCode -> AppStartResult.FIRST_TIME_VERSION
-                else -> AppStartResult.NORMAL
-            },
-    ) = AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion)
+    ) = AppStart(
+        when {
+            lastVersionCode == -1 -> AppStartResult.FIRST_TIME
+            lastVersionCode < versionCode -> AppStartResult.FIRST_TIME_VERSION
+            else -> AppStartResult.NORMAL
+        },
+        versionCode,
+        versionName,
+        lastVersionCode,
+        "0.9",
+        tosVersion,
+        acceptedTosVersion,
+    )
 
     init {
         context("isFirstTime") {

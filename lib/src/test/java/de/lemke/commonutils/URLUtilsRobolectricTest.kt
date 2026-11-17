@@ -22,7 +22,6 @@ import android.os.FileUriExposedException
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.LaunchOutcome
 import de.lemke.commonutils.ui.utils.openURL
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import org.junit.Rule
 import org.junit.Test

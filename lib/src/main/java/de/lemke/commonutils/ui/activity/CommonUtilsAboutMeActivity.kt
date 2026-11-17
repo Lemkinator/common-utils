@@ -44,6 +44,7 @@ import de.lemke.commonutils.ui.utils.onSingleLaunchClick
 import de.lemke.commonutils.ui.utils.openApp
 import de.lemke.commonutils.ui.utils.openURL
 import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
+import de.lemke.commonutils.ui.utils.requireSupportActionBar
 import de.lemke.commonutils.ui.utils.sendEmailAboutMe
 import de.lemke.commonutils.ui.utils.setCustomBackAnimation
 import de.lemke.commonutils.ui.utils.shareApp
@@ -105,7 +106,7 @@ public class CommonUtilsAboutMeActivity : AppCompatActivity() {
         setSupportActionBar(binding.aboutToolbar)
         // Should be called after setSupportActionBar
         binding.aboutToolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
-        supportActionBar!!.apply {
+        requireSupportActionBar().apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowTitleEnabled(false)
         }

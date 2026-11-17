@@ -25,7 +25,8 @@ import de.lemke.commonutils.data.SaveLocation
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,7 +39,7 @@ internal fun pngBitmap(): Bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_
 abstract class BitmapExporterContract {
     protected val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
-    abstract fun exporter(): BitmapExporter
+    abstract fun exporter(scheduler: TestCoroutineScheduler): BitmapExporter
 
     /** A document that the `ACTION_CREATE_DOCUMENT` picker created. */
     abstract fun createdDocument(): Uri
@@ -48,7 +49,7 @@ abstract class BitmapExporterContract {
     @Test
     fun `saveToDirectory to a location that needs the picker returns NeedsPicker`() =
         runTest {
-            exporter().saveToDirectory(SaveLocation.CUSTOM, pngBitmap(), "test") shouldBe BitmapSaveResult.NeedsPicker
+            exporter(testScheduler).saveToDirectory(SaveLocation.CUSTOM, pngBitmap(), "test") shouldBe BitmapSaveResult.NeedsPicker
         }
 
     @Test
@@ -56,7 +57,8 @@ abstract class BitmapExporterContract {
         runTest {
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).mkdirs()
 
-            exporter().saveToDirectory(SaveLocation.PICTURES, pngBitmap(), "test") shouldBe BitmapSaveResult.Saved(SaveLocation.PICTURES)
+            exporter(testScheduler).saveToDirectory(SaveLocation.PICTURES, pngBitmap(), "test") shouldBe
+                BitmapSaveResult.Saved(SaveLocation.PICTURES)
         }
 
     @Test
@@ -64,7 +66,7 @@ abstract class BitmapExporterContract {
         runTest {
             val document = createdDocument()
 
-            exporter().saveToCreatedDocument(document, null) shouldBe BitmapSaveResult.WriteFailed
+            exporter(testScheduler).saveToCreatedDocument(document, null) shouldBe BitmapSaveResult.WriteFailed
 
             deletedDocuments() shouldContainExactly listOf(document)
         }
@@ -74,7 +76,7 @@ abstract class BitmapExporterContract {
         runTest {
             val document = createdDocument()
 
-            exporter().deleteCreatedDocument(document)
+            exporter(testScheduler).deleteCreatedDocument(document)
 
             deletedDocuments() shouldContainExactly listOf(document)
         }
@@ -82,7 +84,8 @@ abstract class BitmapExporterContract {
     @Test
     fun `saveToCreatedDocument that writes the bitmap returns Saved to CUSTOM and keeps the document`() =
         runTest {
-            exporter().saveToCreatedDocument(createdDocument(), pngBitmap()) shouldBe BitmapSaveResult.Saved(SaveLocation.CUSTOM)
+            exporter(testScheduler).saveToCreatedDocument(createdDocument(), pngBitmap()) shouldBe
+                BitmapSaveResult.Saved(SaveLocation.CUSTOM)
 
             deletedDocuments().shouldBeEmpty()
         }
@@ -93,7 +96,8 @@ abstract class BitmapExporterContract {
 class DefaultBitmapExporterContractTest : BitmapExporterContract() {
     private val provider by lazy { RecordingDocumentsProvider.create(ctx) }
 
-    override fun exporter(): BitmapExporter = DefaultBitmapExporter(ctx, Dispatchers.Unconfined, "label", "test.png")
+    override fun exporter(scheduler: TestCoroutineScheduler): BitmapExporter =
+        DefaultBitmapExporter(ctx, UnconfinedTestDispatcher(scheduler), "label", "test.png")
 
     override fun createdDocument(): Uri = provider.uri
 
@@ -105,7 +109,7 @@ class DefaultBitmapExporterContractTest : BitmapExporterContract() {
 class FakeBitmapExporterContractTest : BitmapExporterContract() {
     private val fake = FakeBitmapExporter()
 
-    override fun exporter(): BitmapExporter = fake
+    override fun exporter(scheduler: TestCoroutineScheduler): BitmapExporter = fake
 
     override fun createdDocument(): Uri = Uri.parse("content://${RecordingDocumentsProvider.AUTHORITY}/document/1")
 
@@ -137,7 +141,7 @@ private class SaveOnlyExporter(
 class DefaultDeleteBitmapExporterContractTest : BitmapExporterContract() {
     private val fake = FakeBitmapExporter()
 
-    override fun exporter(): BitmapExporter = SaveOnlyExporter(fake)
+    override fun exporter(scheduler: TestCoroutineScheduler): BitmapExporter = SaveOnlyExporter(fake)
 
     override fun createdDocument(): Uri = Uri.parse("content://${RecordingDocumentsProvider.AUTHORITY}/document/1")
 

@@ -171,7 +171,9 @@ public fun AppCompatActivity.setCustomBackAnimation(
             }
         }
     onBackPressedDispatcher.addCallback(this, callback)
-    backEnabled?.apply { lifecycleScope.launch { flowWithLifecycle(lifecycle).collectLatest { enable -> callback.isEnabled = enable } } }
+    if (backEnabled != null) {
+        lifecycleScope.launch { backEnabled.flowWithLifecycle(lifecycle).collectLatest { enable -> callback.isEnabled = enable } }
+    }
 }
 
 /** Adds the predictive-back animation of [setCustomBackAnimation], with the review cooldown kept in [inAppReview]. */

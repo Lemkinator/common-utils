@@ -48,9 +48,7 @@ public fun setupCommonUtilsSettingsActivity(
 
 /** Configures the About Me activity with an optional share-app callback. */
 public fun setupCommonUtilsAboutMeActivity(onShareApp: (activity: Activity) -> Unit = {}) {
-    CommonUtilsAboutMeActivity.apply {
-        this.onShareApp = onShareApp
-    }
+    CommonUtilsAboutMeActivity.onShareApp = onShareApp
 }
 
 /** Configures the About activity with a static version string and optional extra text. */

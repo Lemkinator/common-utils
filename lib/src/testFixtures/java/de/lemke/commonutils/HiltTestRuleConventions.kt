@@ -85,7 +85,7 @@ private fun KoClassDeclaration.describe(problem: String): String = "${portablePr
 private fun KoClassDeclaration.hiltRuleProblems(): List<String> {
     val file = containingFile
     val properties = properties(includeNested = false)
-    val hiltRule = properties.filter { it.isHiltRuleCandidate(file) }.singleOrNull()?.takeIf { it.constructsHiltRule(file) }
+    val hiltRule = properties.singleOrNull { it.isHiltRuleCandidate(file) }?.takeIf { it.constructsHiltRule(file) }
     val hiltOrder = hiltRule?.explicitRuleOrder()
     val otherOrders = properties.filter { it != hiltRule }.mapNotNull { it.ruleOrder() }
     val outermost =
