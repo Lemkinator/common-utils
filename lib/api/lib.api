@@ -754,19 +754,6 @@ public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity$
 	public final fun setSettings (Lde/lemke/commonutils/data/SettingsRepository;)V
 }
 
-public abstract class de/lemke/commonutils/ui/fragment/TransitionFragment : androidx/fragment/app/Fragment {
-	public static final field $stable I
-	public fun <init> (ILandroidx/transition/Transition;Landroidx/transition/Transition;Landroidx/transition/Transition;Landroidx/transition/Transition;)V
-	public synthetic fun <init> (ILandroidx/transition/Transition;Landroidx/transition/Transition;Landroidx/transition/Transition;Landroidx/transition/Transition;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun onCreate (Landroid/os/Bundle;)V
-}
-
-public abstract class de/lemke/commonutils/ui/fragment/TransitionFragmentSharedAxis : de/lemke/commonutils/ui/fragment/TransitionFragment {
-	public static final field $stable I
-	public fun <init> (II)V
-	public synthetic fun <init> (IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
 public final class de/lemke/commonutils/ui/utils/ActivityUtilsKt {
 	public static final fun setupCommonUtilsAboutActivity (Ljava/lang/String;Landroid/text/SpannableString;)V
 	public static synthetic fun setupCommonUtilsAboutActivity$default (Ljava/lang/String;Landroid/text/SpannableString;ILjava/lang/Object;)V
