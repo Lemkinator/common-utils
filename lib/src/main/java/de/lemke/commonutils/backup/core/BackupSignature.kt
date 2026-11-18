@@ -38,8 +38,10 @@ internal data class SignatureFile(val alg: String, val keyId: String, val mac: S
  */
 internal fun signedParts(files: Map<String, ByteArray>): Sequence<ByteArray> =
     files.entries
-        .filter { (name) -> name == MANIFEST_ENTRY || (name.startsWith(SECTIONS_PREFIX) && name.endsWith(".json")) }
-        .sortedBy { it.key }
+        .filter { (name) ->
+            val isSection = name.startsWith(SECTIONS_PREFIX) && name.endsWith(".json")
+            name == MANIFEST_ENTRY || isSection
+        }.sortedBy { it.key }
         .asSequence()
         .flatMap { (name, bytes) -> sequenceOf(name.encodeToByteArray(), byteArrayOf(0), bigEndian(bytes.size.toLong()), bytes) }
 

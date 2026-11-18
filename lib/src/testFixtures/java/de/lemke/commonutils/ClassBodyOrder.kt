@@ -78,7 +78,8 @@ private val classBodyRules: List<Pair<String, (ClassBody) -> Boolean>> =
             val firstNestedType = body.declarations.indexOfFirst { it.isNonPrivateNestedType() }
             val lastMember =
                 body.declarations.indexOfLast {
-                    it.isPropertyFunctionOrInit() || (it is KoObjectDeclaration && it.hasModifier(KoModifier.COMPANION))
+                    val isCompanion = it is KoObjectDeclaration && it.hasModifier(KoModifier.COMPANION)
+                    it.isPropertyFunctionOrInit() || isCompanion
                 }
             firstNestedType == -1 || lastMember == -1 || firstNestedType > lastMember
         },

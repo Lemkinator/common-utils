@@ -152,7 +152,7 @@ public object LaunchLatchConventions {
     /** The start of the type that ends at [end]: qualified, nullable, generic or parenthesized, as in `(() -> Unit)?`. */
     private fun String.typeStart(end: Int): Int {
         var index = skipWhitespaceBackward(end)
-        while (index > 0 && (this[index - 1] == '?' || this[index - 1] == ')' || isClosingAngle(index - 1))) {
+        while (index > 0 && (this[index - 1] in "?)" || isClosingAngle(index - 1))) {
             index = if (this[index - 1] == '?') index - 1 else openingBracketIndex(index - 1)
         }
         val start = identifierStart(index)
@@ -309,7 +309,7 @@ public object LaunchLatchConventions {
             if (isBacktick) quotedIdentifiers += index until end
             for (blanked in index until end) {
                 val char = code[blanked]
-                if (char != '\n' && char != '\r' && (!isBacktick || char in BACKTICK_BLANKED)) code[blanked] = ' '
+                if (char !in "\r\n" && (!isBacktick || char in BACKTICK_BLANKED)) code[blanked] = ' '
             }
             index = maxOf(end, index + 1)
         }

@@ -65,8 +65,7 @@ private open class MergeListSection<E : Any>(
     store: MutableList<E>,
     private val keyOf: (E) -> String,
     private val rule: (E, E) -> E,
-    upgradeStep: (JsonObject) -> JsonObject = { it },
-) : ListSection<E>(id, serializer, version, store, upgradeStep),
+) : ListSection<E>(id, serializer, version, store),
     MergeableSection<E, String> {
     override fun key(entry: E): String = keyOf(entry)
 
@@ -93,15 +92,19 @@ private fun newerWinsEventSection(
     store: MutableList<Event>,
     upgradeStep: (JsonObject) -> JsonObject,
 ): BackupSection<Event> =
-    MergeListSection(
+    object : MergeListSection<Event>(
         "events",
         Event.serializer(),
         version = 2,
         store,
         { it.id },
         newerWins({ it.stamp }, encodedOrder(Event.serializer())),
-        upgradeStep,
-    )
+    ) {
+        override fun upgrade(
+            fromVersion: Int,
+            entry: JsonObject,
+        ): JsonObject = upgradeStep(entry)
+    }
 
 private val eventFixtures =
     mapOf(

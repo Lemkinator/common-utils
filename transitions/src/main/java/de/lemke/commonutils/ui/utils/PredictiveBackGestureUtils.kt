@@ -146,13 +146,13 @@ public fun AppCompatActivity.setCustomBackAnimation(
                 // See the motion spec about the calculations below.
                 // https://developer.android.com/design/ui/mobile/guides/patterns/predictive-back#motion-specs
 
-                val maxTranslationX = (animatedView.width / 20) - predictiveBackMargin
+                val maxTranslationX = animatedView.width / 20 - predictiveBackMargin
                 animatedView.translationX = progress * maxTranslationX * if (backEvent.swipeEdge == EDGE_LEFT) 1 else -1
 
-                val maxTranslationY = (animatedView.height / 20) - predictiveBackMargin
+                val maxTranslationY = animatedView.height / 20 - predictiveBackMargin
                 animatedView.translationY = progressY * maxTranslationY
 
-                val scale = 1f - (0.1f * progress)
+                val scale = 1f - 0.1f * progress
                 animatedView.scaleX = scale
                 animatedView.scaleY = scale
 

@@ -37,30 +37,14 @@ public class CheckAppStartUseCase @Inject constructor(
         val lastVersionName = settings.lastVersionName
         val tosVersion = context.resources.getInteger(R.integer.commonutils_tos_version)
         val acceptedTosVersion = settings.acceptedTosVersion
-        val result =
-            when {
-                lastVersionCode == -1 -> {
-                    AppStartResult.FIRST_TIME
-                }
-
-                lastVersionCode < versionCode -> {
-                    AppStartResult.FIRST_TIME_VERSION
-                }
-
-                lastVersionCode > versionCode -> {
-                    Log.w(
-                        TAG,
-                        "Current version code ($versionCode) is less than the one recognized on last startup ($lastVersionCode). ",
-                    )
-                    Log.w(TAG, "Defensively assuming normal app start.")
-                    AppStartResult.NORMAL
-                }
-
-                else -> {
-                    AppStartResult.NORMAL
-                }
-            }
-        return AppStart(result, versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
+        if (lastVersionCode > versionCode) {
+            Log.w(
+                TAG,
+                "Current version code ($versionCode) is less than the one recognized on last startup ($lastVersionCode). ",
+            )
+            Log.w(TAG, "Defensively assuming normal app start.")
+        }
+        return AppStart(versionCode, versionName, lastVersionCode, lastVersionName, tosVersion, acceptedTosVersion).apply {
             Log.d(TAG, this.toString())
         }
     }

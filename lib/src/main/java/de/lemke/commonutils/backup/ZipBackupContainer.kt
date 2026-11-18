@@ -156,8 +156,8 @@ private class EntryCollector(
     }
 }
 
-private fun isAcceptedName(name: String): Boolean =
-    name == MANIFEST_ENTRY ||
-        name == SIGNATURE_ENTRY ||
-        SECTION_NAME.matches(name) ||
-        (name.startsWith(FILES_PREFIX) && name.removePrefix(FILES_PREFIX).split('/').all { it != ".." && FILE_SEGMENT.matches(it) })
+private fun isAcceptedName(name: String): Boolean {
+    val isFileEntry =
+        name.startsWith(FILES_PREFIX) && name.removePrefix(FILES_PREFIX).split('/').all { it != ".." && FILE_SEGMENT.matches(it) }
+    return name == MANIFEST_ENTRY || name == SIGNATURE_ENTRY || SECTION_NAME.matches(name) || isFileEntry
+}

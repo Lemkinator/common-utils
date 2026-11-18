@@ -41,10 +41,12 @@ import kotlinx.coroutines.SupervisorJob
 public object CommonUtilsCoroutinesModule {
     @Provides
     @IoDispatcher
+    @Suppress("InjectDispatcher")
     public fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
     @Provides
     @DefaultDispatcher
+    @Suppress("InjectDispatcher")
     public fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
 
     @Provides

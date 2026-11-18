@@ -132,7 +132,10 @@ private fun KoClassDeclaration.declaresCloseRule(): Boolean {
 
 private fun KoFileDeclaration.resolvesToFixturePackage(): Boolean =
     packagee?.name == rulePackage ||
-        hasImport { it.name == ruleQualifiedName || (it.isWildcard && it.name.removeSuffix(".*") == rulePackage) }
+        hasImport {
+            val isRulePackageWildcard = it.isWildcard && it.name.removeSuffix(".*") == rulePackage
+            it.name == ruleQualifiedName || isRulePackageWildcard
+        }
 
 private fun KoPropertyDeclaration.constructsHiltRule(file: KoFileDeclaration): Boolean {
     val initializer = value?.trim()
@@ -143,7 +146,8 @@ private fun KoPropertyDeclaration.constructsHiltRule(file: KoFileDeclaration): B
 
 private fun KoPropertyDeclaration.isHiltRuleCandidate(file: KoFileDeclaration): Boolean {
     val typeText = type?.text
-    return typeText == ruleQualifiedName || (typeText == ruleName && file.resolvesToFixturePackage()) || constructsHiltRule(file)
+    val isFixtureRuleName = typeText == ruleName && file.resolvesToFixturePackage()
+    return typeText == ruleQualifiedName || isFixtureRuleName || constructsHiltRule(file)
 }
 
 private fun KoPropertyDeclaration.explicitRuleOrder(): Int? =
@@ -165,7 +169,7 @@ private fun KoFileDeclaration.resolveReferences(text: String): Set<String> =
             val segments = match.value.split('.')
             val head = segments.first()
             val heads =
-                imports.filter { !it.isWildcard && (it.alias?.name ?: it.name.substringAfterLast('.')) == head }.map { it.name } +
+                imports.filter { !it.isWildcard && it.boundName() == head }.map { it.name } +
                     imports.filter { it.isWildcard }.map { "${it.name.removeSuffix(".*")}.$head" } +
                     listOfNotNull(packagee?.name?.let { "$it.$head" }) +
                     head

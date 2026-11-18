@@ -66,9 +66,10 @@ public class BackupEngine(
             }
         val signature = signer?.let { signatureBytes(files, it) }
         val signed = if (signature == null) files else files + (SIGNATURE_ENTRY to signature)
+        val signatureSize = signature?.size ?: 0
         val withinLimits =
             manifestBytes.size <= MAX_MANIFEST_BYTES &&
-                (signature?.size ?: 0) <= MAX_SIGNATURE_BYTES &&
+                signatureSize <= MAX_SIGNATURE_BYTES &&
                 signed.values.sumOf { it.size.toLong() } <= MAX_TOTAL_BYTES
         return if (withinLimits) BackupExport.Files(signed) else null
     }

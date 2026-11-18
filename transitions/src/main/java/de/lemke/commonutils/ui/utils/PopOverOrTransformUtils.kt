@@ -92,6 +92,7 @@ public fun View.popOverOrTransformToActivity(
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @MainThread
+@Suppress("LongParameterList")
 public fun Activity.popOverOrTransformToActivity(
     @IdRes viewId: Int,
     cls: Class<*>,
@@ -128,6 +129,7 @@ public inline fun <reified T : Activity> Activity.popOverOrTransformToActivity(
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
 @MainThread
+@Suppress("LongParameterList")
 public fun Activity.popOverOrTransformToActivity(
     @IdRes viewId: Int,
     intent: Intent,

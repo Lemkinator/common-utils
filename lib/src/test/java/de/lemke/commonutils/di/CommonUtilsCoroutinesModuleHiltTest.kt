@@ -79,6 +79,7 @@ class CommonUtilsCoroutinesModuleHiltTest {
     }
 
     @Test
+    @Suppress("InjectDispatcher")
     fun `an app that includes the module gets each qualified dispatcher`() {
         io shouldBe Dispatchers.IO
         defaultDispatcher shouldBe Dispatchers.Default
@@ -88,6 +89,6 @@ class CommonUtilsCoroutinesModuleHiltTest {
     @Test
     fun `an app that includes the module gets one application scope on the default dispatcher`() {
         applicationScope shouldBe sameApplicationScope
-        applicationScope.coroutineContext[ContinuationInterceptor] shouldBe Dispatchers.Default
+        applicationScope.coroutineContext[ContinuationInterceptor] shouldBe defaultDispatcher
     }
 }

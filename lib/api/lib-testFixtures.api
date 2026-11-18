@@ -271,6 +271,11 @@ public final class de/lemke/commonutils/backup/SectionFixture {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class de/lemke/commonutils/backup/TestBackupScreenDepsKt {
+	public static final fun testBackupScreenDeps (Lde/lemke/commonutils/backup/core/BackupEngine;Lkotlinx/coroutines/CoroutineDispatcher;Lde/lemke/commonutils/backup/BackupDocuments;Ljava/util/Set;)Lde/lemke/commonutils/backup/BackupScreenDeps;
+	public static synthetic fun testBackupScreenDeps$default (Lde/lemke/commonutils/backup/core/BackupEngine;Lkotlinx/coroutines/CoroutineDispatcher;Lde/lemke/commonutils/backup/BackupDocuments;Ljava/util/Set;ILjava/lang/Object;)Lde/lemke/commonutils/backup/BackupScreenDeps;
+}
+
 public final class de/lemke/commonutils/data/FakePackageLookup : de/lemke/commonutils/data/PackageLookup {
 	public static final field $stable I
 	public fun <init> ([Landroid/content/pm/ApplicationInfo;)V

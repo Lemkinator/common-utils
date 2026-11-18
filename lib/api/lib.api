@@ -73,6 +73,8 @@ public final class de/lemke/commonutils/backup/BackupResult$Restored : de/lemke/
 
 public final class de/lemke/commonutils/backup/BackupScreenDeps {
 	public static final field $stable I
+	public final fun getSectionLabels ()Ljava/util/Set;
+	public final fun stateHolder (Lkotlinx/coroutines/CoroutineScope;)Lde/lemke/commonutils/backup/BackupStateHolder;
 }
 
 public final class de/lemke/commonutils/backup/BackupSectionLabel {
@@ -645,7 +647,7 @@ public abstract interface annotation class de/lemke/commonutils/di/MainDispatche
 
 public final class de/lemke/commonutils/domain/AppStart {
 	public static final field $stable I
-	public fun <init> (Lde/lemke/commonutils/domain/AppStartResult;ILjava/lang/String;ILjava/lang/String;II)V
+	public fun <init> (ILjava/lang/String;ILjava/lang/String;II)V
 	public final fun getAcceptedTosVersion ()I
 	public final fun getLastVersionCode ()I
 	public final fun getLastVersionName ()Ljava/lang/String;
@@ -752,19 +754,6 @@ public final class de/lemke/commonutils/ui/activity/CommonUtilsSettingsActivity$
 	public fun onCreatePreferences (Landroid/os/Bundle;Ljava/lang/String;)V
 	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
 	public final fun setSettings (Lde/lemke/commonutils/data/SettingsRepository;)V
-}
-
-public abstract class de/lemke/commonutils/ui/fragment/TransitionFragment : androidx/fragment/app/Fragment {
-	public static final field $stable I
-	public fun <init> (ILandroidx/transition/Transition;Landroidx/transition/Transition;Landroidx/transition/Transition;Landroidx/transition/Transition;)V
-	public synthetic fun <init> (ILandroidx/transition/Transition;Landroidx/transition/Transition;Landroidx/transition/Transition;Landroidx/transition/Transition;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun onCreate (Landroid/os/Bundle;)V
-}
-
-public abstract class de/lemke/commonutils/ui/fragment/TransitionFragmentSharedAxis : de/lemke/commonutils/ui/fragment/TransitionFragment {
-	public static final field $stable I
-	public fun <init> (II)V
-	public synthetic fun <init> (IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class de/lemke/commonutils/ui/utils/ActivityUtilsKt {

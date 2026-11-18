@@ -17,7 +17,6 @@ package de.lemke.commonutils.ui.activity
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
 import android.net.NetworkInfo
 import android.os.Looper
@@ -38,7 +37,6 @@ import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
@@ -50,6 +48,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowNetworkCapabilities
 import org.robolectric.shadows.ShadowNetworkInfo
 
 /**
@@ -92,11 +91,10 @@ class CommonUtilsAboutActivityScreenshotTest {
                     NetworkInfo.State.CONNECTED,
                 ),
             )
-            // NetworkCapabilities has no public builder in the compile-time SDK stub (its Builder
-            // is a system/test API) - a relaxed mock stands in for the "validated" capability the
-            // activity actually reads.
             val networkCapabilities =
-                mockk<NetworkCapabilities>(relaxed = true) { every { hasCapability(NET_CAPABILITY_VALIDATED) } returns true }
+                ShadowNetworkCapabilities.newInstance().also {
+                    shadowOf(it).addCapability(NET_CAPABILITY_VALIDATED)
+                }
             setNetworkCapabilities(connectivityManager.activeNetwork, networkCapabilities)
         }
         mockkStatic(AppUpdateManagerFactory::class)
