@@ -107,6 +107,8 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
 - `BackupSectionContract<E>` and `DirectBackupTransaction` — the tests every backup section runs through `BackupEngine`
   (JUnit 4; see "Backup"), and a transaction that runs in place. `FakeBackupDocuments` fakes `BackupDocuments`; `BackupEngine.exportFiles()` returns the files of
   an export and fails on `BackupExport.TooLarge`.
+- `testBackupScreenDeps(engine, dispatcher, documents, sectionLabels)` — builds the `BackupScreenDeps` that an app view model injects;
+  a Hilt test binds it with `@BindValue`.
 - `RecordingDocumentsProvider` (records and performs `deleteDocument`), `ShadowFileProvider`, `Activity.receivePickerResult`
   (returns the picker intent it answered),
   `File.hasPngSignature`, `RecordingIntentLauncher` — export and launcher fakes. The provider and the shadow need Robolectric.
@@ -261,6 +263,8 @@ An app opts in with:
   and a recreated screen after process death needs it. The module binds `BackupScreenDeps`; the settings fragment injects
   `Optional<BackupScreenDeps>` through Hilt, so it needs no static setup and works after process death. An app without
   the module binds nothing and the screen removes the Backup category.
+  An app view model that hosts its own backup screen injects `BackupScreenDeps`, calls `stateHolder(viewModelScope)`
+  and passes `sectionLabels` to `bindBackupPreferences`.
 
 The save picker uses `application/octet-stream`, because SAF appends `.zip` to a title when the type is `application/zip`;
 the open picker accepts `application/zip` and `application/octet-stream`, and the import trusts only the manifest.

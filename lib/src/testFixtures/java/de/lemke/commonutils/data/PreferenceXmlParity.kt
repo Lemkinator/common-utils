@@ -308,7 +308,7 @@ private fun <T : Any> checkDisplayedDefaults(
     factory: (SharedPreferences) -> T,
     xmlRes: Int,
 ) {
-    val scratch = freshTestPreferences(ApplicationProvider.getApplicationContext<Context>())
+    val scratch = freshTestPreferences()
     val scratchSettings = factory(scratch)
     val settingsClass = empty::class.java
     for (pref in valueBearing) {

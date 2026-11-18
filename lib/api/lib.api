@@ -73,6 +73,8 @@ public final class de/lemke/commonutils/backup/BackupResult$Restored : de/lemke/
 
 public final class de/lemke/commonutils/backup/BackupScreenDeps {
 	public static final field $stable I
+	public final fun getSectionLabels ()Ljava/util/Set;
+	public final fun stateHolder (Lkotlinx/coroutines/CoroutineScope;)Lde/lemke/commonutils/backup/BackupStateHolder;
 }
 
 public final class de/lemke/commonutils/backup/BackupSectionLabel {

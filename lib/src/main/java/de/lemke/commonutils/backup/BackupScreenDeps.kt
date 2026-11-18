@@ -17,14 +17,24 @@ package de.lemke.commonutils.backup
 
 import de.lemke.commonutils.backup.core.BackupEngine
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 
 /**
- * What the common-utils settings screen needs from the app's Hilt graph to offer a backup. `CommonUtilsBackupModule`
- * binds it; the screen shows the Backup category only if the graph holds it.
+ * The backup dependencies of the app's Hilt graph. `CommonUtilsBackupModule` binds it; the common-utils settings screen
+ * shows the Backup category only if the graph holds it. An app view model injects it to host its own backup screen:
+ * [stateHolder] builds the [BackupStateHolder] and [sectionLabels] names the sections of an import preview.
  */
 public class BackupScreenDeps internal constructor(
     internal val engine: BackupEngine,
     internal val documents: BackupDocuments,
-    internal val sectionLabels: Set<BackupSectionLabel>,
+    /** The label of each backup section, for `bindBackupPreferences`. */
+    public val sectionLabels: Set<BackupSectionLabel>,
     internal val dispatcher: CoroutineDispatcher,
-)
+) {
+    /**
+     * Creates a [BackupStateHolder] that runs in [scope], such as the `viewModelScope` of the view model that holds it.
+     * Each call creates an independent holder with its own state. The caller owns it and keeps one per screen in its
+     * view model.
+     */
+    public fun stateHolder(scope: CoroutineScope): BackupStateHolder = BackupStateHolder(scope, engine, documents, dispatcher)
+}
