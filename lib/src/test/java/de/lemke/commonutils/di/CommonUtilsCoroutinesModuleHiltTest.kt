@@ -79,6 +79,7 @@ class CommonUtilsCoroutinesModuleHiltTest {
     }
 
     @Test
+    @Suppress("InjectDispatcher")
     fun `an app that includes the module gets each qualified dispatcher`() {
         io shouldBe Dispatchers.IO
         defaultDispatcher shouldBe Dispatchers.Default
