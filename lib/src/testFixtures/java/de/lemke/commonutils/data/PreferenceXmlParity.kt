@@ -223,8 +223,7 @@ private fun <T : Any> checkXml(
         val getters = gettersFor(valueBearing, settingsClass, xmlRes)
         checkDefaultsDeclared(keys, collectDeclaredDefaultValueKeys(context, xmlRes), settingsClass, xmlRes)
 
-        val scratch = freshTestPreferences(context)
-        checkDisplayedDefaults(valueBearing, getters, empty, factory(scratch), scratch, xmlRes)
+        checkDisplayedDefaults(valueBearing, getters, empty, factory, xmlRes)
     } finally {
         controller.destroy()
     }
@@ -302,14 +301,15 @@ private fun checkDefaultsDeclared(
     }
 }
 
-private fun checkDisplayedDefaults(
+private fun <T : Any> checkDisplayedDefaults(
     valueBearing: List<Preference>,
     getters: Map<String, Method>,
-    empty: Any,
-    scratchSettings: Any,
-    scratch: SharedPreferences,
+    empty: T,
+    factory: (SharedPreferences) -> T,
     xmlRes: Int,
 ) {
+    val scratch = freshTestPreferences(ApplicationProvider.getApplicationContext<Context>())
+    val scratchSettings = factory(scratch)
     val settingsClass = empty::class.java
     for (pref in valueBearing) {
         val key = pref.key!!

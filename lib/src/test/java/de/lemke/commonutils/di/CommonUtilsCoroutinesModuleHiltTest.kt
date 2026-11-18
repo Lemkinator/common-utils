@@ -88,6 +88,6 @@ class CommonUtilsCoroutinesModuleHiltTest {
     @Test
     fun `an app that includes the module gets one application scope on the default dispatcher`() {
         applicationScope shouldBe sameApplicationScope
-        applicationScope.coroutineContext[ContinuationInterceptor] shouldBe Dispatchers.Default
+        applicationScope.coroutineContext[ContinuationInterceptor] shouldBe defaultDispatcher
     }
 }

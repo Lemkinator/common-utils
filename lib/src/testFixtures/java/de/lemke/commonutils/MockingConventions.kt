@@ -141,7 +141,7 @@ private fun KoFileDeclaration.declaredTypeNames(): List<String> =
 private fun KoFileDeclaration.resolveNames(name: String): List<String> {
     val head = name.substringBefore('.')
     val tail = name.removePrefix(head)
-    val named = imports.filter { !it.isWildcard && (it.alias?.name ?: it.name.substringAfterLast('.')) == head }
+    val named = imports.filter { !it.isWildcard && it.boundName() == head }
     return if (named.isNotEmpty()) {
         named.map { it.name + tail }
     } else {

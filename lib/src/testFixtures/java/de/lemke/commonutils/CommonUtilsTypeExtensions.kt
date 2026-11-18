@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import com.lemonappdev.konsist.api.container.KoScope
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
+import com.lemonappdev.konsist.api.declaration.KoImportDeclaration
 
 /**
  * Fails on an app-declared extension whose receiver lives in `de.lemke.commonutils`.
@@ -78,6 +79,8 @@ private class Extension(
     val line: Int,
 )
 
+internal fun KoImportDeclaration.boundName(): String = alias?.name ?: name.substringAfterLast('.')
+
 private fun KoFileDeclaration.isInCommonUtils(): Boolean =
     packagee?.name.orEmpty().let { it == COMMON_UTILS_PACKAGE || it.startsWith("$COMMON_UTILS_PACKAGE.") }
 
@@ -119,7 +122,7 @@ private fun KoFileDeclaration.receiverIsCommonUtils(
     typesByPackage: Map<String, Set<String>>,
 ): Boolean {
     val head = receiver.substringBefore('.')
-    val named = imports.filter { !it.isWildcard && (it.alias?.name ?: it.name.substringAfterLast('.')) == head }
+    val named = imports.filter { !it.isWildcard && it.boundName() == head }
     val wildcardPackages = imports.filter { it.isWildcard }.map { it.name.removeSuffix(".*").removeSuffix(".") }
     return when {
         receiver.startsWith("$COMMON_UTILS_PACKAGE.") -> true

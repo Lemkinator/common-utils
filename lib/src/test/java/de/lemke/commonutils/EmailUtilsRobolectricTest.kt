@@ -95,7 +95,8 @@ class EmailUtilsRobolectricTest {
                 .track(destroyActivities)
                 .get()
         activity.sendEmail("a@b.com", "Sub", "Body") shouldBe LaunchOutcome.Started
-        (shadowOf(activity).nextStartedActivity.flags and Intent.FLAG_ACTIVITY_NEW_TASK) shouldBe 0
+        val newTaskFlag = shadowOf(activity).nextStartedActivity.flags and Intent.FLAG_ACTIVITY_NEW_TASK
+        newTaskFlag shouldBe 0
     }
 
     @Test
