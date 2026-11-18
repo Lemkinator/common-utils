@@ -25,7 +25,6 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
-import de.lemke.commonutils.domain.AppStartResult
 import de.lemke.commonutils.track
 import de.lemke.commonutils.ui.utils.OnboardingContext
 import de.lemke.commonutils.ui.utils.singleLaunchActivity
@@ -78,7 +77,6 @@ class CommonUtilsOOBEActivityTest {
                 steps = emptyList(),
                 versionCode = 1,
                 versionName = "1.0",
-                appStartResult = AppStartResult.FIRST_TIME,
                 lastVersionCode = -1,
                 lastVersionName = "",
                 tosChanged = false,
@@ -147,7 +145,6 @@ class CommonUtilsOOBEActivityTest {
                 steps = emptyList(),
                 versionCode = 1,
                 versionName = "1.0",
-                appStartResult = AppStartResult.FIRST_TIME_VERSION,
                 lastVersionCode = 0,
                 lastVersionName = "0.0.0",
                 tosChanged = true,

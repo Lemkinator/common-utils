@@ -645,7 +645,7 @@ public abstract interface annotation class de/lemke/commonutils/di/MainDispatche
 
 public final class de/lemke/commonutils/domain/AppStart {
 	public static final field $stable I
-	public fun <init> (Lde/lemke/commonutils/domain/AppStartResult;ILjava/lang/String;ILjava/lang/String;II)V
+	public fun <init> (ILjava/lang/String;ILjava/lang/String;II)V
 	public final fun getAcceptedTosVersion ()I
 	public final fun getLastVersionCode ()I
 	public final fun getLastVersionName ()Ljava/lang/String;

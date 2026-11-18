@@ -70,7 +70,6 @@ public fun setupOnboarding(steps: List<Class<out Activity>> = emptyList()) {
  * @property steps Ordered list of fully qualified class names for the app-specific onboarding steps.
  * @property versionCode The current app version code at the time onboarding was initiated.
  * @property versionName The current app version name at the time onboarding was initiated.
- * @property appStartResult The original [AppStartResult] from the fresh app-start check.
  * @property lastVersionCode The version code recorded on the previous launch.
  * @property lastVersionName The version name recorded on the previous launch.
  * @property tosChanged `true` if the TOS version changed since the user last accepted.
@@ -81,7 +80,6 @@ internal data class OnboardingContext(
     val steps: List<String>,
     val versionCode: Int,
     val versionName: String,
-    val appStartResult: AppStartResult,
     val lastVersionCode: Int,
     val lastVersionName: String,
     val tosChanged: Boolean,
@@ -131,7 +129,6 @@ public fun AppCompatActivity.onboardIfNeeded(
             intent.removeExtra(EXTRA_ONBOARDING_CONTEXT)
             val tosVersion = applicationContext.resources.getInteger(R.integer.commonutils_tos_version)
             AppStart(
-                ctx.appStartResult,
                 versionCode,
                 versionName,
                 ctx.lastVersionCode,
@@ -150,7 +147,6 @@ public fun AppCompatActivity.onboardIfNeeded(
                                 steps = Onboarding.steps.map { it.name },
                                 versionCode = versionCode,
                                 versionName = versionName,
-                                appStartResult = freshAppStart.result,
                                 lastVersionCode = freshAppStart.lastVersionCode,
                                 lastVersionName = freshAppStart.lastVersionName,
                                 tosChanged = freshAppStart.result == AppStartResult.FIRST_TIME_VERSION && !freshAppStart.tosAccepted,

@@ -18,6 +18,7 @@ package de.lemke.commonutils.domain
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 
 class AppStartTest : ShouldSpec() {
@@ -28,11 +29,6 @@ class AppStartTest : ShouldSpec() {
         tosVersion: Int = 1,
         acceptedTosVersion: Int = 1,
     ) = AppStart(
-        when {
-            lastVersionCode == -1 -> AppStartResult.FIRST_TIME
-            lastVersionCode < versionCode -> AppStartResult.FIRST_TIME_VERSION
-            else -> AppStartResult.NORMAL
-        },
         versionCode,
         versionName,
         lastVersionCode,
@@ -42,6 +38,20 @@ class AppStartTest : ShouldSpec() {
     )
 
     init {
+        context("result") {
+            should("be FIRST_TIME when lastVersionCode is -1") {
+                appStart(versionCode = 10, lastVersionCode = -1).result shouldBe AppStartResult.FIRST_TIME
+            }
+            should("be FIRST_TIME_VERSION when lastVersionCode is below versionCode") {
+                appStart(versionCode = 10, lastVersionCode = 9).result shouldBe AppStartResult.FIRST_TIME_VERSION
+            }
+            should("be NORMAL when the codes are equal") {
+                appStart(versionCode = 10, lastVersionCode = 10).result shouldBe AppStartResult.NORMAL
+            }
+            should("be NORMAL on a downgrade") {
+                appStart(versionCode = 9, lastVersionCode = 10).result shouldBe AppStartResult.NORMAL
+            }
+        }
         context("isFirstTime") {
             should("be true when lastVersionCode is -1") {
                 appStart(lastVersionCode = -1).isFirstTime.shouldBeTrue()

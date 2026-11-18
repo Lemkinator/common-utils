@@ -30,7 +30,6 @@ public enum class AppStartResult {
 /**
  * Snapshot of version and TOS state captured at app launch.
  *
- * @property result The categorized outcome of this launch.
  * @property versionCode The current app version code.
  * @property versionName The current human-readable version string.
  * @property lastVersionCode The version code recorded on the previous launch, or -1 if never set.
@@ -39,7 +38,6 @@ public enum class AppStartResult {
  * @property acceptedTosVersion The highest TOS version the user has accepted, or -1 if never set.
  */
 public class AppStart(
-    public val result: AppStartResult,
     public val versionCode: Int,
     public val versionName: String,
     public val lastVersionCode: Int,
@@ -47,6 +45,15 @@ public class AppStart(
     public val tosVersion: Int,
     public val acceptedTosVersion: Int,
 ) {
+    /** The categorized outcome of this launch; a downgrade counts as [AppStartResult.NORMAL]. */
+    public val result: AppStartResult
+        get() =
+            when {
+                lastVersionCode == -1 -> AppStartResult.FIRST_TIME
+                lastVersionCode < versionCode -> AppStartResult.FIRST_TIME_VERSION
+                else -> AppStartResult.NORMAL
+            }
+
     /** `true` if no previous installation was recorded. */
     public val isFirstTime: Boolean get() = lastVersionCode == -1
 
