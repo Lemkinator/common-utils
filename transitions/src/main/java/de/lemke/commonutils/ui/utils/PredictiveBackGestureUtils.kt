@@ -113,7 +113,8 @@ internal class BackAnimationOutlineProvider : ViewOutlineProvider() {
 
 /**
  * Adds a predictive-back animation to [animatedView] that scales and shifts it as the user swipes back. Pass an
- * [InAppReview] to show the in-app review flow on back instead, when its cooldown has elapsed.
+ * [InAppReview] to show the in-app review flow on back instead, when its cooldown has elapsed. Inside a One UI
+ * pop-over the view stays unchanged during the gesture, and release still closes the activity.
  */
 public fun AppCompatActivity.setCustomBackAnimation(
     animatedView: View,
@@ -127,6 +128,7 @@ public fun AppCompatActivity.setCustomBackAnimation(
     animatedView.clipToOutline = true
     animatedView.outlineProvider = outlineProvider
     val review = inAppReview?.takeIf { it.canShow() }
+    var windowKind = BackPreviewWindow.FullScreen
     val callback =
         object : OnBackPressedCallback(backEnabled?.value != false) {
             override fun handleOnBackPressed() {
@@ -137,8 +139,12 @@ public fun AppCompatActivity.setCustomBackAnimation(
                 }
             }
 
+            override fun handleOnBackStarted(backEvent: BackEventCompat) {
+                windowKind = resources.configuration.backPreviewWindow()
+            }
+
             override fun handleOnBackProgressed(backEvent: BackEventCompat) {
-                if (review != null) return
+                if (review != null || windowKind == BackPreviewWindow.PopOver) return
                 val progress = GestureInterpolator.getInterpolation(backEvent.progress)
                 if (initialTouchY < 0f) initialTouchY = backEvent.touchY
                 val progressY = GestureInterpolator.getInterpolation((backEvent.touchY - initialTouchY) / animatedView.height)
@@ -168,6 +174,8 @@ public fun AppCompatActivity.setCustomBackAnimation(
                     scaleX = 1f
                     scaleY = 1f
                 }
+                outlineProvider.progress = 0f
+                animatedView.invalidateOutline()
             }
         }
     onBackPressedDispatcher.addCallback(this, callback)
