@@ -174,6 +174,8 @@ public fun AppCompatActivity.setCustomBackAnimation(
                     scaleX = 1f
                     scaleY = 1f
                 }
+                outlineProvider.progress = 0f
+                animatedView.invalidateOutline()
             }
         }
     onBackPressedDispatcher.addCallback(this, callback)

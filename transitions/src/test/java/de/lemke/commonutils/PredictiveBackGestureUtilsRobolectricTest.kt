@@ -302,6 +302,20 @@ class PredictiveBackGestureUtilsRobolectricTest {
         back.dispatchOnBackProgressed(swipe(1f))
         view.scaleX shouldBe 0.9f
     }
+
+    @Test
+    fun `cancel resets the corner rounding of a full-screen window`() {
+        val view = laidOutView()
+        activity.setCustomBackAnimation(view)
+        val back = activity.onBackPressedDispatcher
+        back.dispatchOnBackStarted(swipe(0f))
+        back.dispatchOnBackProgressed(swipe(1f))
+        view.radius() shouldBe 100f
+        back.dispatchOnBackCancelled()
+        view.radius() shouldBe 0f
+        view.translationY shouldBe 0f
+        view.scaleY shouldBe 1f
+    }
 }
 
 @RunWith(RobolectricTestRunner::class)
