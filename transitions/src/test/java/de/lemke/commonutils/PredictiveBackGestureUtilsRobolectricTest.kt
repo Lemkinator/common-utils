@@ -284,11 +284,21 @@ class PredictiveBackGestureUtilsRobolectricTest {
         val view = laidOutView()
         reportPopOver(false)
         activity.setCustomBackAnimation(view)
-        reportPopOver(true)
         val back = activity.onBackPressedDispatcher
         back.dispatchOnBackStarted(swipe(0f))
         back.dispatchOnBackProgressed(swipe(1f))
+        view.scaleX shouldBe 0.9f
+        view.translationX shouldBe 29f
+        view.radius() shouldBe 100f
+        back.dispatchOnBackCancelled()
         view.scaleX shouldBe 1f
+        view.radius() shouldBe 0f
+        reportPopOver(true)
+        back.dispatchOnBackStarted(swipe(0f))
+        back.dispatchOnBackProgressed(swipe(1f))
+        view.scaleX shouldBe 1f
+        view.translationX shouldBe 0f
+        view.radius() shouldBe 0f
     }
 
     @Test
@@ -296,11 +306,20 @@ class PredictiveBackGestureUtilsRobolectricTest {
         val view = laidOutView()
         reportPopOver(true)
         activity.setCustomBackAnimation(view)
-        reportPopOver(false)
         val back = activity.onBackPressedDispatcher
         back.dispatchOnBackStarted(swipe(0f))
         back.dispatchOnBackProgressed(swipe(1f))
+        view.scaleX shouldBe 1f
+        view.translationX shouldBe 0f
+        view.radius() shouldBe 0f
+        back.dispatchOnBackCancelled()
+        reportPopOver(false)
+        back.dispatchOnBackStarted(swipe(0f))
+        back.dispatchOnBackProgressed(swipe(1f))
         view.scaleX shouldBe 0.9f
+        view.scaleY shouldBe 0.9f
+        view.translationX shouldBe 29f
+        view.radius() shouldBe 100f
     }
 
     @Test
