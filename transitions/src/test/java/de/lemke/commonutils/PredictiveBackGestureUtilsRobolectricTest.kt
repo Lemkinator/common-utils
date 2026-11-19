@@ -18,7 +18,9 @@ package de.lemke.commonutils
 import android.view.View
 import androidx.activity.BackEventCompat
 import androidx.appcompat.app.AppCompatActivity
+import androidx.reflect.SeslBaseReflector
 import de.lemke.commonutils.data.InAppReviewCooldown
+import de.lemke.commonutils.ui.utils.BackAnimationOutlineProvider
 import de.lemke.commonutils.ui.utils.FakeInAppReview
 import de.lemke.commonutils.ui.utils.FakeInAppReviewCooldown
 import de.lemke.commonutils.ui.utils.defaultWindowBackground
@@ -32,8 +34,12 @@ import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.floats.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import java.util.concurrent.TimeUnit.DAYS
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -59,6 +65,25 @@ class PredictiveBackGestureUtilsRobolectricTest {
                 .track(destroyActivities)
                 .get()
     }
+
+    private fun laidOutView() = View(activity).apply { layout(0, 0, 1000, 2000) }
+
+    @After
+    fun tearDown() {
+        unmockkStatic(SeslBaseReflector::class)
+    }
+
+    private fun reportPopOver(isPopOver: Boolean) {
+        mockkStatic(SeslBaseReflector::class)
+        every { SeslBaseReflector.invoke(any(), any()) } returns isPopOver
+    }
+
+    private fun View.radius() = (outlineProvider as BackAnimationOutlineProvider).radius
+
+    private fun swipe(
+        progress: Float,
+        touchY: Float = 500f,
+    ) = BackEventCompat(10f, touchY, progress, BackEventCompat.EDGE_LEFT)
 
     @Test
     fun `setWindowTransparent true does not throw`() {
@@ -188,6 +213,94 @@ class PredictiveBackGestureUtilsRobolectricTest {
         activity.setCustomBackAnimation(View(activity), inAppReview = null as InAppReviewCooldown?)
         activity.onBackPressedDispatcher.onBackPressed()
         activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
+    fun `a full-screen window shrinks the view with the gesture`() {
+        val view = laidOutView()
+        activity.setCustomBackAnimation(view)
+        val back = activity.onBackPressedDispatcher
+        back.dispatchOnBackStarted(swipe(0f))
+        back.dispatchOnBackProgressed(swipe(1f))
+        view.scaleX shouldBe 0.9f
+        view.scaleY shouldBe 0.9f
+        view.translationX shouldBe 29f
+        view.radius() shouldBe 100f
+    }
+
+    @Test
+    fun `a pop-over leaves the view unchanged during the gesture`() {
+        reportPopOver(true)
+        val view = laidOutView()
+        activity.setCustomBackAnimation(view)
+        val back = activity.onBackPressedDispatcher
+        back.dispatchOnBackStarted(swipe(0f))
+        back.dispatchOnBackProgressed(swipe(0.5f))
+        back.dispatchOnBackProgressed(swipe(1f, touchY = 900f))
+        view.scaleX shouldBe 1f
+        view.scaleY shouldBe 1f
+        view.translationX shouldBe 0f
+        view.translationY shouldBe 0f
+        view.radius() shouldBe 0f
+    }
+
+    @Test
+    fun `a pop-over keeps the view unchanged after progress and after a cancel`() {
+        reportPopOver(true)
+        val view = laidOutView()
+        activity.setCustomBackAnimation(view)
+        val back = activity.onBackPressedDispatcher
+        back.dispatchOnBackStarted(swipe(0f))
+        back.dispatchOnBackProgressed(swipe(1f))
+        view.scaleX shouldBe 1f
+        view.translationX shouldBe 0f
+        view.radius() shouldBe 0f
+        back.dispatchOnBackCancelled()
+        view.scaleX shouldBe 1f
+        view.translationX shouldBe 0f
+        view.radius() shouldBe 0f
+        activity.isFinishing.shouldBeFalse()
+    }
+
+    @Test
+    fun `back in a pop-over finishes the activity`() {
+        reportPopOver(true)
+        activity.setCustomBackAnimation(laidOutView())
+        activity.onBackPressedDispatcher.onBackPressed()
+        activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
+    fun `back in a pop-over with an available review hands back to the review`() {
+        reportPopOver(true)
+        val review = FakeInAppReview()
+        activity.setCustomBackAnimation(laidOutView(), inAppReview = review)
+        activity.onBackPressedDispatcher.onBackPressed()
+        review.calls shouldContainExactly listOf(FakeInAppReview.Call.ShowOrFinish(activity))
+    }
+
+    @Test
+    fun `a window that turns into a pop-over stops the preview at the next gesture`() {
+        val view = laidOutView()
+        reportPopOver(false)
+        activity.setCustomBackAnimation(view)
+        reportPopOver(true)
+        val back = activity.onBackPressedDispatcher
+        back.dispatchOnBackStarted(swipe(0f))
+        back.dispatchOnBackProgressed(swipe(1f))
+        view.scaleX shouldBe 1f
+    }
+
+    @Test
+    fun `a pop-over that turns full screen shrinks again at the next gesture`() {
+        val view = laidOutView()
+        reportPopOver(true)
+        activity.setCustomBackAnimation(view)
+        reportPopOver(false)
+        val back = activity.onBackPressedDispatcher
+        back.dispatchOnBackStarted(swipe(0f))
+        back.dispatchOnBackProgressed(swipe(1f))
+        view.scaleX shouldBe 0.9f
     }
 }
 
