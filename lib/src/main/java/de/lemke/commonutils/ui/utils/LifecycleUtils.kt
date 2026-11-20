@@ -48,7 +48,6 @@ public inline fun Fragment.launchAndRepeatWithViewLifecycle(
 }
 
 /** Collects [flow] emissions and delivers each value to [onEach] while the activity is at least [minActiveState]. */
-@NoCoverage
 public inline fun <T> AppCompatActivity.collectState(
     flow: StateFlow<T>,
     minActiveState: State = STARTED,
@@ -59,7 +58,6 @@ public inline fun <T> AppCompatActivity.collectState(
     }
 
 /** Collects [flow] emissions and delivers each value to [onEach] while the fragment view is at least [minActiveState]. */
-@NoCoverage
 public inline fun <T> Fragment.collectState(
     flow: StateFlow<T>,
     minActiveState: State = STARTED,
