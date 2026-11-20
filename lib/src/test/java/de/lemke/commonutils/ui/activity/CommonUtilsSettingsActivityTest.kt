@@ -107,6 +107,7 @@ class CommonUtilsSettingsActivityTest {
                 .first()
 
     private fun Preference.triggerClick() {
+        isEnabled shouldBe true
         checkNotNull(onPreferenceClickListener) { "no click listener on $key" }.onPreferenceClick(this)
     }
 
