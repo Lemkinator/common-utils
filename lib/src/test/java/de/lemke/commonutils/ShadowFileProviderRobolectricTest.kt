@@ -15,9 +15,13 @@
  */
 package de.lemke.commonutils
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+import android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+import android.content.pm.PackageManager.DONT_KILL_APP
 import android.content.res.XmlResourceParser
 import android.net.Uri
 import androidx.core.content.FileProvider
@@ -25,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.test.R
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -238,6 +243,22 @@ class ResetFileProviderCacheRobolectricTest {
 
         resetFileProviderCache()
 
-        shouldThrow<IllegalArgumentException> { lookUpCacheFile() }
+        val e = shouldThrow<IllegalArgumentException> { lookUpCacheFile() }
+        e.message.shouldNotBeNull() shouldStartWith "Failed to find configured root that contains"
+    }
+
+    @Test
+    fun `reset clears the cached root of a provider disabled in the meantime`() {
+        Assume.assumeTrue(File.separatorChar == '/')
+        lookUpCacheFile().toString() shouldBe "content://$TEST_AUTHORITY/cache_root/photo.png"
+        declareFilesOnlyRoots()
+        val component = ComponentName(ctx.packageName, FileProvider::class.java.name)
+        ctx.packageManager.setComponentEnabledSetting(component, COMPONENT_ENABLED_STATE_DISABLED, DONT_KILL_APP)
+
+        resetFileProviderCache()
+
+        ctx.packageManager.setComponentEnabledSetting(component, COMPONENT_ENABLED_STATE_ENABLED, DONT_KILL_APP)
+        val e = shouldThrow<IllegalArgumentException> { lookUpCacheFile() }
+        e.message.shouldNotBeNull() shouldStartWith "Failed to find configured root that contains"
     }
 }
