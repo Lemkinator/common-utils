@@ -318,25 +318,31 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `back gesture progress between the thresholds leaves the app bar collapsed`() {
+    fun `back gesture progress between the thresholds keeps an expanding app bar expanded`() {
         val activity = launchActivity()
         activity.collapseAppBar()
         val dispatcher = activity.onBackPressedDispatcher
 
         dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        activity.appBarOffset shouldBe 0
         dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.1f, BackEventCompat.EDGE_LEFT))
         idleAnimations()
 
-        activity.appBarOffset shouldBe -activity.totalScrollRange
+        activity.appBarOffset shouldBe 0
     }
 
     @Test
-    fun `back gesture progress below the collapse threshold without expanding leaves the app bar collapsed`() {
+    fun `back gesture progress below the collapse threshold collapses an expanding app bar`() {
         val activity = launchActivity()
         activity.collapseAppBar()
         val dispatcher = activity.onBackPressedDispatcher
 
         dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        activity.appBarOffset shouldBe 0
         dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.01f, BackEventCompat.EDGE_LEFT))
         idleAnimations()
 
@@ -344,14 +350,90 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `second high progress event while expanding keeps the app bar expanded`() {
+    fun `back gesture progress below the collapse threshold before expanding leaves the app bar collapsed until progress rises`() {
+        val activity = launchActivity()
+        activity.collapseAppBar()
+        val dispatcher = activity.onBackPressedDispatcher
+
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.01f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        activity.appBarOffset shouldBe -activity.totalScrollRange
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+
+        activity.appBarOffset shouldBe 0
+    }
+
+    @Test
+    fun `second high progress event while expanding does not expand the app bar again`() {
         val activity = launchActivity()
         activity.collapseAppBar()
         val dispatcher = activity.onBackPressedDispatcher
 
         dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
         dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        activity.appBarOffset shouldBe 0
+        activity.collapseAppBar()
         dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.95f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+
+        activity.appBarOffset shouldBe -activity.totalScrollRange
+    }
+
+    @Test
+    fun `cancelled back gesture hands the next back press to the activity once the bar is expanded`() {
+        val activity = launchActivity()
+        activity.collapseAppBar()
+        val dispatcher = activity.onBackPressedDispatcher
+
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        dispatcher.dispatchOnBackCancelled()
+        idleAnimations()
+        activity.setAppBarOffset(0)
+        dispatcher.onBackPressed()
+
+        activity.isFinishing.shouldBeTrue()
+    }
+
+    @Test
+    fun `new back gesture after a cancel expands the app bar again`() {
+        val activity = launchActivity()
+        activity.collapseAppBar()
+        val dispatcher = activity.onBackPressedDispatcher
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        dispatcher.dispatchOnBackCancelled()
+        idleAnimations()
+        activity.appBarOffset shouldBe -activity.totalScrollRange
+
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+
+        activity.appBarOffset shouldBe 0
+    }
+
+    @Test
+    fun `new back gesture after a confirmed back press expands the app bar again`() {
+        val activity = launchActivity()
+        activity.collapseAppBar()
+        val dispatcher = activity.onBackPressedDispatcher
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        dispatcher.onBackPressed()
+        idleAnimations()
+        activity.appBarOffset shouldBe 0
+        activity.collapseAppBar()
+        idleAnimations()
+
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
         idleAnimations()
 
         activity.appBarOffset shouldBe 0
