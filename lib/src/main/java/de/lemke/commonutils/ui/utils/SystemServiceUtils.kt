@@ -21,22 +21,14 @@ import android.content.Context
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
-import de.lemke.commonutils.NoCoverage
 
-/**
- * Looks up [serviceClass] via [ContextCompat.getSystemService] and, if present, runs [action] on it.
- * The null case (service unregistered for this Context) can't be produced under Robolectric for any
- * real platform service, so it stays untested here deliberately — same reasoning as
- * `SharingUtils.openOutputStream()`.
- */
-@NoCoverage
+/** Looks up [serviceClass] via [ContextCompat.getSystemService] and, if present, runs [action] on it; returns `null` otherwise. */
 public fun <T, R> Context.withSystemService(
     serviceClass: Class<T>,
     action: (T) -> R,
 ): R? = ContextCompat.getSystemService(this, serviceClass)?.let(action)
 
 /** Like [withSystemService], but runs [onMissing] instead of returning `null` if the service isn't present. */
-@NoCoverage
 public fun <T, R> Context.withSystemService(
     serviceClass: Class<T>,
     onMissing: () -> R,
@@ -44,13 +36,11 @@ public fun <T, R> Context.withSystemService(
 ): R = ContextCompat.getSystemService(this, serviceClass)?.let(action) ?: onMissing()
 
 /** Requests focus and shows the soft keyboard for this view. */
-@NoCoverage
 public fun View.showSoftInput(flags: Int = 0) {
     context.withSystemService(InputMethodManager::class.java) { it.showSoftInput(this, flags) }
 }
 
 /** Sets [clip] as the current primary clipboard content. */
-@NoCoverage
 public fun Context.setClip(clip: ClipData) {
     withSystemService(ClipboardManager::class.java) { it.setPrimaryClip(clip) }
 }
