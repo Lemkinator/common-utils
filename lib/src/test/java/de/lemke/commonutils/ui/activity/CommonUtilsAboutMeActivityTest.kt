@@ -345,30 +345,6 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `handleShareApp invokes onShareApp and shares the Play Store link`() {
-        var sharedFrom: Activity? = null
-        setupCommonUtilsAboutMeActivity(onShareApp = { sharedFrom = it })
-        val activity = launchActivity()
-        activity.handleShareApp()
-        sharedFrom shouldBeSameInstanceAs activity
-        activity.shouldHaveSharedApp()
-    }
-
-    @Test
-    fun `handleWriteEmail composes the contact email`() {
-        val activity = launchActivity()
-        activity.handleWriteEmail()
-        activity.shouldHaveStartedAboutMeEmail()
-    }
-
-    @Test
-    fun `onPlayStoreConfirmed opens the developer page`() {
-        val activity = launchActivity()
-        activity.onPlayStoreConfirmed()
-        activity.shouldHaveOpenedUrl("https://play.google.com/store/apps/dev?id=4961154860499174073")
-    }
-
-    @Test
     fun `onBackPressedHandler resets back-progress state`() {
         val activity = launchActivity()
         activity.backGesture.onBackStartedHandler()

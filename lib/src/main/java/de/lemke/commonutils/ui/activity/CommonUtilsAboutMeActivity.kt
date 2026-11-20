@@ -164,21 +164,18 @@ public class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     /** Opens the developer's Play Store page after the user confirms the redirect dialog. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onPlayStoreConfirmed() {
+    private fun onPlayStoreConfirmed() {
         openURL(getString(R.string.commonutils_playstore_developer_page_link))
     }
 
     /** Invokes the [onShareApp] callback and shares the app's Play Store link. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleShareApp() {
+    private fun handleShareApp() {
         onShareApp(this)
         shareApp()
     }
 
     /** Opens a pre-filled contact email addressed to the developer. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun handleWriteEmail() {
+    private fun handleWriteEmail() {
         sendEmailAboutMe(getString(R.string.commonutils_email), applicationInfo.loadLabel(packageManager).toString())
     }
 
