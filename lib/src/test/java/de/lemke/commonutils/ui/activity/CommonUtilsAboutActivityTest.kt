@@ -17,16 +17,27 @@ package de.lemke.commonutils.ui.activity
 
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
+import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
+import android.os.Bundle
 import android.os.Looper
 import android.text.SpannableString
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
+import com.google.android.gms.tasks.Tasks
+import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.ActivityResult.RESULT_IN_APP_UPDATE_FAILED
+import com.google.android.play.core.install.model.UpdateAvailability
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -38,7 +49,9 @@ import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoConnection
+import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoUpdate
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NotUpdatable
+import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.UpdateAvailable
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
@@ -54,6 +67,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLog
 import org.robolectric.shadows.ShadowNetworkCapabilities
 import dev.oneuiproject.oneui.design.R as designR
 
@@ -106,18 +120,24 @@ class CommonUtilsAboutActivityTest {
     }
 
     @Test
-    fun `onUpdateFlowResult RESULT_OK does not throw`() {
-        launchActivity { activity -> activity.onUpdateFlowResult(RESULT_OK) }
+    fun `an update flow result of RESULT_OK is logged as successful`() {
+        launchActivity { activity -> activity.deliverUpdateResult(RESULT_OK) }
+
+        updateLogs() shouldBe listOf(Log.DEBUG to "Update successful")
     }
 
     @Test
-    fun `onUpdateFlowResult RESULT_CANCELED does not throw`() {
-        launchActivity { activity -> activity.onUpdateFlowResult(RESULT_CANCELED) }
+    fun `an update flow result of RESULT_CANCELED is logged as canceled`() {
+        launchActivity { activity -> activity.deliverUpdateResult(RESULT_CANCELED) }
+
+        updateLogs() shouldBe listOf(Log.WARN to "Update canceled")
     }
 
     @Test
-    fun `onUpdateFlowResult RESULT_IN_APP_UPDATE_FAILED does not throw`() {
-        launchActivity { activity -> activity.onUpdateFlowResult(RESULT_IN_APP_UPDATE_FAILED) }
+    fun `an update flow result of RESULT_IN_APP_UPDATE_FAILED is logged as failed`() {
+        launchActivity { activity -> activity.deliverUpdateResult(RESULT_IN_APP_UPDATE_FAILED) }
+
+        updateLogs() shouldBe listOf(Log.ERROR to "Update failed")
     }
 
     @Test
@@ -185,5 +205,75 @@ class CommonUtilsAboutActivityTest {
         } finally {
             CommonUtilsAboutActivity.optionalText = null
         }
+    }
+
+    @Test
+    fun `validated network with an available update shows UpdateAvailable`() {
+        validateNetwork()
+        every { mockAppUpdateManager.appUpdateInfo } returns Tasks.forResult(updateInfo(UpdateAvailability.UPDATE_AVAILABLE))
+
+        launchActivity { activity -> activity.updateStatus() shouldBe UpdateAvailable }
+    }
+
+    @Test
+    fun `validated network without an update shows NoUpdate`() {
+        validateNetwork()
+        every { mockAppUpdateManager.appUpdateInfo } returns Tasks.forResult(updateInfo(UpdateAvailability.UPDATE_NOT_AVAILABLE))
+
+        launchActivity { activity -> activity.updateStatus() shouldBe NoUpdate }
+    }
+
+    @Test
+    fun `validated network with unknown availability keeps Loading`() {
+        validateNetwork()
+        every { mockAppUpdateManager.appUpdateInfo } returns Tasks.forResult(updateInfo(UpdateAvailability.UNKNOWN))
+
+        launchActivity { activity -> activity.updateStatus() shouldBe Loading }
+    }
+
+    @Test
+    fun `failed update check shows NotUpdatable`() {
+        validateNetwork()
+        every { mockAppUpdateManager.appUpdateInfo } returns Tasks.forException(IllegalStateException("offline"))
+
+        launchActivity { activity -> activity.updateStatus() shouldBe NotUpdatable }
+    }
+
+    @Test
+    fun `resuming during a developer triggered update restarts the update flow once`() {
+        validateNetwork()
+        val info = updateInfo(UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS)
+        every { mockAppUpdateManager.appUpdateInfo } returns Tasks.forResult(info)
+
+        launchActivity { }
+
+        verify(exactly = 1) {
+            mockAppUpdateManager.startUpdateFlowForResult(
+                info,
+                any<ActivityResultLauncher<IntentSenderRequest>>(),
+                any<AppUpdateOptions>(),
+            )
+        }
+    }
+
+    private fun CommonUtilsAboutActivity.deliverUpdateResult(resultCode: Int) {
+        val registered = Bundle().also { activityResultRegistry.onSaveInstanceState(it) }
+        val requestCodes = checkNotNull(registered.getIntegerArrayList("KEY_COMPONENT_ACTIVITY_REGISTERED_RCS"))
+        requestCodes.size shouldBe 1
+        ShadowLog.clear()
+        activityResultRegistry.dispatchResult(requestCodes.single(), resultCode, Intent())
+    }
+
+    private fun updateLogs() = ShadowLog.getLogsForTag("CommonUtilsAboutActivity").map { it.type to it.msg }
+
+    private fun CommonUtilsAboutActivity.updateStatus() = findViewById<AppInfoLayout>(R.id.appInfoLayout).updateStatus
+
+    private fun updateInfo(availability: Int): AppUpdateInfo = mockk { every { updateAvailability() } returns availability }
+
+    private fun validateNetwork() {
+        val connectivity = ApplicationProvider.getApplicationContext<Context>().getSystemService(ConnectivityManager::class.java)
+        val validated = ShadowNetworkCapabilities.newInstance()
+        shadowOf(validated).addCapability(NET_CAPABILITY_VALIDATED)
+        shadowOf(connectivity).setNetworkCapabilities(connectivity.activeNetwork, validated)
     }
 }
