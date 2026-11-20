@@ -122,7 +122,6 @@ public fun Activity.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-@NoCoverage
 public inline fun <reified T : Activity> Activity.transformToActivity(
     @IdRes viewId: Int,
     transitionName: String = DEFAULT_TRANSITION_NAME,
@@ -184,7 +183,6 @@ public fun Activity.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-@NoCoverage
 public inline fun <reified T : Activity> Activity.transformToActivity(
     view: View?,
     transitionName: String = DEFAULT_TRANSITION_NAME,

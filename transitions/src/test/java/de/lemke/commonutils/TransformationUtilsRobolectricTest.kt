@@ -207,6 +207,38 @@ class TransformationUtilsRobolectricTest {
     }
 
     @Test
+    fun `View transformToActivity reified starts the activity of the type argument`() {
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
+
+        View(a).transformToActivity<AppCompatActivity>().shouldBeTrue()
+
+        shadowOf(a).nextStartedActivity.component?.className shouldBe AppCompatActivity::class.java.name
+    }
+
+    @Test
+    fun `View transformToActivity reified passes its transition arguments to the launch intent`() {
+        val a =
+            Robolectric
+                .buildActivity(Activity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
+        val view = FrameLayout(a)
+        a.setContentView(view)
+
+        view.transformToActivity<AppCompatActivity>(transitionName = "shared", duration = 123L, fadeMode = 1).shouldBeTrue()
+
+        val launched = shadowOf(a).nextStartedActivity
+        launched.component?.className shouldBe AppCompatActivity::class.java.name
+        launched.shouldBeContainerTransformTo("shared", 123L, 1)
+    }
+
+    @Test
     fun `overrideFadeOpenTransition does not throw`() {
         activity().overrideFadeOpenTransition()
     }
