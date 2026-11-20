@@ -37,6 +37,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import java.time.Duration
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -65,22 +66,26 @@ class CommonUtilsAboutMeActivityTest {
         return controller.get()
     }
 
-    /** Reads the private `isExpanding` field via reflection - the controller exposes no public getter for it. */
-    private val CommonUtilsAboutMeActivity.PredictiveBackGestureController.isExpanding: Boolean
-        get() {
-            val field = javaClass.getDeclaredField("isExpanding")
-            field.isAccessible = true
-            return field.getBoolean(this)
-        }
+    private fun CommonUtilsAboutMeActivity.appBarBehavior(): AppBarLayout.Behavior =
+        (findViewById<AppBarLayout>(R.id.aboutAppBar).layoutParams as CoordinatorLayout.LayoutParams).behavior as AppBarLayout.Behavior
+
+    private val CommonUtilsAboutMeActivity.appBarOffset: Int
+        get() = appBarBehavior().topAndBottomOffset
+
+    private val CommonUtilsAboutMeActivity.totalScrollRange: Int
+        get() = findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange
 
     /** Moves the app bar through its own behavior and lays it out, so the offset listener runs as it does on a device. */
     private fun CommonUtilsAboutMeActivity.setAppBarOffset(offset: Int) {
-        val appBar = findViewById<AppBarLayout>(R.id.aboutAppBar)
-        val behavior = (appBar.layoutParams as CoordinatorLayout.LayoutParams).behavior as AppBarLayout.Behavior
-        behavior.setTopAndBottomOffset(offset)
-        appBar.requestLayout()
+        appBarBehavior().setTopAndBottomOffset(offset)
+        findViewById<AppBarLayout>(R.id.aboutAppBar).requestLayout()
         shadowOf(Looper.getMainLooper()).idle()
     }
+
+    private fun idleAnimations() = shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(1))
+
+    private fun CommonUtilsAboutMeActivity.portraitConfig() =
+        Configuration(resources.configuration).apply { orientation = Configuration.ORIENTATION_PORTRAIT }
 
     private fun CommonUtilsAboutMeActivity.startedIntent(): Intent = shadowOf(this).nextStartedActivity.shouldNotBeNull()
 
@@ -290,133 +295,150 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
-    fun `back gesture start progressed and cancelled dispatches callbacks`() {
+    fun `back gesture progress expands and collapses the app bar and cancel collapses it`() {
         val activity = launchActivity()
         activity.collapseAppBar()
-        shadowOf(Looper.getMainLooper()).idle()
-
         val dispatcher = activity.onBackPressedDispatcher
-        val event = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
-        dispatcher.dispatchOnBackStarted(event)
-        shadowOf(Looper.getMainLooper()).idle()
-        activity.backGesture.isBackProgressing.shouldBeTrue()
 
-        val highProgressEvent = BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT)
-        dispatcher.dispatchOnBackProgressed(highProgressEvent)
-        shadowOf(Looper.getMainLooper()).idle()
-        activity.backGesture.isExpanding.shouldBeTrue()
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        activity.appBarOffset shouldBe 0
 
-        val lowProgressEvent = BackEventCompat(10f, 500f, 0.01f, BackEventCompat.EDGE_LEFT)
-        dispatcher.dispatchOnBackProgressed(lowProgressEvent)
-        shadowOf(Looper.getMainLooper()).idle()
-        activity.backGesture.isExpanding.shouldBeFalse()
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.01f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        activity.appBarOffset shouldBe -activity.totalScrollRange
 
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        activity.appBarOffset shouldBe 0
         dispatcher.dispatchOnBackCancelled()
-        shadowOf(Looper.getMainLooper()).idle()
-        activity.backGesture.isBackProgressing.shouldBeFalse()
+        idleAnimations()
+        activity.appBarOffset shouldBe -activity.totalScrollRange
     }
 
     @Test
-    fun `back gesture pressed finishes activity`() {
+    fun `back gesture progress between the thresholds leaves the app bar collapsed`() {
+        val activity = launchActivity()
+        activity.collapseAppBar()
+        val dispatcher = activity.onBackPressedDispatcher
+
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.1f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+
+        activity.appBarOffset shouldBe -activity.totalScrollRange
+    }
+
+    @Test
+    fun `back gesture progress below the collapse threshold without expanding leaves the app bar collapsed`() {
+        val activity = launchActivity()
+        activity.collapseAppBar()
+        val dispatcher = activity.onBackPressedDispatcher
+
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.01f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+
+        activity.appBarOffset shouldBe -activity.totalScrollRange
+    }
+
+    @Test
+    fun `second high progress event while expanding keeps the app bar expanded`() {
+        val activity = launchActivity()
+        activity.collapseAppBar()
+        val dispatcher = activity.onBackPressedDispatcher
+
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.95f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+
+        activity.appBarOffset shouldBe 0
+    }
+
+    @Test
+    fun `back press while collapsed expands the app bar instead of finishing`() {
+        val activity = launchActivity()
+        activity.collapseAppBar()
+
+        activity.onBackPressedDispatcher.onBackPressed()
+        idleAnimations()
+
+        activity.isFinishing.shouldBeFalse()
+        activity.appBarOffset shouldBe 0
+    }
+
+    @Test
+    fun `back press while expanded finishes the activity`() {
         val activity = launchActivity()
         activity.setAppBarOffset(0)
 
         activity.onBackPressedDispatcher.onBackPressed()
+
         activity.isFinishing.shouldBeTrue()
     }
 
     @Test
-    fun `predictive back callback isEnabled follows the collapsed-portrait condition`() {
+    fun `back press one pixel short of collapsed finishes the activity`() {
         val activity = launchActivity()
-        val totalScrollRange = activity.findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange
 
-        activity.setAppBarOffset(-totalScrollRange)
-        activity.backGesture.callback.isEnabled
-            .shouldBeTrue()
+        activity.setAppBarOffset(-activity.totalScrollRange + 1)
+        activity.onBackPressedDispatcher.onBackPressed()
 
-        activity.setAppBarOffset(-totalScrollRange + 1)
-        activity.backGesture.callback.isEnabled
-            .shouldBeFalse()
+        activity.isFinishing.shouldBeTrue()
     }
 
     @Test
-    fun `onBackPressedHandler resets back-progress state`() {
+    fun `back press stays handled by the app bar while a back gesture progresses`() {
         val activity = launchActivity()
-        activity.backGesture.onBackStartedHandler()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
+        activity.collapseAppBar()
+        val dispatcher = activity.onBackPressedDispatcher
 
-        activity.backGesture.onBackPressedHandler()
+        dispatcher.dispatchOnBackStarted(BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT))
+        dispatcher.dispatchOnBackProgressed(BackEventCompat(10f, 500f, 0.9f, BackEventCompat.EDGE_LEFT))
+        idleAnimations()
+        dispatcher.onBackPressed()
 
-        activity.backGesture.isBackProgressing.shouldBeFalse()
-        activity.backGesture.isExpanding.shouldBeFalse()
+        activity.isFinishing.shouldBeFalse()
     }
 
     @Test
-    fun `onBackStartedHandler sets isBackProgressing`() {
+    fun `portrait configuration change expands a collapsed app bar and shows the swipe-up container`() {
         val activity = launchActivity()
-        activity.backGesture.onBackStartedHandler()
-        activity.backGesture.isBackProgressing.shouldBeTrue()
+        activity.collapseAppBar()
+
+        activity.onConfigurationChanged(activity.portraitConfig())
+        shadowOf(Looper.getMainLooper()).idle()
+
+        activity.appBarOffset shouldBe 0
+        activity.findViewById<View>(R.id.aboutSwipeUpContainer).isVisible.shouldBeTrue()
     }
 
     @Test
-    fun `onBackProgressedHandler high progress triggers expand branch`() {
+    @Config(sdk = [36], qualifiers = "land")
+    fun `collapsed landscape app bar leaves back to the activity`() {
         val activity = launchActivity()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
-        activity.backGesture.isExpanding.shouldBeTrue()
+        activity.collapseAppBar()
+        activity.onConfigurationChanged(activity.resources.configuration)
+        shadowOf(Looper.getMainLooper()).idle()
+
+        activity.onBackPressedDispatcher.onBackPressed()
+
+        activity.isFinishing.shouldBeTrue()
     }
 
     @Test
-    fun `onBackProgressedHandler low progress while expanding triggers collapse branch`() {
+    fun `multi-window mode hides the swipe-up container and leaves back to the activity`() {
         val activity = launchActivity()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
-        activity.backGesture.isExpanding.shouldBeTrue()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
-        activity.backGesture.isExpanding.shouldBeFalse()
-    }
+        activity.collapseAppBar()
+        shadowOf(activity).setInMultiWindowMode(true)
+        activity.onConfigurationChanged(activity.portraitConfig())
+        shadowOf(Looper.getMainLooper()).idle()
 
-    @Test
-    fun `onBackProgressedHandler low progress while not expanding hits fallthrough`() {
-        val activity = launchActivity()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.1f, BackEventCompat.EDGE_LEFT))
-        activity.backGesture.isExpanding.shouldBeFalse()
-    }
-
-    @Test
-    fun `onBackProgressedHandler two consecutive high-progress events cover A=true B=false branch`() {
-        val activity = launchActivity()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
-        activity.backGesture.isExpanding.shouldBeTrue()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
-        activity.backGesture.isExpanding.shouldBeTrue()
-    }
-
-    @Test
-    fun `onBackProgressedHandler very low progress while not expanding covers C=true D=false branch`() {
-        val activity = launchActivity()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.01f, BackEventCompat.EDGE_LEFT))
-        activity.backGesture.isExpanding.shouldBeFalse()
-    }
-
-    @Test
-    fun `back gesture callback overrides delegate to the handler methods`() {
-        val activity = launchActivity()
-        val callback = activity.backGesture.callback
-        val startedEvent = BackEventCompat(10f, 500f, 0.5f, BackEventCompat.EDGE_LEFT)
-        val expandingEvent = BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT)
-
-        callback.handleOnBackStarted(startedEvent)
-        activity.backGesture.isBackProgressing.shouldBeTrue()
-
-        callback.handleOnBackProgressed(expandingEvent)
-        activity.backGesture.isExpanding.shouldBeTrue()
-
-        callback.handleOnBackCancelled()
-        activity.backGesture.isBackProgressing.shouldBeFalse()
-        activity.backGesture.isExpanding.shouldBeFalse()
-
-        callback.handleOnBackStarted(startedEvent)
-        callback.handleOnBackPressed()
-        activity.backGesture.isBackProgressing.shouldBeFalse()
+        activity.findViewById<View>(R.id.aboutSwipeUpContainer).isVisible.shouldBeFalse()
+        activity.onBackPressedDispatcher.onBackPressed()
+        activity.isFinishing.shouldBeTrue()
     }
 
     @Test
@@ -429,18 +451,6 @@ class CommonUtilsAboutMeActivityTest {
         controller.setup()
         shadowOf(Looper.getMainLooper()).idle()
         controller.get() shouldNotBe null
-    }
-
-    @Test
-    fun `onBackCancelledHandler resets back-progress state`() {
-        val activity = launchActivity()
-        activity.backGesture.onBackStartedHandler()
-        activity.backGesture.onBackProgressedHandler(BackEventCompat(0f, 0f, 0.9f, BackEventCompat.EDGE_LEFT))
-
-        activity.backGesture.onBackCancelledHandler()
-
-        activity.backGesture.isBackProgressing.shouldBeFalse()
-        activity.backGesture.isExpanding.shouldBeFalse()
     }
 }
 

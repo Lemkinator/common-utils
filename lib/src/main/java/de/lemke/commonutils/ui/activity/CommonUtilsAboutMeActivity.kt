@@ -25,7 +25,6 @@ import android.os.Bundle
 import android.view.WindowInsets.Type.systemBars
 import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -37,7 +36,6 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityAboutMeBinding
 import de.lemke.commonutils.ui.utils.onSingleLaunchClick
@@ -67,8 +65,7 @@ public class CommonUtilsAboutMeActivity : AppCompatActivity() {
     private val callbackIsActive = MutableStateFlow(false)
     private val crossActivityCallbackIsActive = MutableStateFlow(true)
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val backGesture = PredictiveBackGestureController()
+    private val backGesture = PredictiveBackGestureController()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         prepareActivityTransformationTo()
@@ -112,7 +109,6 @@ public class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
-    @NoCoverage
     @SuppressLint("RestrictedApi")
     private fun refreshAppBar(config: Configuration) {
         if (config.orientation != ORIENTATION_LANDSCAPE && !isInMultiWindowModeCompat) {
@@ -222,7 +218,6 @@ public class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
     }
 
-    @NoCoverage
     private fun updateCallbackState(enable: Boolean? = null) {
         if (backGesture.isBackProgressing) return
         callbackIsActive.value =
@@ -246,24 +241,16 @@ public class CommonUtilsAboutMeActivity : AppCompatActivity() {
     }
 
     /** Drives the app bar's expand/collapse animation in response to predictive-back gesture progress. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal inner class PredictiveBackGestureController {
+    private inner class PredictiveBackGestureController {
         private val progressInterpolator = PathInterpolatorCompat.create(0f, 0f, 0f, 1f)
 
         var isBackProgressing = false
             private set
         private var isExpanding = false
 
-        /** The registered dispatcher callback; exposed so tests can drive its handle* overrides directly. */
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal lateinit var callback: OnBackPressedCallback
-            @NoCoverage // lateinit getter's uninitialized-check branch is never taken once register() has run.
-            get
-            private set
-
         /** Registers the predictive-back callback with the dispatcher and syncs its initial enabled state. */
         fun register() {
-            callback =
+            val callback =
                 object : OnBackPressedCallback(callbackIsActive.value) {
                     override fun handleOnBackPressed() {
                         onBackPressedHandler()
@@ -291,22 +278,19 @@ public class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
 
         /** Expands the app bar and resets back-gesture state when the back press is confirmed. */
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal fun onBackPressedHandler() {
+        private fun onBackPressedHandler() {
             binding.aboutAppBar.setExpanded(true)
             isBackProgressing = false
             isExpanding = false
         }
 
         /** Records that a predictive back gesture has started. */
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal fun onBackStartedHandler() {
+        private fun onBackStartedHandler() {
             isBackProgressing = true
         }
 
         /** Expands or collapses the app bar in response to predictive back gesture progress. */
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal fun onBackProgressedHandler(event: BackEventCompat) {
+        private fun onBackProgressedHandler(event: BackEventCompat) {
             val interpolatedProgress = progressInterpolator.getInterpolation(event.progress)
             if (interpolatedProgress > BACK_EXPAND_THRESHOLD && !isExpanding) {
                 isExpanding = true
@@ -318,8 +302,7 @@ public class CommonUtilsAboutMeActivity : AppCompatActivity() {
         }
 
         /** Collapses the app bar and resets back-gesture state when the gesture is canceled. */
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal fun onBackCancelledHandler() {
+        private fun onBackCancelledHandler() {
             binding.aboutAppBar.setExpanded(false)
             isBackProgressing = false
             isExpanding = false
