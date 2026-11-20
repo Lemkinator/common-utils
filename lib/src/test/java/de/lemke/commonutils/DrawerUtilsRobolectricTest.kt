@@ -18,35 +18,56 @@ package de.lemke.commonutils
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Looper
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import com.google.android.gms.tasks.Tasks
 import com.google.android.material.navigation.NavigationView
+import com.google.android.play.core.appupdate.AppUpdateInfo
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
+import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_IS_ACTION_MODE
 import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_IS_SEARCH_MODE
 import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_SELECTED_IDS
 import de.lemke.commonutils.ui.utils.onSingleLaunchItemSelected
 import de.lemke.commonutils.ui.utils.restoreSearchAndActionMode
 import de.lemke.commonutils.ui.utils.saveSearchAndActionMode
+import de.lemke.commonutils.ui.utils.setupHeaderAndNavRail
 import de.lemke.commonutils.ui.utils.singleLaunchActivity
+import dev.oneuiproject.oneui.layout.NavDrawerLayout
 import dev.oneuiproject.oneui.navigation.widget.DrawerNavigationView
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkAll
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import dev.oneuiproject.oneui.design.R as designR
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class DrawerUtilsRobolectricTest {
     @get:Rule
     val destroyActivities = DestroyActivitiesRule()
+
+    @After
+    fun tearDown() {
+        unmockkAll()
+    }
 
     @Test
     fun `saveSearchAndActionMode sets search mode key`() {
@@ -134,6 +155,47 @@ class DrawerUtilsRobolectricTest {
         navView.onSingleLaunchItemSelected { false }
 
         listenerSlot.captured.onNavigationItemSelected(mockk()).shouldBeFalse()
+    }
+
+    @Test
+    fun `setupHeaderAndNavRail makes the header button open the about screen`() {
+        stubUpdateAvailability(UpdateAvailability.UPDATE_NOT_AVAILABLE)
+        val activity = themedActivity()
+        val drawer = NavDrawerLayout(activity)
+        activity.setContentView(drawer)
+
+        drawer.setupHeaderAndNavRail("About app")
+        drawer.findViewById<View>(designR.id.oui_des_drawer_header_button).performClick()
+
+        shadowOf(activity).nextStartedActivity.component?.className shouldBe CommonUtilsAboutActivity::class.java.name
+    }
+
+    @Test
+    fun `setupHeaderAndNavRail badges the header button when an update is available`() {
+        stubUpdateAvailability(UpdateAvailability.UPDATE_AVAILABLE)
+        val activity = themedActivity()
+        val drawer = NavDrawerLayout(activity)
+        activity.setContentView(drawer)
+        val badge = drawer.findViewById<View>(designR.id.oui_des_drawer_header_button_badge)
+
+        drawer.setupHeaderAndNavRail("About app")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        badge.isVisible.shouldBeTrue()
+    }
+
+    private fun themedActivity() =
+        Robolectric
+            .buildActivity(NoActionBarTestActivity::class.java)
+            .setup()
+            .track(destroyActivities)
+            .get()
+
+    private fun stubUpdateAvailability(availability: Int) {
+        val info = mockk<AppUpdateInfo> { every { updateAvailability() } returns availability }
+        val manager = mockk<AppUpdateManager> { every { appUpdateInfo } returns Tasks.forResult(info) }
+        mockkStatic(AppUpdateManagerFactory::class)
+        every { AppUpdateManagerFactory.create(any()) } returns manager
     }
 
     private fun navigationView(): DrawerNavigationView {

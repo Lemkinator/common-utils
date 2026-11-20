@@ -75,7 +75,6 @@ public inline fun Bundle?.restoreSearchAndActionMode(
  * Sets up the drawer header button with an info icon that opens [CommonUtilsAboutActivity] through [popOverOrTransformToActivity]
  * and configures the nav rail.
  */
-@NoCoverage
 public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
         icon = checkNotNull(AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)) { "Missing info icon drawable" },
@@ -87,7 +86,6 @@ public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
 }
 
-@NoCoverage
 private fun View.openAboutActivity() {
     popOverOrTransformToActivity<CommonUtilsAboutActivity>(transitionName = "CommonUtilsAboutAppTransition")
 }
