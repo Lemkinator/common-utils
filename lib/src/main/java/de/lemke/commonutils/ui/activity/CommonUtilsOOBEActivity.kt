@@ -27,7 +27,6 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout.LayoutParams
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.databinding.ActivityOobeBinding
 import de.lemke.commonutils.ui.utils.LaunchOutcome
@@ -72,18 +71,11 @@ public class CommonUtilsOOBEActivity : AppCompatActivity() {
         }
     }
 
-    @NoCoverage
     private fun initToSView() {
         val tosChanged = intent.onboardingContext?.tosChanged ?: false
         val tos = getString(R.string.commonutils_tos)
         val tosText = getString(if (tosChanged) R.string.commonutils_oobe_new_tos_text else R.string.commonutils_oobe_tos_text, tos)
-        val spanned =
-            buildTosSpannable(tosText, tos) { showTosDialogOnce() }
-        if (spanned == null) {
-            binding.oobeIntroFooterTosText.text = tosText
-            return
-        }
-        binding.oobeIntroFooterTosText.text = spanned
+        binding.oobeIntroFooterTosText.text = buildTosSpannable(tosText, tos) { showTosDialogOnce() }
         binding.oobeIntroFooterTosText.movementMethod = LinkMovementMethod.getInstance()
         binding.oobeIntroFooterTosText.highlightColor = TRANSPARENT
     }
@@ -116,17 +108,17 @@ public class CommonUtilsOOBEActivity : AppCompatActivity() {
 
 /**
  * Builds a [SpannableString] from [tosText] where the last occurrence of [tos] is a clickable span
- * that invokes [onClick]. Returns `null` if [tos] does not appear in [tosText].
+ * that invokes [onClick]. Without [tos] in [tosText] the result is the plain text.
  */
 internal fun buildTosSpannable(
     tosText: String,
     tos: String,
     onClick: () -> Unit,
-): SpannableString? {
+): SpannableString {
+    val spannable = SpannableString(tosText)
     val tosIndex = tosText.lastIndexOf(tos)
-    if (tosIndex < 0) return null
-    return SpannableString(tosText).apply {
-        setSpan(
+    if (tosIndex >= 0) {
+        spannable.setSpan(
             object : ClickableSpan() {
                 override fun onClick(widget: View) = onClick()
             },
@@ -135,4 +127,5 @@ internal fun buildTosSpannable(
             SPAN_EXCLUSIVE_EXCLUSIVE,
         )
     }
+    return spannable
 }
