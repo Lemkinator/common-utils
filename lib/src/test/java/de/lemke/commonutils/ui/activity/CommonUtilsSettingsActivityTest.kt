@@ -107,17 +107,11 @@ class CommonUtilsSettingsActivityTest {
                 .first()
 
     private fun Preference.triggerClick() {
-        Preference::class.java
-            .getDeclaredMethod("callClickListener")
-            .also { it.isAccessible = true }
-            .invoke(this)
+        isEnabled shouldBe true
+        checkNotNull(onPreferenceClickListener) { "no click listener on $key" }.onPreferenceClick(this)
     }
 
-    private fun Preference.triggerChange(newValue: Any): Boolean =
-        Preference::class.java
-            .getDeclaredMethod("callChangeListener", Any::class.java)
-            .also { it.isAccessible = true }
-            .invoke(this, newValue) as Boolean
+    private fun Preference.triggerChange(newValue: Any): Boolean = callChangeListener(newValue)
 
     // Mirrors HorizontalRadioPreference's real onClickListener.
     private fun HorizontalRadioPreference.triggerRadioClick(newValue: String) {

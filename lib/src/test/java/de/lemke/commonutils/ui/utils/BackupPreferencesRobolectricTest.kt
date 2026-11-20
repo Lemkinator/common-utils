@@ -162,10 +162,8 @@ class BackupPreferencesRobolectricTest {
     private fun CommonUtilsSettingsActivity.click(keyRes: Int) {
         val fragment = fragmentOf(this)
         val preference = fragment.findPreference<Preference>(getString(keyRes))!!
-        Preference::class.java
-            .getDeclaredMethod("callClickListener")
-            .also { it.isAccessible = true }
-            .invoke(preference)
+        preference.isEnabled shouldBe true
+        checkNotNull(preference.onPreferenceClickListener) { "no click listener on ${preference.key}" }.onPreferenceClick(preference)
         idle()
     }
 

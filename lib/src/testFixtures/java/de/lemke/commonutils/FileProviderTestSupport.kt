@@ -15,21 +15,49 @@
  */
 package de.lemke.commonutils
 
+import android.content.Context
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.content.pm.PackageManager.GET_PROVIDERS
+import android.content.pm.PackageManager.MATCH_DISABLED_COMPONENTS
+import android.content.pm.ProviderInfo
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.TIRAMISU
 import androidx.core.content.FileProvider
+import androidx.test.core.app.ApplicationProvider
 
 /**
- * Clears FileProvider's static per-authority path-strategy cache. [ShadowFileProvider] never reads that cache; a test on the
- * stock provider calls this after each test, since `getUriForFile` reads the cache before the provider is attached to the next test.
+ * Clears FileProvider's static per-authority path-strategy cache for each non-exported, URI-granting provider the application
+ * declares. [ShadowFileProvider] never reads that cache; a test on the stock provider calls this after each test, since
+ * stock `getUriForFile` caches the path strategy per authority and Robolectric does not attach the provider again for the
+ * next test.
+ *
+ * `FileProvider.attachInfo` removes the provider's authority from the cache and throws for an exported provider or one that
+ * grants no URI permissions, so only matching providers are attached, once per authority of a `;`-separated
+ * list. A provider a test disabled stays in the reset.
  */
 public fun resetFileProviderCache() {
-    val cache =
-        try {
-            val sCache = FileProvider::class.java.getDeclaredField("sCache")
-            sCache.isAccessible = true
-            sCache.get(null) as MutableMap<*, *>
-        } catch (e: ReflectiveOperationException) {
-            throw IllegalStateException("FileProvider internals changed: expected private static sCache map", e)
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val providers =
+        context.packageManager
+            .packageInfoWithProviders(context.packageName)
+            .providers
+            .orEmpty()
+    providers
+        .filter { !it.exported && it.grantUriPermissions }
+        .forEach { info ->
+            info.authority.split(";").forEach { authority ->
+                FileProvider().attachInfo(context, ProviderInfo(info).apply { this.authority = authority })
+            }
         }
-    // FileProvider guards sCache with synchronized (sCache).
-    synchronized(cache) { cache.clear() }
 }
+
+private const val PROVIDER_FLAGS = GET_PROVIDERS or MATCH_DISABLED_COMPONENTS
+
+private fun PackageManager.packageInfoWithProviders(packageName: String): PackageInfo =
+    if (SDK_INT >= TIRAMISU) {
+        getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(PROVIDER_FLAGS.toLong()))
+    } else {
+        @Suppress("DEPRECATION")
+        getPackageInfo(packageName, PROVIDER_FLAGS)
+    }

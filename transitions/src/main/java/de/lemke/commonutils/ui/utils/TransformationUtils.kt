@@ -28,7 +28,6 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
-import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -147,11 +146,10 @@ public fun Activity.prepareActivityTransformationBetween() {
  * @param fadeMode The fade mode for the transition.
  * @return MaterialContainerTransform The configured container transform.
  */
-@VisibleForTesting
-internal fun View.getContainerTransform(
+private fun View.getContainerTransform(
     endView: View,
-    duration: Long = DEFAULT_DURATION,
-    fadeMode: Int = DEFAULT_FADE_MODE,
+    duration: Long,
+    fadeMode: Int,
 ) = MaterialContainerTransform().apply {
     this.startView = this@getContainerTransform
     this.endView = endView
@@ -160,23 +158,6 @@ internal fun View.getContainerTransform(
     scrimColor = TRANSPARENT
     pathMotion = MaterialArcMotion()
     addTarget(endView)
-}
-
-/**
- * Executes the container transform: hides this view, shows [targetView], and begins the transition.
- * Extracted from [transformTo]'s [View.post] lambda to allow direct testing without window attachment.
- */
-@VisibleForTesting
-internal fun View.performTransform(
-    container: ViewGroup,
-    targetView: View,
-    duration: Long = DEFAULT_DURATION,
-    fadeMode: Int = DEFAULT_FADE_MODE,
-) {
-    TransitionManager.endTransitions(container)
-    isVisible = false
-    targetView.isVisible = true
-    TransitionManager.beginDelayedTransition(container, getContainerTransform(targetView, duration, fadeMode))
 }
 
 /**
@@ -192,7 +173,12 @@ public fun View.transformTo(
     fadeMode: Int = DEFAULT_FADE_MODE,
 ) {
     (parent as ViewGroup).also { container ->
-        container.post { performTransform(container, targetView, duration, fadeMode) }
+        container.post {
+            TransitionManager.endTransitions(container)
+            isVisible = false
+            targetView.isVisible = true
+            TransitionManager.beginDelayedTransition(container, getContainerTransform(targetView, duration, fadeMode))
+        }
     }
 }
 

@@ -17,6 +17,8 @@ package de.lemke.commonutils.ui.activity
 
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
 import android.os.Looper
 import android.text.SpannableString
 import android.widget.Button
@@ -35,12 +37,15 @@ import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
+import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NoConnection
+import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.NotUpdatable
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -49,6 +54,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowNetworkCapabilities
 import dev.oneuiproject.oneui.design.R as designR
 
 /**
@@ -115,23 +121,34 @@ class CommonUtilsAboutActivityTest {
     }
 
     @Test
-    fun `onMainButtonClicked when NoConnection re-triggers checkUpdate`() {
+    fun `update button click without a connection checks again once the network is validated`() {
         launchActivity { activity ->
-            // Under Robolectric, no active network → checkUpdate sets NoConnection status.
-            // Calling onMainButtonClicked with NoConnection hits the if-branch.
-            activity.onMainButtonClicked()
+            val appInfo = activity.findViewById<AppInfoLayout>(R.id.appInfoLayout)
+            appInfo.updateStatus shouldBe NoConnection
+            verify(exactly = 1) { mockAppUpdateManager.appUpdateInfo }
+            val connectivity = activity.getSystemService(ConnectivityManager::class.java)
+            val validated = ShadowNetworkCapabilities.newInstance()
+            shadowOf(validated).addCapability(NET_CAPABILITY_VALIDATED)
+            shadowOf(connectivity).setNetworkCapabilities(connectivity.activeNetwork, validated)
+
+            activity.findViewById<Button>(designR.id.app_info_update).performClick()
             shadowOf(Looper.getMainLooper()).idle()
+
+            appInfo.updateStatus shouldBe Loading
+            verify(exactly = 2) { mockAppUpdateManager.appUpdateInfo }
         }
     }
 
     @Test
-    fun `onMainButtonClicked when not NoConnection triggers startUpdateFlow else-branch`() {
+    fun `update button click while loading fails the update flow and shows NotUpdatable`() {
         launchActivity { activity ->
-            // Force a non-NoConnection status to cover the else-branch.
-            // startUpdateFlow is @NoCoverage; its call site inside onMainButtonClicked is covered.
-            activity.findViewById<AppInfoLayout>(R.id.appInfoLayout).updateStatus = Loading
-            activity.onMainButtonClicked()
+            val appInfo = activity.findViewById<AppInfoLayout>(R.id.appInfoLayout)
+            appInfo.updateStatus = Loading
+
+            activity.findViewById<Button>(designR.id.app_info_update).performClick()
             shadowOf(Looper.getMainLooper()).idle()
+
+            appInfo.updateStatus shouldBe NotUpdatable
         }
     }
 
@@ -147,15 +164,6 @@ class CommonUtilsAboutActivityTest {
             shadowOf(Looper.getMainLooper()).idle()
             shadowOf(activity).nextStartedActivity.component?.className shouldBe
                 CommonUtilsLibsActivity::class.java.name
-        }
-    }
-
-    @Test
-    fun `update button click covers setMainButtonClickListener lambda`() {
-        // Under Robolectric (no network) updateStatus = NoConnection → update button visible with listener set.
-        launchActivity { activity ->
-            activity.findViewById<Button>(designR.id.app_info_update)?.performClick()
-            shadowOf(Looper.getMainLooper()).idle()
         }
     }
 

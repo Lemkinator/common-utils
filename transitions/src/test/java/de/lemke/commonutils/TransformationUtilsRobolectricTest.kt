@@ -23,14 +23,12 @@ import android.os.Looper
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.DEFAULT_DURATION
-import de.lemke.commonutils.ui.utils.DEFAULT_FADE_MODE
 import de.lemke.commonutils.ui.utils.finishWithFade
-import de.lemke.commonutils.ui.utils.getContainerTransform
 import de.lemke.commonutils.ui.utils.getTransitionContainerTransform
 import de.lemke.commonutils.ui.utils.overrideFadeOpenTransition
-import de.lemke.commonutils.ui.utils.performTransform
 import de.lemke.commonutils.ui.utils.prepareActivityTransformationBetween
 import de.lemke.commonutils.ui.utils.prepareActivityTransformationFrom
 import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
@@ -147,36 +145,6 @@ class TransformationUtilsRobolectricTest {
     }
 
     @Test
-    fun `performTransform without duration and fadeMode covers default-param synthetic`() {
-        val a =
-            Robolectric
-                .buildActivity(Activity::class.java)
-                .setup()
-                .track(destroyActivities)
-                .get()
-        val container = FrameLayout(a)
-        val v1 = View(a)
-        val v2 = View(a)
-        container.addView(v1)
-        container.addView(v2)
-        a.setContentView(container)
-        v1.performTransform(container, v2)
-    }
-
-    @Test
-    fun `getContainerTransform without duration and fadeMode covers default-param synthetic`() {
-        val a =
-            Robolectric
-                .buildActivity(Activity::class.java)
-                .setup()
-                .track(destroyActivities)
-                .get()
-        val v1 = View(a)
-        val v2 = View(a)
-        v1.getContainerTransform(v2)
-    }
-
-    @Test
     fun `View transformTo animates between views in a container`() {
         val a =
             Robolectric
@@ -189,40 +157,12 @@ class TransformationUtilsRobolectricTest {
         val v2 = View(a)
         container.addView(v1)
         container.addView(v2)
+        v2.isVisible = false
         a.setContentView(container)
         v1.transformTo(v2)
         shadowOf(Looper.getMainLooper()).idle()
-    }
-
-    @Test
-    fun `performTransform directly covers getContainerTransform and transition logic`() {
-        val a =
-            Robolectric
-                .buildActivity(Activity::class.java)
-                .setup()
-                .track(destroyActivities)
-                .get()
-        val container = FrameLayout(a)
-        val v1 = View(a)
-        val v2 = View(a)
-        container.addView(v1)
-        container.addView(v2)
-        a.setContentView(container)
-        v1.performTransform(container, v2, DEFAULT_DURATION, DEFAULT_FADE_MODE)
-    }
-
-    @Test
-    fun `getContainerTransform returns MaterialContainerTransform with correct settings`() {
-        val a =
-            Robolectric
-                .buildActivity(Activity::class.java)
-                .setup()
-                .track(destroyActivities)
-                .get()
-        val v1 = View(a)
-        val v2 = View(a)
-        val transform = v1.getContainerTransform(v2, 500L, DEFAULT_FADE_MODE)
-        transform.duration shouldBe 500L
+        v1.isVisible shouldBe false
+        v2.isVisible shouldBe true
     }
 
     @Test
