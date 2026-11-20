@@ -22,10 +22,10 @@ import android.content.res.Configuration
 import android.os.Looper
 import android.view.View
 import androidx.activity.BackEventCompat
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.IntentCompat
 import androidx.core.view.isVisible
 import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
 import de.lemke.commonutils.track
@@ -73,12 +73,13 @@ class CommonUtilsAboutMeActivityTest {
             return field.getBoolean(this)
         }
 
-    /** Invokes [OnOffsetChangedListener.onOffsetChanged] directly via the private field. */
-    private fun CommonUtilsAboutMeActivity.dispatchAppBarOffset(offset: Int) {
-        val listenerField = CommonUtilsAboutMeActivity::class.java.getDeclaredField("appBarListener")
-        listenerField.isAccessible = true
-        val listener = listenerField.get(this) as OnOffsetChangedListener
-        listener.onOffsetChanged(findViewById(R.id.aboutAppBar), offset)
+    /** Moves the app bar through its own behavior and lays it out, so the offset listener runs as it does on a device. */
+    private fun CommonUtilsAboutMeActivity.setAppBarOffset(offset: Int) {
+        val appBar = findViewById<AppBarLayout>(R.id.aboutAppBar)
+        val behavior = (appBar.layoutParams as CoordinatorLayout.LayoutParams).behavior as AppBarLayout.Behavior
+        behavior.setTopAndBottomOffset(offset)
+        appBar.requestLayout()
+        shadowOf(Looper.getMainLooper()).idle()
     }
 
     private fun CommonUtilsAboutMeActivity.startedIntent(): Intent = shadowOf(this).nextStartedActivity.shouldNotBeNull()
@@ -113,7 +114,8 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     private fun CommonUtilsAboutMeActivity.collapseAppBar() {
-        dispatchAppBarOffset(-findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange)
+        findViewById<AppBarLayout>(R.id.aboutAppBar).setExpanded(false, false)
+        shadowOf(Looper.getMainLooper()).idle()
     }
 
     private val CommonUtilsAboutMeActivity.bottomContentEnabled: Boolean
@@ -157,8 +159,7 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `AboutAppBarListener onOffsetChanged abs gt half range hides swipe-up and enables bottom content`() {
         val activity = launchActivity()
-        activity.dispatchAppBarOffset(-600)
-        shadowOf(Looper.getMainLooper()).idle()
+        activity.setAppBarOffset(-activity.findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange)
         activity.findViewById<View>(R.id.aboutSwipeUpContainer).alpha shouldBe 0f
         activity.bottomContentEnabled.shouldBeTrue()
     }
@@ -166,9 +167,8 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `AboutAppBarListener onOffsetChanged abs equals zero shows swipe-up and disables bottom content`() {
         val activity = launchActivity()
-        activity.dispatchAppBarOffset(-1000)
-        activity.dispatchAppBarOffset(0)
-        shadowOf(Looper.getMainLooper()).idle()
+        activity.setAppBarOffset(-activity.findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange)
+        activity.setAppBarOffset(0)
         activity.findViewById<View>(R.id.aboutSwipeUpContainer).alpha shouldBe 1f
         activity.bottomContentEnabled.shouldBeFalse()
     }
@@ -177,9 +177,7 @@ class CommonUtilsAboutMeActivityTest {
     fun `AboutAppBarListener onOffsetChanged intermediate offset fades swipe-up with the app bar position`() {
         val activity = launchActivity()
         val appBar = activity.findViewById<AppBarLayout>(R.id.aboutAppBar)
-        appBar.y = -appBar.totalScrollRange / 10f
-        activity.dispatchAppBarOffset(-10)
-        shadowOf(Looper.getMainLooper()).idle()
+        activity.setAppBarOffset(-appBar.totalScrollRange / 10)
         activity.findViewById<View>(R.id.aboutSwipeUpContainer).alpha shouldBe (0.7f plusOrMinus 0.001f)
     }
 
@@ -321,8 +319,7 @@ class CommonUtilsAboutMeActivityTest {
     @Test
     fun `back gesture pressed finishes activity`() {
         val activity = launchActivity()
-        activity.dispatchAppBarOffset(0)
-        shadowOf(Looper.getMainLooper()).idle()
+        activity.setAppBarOffset(0)
 
         activity.onBackPressedDispatcher.onBackPressed()
         activity.isFinishing.shouldBeTrue()
@@ -333,13 +330,11 @@ class CommonUtilsAboutMeActivityTest {
         val activity = launchActivity()
         val totalScrollRange = activity.findViewById<AppBarLayout>(R.id.aboutAppBar).totalScrollRange
 
-        activity.dispatchAppBarOffset(-totalScrollRange)
-        shadowOf(Looper.getMainLooper()).idle()
+        activity.setAppBarOffset(-totalScrollRange)
         activity.backGesture.callback.isEnabled
             .shouldBeTrue()
 
-        activity.dispatchAppBarOffset(-totalScrollRange + 1)
-        shadowOf(Looper.getMainLooper()).idle()
+        activity.setAppBarOffset(-totalScrollRange + 1)
         activity.backGesture.callback.isEnabled
             .shouldBeFalse()
     }

@@ -189,8 +189,6 @@ kover {
                     $$"*CommonUtilsAboutActivity$onCreate*",
                     // AutoClearedUtilsKt: DESTROYED-lifecycle branch needs a re-entrant call during onDestroyView, unsafe to reproduce.
                     $$"*AutoClearedUtilsKt$autoCleared$1*",
-                    // AboutAppBarListener: else branches unreachable under Robolectric since totalScrollRange is always 0.
-                    $$"*CommonUtilsAboutMeActivity$AboutAppBarListener*",
                     // CommonUtilsOOBEActivity: initFooterButton's coroutine completes synchronously, suspension path unreachable.
                     $$"*CommonUtilsOOBEActivity$initFooterButton*",
                     // LottieUtilsKt: null branch is tested, but JaCoCo loads this continuation class too late to attribute it.
