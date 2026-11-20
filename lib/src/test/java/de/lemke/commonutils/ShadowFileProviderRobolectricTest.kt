@@ -17,6 +17,7 @@ package de.lemke.commonutils
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.PackageManager
 import android.content.res.XmlResourceParser
 import android.net.Uri
 import androidx.core.content.FileProvider
@@ -34,9 +35,11 @@ import io.mockk.spyk
 import java.io.File
 import java.io.IOException
 import org.junit.After
+import org.junit.Assume
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.xmlpull.v1.XmlPullParserException
 
@@ -207,24 +210,18 @@ class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
     }
 }
 
-/** Runs on every OS: the parity class above skips where the stock provider cannot resolve paths. */
+/** Exercises the reset on the stock provider; it needs POSIX separators to resolve roots, like the parity class above. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class ResetFileProviderCacheRobolectricTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
-    private fun cacheSize(): Int {
-        val sCache =
-            FileProvider::class.java
-                .getDeclaredField("sCache")
-                .apply { isAccessible = true }
-                .get(null) as Map<*, *>
-        return synchronized(sCache) { sCache.size }
-    }
+    private fun lookUpCacheFile() = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "photo.png"))
 
-    private fun lookUpCacheFile() {
-        // The strategy is cached before the root check; on Windows the check then throws.
-        runCatching { FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File(ctx.cacheDir, "photo.png")) }
+    private fun declareFilesOnlyRoots() {
+        val provider = ctx.packageManager.resolveContentProvider(TEST_AUTHORITY, PackageManager.GET_META_DATA)!!
+        provider.metaData.putInt("android.support.FILE_PROVIDER_PATHS", R.xml.test_file_provider_paths_files_only)
+        shadowOf(ctx.packageManager).addOrUpdateProvider(provider)
     }
 
     @After
@@ -233,15 +230,14 @@ class ResetFileProviderCacheRobolectricTest {
     }
 
     @Test
-    fun `reset empties the stock path-strategy cache and a new lookup fills it again`() {
-        resetFileProviderCache()
-        lookUpCacheFile()
-        cacheSize() shouldBe 1
+    fun `reset makes the stock provider read its declared roots again`() {
+        Assume.assumeTrue(File.separatorChar == '/')
+        lookUpCacheFile().toString() shouldBe "content://$TEST_AUTHORITY/cache_root/photo.png"
+        declareFilesOnlyRoots()
+        lookUpCacheFile().toString() shouldBe "content://$TEST_AUTHORITY/cache_root/photo.png"
 
         resetFileProviderCache()
-        cacheSize() shouldBe 0
 
-        lookUpCacheFile()
-        cacheSize() shouldBe 1
+        shouldThrow<IllegalArgumentException> { lookUpCacheFile() }
     }
 }
