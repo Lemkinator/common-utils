@@ -17,8 +17,11 @@ package de.lemke.commonutils.ui.widget
 
 import android.os.Looper
 import android.view.Gravity.CENTER
+import android.view.Gravity.RELATIVE_HORIZONTAL_GRAVITY_MASK
 import android.view.Gravity.START
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import de.lemke.commonutils.DestroyActivitiesRule
 import de.lemke.commonutils.R
@@ -40,24 +43,6 @@ class InfoBottomSheetTest {
     @get:Rule
     val destroyActivities = DestroyActivitiesRule()
 
-    // newInstance is private on the companion object; access via reflection so tests
-    // cover argument-packing without needing a themed Activity to show the dialog.
-    private fun newInstance(
-        title: String,
-        message: String,
-        gravity: Int = CENTER,
-    ): InfoBottomSheet {
-        val method =
-            InfoBottomSheet.Companion::class.java.getDeclaredMethod(
-                "newInstance",
-                String::class.java,
-                String::class.java,
-                Int::class.java,
-            )
-        method.isAccessible = true
-        return method.invoke(InfoBottomSheet.Companion, title, message, gravity) as InfoBottomSheet
-    }
-
     private fun activity(): AppCompatActivity =
         Robolectric
             .buildActivity(AppCompatActivity::class.java)
@@ -65,30 +50,47 @@ class InfoBottomSheetTest {
             .track(destroyActivities)
             .get()
 
-    // ── newInstance / argument packing ─────────────────────────────────────────
+    private fun AppCompatActivity.shownSheet(): InfoBottomSheet {
+        shadowOf(Looper.getMainLooper()).idle()
+        return supportFragmentManager.findFragmentByTag("InfoBottomSheet") as InfoBottomSheet
+    }
+
+    private fun InfoBottomSheet.text(id: Int): TextView = view!!.findViewById(id)
+
+    // ── argument packing ───────────────────────────────────────────────────────
 
     @Test
     fun `title is stored in arguments bundle`() {
-        val frag = newInstance("Hello", "World")
-        frag.arguments!!.getString(InfoBottomSheet.KEY_TITLE) shouldBe "Hello"
+        val a = activity()
+        a.showInfoBottomSheet("Hello", "World")
+        a.shownSheet().arguments!!.getString(InfoBottomSheet.KEY_TITLE) shouldBe "Hello"
     }
 
     @Test
     fun `message is stored in arguments bundle`() {
-        val frag = newInstance("T", "My Message")
-        frag.arguments!!.getString(InfoBottomSheet.KEY_MESSAGE) shouldBe "My Message"
+        val a = activity()
+        a.showInfoBottomSheet("T", "My Message")
+        a.shownSheet().arguments!!.getString(InfoBottomSheet.KEY_MESSAGE) shouldBe "My Message"
     }
 
     @Test
     fun `text gravity defaults to CENTER`() {
-        val frag = newInstance("T", "M")
-        frag.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY) shouldBe CENTER
+        val a = activity()
+        a.showInfoBottomSheet("T", "M")
+        val sheet = a.shownSheet()
+        sheet.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY) shouldBe CENTER
+        sheet.text(R.id.infoTitle).gravity shouldBe CENTER
+        sheet.text(R.id.infoMessage).gravity shouldBe CENTER
     }
 
     @Test
     fun `explicit text gravity is preserved`() {
-        val frag = newInstance("T", "M", START)
-        frag.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY) shouldBe START
+        val a = activity()
+        a.showInfoBottomSheet("T", "M", START)
+        val sheet = a.shownSheet()
+        sheet.arguments!!.getInt(InfoBottomSheet.KEY_TEXT_GRAVITY) shouldBe START
+        sheet.text(R.id.infoTitle).gravity and RELATIVE_HORIZONTAL_GRAVITY_MASK shouldBe START
+        sheet.text(R.id.infoMessage).gravity and RELATIVE_HORIZONTAL_GRAVITY_MASK shouldBe START
     }
 
     // ── showInfoBottomSheet companion overloads + lifecycle ────────────────────
@@ -181,22 +183,28 @@ class InfoBottomSheetTest {
     @Test
     fun `onViewCreated with title and message covers non-blank branches`() {
         val a = activity()
-        newInstance("Real Title", "Real Message", START).showNow(a.supportFragmentManager, "full_tag")
-        shadowOf(Looper.getMainLooper()).idle()
+        a.showInfoBottomSheet("Real Title", "Real Message", START)
+        val sheet = a.shownSheet()
+        sheet.text(R.id.infoTitle).text.toString() shouldBe "Real Title"
+        sheet.text(R.id.infoMessage).text.toString() shouldBe "Real Message"
     }
 
     @Test
     fun `onViewCreated with blank title covers isNullOrBlank true branch for title`() {
         val a = activity()
-        newInstance("", "Some message").showNow(a.supportFragmentManager, "blank_t_tag")
-        shadowOf(Looper.getMainLooper()).idle()
+        a.showInfoBottomSheet("", "Some message")
+        val sheet = a.shownSheet()
+        sheet.text(R.id.infoTitle).isVisible shouldBe false
+        sheet.text(R.id.infoMessage).isVisible shouldBe true
     }
 
     @Test
     fun `onViewCreated with blank message covers isNullOrBlank true branch for message`() {
         val a = activity()
-        newInstance("A Title", "").showNow(a.supportFragmentManager, "blank_m_tag")
-        shadowOf(Looper.getMainLooper()).idle()
+        a.showInfoBottomSheet("A Title", "")
+        val sheet = a.shownSheet()
+        sheet.text(R.id.infoTitle).isVisible shouldBe true
+        sheet.text(R.id.infoMessage).isVisible shouldBe false
     }
 
     @Test
@@ -209,11 +217,11 @@ class InfoBottomSheetTest {
     @Test
     fun `onDismiss is called when sheet is dismissed`() {
         val a = activity()
-        val fragment = newInstance("T", "M")
-        fragment.showNow(a.supportFragmentManager, "dismiss_tag")
-        shadowOf(Looper.getMainLooper()).idle()
-        fragment.dismiss()
+        a.showInfoBottomSheet("T", "M")
+        val sheet = a.shownSheet()
+        sheet.dismiss()
         a.supportFragmentManager.executePendingTransactions()
         shadowOf(Looper.getMainLooper()).idle()
+        a.supportFragmentManager.findFragmentByTag("InfoBottomSheet") shouldBe null
     }
 }
