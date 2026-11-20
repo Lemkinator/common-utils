@@ -70,7 +70,7 @@ resolves roots per call and keeps no strategy cache. `FileProviderContentContrac
 `resetFileProviderCache()` in its own `@After`, so no subclass can drop it: stock `getUriForFile` caches the path strategy per authority
 and Robolectric does not attach the provider again for the next test, so a root cached by the previous test makes it throw.
 `resetFileProviderCache()` attaches a fresh `FileProvider` to each declared provider that is not exported and grants URI
-permissions; `attachInfo` drops the authority from the cache.
+permissions, once per authority; `FileProvider.attachInfo` drops that authority from the cache.
 `FileProviderContentContract` (`src/testShared`) holds the stock-provider tests; the Robolectric shadow test and
 `StockFileProviderInstrumentedTest` (stock `FileProvider` on a device) both run it.
 
