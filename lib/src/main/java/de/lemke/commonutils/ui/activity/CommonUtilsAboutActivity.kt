@@ -94,8 +94,7 @@ public class CommonUtilsAboutActivity : AppCompatActivity() {
     }
 
     /** Handles the main button click: retries update check when offline, or starts the update flow. */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onMainButtonClicked() {
+    private fun onMainButtonClicked() {
         if (binding.appInfoLayout.updateStatus == NoConnection) {
             binding.appInfoLayout.updateStatus = Loading
             checkUpdate()
