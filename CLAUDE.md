@@ -154,13 +154,11 @@ singleton after each test, not just defensively before it — for pending main-L
 add `@get:Rule val drainMainLooper = DrainMainLooperRule()` rather than hand-rolling an
 `@After` method per test class.
 
-**`@NoCoverage` on `inline fun`** (each module declares its own internal `NoCoverage`): Kover maps inline call-site coverage back to the original
-definition via JaCoCo SMAP data. This requires `@NoCoverage` on all `inline fun` that are
-never called non-inline, and unconditionally on `crossinline` default-value lambdas (the
-default compiles to a definition-site private static method that's never invoked, since the
-default is inlined at every call site regardless of runner). These annotations predate the
-JUnit 4 migration above and haven't been re-audited against the new runner — some may now
-be unnecessary; treat that as an open follow-up, not a settled fact.
+**`@NoCoverage`** (each module declares its own internal `NoCoverage`; Kover reads it through `annotatedBy`): it sits on
+`inline` functions only, because Kotlin copies an inline body into each caller and the definition itself never runs.
+`NoCoverageConventionsTest` fails on the mark on any other declaration. Each marked function has tests that call it, on
+every arm (`@Config(sdk = ...)` selects the `SDK_INT` arm). The Kover class excludes of each module hold only generated
+code (Hilt, data binding, `BuildConfig`); no hand-written class pattern hides code.
 
 ## Dependency Analysis
 
