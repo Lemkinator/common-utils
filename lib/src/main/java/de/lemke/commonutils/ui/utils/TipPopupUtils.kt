@@ -63,9 +63,8 @@ private fun View.showTipPopupWithOverlay(
     actionText: String?,
     action: () -> Unit,
 ): TipPopup {
-    val rootView =
-        context.activity?.let { it.window.decorView.rootView } as? ViewGroup
-            ?: error("showTipPopup requires an Activity context with an initialized window")
+    val activity = checkNotNull(context.activity) { "showTipPopup requires an Activity context with an initialized window" }
+    val rootView = activity.window.decorView.rootView as ViewGroup
     rootView.addView(overlay)
     return showTipPopup(rootView, overlay, message, actionText, action)
 }
