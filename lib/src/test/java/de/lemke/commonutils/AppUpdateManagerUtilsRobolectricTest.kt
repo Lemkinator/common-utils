@@ -23,7 +23,9 @@ import com.google.android.gms.tasks.Tasks
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
-import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.android.play.core.appupdate.testing.FakeAppUpdateManager
+import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+import com.google.android.play.core.install.model.UpdateAvailability.UNKNOWN
 import de.lemke.commonutils.ui.utils.onAppUpdateAvailable
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -49,27 +51,27 @@ class AppUpdateManagerUtilsRobolectricTest {
 
     @Test
     fun `an available update runs the action`() {
-        checkUpdate(UpdateAvailability.UPDATE_AVAILABLE) shouldBe true
+        checkUpdate(FakeAppUpdateManager(ctx).apply { setUpdateAvailable(2) }) shouldBe true
     }
 
     @Test
     fun `an update in progress does not run the action`() {
-        checkUpdate(UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) shouldBe false
+        checkUpdate(DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) shouldBe false
     }
 
     @Test
     fun `no update does not run the action`() {
-        checkUpdate(UpdateAvailability.UPDATE_NOT_AVAILABLE) shouldBe false
+        checkUpdate(FakeAppUpdateManager(ctx).apply { setUpdateNotAvailable() }) shouldBe false
     }
 
     @Test
     fun `unknown availability does not run the action`() {
-        checkUpdate(UpdateAvailability.UNKNOWN) shouldBe false
+        checkUpdate(UNKNOWN) shouldBe false
     }
 
     @Test
     fun `a failed check does not run the action`() {
-        stubManager(Tasks.forException(IllegalStateException("offline")))
+        stubManager(managerWith(Tasks.forException(IllegalStateException("offline"))))
         var called = false
 
         ctx.onAppUpdateAvailable { called = true }
@@ -80,7 +82,11 @@ class AppUpdateManagerUtilsRobolectricTest {
 
     private fun checkUpdate(availability: Int): Boolean {
         val info = mockk<AppUpdateInfo> { every { updateAvailability() } returns availability }
-        stubManager(Tasks.forResult(info))
+        return checkUpdate(managerWith(Tasks.forResult(info)))
+    }
+
+    private fun checkUpdate(manager: AppUpdateManager): Boolean {
+        stubManager(manager)
         var called = false
 
         ctx.onAppUpdateAvailable { called = true }
@@ -89,8 +95,9 @@ class AppUpdateManagerUtilsRobolectricTest {
         return called
     }
 
-    private fun stubManager(task: Task<AppUpdateInfo>) {
-        val manager = mockk<AppUpdateManager> { every { appUpdateInfo } returns task }
+    private fun managerWith(task: Task<AppUpdateInfo>) = mockk<AppUpdateManager> { every { appUpdateInfo } returns task }
+
+    private fun stubManager(manager: AppUpdateManager) {
         mockkStatic(AppUpdateManagerFactory::class)
         every { AppUpdateManagerFactory.create(any()) } returns manager
     }

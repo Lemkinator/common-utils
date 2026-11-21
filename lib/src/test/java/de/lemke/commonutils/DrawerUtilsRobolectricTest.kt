@@ -23,12 +23,11 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import com.google.android.gms.tasks.Tasks
+import androidx.test.core.app.ApplicationProvider
 import com.google.android.material.navigation.NavigationView
-import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
-import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.android.play.core.appupdate.testing.FakeAppUpdateManager
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
 import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_IS_ACTION_MODE
 import de.lemke.commonutils.ui.utils.COMMONUTILS_KEY_IS_SEARCH_MODE
@@ -159,7 +158,7 @@ class DrawerUtilsRobolectricTest {
 
     @Test
     fun `setupHeaderAndNavRail makes the header button open the about screen`() {
-        stubUpdateAvailability(UpdateAvailability.UPDATE_NOT_AVAILABLE)
+        stubManager(FakeAppUpdateManager(ApplicationProvider.getApplicationContext()).apply { setUpdateNotAvailable() })
         val activity = themedActivity()
         val drawer = NavDrawerLayout(activity)
         activity.setContentView(drawer)
@@ -172,7 +171,7 @@ class DrawerUtilsRobolectricTest {
 
     @Test
     fun `setupHeaderAndNavRail badges the header button when an update is available`() {
-        stubUpdateAvailability(UpdateAvailability.UPDATE_AVAILABLE)
+        stubManager(FakeAppUpdateManager(ApplicationProvider.getApplicationContext()).apply { setUpdateAvailable(2) })
         val activity = themedActivity()
         val drawer = NavDrawerLayout(activity)
         activity.setContentView(drawer)
@@ -191,9 +190,7 @@ class DrawerUtilsRobolectricTest {
             .track(destroyActivities)
             .get()
 
-    private fun stubUpdateAvailability(availability: Int) {
-        val info = mockk<AppUpdateInfo> { every { updateAvailability() } returns availability }
-        val manager = mockk<AppUpdateManager> { every { appUpdateInfo } returns Tasks.forResult(info) }
+    private fun stubManager(manager: AppUpdateManager) {
         mockkStatic(AppUpdateManagerFactory::class)
         every { AppUpdateManagerFactory.create(any()) } returns manager
     }
