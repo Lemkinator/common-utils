@@ -24,6 +24,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreferenceCompat
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.ui.utils.deleteAppDataAndExit
 import de.lemke.commonutils.ui.utils.initCommonUtilsPreferences
@@ -49,6 +50,18 @@ class EmptyPreferencesFragment : PreferenceFragmentCompat() {
         rootKey: String?,
     ) {
         preferenceScreen = preferenceManager.createPreferenceScreen(requireContext())
+    }
+}
+
+class AutoDarkModeOnlyPreferencesFragment : PreferenceFragmentCompat() {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?,
+    ) {
+        preferenceScreen = preferenceManager.createPreferenceScreen(requireContext())
+        preferenceScreen.addPreference(
+            SwitchPreferenceCompat(requireContext()).apply { key = getString(R.string.commonutils_preference_key_auto_dark_mode) },
+        )
     }
 }
 
@@ -111,24 +124,36 @@ class PreferenceUtilsRobolectricTest {
 
     @Test
     fun `initCommonUtilsPreferences logs and skips the dark mode setup when the screen lacks its preferences`() {
+        initDarkModeErrors(EmptyPreferencesFragment()) shouldBe listOf(DARK_MODE_SKIPPED)
+    }
+
+    @Test
+    fun `initCommonUtilsPreferences logs and skips the dark mode setup when only the auto dark mode preference exists`() {
+        initDarkModeErrors(AutoDarkModeOnlyPreferencesFragment()) shouldBe listOf(DARK_MODE_SKIPPED)
+    }
+
+    private fun initDarkModeErrors(preferences: PreferenceFragmentCompat): List<String> {
         val themed =
             Robolectric
                 .buildActivity(NoActionBarTestActivity::class.java)
                 .setup()
                 .track(destroyActivities)
                 .get()
-        val preferences = EmptyPreferencesFragment()
         themed.supportFragmentManager
             .beginTransaction()
-            .add(preferences, "emptyPreferences")
+            .add(preferences, "preferences")
             .commitNow()
         ShadowLog.clear()
 
         preferences.initCommonUtilsPreferences(SettingsRepository(freshTestPreferences()))
 
-        ShadowLog
+        return ShadowLog
             .getLogsForTag("PreferenceUtils")
             .filter { it.type == Log.ERROR }
-            .map { it.msg } shouldBe listOf("autoDarkModePref or darkModePref is null, skipping initialization")
+            .map { it.msg }
+    }
+
+    private companion object {
+        const val DARK_MODE_SKIPPED = "autoDarkModePref or darkModePref is null, skipping initialization"
     }
 }

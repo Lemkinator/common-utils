@@ -16,7 +16,6 @@
 package de.lemke.commonutils.ui.utils
 
 import android.app.ActivityManager
-import android.content.Context.ACTIVITY_SERVICE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.res.Configuration.UI_MODE_NIGHT_MASK
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -134,7 +133,7 @@ public fun Fragment.deleteAppDataAndExit(
 
 private suspend fun Fragment.deleteAppData() {
     delay(DELETE_APP_DATA_DELAY_MS.milliseconds)
-    (context?.getSystemService(ACTIVITY_SERVICE) as? ActivityManager)?.clearApplicationUserData()
+    requireContext().withSystemService(ActivityManager::class.java) { it.clearApplicationUserData() }
 }
 
 private fun PreferenceFragmentCompat.initDarkMode() {
