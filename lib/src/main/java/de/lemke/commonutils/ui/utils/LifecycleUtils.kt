@@ -21,7 +21,6 @@ import androidx.lifecycle.Lifecycle.State
 import androidx.lifecycle.Lifecycle.State.STARTED
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import de.lemke.commonutils.NoCoverage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,7 +29,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Launches [block] in the lifecycle scope, repeating it whenever the lifecycle reaches [minActiveState]. */
-@NoCoverage
 public inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
     minActiveState: State = STARTED,
     crossinline block: suspend CoroutineScope.() -> Unit,
@@ -39,7 +37,6 @@ public inline fun AppCompatActivity.launchAndRepeatWithLifecycle(
 }
 
 /** Launches [block] in the view lifecycle scope, repeating it whenever the view lifecycle reaches [minActiveState]. */
-@NoCoverage
 public inline fun Fragment.launchAndRepeatWithViewLifecycle(
     minActiveState: State = STARTED,
     crossinline block: suspend CoroutineScope.() -> Unit,
