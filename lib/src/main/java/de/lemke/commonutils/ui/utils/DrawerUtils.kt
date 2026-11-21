@@ -17,7 +17,6 @@ package de.lemke.commonutils.ui.utils
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.content.res.AppCompatResources
 import com.google.android.material.navigation.NavigationView
 import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.ui.activity.CommonUtilsAboutActivity
@@ -77,7 +76,7 @@ public inline fun Bundle?.restoreSearchAndActionMode(
  */
 public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
     setupHeaderButton(
-        icon = checkNotNull(AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)) { "Missing info icon drawable" },
+        icon = context.resources.getDrawable(iconsR.drawable.ic_oui_info_outline, context.theme),
         tooltipText = aboutApp,
         listener = View::openAboutActivity,
     )
