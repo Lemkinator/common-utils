@@ -76,11 +76,9 @@ public inline fun Bundle?.restoreSearchAndActionMode(
  * and configures the nav rail.
  */
 public fun NavDrawerLayout.setupHeaderAndNavRail(aboutApp: String) {
-    setupHeaderButton(
-        icon = checkNotNull(AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline)) { "Missing info icon drawable" },
-        tooltipText = aboutApp,
-        listener = View::openAboutActivity,
-    )
+    setHeaderButtonIcon(AppCompatResources.getDrawable(context, iconsR.drawable.ic_oui_info_outline))
+    setHeaderButtonTooltip(aboutApp)
+    setHeaderButtonOnClickListener(View::openAboutActivity)
     setNavRailContentMinSideMargin(NAV_RAIL_MIN_SIDE_MARGIN_DP)
     closeNavRailOnBack = true
     context.onAppUpdateAvailable { setButtonBadges(Badge.DOT, Badge.DOT) }
