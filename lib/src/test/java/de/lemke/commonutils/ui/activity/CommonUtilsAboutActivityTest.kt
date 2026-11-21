@@ -143,6 +143,14 @@ class CommonUtilsAboutActivityTest {
     }
 
     @Test
+    fun `an update check without any active network shows NoConnection`() {
+        val connectivity = ApplicationProvider.getApplicationContext<Context>().getSystemService(ConnectivityManager::class.java)
+        shadowOf(connectivity).setActiveNetworkInfo(null)
+
+        launchActivity { activity -> activity.updateStatus() shouldBe NoConnection }
+    }
+
+    @Test
     fun `update button click without a connection checks again once the network is validated`() {
         launchActivity { activity ->
             val appInfo = activity.findViewById<AppInfoLayout>(R.id.appInfoLayout)

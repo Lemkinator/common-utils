@@ -24,6 +24,7 @@ import de.lemke.commonutils.ui.utils.showDimmingTipPopup
 import de.lemke.commonutils.ui.utils.showTouchBlockingTipPopup
 import de.lemke.commonutils.ui.widget.DimmingView
 import de.lemke.commonutils.ui.widget.TouchBlockingView
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -113,6 +114,15 @@ class TipPopupUtilsRobolectricTest {
     }
 
     @Test
+    fun `showDimmingTipPopup with only a message resource labels the action OK`() {
+        anchor.showDimmingTipPopup(R.string.commonutils_share)
+        idle()
+
+        popupActionButton("Share").isShown shouldBe true
+        popupActionButton("Ok").isShown shouldBe true
+    }
+
+    @Test
     fun `showTouchBlockingTipPopup resolves message and action from string resources`() {
         anchor.showTouchBlockingTipPopup(R.string.commonutils_share, R.string.commonutils_delete)
         idle()
@@ -120,5 +130,34 @@ class TipPopupUtilsRobolectricTest {
         popupActionButton("Share").isShown shouldBe true
         popupActionButton("Delete").isShown shouldBe true
         root.children.count { it is TouchBlockingView } shouldBe 1
+    }
+
+    @Test
+    fun `showTouchBlockingTipPopup with only a message resource labels the action OK`() {
+        anchor.showTouchBlockingTipPopup(R.string.commonutils_share)
+        idle()
+
+        popupActionButton("Share").isShown shouldBe true
+        popupActionButton("Ok").isShown shouldBe true
+    }
+
+    @Test
+    fun `showTouchBlockingTipPopup with only a message labels the action OK and removes the overlay with it`() {
+        anchor.showTouchBlockingTipPopup("Tip message")
+        idle()
+        root.children.any { it is TouchBlockingView }.shouldBeTrue()
+
+        popupActionButton("Ok").performClick()
+        idle()
+
+        root.children.any { it is TouchBlockingView }.shouldBeFalse()
+    }
+
+    @Test
+    fun `showing a tip popup from a view outside an activity fails`() {
+        val detached = View(activity.applicationContext)
+
+        shouldThrow<IllegalStateException> { detached.showDimmingTipPopup("Tip message") }
+            .message shouldBe "showTipPopup requires an Activity context with an initialized window"
     }
 }
