@@ -22,8 +22,10 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_SHORT
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.SESL_SNACKBAR_TYPE_SUGGESTION
+import de.lemke.commonutils.NoCoverage
 
 /** Shows a OneUI suggestive snackbar with [msg] string resource and an optional action. */
+@NoCoverage
 public inline fun Fragment.suggestiveSnackBar(
     @StringRes msg: Int,
     view: View? = null,
@@ -33,6 +35,7 @@ public inline fun Fragment.suggestiveSnackBar(
 ): Snackbar = requireActivity().suggestiveSnackBar(msg, view, duration, actionText, action)
 
 /** Shows a OneUI suggestive snackbar with [msg] and an optional action. */
+@NoCoverage
 public inline fun Fragment.suggestiveSnackBar(
     msg: String,
     view: View? = null,
@@ -42,6 +45,7 @@ public inline fun Fragment.suggestiveSnackBar(
 ): Snackbar = requireActivity().suggestiveSnackBar(msg, view, duration, actionText, action)
 
 /** Shows a OneUI suggestive snackbar with [msg] string resource and an optional action. */
+@NoCoverage
 public inline fun Activity.suggestiveSnackBar(
     @StringRes msg: Int,
     view: View? = null,
