@@ -52,6 +52,11 @@ class SystemServiceUtilsRobolectricTest {
     }
 
     @Test
+    fun `withSystemService with onMissing keeps a null result of the action for a registered service`() {
+        ctx.withSystemService<ClipboardManager, String?>(ClipboardManager::class.java, onMissing = { "missing" }) { null } shouldBe null
+    }
+
+    @Test
     fun `withSystemService with onMissing returns the fallback for a class without a system service`() {
         ctx.withSystemService(String::class.java, onMissing = { "missing" }) { "found" } shouldBe "missing"
     }

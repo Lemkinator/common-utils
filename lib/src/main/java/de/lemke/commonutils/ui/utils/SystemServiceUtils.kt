@@ -33,7 +33,10 @@ public fun <T, R> Context.withSystemService(
     serviceClass: Class<T>,
     onMissing: () -> R,
     action: (T) -> R,
-): R = ContextCompat.getSystemService(this, serviceClass)?.let(action) ?: onMissing()
+): R {
+    val service = ContextCompat.getSystemService(this, serviceClass) ?: return onMissing()
+    return action(service)
+}
 
 /** Requests focus and shows the soft keyboard for this view. */
 public fun View.showSoftInput(flags: Int = 0) {
