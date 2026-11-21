@@ -17,6 +17,8 @@ package de.lemke.commonutils
 
 import android.view.View
 import androidx.activity.BackEventCompat
+import androidx.appcompat.R.color.sesl_round_and_bgcolor_dark
+import androidx.appcompat.R.color.sesl_round_and_bgcolor_light
 import androidx.appcompat.app.AppCompatActivity
 import androidx.reflect.SeslBaseReflector
 import de.lemke.commonutils.data.InAppReviewCooldown
@@ -96,8 +98,14 @@ class PredictiveBackGestureUtilsRobolectricTest {
     }
 
     @Test
-    fun `defaultWindowBackground returns a valid resource id`() {
-        activity.defaultWindowBackground shouldNotBe 0
+    fun `defaultWindowBackground is the light background in the default theme`() {
+        activity.defaultWindowBackground shouldBe sesl_round_and_bgcolor_light
+    }
+
+    @Test
+    @Config(qualifiers = "night")
+    fun `defaultWindowBackground is the dark background in the night theme`() {
+        activity.defaultWindowBackground shouldBe sesl_round_and_bgcolor_dark
     }
 
     @Test

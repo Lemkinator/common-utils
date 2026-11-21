@@ -217,6 +217,5 @@ public fun AppCompatActivity.setWindowTransparent(transparent: Boolean) {
 
 /** The theme-appropriate default window background color for this activity. */
 public val AppCompatActivity.defaultWindowBackground: Int
-    @NoCoverage
     @SuppressLint("RestrictedApi", "PrivateResource")
     get() = if (isLightTheme(this)) sesl_round_and_bgcolor_light else sesl_round_and_bgcolor_dark

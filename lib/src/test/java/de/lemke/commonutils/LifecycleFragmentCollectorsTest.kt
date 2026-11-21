@@ -22,7 +22,9 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import de.lemke.commonutils.ui.utils.collectState
+import de.lemke.commonutils.ui.utils.launchAndRepeatWithViewLifecycle
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
@@ -91,5 +93,34 @@ class FragmentCollectStateUpdateTest {
         flow.value = 2
         Shadows.shadowOf(Looper.getMainLooper()).idle()
         collected shouldBe listOf(1, 2)
+    }
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class FragmentLaunchAndRepeatTest {
+    @get:Rule
+    val destroyActivities = DestroyActivitiesRule()
+
+    @Test
+    fun `launchAndRepeatWithViewLifecycle runs the block once the view is started`() {
+        val fragment = attachedFragment(destroyActivities)
+        var runs = 0
+
+        fragment.launchAndRepeatWithViewLifecycle { runs++ }
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        runs shouldBe 1
+    }
+
+    @Test
+    fun `launchAndRepeatWithViewLifecycle with RESUMED runs the block once the view is resumed`() {
+        val fragment = attachedFragment(destroyActivities)
+        var runs = 0
+
+        fragment.launchAndRepeatWithViewLifecycle(Lifecycle.State.RESUMED) { runs++ }
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        runs shouldBe 1
     }
 }

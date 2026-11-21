@@ -27,7 +27,6 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
-import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
@@ -39,7 +38,6 @@ import com.google.android.play.core.install.model.UpdateAvailability.DEVELOPER_T
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_AVAILABLE
 import com.google.android.play.core.install.model.UpdateAvailability.UPDATE_NOT_AVAILABLE
 import dagger.hilt.android.AndroidEntryPoint
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.databinding.ActivityAboutBinding
@@ -109,8 +107,7 @@ public class CommonUtilsAboutActivity : AppCompatActivity() {
      * For immediate updates [RESULT_OK] may never arrive because the update finishes
      * before control is returned to the app.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun onUpdateFlowResult(resultCode: Int) {
+    private fun onUpdateFlowResult(resultCode: Int) {
         when (resultCode) {
             RESULT_OK -> Log.d(TAG, "Update successful")
             RESULT_CANCELED -> Log.w(TAG, "Update canceled")
@@ -118,7 +115,6 @@ public class CommonUtilsAboutActivity : AppCompatActivity() {
         }
     }
 
-    @NoCoverage
     private fun onUpdateActivityResult(result: ActivityResult) = onUpdateFlowResult(result.resultCode)
 
     private fun setVersionText() {
@@ -143,7 +139,6 @@ public class CommonUtilsAboutActivity : AppCompatActivity() {
         }
     }
 
-    @NoCoverage
     private fun checkUpdate() {
         Log.i(TAG, "Checking for updates")
         val connectivityManager = getSystemService(ConnectivityManager::class.java)
@@ -158,10 +153,6 @@ public class CommonUtilsAboutActivity : AppCompatActivity() {
             .addOnFailureListener(::onUpdateFetchFailed)
     }
 
-    // Play Core callbacks: require a live Google Play Store connection, untestable in JVM tests.
-    // The generated thin-wrapper lambda classes are excluded by Kover class-name patterns in build.gradle.kts.
-
-    @NoCoverage
     private fun onUpdateAvailabilityFetched(info: AppUpdateInfo) {
         appUpdateInfo = info
         when {
@@ -170,21 +161,17 @@ public class CommonUtilsAboutActivity : AppCompatActivity() {
         }
     }
 
-    @NoCoverage
     private fun onUpdateFetchFailed(exception: Exception) {
         binding.appInfoLayout.updateStatus = NotUpdatable
         Log.w(TAG, exception.message.toString())
     }
 
-    @NoCoverage
     private fun onResumeUpdateCheck(info: AppUpdateInfo) {
         if (info.updateAvailability() == DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
             startUpdateFlow()
         }
     }
 
-    // startUpdateFlow calls Play Core's startUpdateFlowForResult, which requires the live Play Store.
-    @NoCoverage
     @Suppress("TooGenericExceptionCaught")
     private fun startUpdateFlow() {
         try {

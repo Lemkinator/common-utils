@@ -16,7 +16,6 @@
 package de.lemke.commonutils.ui.utils
 
 import android.app.ActivityManager
-import android.content.Context.ACTIVITY_SERVICE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.res.Configuration.UI_MODE_NIGHT_MASK
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -35,7 +34,6 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreferenceCompat
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SaveLocation
 import de.lemke.commonutils.data.SettingsRepository
@@ -54,7 +52,6 @@ private const val DELETE_APP_DATA_DELAY_MS = 500L
 private const val DELETE_APP_DATA_DIALOG_TAG = "commonutils_delete_app_data"
 
 /** Adds a relative-links card with "Share app" and "Rate app" actions to the preference screen. */
-@NoCoverage
 public fun PreferenceFragmentCompat.addShareAppAndRateRelativeLinksCard() {
     addRelativeLinksCard(
         RelativeLink(getString(R.string.commonutils_share_app)) { shareApp() },
@@ -134,13 +131,11 @@ public fun Fragment.deleteAppDataAndExit(
     }
 }
 
-@NoCoverage
 private suspend fun Fragment.deleteAppData() {
     delay(DELETE_APP_DATA_DELAY_MS.milliseconds)
-    (context?.getSystemService(ACTIVITY_SERVICE) as? ActivityManager)?.clearApplicationUserData()
+    requireContext().withSystemService(ActivityManager::class.java) { it.clearApplicationUserData() }
 }
 
-@NoCoverage
 private fun PreferenceFragmentCompat.initDarkMode() {
     val darkModePref = findPreference<HorizontalRadioPreference>(getString(R.string.commonutils_preference_key_dark_mode))
     val autoDarkModePref = findPreference<SwitchPreferenceCompat>(getString(R.string.commonutils_preference_key_auto_dark_mode))

@@ -20,7 +20,6 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import androidx.annotation.ColorInt
 import androidx.core.content.edit
-import de.lemke.commonutils.NoCoverage
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -74,8 +73,10 @@ public fun <R, T, S> ReadWriteProperty<R, T>.mapped(
     }
 
 /** Parses [raw] as a comma-joined int list; null (→ delegate falls back to its default) if null, empty, or unparsable. */
-@NoCoverage // toIntOrNull()'s inlined radix-range check is unreachable at radix=10.
-private fun parseIntList(raw: String?): List<Int>? = raw?.split(",")?.mapNotNull { it.toIntOrNull() }?.takeIf { it.isNotEmpty() }
+private fun parseIntList(raw: String?): List<Int>? {
+    if (raw == null) return null
+    return raw.split(",").mapNotNull { it.toIntOrNull() }.takeIf { it.isNotEmpty() }
+}
 
 /** Factory for type-safe [ReadWriteProperty] delegates backed by [SharedPreferences]. */
 public class SharedPreferenceDelegates(

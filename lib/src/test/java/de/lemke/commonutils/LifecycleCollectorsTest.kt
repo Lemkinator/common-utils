@@ -17,7 +17,9 @@ package de.lemke.commonutils
 
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import de.lemke.commonutils.ui.utils.collectState
+import de.lemke.commonutils.ui.utils.launchAndRepeatWithLifecycle
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
@@ -66,5 +68,35 @@ class LifecycleCollectorsTest {
         stateFlow.value = 99
         idle()
         stateCollected shouldBe listOf(42, 99)
+    }
+
+    @Test
+    fun `launchAndRepeatWithLifecycle runs the block once the activity is started`() {
+        val activity = launchActivity()
+        var runs = 0
+
+        activity.launchAndRepeatWithLifecycle { runs++ }
+        idle()
+
+        runs shouldBe 1
+    }
+
+    @Test
+    fun `launchAndRepeatWithLifecycle with RESUMED waits for the resumed state`() {
+        val controller =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .create()
+                .start()
+                .track(destroyActivities)
+        var runs = 0
+
+        controller.get().launchAndRepeatWithLifecycle(Lifecycle.State.RESUMED) { runs++ }
+        idle()
+        runs shouldBe 0
+
+        controller.resume()
+        idle()
+        runs shouldBe 1
     }
 }

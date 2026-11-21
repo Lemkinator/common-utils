@@ -167,36 +167,13 @@ kover {
                     "*.BuildConfig",
                     "*Hilt_*",
                     "*_HiltModules*",
-                    "*_Factory",
+                    "*_*Factory",
+                    "*.HiltWrapper_*",
                     "*_Provide*",
                     "*_MembersInjector",
                     "dagger.hilt.*",
                     "hilt_aggregated_deps.*",
-                    "*.di.*",
-                    // Play Core: requires live device + Play Store; SAM lambdas slip past annotatedBy.
-                    "*AppUpdateManagerUtilsKt*",
-                    // TipPopupUtils: requires OneUI TipPopup widget + real decorView root, can't instantiate under Robolectric.
-                    "*TipPopupUtilsKt*",
-                    // PreferenceUtilsKt: OneUI listView extension lambda, can't exercise under Robolectric.
-                    $$"*PreferenceUtilsKt$addShareAppAndRateRelativeLinksCard*",
-                    // DrawerUtilsKt: requires OneUI NavDrawerLayout, untestable in JVM tests.
-                    $$"*DrawerUtilsKt$setupHeaderAndNavRail*",
-                    // PreferenceUtilsKt: deleteAppDataAndExit's coroutine calls clearApplicationUserData(), untestable in JVM.
-                    $$"*PreferenceUtilsKt$deleteAppDataAndExit*",
-                    // CommonUtilsLibsActivity: Compose setContent{} lambda needs UI rendering; no Compose test infra here.
-                    "*CommonUtilsLibsActivity*",
-                    // CommonUtilsAboutActivity: onCreate's SAM wrappers fire only via live Play Store callbacks.
-                    $$"*CommonUtilsAboutActivity$onCreate*",
-                    // AutoClearedUtilsKt: DESTROYED-lifecycle branch needs a re-entrant call during onDestroyView, unsafe to reproduce.
-                    $$"*AutoClearedUtilsKt$autoCleared$1*",
-                    // CommonUtilsOOBEActivity: initFooterButton's coroutine completes synchronously, suspension path unreachable.
-                    $$"*CommonUtilsOOBEActivity$initFooterButton*",
-                    // LottieUtilsKt: null branch is tested, but JaCoCo loads this continuation class too late to attribute it.
-                    $$"*LottieUtilsKt$launchDelayedPlay*",
-                    // OnboardingContext$Creator: @Parcelize-generated null-checks are synthetic, never reached directly.
-                    $$"*OnboardingContext$Creator*",
                 )
-                // inline fun definition-site stubs are unreachable under JUnit 5 + Robolectric; see CLAUDE.md §@NoCoverage.
                 annotatedBy("de.lemke.commonutils.NoCoverage")
             }
         }

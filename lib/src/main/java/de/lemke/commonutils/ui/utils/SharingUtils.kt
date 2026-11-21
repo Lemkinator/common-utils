@@ -25,7 +25,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
-import de.lemke.commonutils.NoCoverage
 import de.lemke.commonutils.R
 import java.io.File
 import java.io.FileOutputStream
@@ -193,17 +192,11 @@ internal fun Context.deleteExpiredCacheWrites(
 /** Encodes this bitmap as a lossless PNG into [out]; returns false if the bitmap cannot be encoded. */
 internal fun Bitmap.writePng(out: OutputStream): Boolean = compress(Bitmap.CompressFormat.PNG, PNG_QUALITY, out)
 
-// File.outputStream() is inline; its FileOutputStream constructor is inlined at every call site
-// and attributed as an uncoverable branch by JaCoCo on Linux/CI. Wrapping it here keeps the
-// inline expansion inside excluded code while the call site stays a plain Kotlin function call.
-@NoCoverage
-private fun File.openOutputStream(): FileOutputStream = outputStream()
-
 /**
  * Writes [bitmap] as a PNG to this file.
  * @return false if the bitmap cannot be encoded; I/O errors propagate.
  */
-private fun File.writePng(bitmap: Bitmap): Boolean = openOutputStream().use(bitmap::writePng)
+private fun File.writePng(bitmap: Bitmap): Boolean = FileOutputStream(this).use(bitmap::writePng)
 
 /**
  * Writes [bitmap] as a PNG to this file and deletes the file if the bitmap cannot be encoded or the write throws.

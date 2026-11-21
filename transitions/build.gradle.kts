@@ -81,12 +81,6 @@ kover {
     reports {
         filters {
             excludes {
-                classes(
-                    // Play Core: requires live device + Play Store; SAM lambdas slip past annotatedBy.
-                    "*InAppReviewUtilsKt*",
-                    // SplashUtils: exit-animation lambda drives real ObjectAnimators + lifecycleScope, untestable on JVM.
-                    "*SplashUtilsKt*",
-                )
                 annotatedBy("de.lemke.commonutils.transitions.NoCoverage")
             }
         }

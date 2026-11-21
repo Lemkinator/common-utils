@@ -44,6 +44,25 @@ internal class AutoClearedViewFragment : Fragment() {
     ): View = FrameLayout(requireContext())
 }
 
+/** Fragment that reads its auto-cleared property twice while the view lifecycle is already destroyed. */
+internal class AutoClearedReadOnDestroyViewFragment : Fragment() {
+    var initCount = 0
+    val cached: String by autoCleared { "val${++initCount}" }
+    val readsDuringDestroyView = mutableListOf<String>()
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View = FrameLayout(requireContext())
+
+    override fun onDestroyView() {
+        readsDuringDestroyView += cached
+        readsDuringDestroyView += cached
+        super.onDestroyView()
+    }
+}
+
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class AutoClearedUtilsRobolectricTest {
@@ -101,5 +120,28 @@ class AutoClearedUtilsRobolectricTest {
         // View is null — accessing a view-bound property after onDestroyView is a programming error.
         shouldThrow<IllegalStateException> { fragment.cached }
         fragment.initCount shouldBe 1
+    }
+
+    @Test
+    fun `a read during onDestroyView initializes every time and caches nothing`() {
+        val activity =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .setup()
+                .track(destroyActivities)
+                .get()
+        val fragment = AutoClearedReadOnDestroyViewFragment()
+        activity.supportFragmentManager
+            .beginTransaction()
+            .add(android.R.id.content, fragment)
+            .commitNow()
+
+        activity.supportFragmentManager
+            .beginTransaction()
+            .remove(fragment)
+            .commitNow()
+
+        fragment.readsDuringDestroyView shouldBe listOf("val1", "val2")
+        fragment.initCount shouldBe 2
     }
 }

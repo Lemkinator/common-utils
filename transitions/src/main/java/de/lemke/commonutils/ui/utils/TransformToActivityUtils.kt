@@ -20,7 +20,6 @@ import android.app.ActivityOptions
 import android.content.Intent
 import android.view.View
 import androidx.annotation.IdRes
-import de.lemke.commonutils.transitions.NoCoverage
 import dev.oneuiproject.oneui.ktx.activity
 
 private const val STATE_ANIMATOR_RESTORE_DELAY_MS = 1_000L
@@ -50,7 +49,6 @@ public fun View.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-@NoCoverage
 public inline fun <reified T : Activity> View.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
@@ -122,7 +120,6 @@ public fun Activity.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-@NoCoverage
 public inline fun <reified T : Activity> Activity.transformToActivity(
     @IdRes viewId: Int,
     transitionName: String = DEFAULT_TRANSITION_NAME,
@@ -184,7 +181,6 @@ public fun Activity.transformToActivity(
  * @param fadeMode The fade mode for the transition.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-@NoCoverage
 public inline fun <reified T : Activity> Activity.transformToActivity(
     view: View?,
     transitionName: String = DEFAULT_TRANSITION_NAME,

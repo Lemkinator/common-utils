@@ -187,15 +187,18 @@ class CommonUtilsOOBEActivityTest {
     }
 
     @Test
-    fun `buildTosSpannable returns null when tos is absent from tosText`() {
-        buildTosSpannable("By continuing, you agree to our terms.", "Terms of Service") {} shouldBe null
+    fun `buildTosSpannable returns the plain text without a span when tos is absent from tosText`() {
+        val spanned = buildTosSpannable("By continuing, you agree to our terms.", "Terms of Service") {}
+
+        spanned.toString() shouldBe "By continuing, you agree to our terms."
+        spanned.getSpans(0, spanned.length, ClickableSpan::class.java).size shouldBe 0
     }
 
     @Test
     fun `buildTosSpannable wraps tos substring in a ClickableSpan at the correct position`() {
         val tos = "Terms of Service"
         val tosText = "By continuing, you agree to the $tos."
-        val spanned = checkNotNull(buildTosSpannable(tosText, tos) {})
+        val spanned = buildTosSpannable(tosText, tos) {}
         val spans = spanned.getSpans(0, spanned.length, ClickableSpan::class.java)
         spans.size shouldBe 1
         val expectedStart = tosText.lastIndexOf(tos)

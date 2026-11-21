@@ -21,7 +21,6 @@ import android.view.View
 import androidx.annotation.IdRes
 import androidx.annotation.MainThread
 import androidx.reflect.DeviceInfo
-import de.lemke.commonutils.transitions.NoCoverage
 import dev.oneuiproject.oneui.ktx.activity
 import dev.oneuiproject.oneui.ktx.startPopOverActivity
 import dev.oneuiproject.oneui.popover.PopOverOptions
@@ -48,7 +47,6 @@ public fun View.popOverOrTransformToActivity(
  * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-@NoCoverage
 @MainThread
 public inline fun <reified T : Activity> View.popOverOrTransformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
@@ -108,7 +106,6 @@ public fun Activity.popOverOrTransformToActivity(
  * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
  */
-@NoCoverage
 @MainThread
 public inline fun <reified T : Activity> Activity.popOverOrTransformToActivity(
     @IdRes viewId: Int,
