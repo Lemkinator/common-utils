@@ -22,7 +22,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
-import android.os.Bundle
 import android.os.Looper
 import android.text.SpannableString
 import android.util.Log
@@ -277,10 +276,8 @@ class CommonUtilsAboutActivityTest {
             val sender = PendingIntent.getActivity(activity, 0, Intent(), PendingIntent.FLAG_IMMUTABLE).intentSender
             launcher.captured.launch(IntentSenderRequest.Builder(sender).build())
             ShadowLog.clear()
-            val registered = Bundle().also { activity.activityResultRegistry.onSaveInstanceState(it) }
-            checkNotNull(registered.getIntegerArrayList("KEY_COMPONENT_ACTIVITY_REGISTERED_RCS")).forEach {
-                activity.activityResultRegistry.dispatchResult(it, resultCode, Intent())
-            }
+            val requestCode = shadowOf(activity).lastIntentSenderRequest.requestCode
+            activity.activityResultRegistry.dispatchResult(requestCode, resultCode, Intent())
         }
     }
 
