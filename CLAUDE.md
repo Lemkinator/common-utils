@@ -154,11 +154,10 @@ singleton after each test, not just defensively before it — for pending main-L
 add `@get:Rule val drainMainLooper = DrainMainLooperRule()` rather than hand-rolling an
 `@After` method per test class.
 
-**`@NoCoverage`** (each module declares its own internal `NoCoverage`; Kover reads it through `annotatedBy`): it sits on
-`inline` functions only, because Kotlin copies an inline body into each caller and the definition itself never runs.
-`NoCoverageConventionsTest` fails on the mark on any other declaration. Each marked function has tests that call it, on
-every arm (`@Config(sdk = ...)` selects the `SDK_INT` arm). The Kover class excludes of each module hold only generated
-code (Hilt, data binding, `BuildConfig`); no hand-written class pattern hides code.
+**`@NoCoverage`** (each module declares its own internal `NoCoverage`; Kover reads it through `annotatedBy`): it sits only on
+`inline` functions whose callers are tested, because Kotlin copies an inline body into each caller and the definition itself
+never runs. `NoCoverageConventionsTest` fails on the mark on any other declaration. The Kover class excludes of each
+module hold only generated code (Hilt, data binding, `BuildConfig`); no hand-written class pattern hides code.
 
 ## Dependency Analysis
 
