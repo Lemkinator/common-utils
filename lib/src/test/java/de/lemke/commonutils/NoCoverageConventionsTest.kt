@@ -23,6 +23,8 @@ import io.kotest.matchers.shouldBe
 
 private const val NO_COVERAGE = "NoCoverage"
 
+private val GETTER_MARK = Regex("@(?:\\w+\\.)*$NO_COVERAGE\\b")
+
 /** Names every declaration that carries `@NoCoverage` and is not an `inline` function. */
 private fun KoScope.misplacedNoCoverage(): List<String> =
     buildList {
@@ -35,7 +37,7 @@ private fun KoScope.misplacedNoCoverage(): List<String> =
         properties(includeNested = true)
             .filter {
                 it.hasAnnotationWithName(NO_COVERAGE) ||
-                    it.getter?.text?.contains("@$NO_COVERAGE") == true
+                    it.getter?.text?.let(GETTER_MARK::containsMatchIn) == true
             }.forEach { add("property ${it.name}") }
     }.sorted()
 
@@ -72,6 +74,16 @@ class NoCoverageConventionsTest : ShouldSpec() {
                 """.trimIndent()
 
             withSourceScope(source) { scope -> scope.misplacedNoCoverage() } shouldBe listOf("function plain")
+        }
+        should("report a qualified @NoCoverage on a property getter") {
+            val source =
+                """
+                val answer: Int
+                    @de.lemke.commonutils.NoCoverage
+                    get() = 42
+                """.trimIndent()
+
+            withSourceScope(source) { scope -> scope.misplacedNoCoverage() } shouldBe listOf("property answer")
         }
         should("report @NoCoverage on a class, an object, an interface and a property getter") {
             val source =
