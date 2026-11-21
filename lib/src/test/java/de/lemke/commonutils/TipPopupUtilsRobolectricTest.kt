@@ -103,13 +103,22 @@ class TipPopupUtilsRobolectricTest {
     }
 
     @Test
-    fun `the string resource overloads show the resolved texts`() {
-        anchor.showDimmingTipPopup(R.string.commonutils_ok, R.string.commonutils_ok)
-        idle()
-        anchor.showTouchBlockingTipPopup(R.string.commonutils_ok, R.string.commonutils_ok)
+    fun `showDimmingTipPopup resolves message and action from string resources`() {
+        anchor.showDimmingTipPopup(R.string.commonutils_share, R.string.commonutils_delete)
         idle()
 
-        root.children.count { it is DimmingView } shouldBe 1
+        popupActionButton("Share").isShown shouldBe true
+        popupActionButton("Delete").isShown shouldBe true
+        root.children.count { it.javaClass == DimmingView::class.java } shouldBe 1
+    }
+
+    @Test
+    fun `showTouchBlockingTipPopup resolves message and action from string resources`() {
+        anchor.showTouchBlockingTipPopup(R.string.commonutils_share, R.string.commonutils_delete)
+        idle()
+
+        popupActionButton("Share").isShown shouldBe true
+        popupActionButton("Delete").isShown shouldBe true
         root.children.count { it is TouchBlockingView } shouldBe 1
     }
 }

@@ -17,6 +17,7 @@ package de.lemke.commonutils.ui.activity
 
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
@@ -57,6 +58,7 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
@@ -121,21 +123,21 @@ class CommonUtilsAboutActivityTest {
 
     @Test
     fun `an update flow result of RESULT_OK is logged as successful`() {
-        launchActivity { activity -> activity.deliverUpdateResult(RESULT_OK) }
+        deliverUpdateResult(RESULT_OK)
 
         updateLogs() shouldBe listOf(Log.DEBUG to "Update successful")
     }
 
     @Test
     fun `an update flow result of RESULT_CANCELED is logged as canceled`() {
-        launchActivity { activity -> activity.deliverUpdateResult(RESULT_CANCELED) }
+        deliverUpdateResult(RESULT_CANCELED)
 
         updateLogs() shouldBe listOf(Log.WARN to "Update canceled")
     }
 
     @Test
     fun `an update flow result of RESULT_IN_APP_UPDATE_FAILED is logged as failed`() {
-        launchActivity { activity -> activity.deliverUpdateResult(RESULT_IN_APP_UPDATE_FAILED) }
+        deliverUpdateResult(RESULT_IN_APP_UPDATE_FAILED)
 
         updateLogs() shouldBe listOf(Log.ERROR to "Update failed")
     }
@@ -256,12 +258,22 @@ class CommonUtilsAboutActivityTest {
         }
     }
 
-    private fun CommonUtilsAboutActivity.deliverUpdateResult(resultCode: Int) {
-        val registered = Bundle().also { activityResultRegistry.onSaveInstanceState(it) }
-        val requestCodes = checkNotNull(registered.getIntegerArrayList("KEY_COMPONENT_ACTIVITY_REGISTERED_RCS"))
-        requestCodes.size shouldBe 1
-        ShadowLog.clear()
-        activityResultRegistry.dispatchResult(requestCodes.single(), resultCode, Intent())
+    private fun deliverUpdateResult(resultCode: Int) {
+        validateNetwork()
+        every { mockAppUpdateManager.appUpdateInfo } returns
+            Tasks.forResult(updateInfo(UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS))
+        val launcher = slot<ActivityResultLauncher<IntentSenderRequest>>()
+        every { mockAppUpdateManager.startUpdateFlowForResult(any(), capture(launcher), any<AppUpdateOptions>()) } returns true
+
+        launchActivity { activity ->
+            val sender = PendingIntent.getActivity(activity, 0, Intent(), PendingIntent.FLAG_IMMUTABLE).intentSender
+            launcher.captured.launch(IntentSenderRequest.Builder(sender).build())
+            ShadowLog.clear()
+            val registered = Bundle().also { activity.activityResultRegistry.onSaveInstanceState(it) }
+            checkNotNull(registered.getIntegerArrayList("KEY_COMPONENT_ACTIVITY_REGISTERED_RCS")).forEach {
+                activity.activityResultRegistry.dispatchResult(it, resultCode, Intent())
+            }
+        }
     }
 
     private fun updateLogs() = ShadowLog.getLogsForTag("CommonUtilsAboutActivity").map { it.type to it.msg }
