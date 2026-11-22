@@ -79,12 +79,11 @@ public fun View.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-): Boolean =
-    transformFrom(
-        context.activity?.windowKind() ?: WindowKind.FullScreen,
-        intent,
-        ContainerTransformSpec(transitionName, duration, fadeMode),
-    )
+): Boolean {
+    val spec = ContainerTransformSpec(transitionName, duration, fadeMode)
+    val launcher = context.activity ?: return transformFrom(WindowKind.FullScreen, intent, spec)
+    return transformFrom(launcher.windowKind(), intent, spec)
+}
 
 internal data class ContainerTransformSpec(
     val transitionName: String,

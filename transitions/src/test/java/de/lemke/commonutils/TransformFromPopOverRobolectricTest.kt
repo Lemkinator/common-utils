@@ -17,11 +17,13 @@ package de.lemke.commonutils
 
 import android.animation.StateListAnimator
 import android.app.Activity
+import android.app.Application
 import android.content.Intent
 import android.content.res.Configuration
 import android.view.View
 import androidx.reflect.DeviceInfo
 import androidx.reflect.SeslBaseReflector
+import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.ui.utils.popOverOrTransformToActivity
 import de.lemke.commonutils.ui.utils.transformToActivity
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -263,5 +265,33 @@ class TransformFromPopOverRobolectricTest : LaunchLatchRobolectricTest() {
         activity.popOverOrTransformToActivity<Activity>(ORIGIN_VIEW_ID).shouldBeTrue()
 
         verify(exactly = 1) { SeslBaseReflector.invoke(any(), semIsPopOver) }
+    }
+
+    @Test
+    fun `a view transform without an activity starts plainly`() {
+        platform(isPopOver = true)
+        val application = ApplicationProvider.getApplicationContext<Application>()
+
+        View(
+            application,
+        ).transformToActivity(Intent(application, Activity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)).shouldBeTrue()
+
+        val started = shadowOf(application).nextStartedActivity.shouldNotBeNull()
+        started.component?.className shouldBe Activity::class.java.name
+        started.shouldHaveNoContainerTransform()
+    }
+
+    @Test
+    fun `a view pop-over-or-transform without an activity starts plainly`() {
+        platform(isPopOver = true)
+        val application = ApplicationProvider.getApplicationContext<Application>()
+
+        View(
+            application,
+        ).popOverOrTransformToActivity(Intent(application, Activity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)).shouldBeTrue()
+
+        val started = shadowOf(application).nextStartedActivity.shouldNotBeNull()
+        started.component?.className shouldBe Activity::class.java.name
+        started.shouldHaveNoContainerTransform()
     }
 }

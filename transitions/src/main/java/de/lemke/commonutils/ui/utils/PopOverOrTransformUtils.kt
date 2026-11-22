@@ -77,12 +77,13 @@ public fun View.popOverOrTransformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean {
-    val activity = context.activity
-    val windowKind = activity?.windowKind() ?: WindowKind.FullScreen
-    return if (activity != null && activity.startsPopOver(windowKind)) {
+    val spec = ContainerTransformSpec(transitionName, duration, fadeMode)
+    val activity = context.activity ?: return transformFrom(WindowKind.FullScreen, intent, spec)
+    val windowKind = activity.windowKind()
+    return if (activity.startsPopOver(windowKind)) {
         activity.launchPopOver(intent, windowKind, popOverOptions)
     } else {
-        transformFrom(windowKind, intent, ContainerTransformSpec(transitionName, duration, fadeMode))
+        transformFrom(windowKind, intent, spec)
     }
 }
 
