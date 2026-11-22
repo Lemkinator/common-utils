@@ -90,7 +90,7 @@ internal fun View.containerTransform(
     duration: Long,
     fadeMode: Int,
 ): Boolean {
-    if (!isAttachedToWindow || !activity.inputViewsCurrent()) return context.singleLaunchActivity(intent)
+    if (!isAttachedToWindow || !activity.inputViewsCurrent()) return activity.singleLaunchActivity(intent)
     return activity.launchGated {
         suspendStateListAnimator()
         this.transitionName = transitionName
@@ -99,7 +99,7 @@ internal fun View.containerTransform(
             .putExtra(TRANSITION_NAME_KEY, transitionName)
             .putExtra(DURATION_KEY, duration)
             .putExtra(FADE_MODE_KEY, fadeMode)
-        context.startActivity(intent, bundle)
+        activity.startActivity(intent, bundle)
     }
 }
 

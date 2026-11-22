@@ -85,6 +85,26 @@ class TransformToActivityGuardRobolectricTest : LaunchLatchRobolectricTest() {
     }
 
     @Test
+    fun `attached view of the application context launches from the activity with the transition`() {
+        val activity = resumed().get()
+        val view = View(activity.applicationContext).also(activity::setContentView)
+
+        activity.transformToActivity(view, Intent(activity, Activity::class.java), "shared").shouldBeTrue()
+
+        activity.startedLaunch().shouldUseTheTransition(view)
+    }
+
+    @Test
+    fun `detached view of the application context launches from the activity without the transition`() {
+        val activity = resumed().get()
+        val view = View(activity.applicationContext)
+
+        activity.transformToActivity(view, Intent(activity, Activity::class.java), "shared").shouldBeTrue()
+
+        activity.startedLaunch().shouldSkipTheTransition(view)
+    }
+
+    @Test
     fun `view detached during the work starts the activity without the transition`() {
         val activity = resumed().get()
         val view = activity.attachedView()
