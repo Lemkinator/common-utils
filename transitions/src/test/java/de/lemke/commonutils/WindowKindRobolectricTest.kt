@@ -16,6 +16,7 @@
 package de.lemke.commonutils
 
 import android.content.res.Configuration
+import androidx.reflect.DeviceInfo
 import androidx.reflect.SeslBaseReflector
 import de.lemke.commonutils.ui.utils.WindowKind
 import de.lemke.commonutils.ui.utils.windowKind
@@ -34,14 +35,25 @@ import org.robolectric.annotation.Config
 class WindowKindRobolectricTest {
     private val method = Configuration::class.java.getMethod("toString")
 
-    private fun windowWhenReflectorReturns(value: Any?): WindowKind {
+    private fun oneUi(isOneUi: Boolean) {
+        mockkStatic(DeviceInfo::class)
+        every { DeviceInfo.isOneUI() } returns isOneUi
+    }
+
+    private fun reflectorReturns(value: Any?) {
         mockkStatic(SeslBaseReflector::class)
         every { SeslBaseReflector.invoke(any(), any()) } returns value
+    }
+
+    private fun windowWhenReflectorReturns(value: Any?): WindowKind {
+        oneUi(true)
+        reflectorReturns(value)
         return Configuration().windowKind()
     }
 
     @After
     fun tearDown() {
+        unmockkStatic(DeviceInfo::class)
         unmockkStatic(SeslBaseReflector::class)
     }
 
@@ -67,6 +79,7 @@ class WindowKindRobolectricTest {
 
     @Test
     fun `the lookup asks the Configuration class for semIsPopOver`() {
+        oneUi(true)
         mockkStatic(SeslBaseReflector::class)
         every { SeslBaseReflector.getDeclaredMethod(Configuration::class.java, "semIsPopOver") } returns method
         every { SeslBaseReflector.invoke(any(), method) } returns true
@@ -74,7 +87,15 @@ class WindowKindRobolectricTest {
     }
 
     @Test
-    fun `a system without semIsPopOver is a full-screen window`() {
+    fun `a One UI system without semIsPopOver is a full-screen window`() {
+        oneUi(true)
+        Configuration().windowKind() shouldBe WindowKind.FullScreen
+    }
+
+    @Test
+    fun `a device other than One UI is a full-screen window although the reflector reports a pop-over`() {
+        oneUi(false)
+        reflectorReturns(true)
         Configuration().windowKind() shouldBe WindowKind.FullScreen
     }
 }

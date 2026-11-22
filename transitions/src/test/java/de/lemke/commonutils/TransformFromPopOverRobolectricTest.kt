@@ -32,6 +32,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -54,9 +55,12 @@ class TransformFromPopOverRobolectricTest : LaunchLatchRobolectricTest() {
         unmockkStatic(SeslBaseReflector::class)
     }
 
-    private fun platform(isPopOver: Boolean) {
+    private fun platform(
+        isPopOver: Boolean,
+        isOneUi: Boolean = true,
+    ) {
         mockkStatic(DeviceInfo::class)
-        every { DeviceInfo.isOneUI() } returns true
+        every { DeviceInfo.isOneUI() } returns isOneUi
         mockkStatic(SeslBaseReflector::class)
         every { SeslBaseReflector.getDeclaredMethod(Configuration::class.java, "semIsPopOver") } returns semIsPopOver
         every { SeslBaseReflector.invoke(any(), semIsPopOver) } returns isPopOver
@@ -174,5 +178,45 @@ class TransformFromPopOverRobolectricTest : LaunchLatchRobolectricTest() {
 
         val started = activity.startedLaunch()
         started.intent.shouldBeContainerTransformTo(Activity::class.java, started.options, "shared")
+    }
+
+    @Test
+    fun `a view transform from a device other than One UI keeps the container transform`() {
+        platform(isPopOver = true, isOneUi = false)
+        val activity = resumed().get()
+
+        activity.originView().transformToActivity(Activity::class.java, "shared").shouldBeTrue()
+
+        val started = activity.startedLaunch()
+        started.intent.shouldBeContainerTransformTo(Activity::class.java, started.options, "shared")
+    }
+
+    @Test
+    fun `a view transform reads the window kind once`() {
+        val activity = popOverActivity()
+
+        activity.originView().transformToActivity(Activity::class.java).shouldBeTrue()
+
+        verify(exactly = 1) { SeslBaseReflector.invoke(any(), semIsPopOver) }
+    }
+
+    @Test
+    fun `a view pop-over-or-transform reads the window kind once`() {
+        val activity = popOverActivity()
+
+        activity.originView().popOverOrTransformToActivity(Activity::class.java).shouldBeTrue()
+
+        verify(exactly = 1) { SeslBaseReflector.invoke(any(), semIsPopOver) }
+    }
+
+    @Test
+    fun `an activity pop-over-or-transform by view id reads the window kind once`() {
+        platform(isPopOver = false)
+        val activity = resumed().get()
+        activity.originView()
+
+        activity.popOverOrTransformToActivity<Activity>(ORIGIN_VIEW_ID).shouldBeTrue()
+
+        verify(exactly = 1) { SeslBaseReflector.invoke(any(), semIsPopOver) }
     }
 }

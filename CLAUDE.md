@@ -16,7 +16,7 @@ See `gradle/libs.versions.toml` for SDK and language versions.
   `PredictiveBackGestureUtils.kt`, `SingleLaunchUtils.kt` (the launch latch), `PopOverOrTransformUtils.kt`, the in-app review (`InAppReview`,
   `PlayInAppReview`, `InAppReviewCooldown`, the Play `review` dependency), their resources and tests. It depends on
   `oneui-design` and `core-splashscreen`, not on `:lib`.
-  `WindowKind` (`WindowKind.kt`) is the one source for "this window is a One UI pop-over": the predictive back reads it, and every
+  `WindowKind` (`WindowKind.kt`) is the one source for "this window is a One UI pop-over" (a device other than One UI is always `FullScreen`): the predictive back reads it, and every
   `transformToActivity` and `popOverOrTransformToActivity` overload starts a pop-over page instead of a container transform when the
   launching activity is itself a pop-over.
 - `:lib`: everything else. It re-exports `:transitions` with `api(project(":transitions"))`, so an app that depends on

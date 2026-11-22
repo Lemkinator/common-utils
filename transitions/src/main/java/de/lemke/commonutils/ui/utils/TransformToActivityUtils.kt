@@ -78,10 +78,18 @@ public fun View.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
+): Boolean = transformFrom(context.activity?.windowKind() ?: WindowKind.FullScreen, intent, transitionName, duration, fadeMode)
+
+internal fun View.transformFrom(
+    windowKind: WindowKind,
+    intent: Intent,
+    transitionName: String,
+    duration: Long,
+    fadeMode: Int,
 ): Boolean {
     val launcher = context.activity
     return when {
-        launcher?.windowKind() == WindowKind.PopOver -> launcher.launchPopOver(intent)
+        launcher != null && windowKind == WindowKind.PopOver -> launcher.launchPopOver(intent)
         launcher != null && isAttachedToWindow && launcher.inputViewsCurrent() ->
             launcher.launchGated {
                 suspendStateListAnimator()
@@ -171,9 +179,18 @@ public fun Activity.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
+): Boolean = transformFrom(windowKind(), view, intent, transitionName, duration, fadeMode)
+
+internal fun Activity.transformFrom(
+    windowKind: WindowKind,
+    view: View?,
+    intent: Intent,
+    transitionName: String,
+    duration: Long,
+    fadeMode: Int,
 ): Boolean =
     if (view != null) {
-        view.transformToActivity(intent, transitionName, duration, fadeMode)
+        view.transformFrom(windowKind, intent, transitionName, duration, fadeMode)
     } else {
         singleLaunchActivity(intent)
     }

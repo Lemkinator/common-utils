@@ -77,10 +77,11 @@ public fun View.popOverOrTransformToActivity(
     fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean {
     val activity = context.activity
-    return if (activity != null && activity.startsPopOver()) {
+    val windowKind = activity?.windowKind() ?: WindowKind.FullScreen
+    return if (activity != null && activity.startsPopOver(windowKind)) {
         activity.launchPopOver(intent, popOverOptions)
     } else {
-        transformToActivity(intent, transitionName, duration, fadeMode)
+        transformFrom(windowKind, intent, transitionName, duration, fadeMode)
     }
 }
 
@@ -136,12 +137,14 @@ public fun Activity.popOverOrTransformToActivity(
     popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(this),
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-): Boolean =
-    if (startsPopOver()) {
+): Boolean {
+    val windowKind = windowKind()
+    return if (startsPopOver(windowKind)) {
         launchPopOver(intent, popOverOptions)
     } else {
-        transformToActivity(viewId, intent, transitionName, duration, fadeMode)
+        transformFrom(windowKind, findViewById<View>(viewId), intent, transitionName, duration, fadeMode)
     }
+}
 
 /**
  * Starts [intent] as a gated pop-over launch: single-top, no container transform and no scene transition, so One UI
@@ -153,7 +156,7 @@ internal fun Activity.launchPopOver(
 ): Boolean = launchGated { startPopOverActivity(Intent(intent).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), popOverOptions) }
 
 // A pop-over has a smallest width of 360dp, so the width check alone misses a launch from inside one.
-private fun Activity.startsPopOver(): Boolean = windowKind() == WindowKind.PopOver || showsPopOver()
+private fun Activity.startsPopOver(windowKind: WindowKind): Boolean = windowKind == WindowKind.PopOver || showsPopOver()
 
 // One UI starts a pop-over only in a task whose smallest width is at least 600dp.
 private fun Activity.showsPopOver(): Boolean = DeviceInfo.isOneUI() && DeviceLayoutUtil.isTabletLayout(resources)
