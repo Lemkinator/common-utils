@@ -19,8 +19,11 @@ import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Insets
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowInsets
 import androidx.activity.BackEventCompat
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.IntentCompat
@@ -532,8 +535,20 @@ class CommonUtilsAboutMeActivityTest {
             .window.decorView.fitsSystemWindows = true
         controller.setup()
         shadowOf(Looper.getMainLooper()).idle()
-        controller.get() shouldNotBe null
+        controller.get().paddingAfter(systemBarInsets()) shouldBe listOf(0, 0, 0, 0)
     }
+}
+
+private fun systemBarInsets(): WindowInsets =
+    WindowInsets.Builder().setInsets(WindowInsets.Type.systemBars(), Insets.of(11, 22, 33, 44)).build()
+
+@Suppress("DEPRECATION")
+private fun legacySystemWindowInsets(): WindowInsets = WindowInsets.Builder().setSystemWindowInsets(Insets.of(11, 22, 33, 44)).build()
+
+private fun Activity.paddingAfter(insets: WindowInsets): List<Int> {
+    val root = findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+    root.dispatchApplyWindowInsets(insets)
+    return listOf(root.paddingLeft, root.paddingTop, root.paddingRight, root.paddingBottom)
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -551,6 +566,6 @@ class CommonUtilsAboutMeActivitySdk29Test {
     fun `applyInsetIfNeeded SDK_INT less than R skips listener setup`() {
         val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
-        controller.get() shouldNotBe null
+        controller.get().paddingAfter(legacySystemWindowInsets()) shouldBe listOf(0, 0, 0, 0)
     }
 }
