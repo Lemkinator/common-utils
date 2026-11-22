@@ -77,6 +77,13 @@ class TransformFromPopOverRobolectricTest : LaunchLatchRobolectricTest() {
 
     private fun IntentForResult.shouldBePopOver() = intent.shouldBePopOverFromPopOverTo(Activity::class.java, options)
 
+    private fun IntentForResult.shouldBePlainStart() {
+        intent.component?.className shouldBe Activity::class.java.name
+        intent.shouldHaveNoContainerTransform()
+        intent.flags shouldBe 0
+        options.shouldBeNull()
+    }
+
     @Test
     fun `a view transform from a pop-over starts a pop-over page and leaves the view alone`() {
         val activity = popOverActivity()
@@ -136,6 +143,44 @@ class TransformFromPopOverRobolectricTest : LaunchLatchRobolectricTest() {
         activity.transformToActivity<Activity>(view).shouldBeTrue()
 
         activity.startedLaunch().shouldBePopOver()
+    }
+
+    @Test
+    fun `an activity transform without a view from a pop-over starts a pop-over page`() {
+        val activity = popOverActivity()
+
+        activity.transformToActivity(null, Intent(activity, Activity::class.java)).shouldBeTrue()
+
+        activity.startedLaunch().shouldBePopOver()
+    }
+
+    @Test
+    fun `an activity transform by a missing view id from a pop-over starts a pop-over page`() {
+        val activity = popOverActivity()
+
+        activity.transformToActivity(ORIGIN_VIEW_ID, Activity::class.java).shouldBeTrue()
+
+        activity.startedLaunch().shouldBePopOver()
+    }
+
+    @Test
+    fun `an activity transform without a view outside a pop-over starts plainly`() {
+        platform(isPopOver = false)
+        val activity = resumed().get()
+
+        activity.transformToActivity(null, Intent(activity, Activity::class.java)).shouldBeTrue()
+
+        activity.startedLaunch().shouldBePlainStart()
+    }
+
+    @Test
+    fun `an activity transform by a missing view id outside a pop-over starts plainly`() {
+        platform(isPopOver = false)
+        val activity = resumed().get()
+
+        activity.transformToActivity(ORIGIN_VIEW_ID, Activity::class.java).shouldBeTrue()
+
+        activity.startedLaunch().shouldBePlainStart()
     }
 
     @Test

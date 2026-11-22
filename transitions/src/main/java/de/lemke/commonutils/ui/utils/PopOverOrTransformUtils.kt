@@ -82,7 +82,7 @@ public fun View.popOverOrTransformToActivity(
     return if (activity != null && activity.startsPopOver(windowKind)) {
         activity.launchPopOver(intent, windowKind, popOverOptions)
     } else {
-        transformFrom(windowKind, intent, transitionName, duration, fadeMode)
+        transformFrom(windowKind, intent, ContainerTransformSpec(transitionName, duration, fadeMode))
     }
 }
 
@@ -143,7 +143,7 @@ public fun Activity.popOverOrTransformToActivity(
     return if (startsPopOver(windowKind)) {
         launchPopOver(intent, windowKind, popOverOptions)
     } else {
-        transformFrom(windowKind, findViewById<View>(viewId), intent, transitionName, duration, fadeMode)
+        transformFrom(windowKind, findViewById<View>(viewId), intent, ContainerTransformSpec(transitionName, duration, fadeMode))
     }
 }
 
