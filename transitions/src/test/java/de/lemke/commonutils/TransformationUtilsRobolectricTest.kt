@@ -35,6 +35,7 @@ import de.lemke.commonutils.ui.utils.prepareActivityTransformationTo
 import de.lemke.commonutils.ui.utils.transformTo
 import de.lemke.commonutils.ui.utils.transformToActivity
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.Rule
@@ -44,6 +45,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -65,9 +67,12 @@ class TransformationUtilsRobolectricTest {
     }
 
     @Test
-    fun `prepareActivityTransformationTo without transition name in intent returns early`() {
-        // Intent has no TRANSITION_NAME_KEY → early-return path
-        activity().prepareActivityTransformationTo()
+    fun `prepareActivityTransformationTo without transition name in intent returns early without a warning`() {
+        val a = activity()
+
+        a.prepareActivityTransformationTo()
+
+        ShadowLog.getLogsForTag("TransformationUtils").shouldBeEmpty()
     }
 
     @Test
