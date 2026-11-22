@@ -53,9 +53,7 @@ extensions.configure<LibraryExtension> {
     lint {
         informational += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
         warningsAsErrors = true
-        // checkDependencies = false: private AAR deps surface
-        // hundreds of unactionable warnings; flip to true once in-project surface is clean
-        checkDependencies = false
+        checkDependencies = true
         // Explicit: pins intent against future AGP default changes.
         checkReleaseBuilds = true
         abortOnError = true

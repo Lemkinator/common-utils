@@ -46,7 +46,6 @@ android {
         viewBinding = true
     }
     lint {
-        baseline = file("lint-baseline.xml")
         // Why: the two display_help_* illustrations ship at a single fixed density
         // (drawable-xxhdpi) on purpose — static help-screen art, not a scaled icon.
         disable += "IconMissingDensityFolder"
