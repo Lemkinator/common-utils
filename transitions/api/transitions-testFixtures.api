@@ -11,6 +11,7 @@ public final class de/lemke/commonutils/ContainerTransformAssertionsKt {
 public final class de/lemke/commonutils/LaunchAssertionsKt {
 	public static final fun shouldBeContainerTransformTo (Landroid/content/Intent;Ljava/lang/Class;Landroid/os/Bundle;Ljava/lang/String;JI)V
 	public static synthetic fun shouldBeContainerTransformTo$default (Landroid/content/Intent;Ljava/lang/Class;Landroid/os/Bundle;Ljava/lang/String;JIILjava/lang/Object;)V
+	public static final fun shouldBePopOverFromPopOverTo (Landroid/content/Intent;Ljava/lang/Class;Landroid/os/Bundle;)V
 	public static final fun shouldBePopOverTo (Landroid/content/Intent;Ljava/lang/Class;Landroid/os/Bundle;)V
 }
 

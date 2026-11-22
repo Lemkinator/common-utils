@@ -89,7 +89,7 @@ internal fun View.transformFrom(
 ): Boolean {
     val launcher = context.activity
     return when {
-        launcher != null && windowKind == WindowKind.PopOver -> launcher.launchPopOver(intent)
+        launcher != null && windowKind == WindowKind.PopOver -> launcher.launchPopOver(intent, windowKind)
         launcher != null && isAttachedToWindow && launcher.inputViewsCurrent() ->
             launcher.launchGated {
                 suspendStateListAnimator()

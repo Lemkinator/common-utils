@@ -75,7 +75,7 @@ class TransformFromPopOverRobolectricTest : LaunchLatchRobolectricTest() {
 
     private fun LatchTestActivity.startedLaunch(): IntentForResult = shadowOf(this).nextStartedActivityForResult.shouldNotBeNull()
 
-    private fun IntentForResult.shouldBePopOver() = intent.shouldBePopOverTo(Activity::class.java, options)
+    private fun IntentForResult.shouldBePopOver() = intent.shouldBePopOverFromPopOverTo(Activity::class.java, options)
 
     @Test
     fun `a view transform from a pop-over starts a pop-over page and leaves the view alone`() {

@@ -28,21 +28,43 @@ private const val ANIM_SCENE_TRANSITION = 5
 private val Bundle?.startsSceneTransition: Boolean get() = this?.getInt(ANIM_TYPE_KEY) == ANIM_SCENE_TRANSITION
 
 /**
- * Fails unless this started intent and its [options] match the pop-over launch of `popOverOrTransformToActivity` for [cls]:
- * single-top, no container transform, and non-null options without a scene transition. The pop-over position and size
- * are not checked: One UI stores them through a hidden call that leaves nothing a JVM test can read, so any plain
- * options bundle passes. A Robolectric test passes the `intent` and `options` of the `ShadowActivity.IntentForResult`
- * it reads.
+ * Fails unless this started intent and its [options] match the pop-over launch of `popOverOrTransformToActivity` for [cls]
+ * from a full-window screen: single-top, no container transform, and non-null options without a scene transition. The
+ * pop-over position and size are not checked: One UI stores them through a hidden call that leaves nothing a JVM test can
+ * read, so any plain options bundle passes. A Robolectric test passes the `intent` and `options` of the
+ * `ShadowActivity.IntentForResult` it reads.
  */
 public fun Intent.shouldBePopOverTo(
     cls: Class<*>,
     options: Bundle?,
 ) {
-    shouldTarget(cls)
-    shouldHaveNoContainerTransform()
+    shouldBePlainPopOverTo(cls, options)
     if (flags and Intent.FLAG_ACTIVITY_SINGLE_TOP == 0) {
         throw AssertionError("Expected a single-top pop-over launch of <${cls.name}> but the intent flags are $flags")
     }
+}
+
+/**
+ * Fails unless this started intent and its [options] match the pop-over launch of `transformToActivity` or
+ * `popOverOrTransformToActivity` for [cls] from inside a pop-over: not single-top, so the page gets a new instance, no
+ * container transform, and non-null options without a scene transition. See [shouldBePopOverTo] for what is not checked.
+ */
+public fun Intent.shouldBePopOverFromPopOverTo(
+    cls: Class<*>,
+    options: Bundle?,
+) {
+    shouldBePlainPopOverTo(cls, options)
+    if (flags and Intent.FLAG_ACTIVITY_SINGLE_TOP != 0) {
+        throw AssertionError("Expected a pop-over launch of <${cls.name}> without single-top but the intent flags are $flags")
+    }
+}
+
+private fun Intent.shouldBePlainPopOverTo(
+    cls: Class<*>,
+    options: Bundle?,
+) {
+    shouldTarget(cls)
+    shouldHaveNoContainerTransform()
     if (options == null || options.startsSceneTransition) {
         throw AssertionError("Expected a pop-over launch of <${cls.name}> with plain activity options but options were $options")
     }

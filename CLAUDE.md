@@ -123,13 +123,14 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
 - `Intent.shouldBeContainerTransformTo(transitionName, duration, fadeMode)` and `Intent.shouldHaveNoContainerTransform()` — assert
   the container transform that `View.transformToActivity` puts on a launch intent. They live in the transitions testFixtures;
   the `:lib` testFixtures re-export them.
-- `Intent.shouldBePopOverTo(cls, options)` and `Intent.shouldBeContainerTransformTo(cls, options, transitionName, duration, fadeMode)`
+- `Intent.shouldBePopOverTo(cls, options)`, `Intent.shouldBePopOverFromPopOverTo(cls, options)` and
+  `Intent.shouldBeContainerTransformTo(cls, options, transitionName, duration, fadeMode)`
   — assert the started intent and its options bundle (the `intent` and `options` of Robolectric's `IntentForResult`) after
-  `popOverOrTransformToActivity` or `transformToActivity`: the target class, the single-top flag (pop-over only), the container
+  `popOverOrTransformToActivity` or `transformToActivity`: the target class, the single-top flag (pop-over from a full-window screen only; a start from inside a pop-over has none), the container
   transform extras and the scene transition. The transform overload defaults to the library's own transition name, duration and fade
   mode, so an app test needs no library constant for them. They do not check the transition name of the source view or the
   pop-over position. They live in the transitions testFixtures too. `transformToActivity` and `popOverOrTransformToActivity` started
-  from an activity that is itself a pop-over (`WindowKind.PopOver`) start a pop-over page, so `shouldBePopOverTo` holds there, not the
+  from an activity that is itself a pop-over (`WindowKind.PopOver`) start a pop-over page, so `shouldBePopOverFromPopOverTo` holds there, not the
   transform assertion.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
