@@ -190,7 +190,8 @@ which the unit-test task analyzes. `check` depends on, and CI runs, `detektMain`
 task, which has no type resolution, so rules that need it stay silent. The pre-commit hook runs plain `detekt` only, so
 type-aware rules run in `check` and CI. The hook does not replace `./gradlew detektMain detektTest`; run it before you push.
 
-The hook runs `spotlessCheck detekt` and exits 1 with a `./gradlew spotlessApply` reminder on failure. It also fails fast
+The hook runs `spotlessCheck detekt` and exits 1 with a `./gradlew spotlessApply` reminder on failure. If the build queue
+exits 75 or 76, nothing ran: the hook exits with that code and a message that says so. It also fails fast
 with a targeted message if `core.autocrlf=true` is detected.
 
 ## Architecture
