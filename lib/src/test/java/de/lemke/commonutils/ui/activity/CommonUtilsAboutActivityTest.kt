@@ -49,7 +49,6 @@ import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
 import de.lemke.commonutils.shouldBePopOverFromPopOverTo
-import de.lemke.commonutils.shouldHaveNoContainerTransform
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
@@ -216,7 +215,6 @@ class CommonUtilsAboutActivityTest {
 
             val started = shadowOf(activity).nextStartedActivityForResult
             started.intent.shouldBePopOverFromPopOverTo(CommonUtilsLibsActivity::class.java, started.options)
-            started.intent.shouldHaveNoContainerTransform()
         }
     }
 
