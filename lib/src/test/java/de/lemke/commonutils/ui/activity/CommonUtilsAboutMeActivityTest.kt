@@ -27,6 +27,7 @@ import android.view.WindowInsets
 import androidx.activity.BackEventCompat
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.IntentCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import com.google.android.material.appbar.AppBarLayout
 import de.lemke.commonutils.DestroyActivitiesRule
@@ -50,6 +51,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
+import androidx.core.graphics.Insets as CompatInsets
 import dev.oneuiproject.oneui.design.R as designR
 
 @RunWith(RobolectricTestRunner::class)
@@ -542,8 +544,13 @@ class CommonUtilsAboutMeActivityTest {
 private fun systemBarInsets(): WindowInsets =
     WindowInsets.Builder().setInsets(WindowInsets.Type.systemBars(), Insets.of(11, 22, 33, 44)).build()
 
-@Suppress("DEPRECATION")
-private fun legacySystemWindowInsets(): WindowInsets = WindowInsets.Builder().setSystemWindowInsets(Insets.of(11, 22, 33, 44)).build()
+private fun legacySystemWindowInsets(): WindowInsets =
+    WindowInsetsCompat
+        .Builder()
+        .setInsets(WindowInsetsCompat.Type.systemBars(), CompatInsets.of(11, 22, 33, 44))
+        .build()
+        .toWindowInsets()
+        .shouldNotBeNull()
 
 private fun Activity.paddingAfter(insets: WindowInsets): List<Int> {
     val root = findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
