@@ -16,6 +16,9 @@ See `gradle/libs.versions.toml` for SDK and language versions.
   `PredictiveBackGestureUtils.kt`, `SingleLaunchUtils.kt` (the launch latch), `PopOverOrTransformUtils.kt`, the in-app review (`InAppReview`,
   `PlayInAppReview`, `InAppReviewCooldown`, the Play `review` dependency), their resources and tests. It depends on
   `oneui-design` and `core-splashscreen`, not on `:lib`.
+  `WindowKind` (`WindowKind.kt`) is the one source for "this window is a One UI pop-over": the predictive back reads it, and every
+  `transformToActivity` and `popOverOrTransformToActivity` overload starts a pop-over page instead of a container transform when the
+  launching activity is itself a pop-over.
 - `:lib`: everything else. It re-exports `:transitions` with `api(project(":transitions"))`, so an app that depends on
   `common-utils` also gets the transitions classes.
 - `:test-support`: an Android library that no publication includes. It holds the Robolectric helpers that the tests of
@@ -125,7 +128,9 @@ boundaries. The KDoc lists the forms it detects and the inferred-type cases it m
   `popOverOrTransformToActivity` or `transformToActivity`: the target class, the single-top flag (pop-over only), the container
   transform extras and the scene transition. The transform overload defaults to the library's own transition name, duration and fade
   mode, so an app test needs no library constant for them. They do not check the transition name of the source view or the
-  pop-over position. They live in the transitions testFixtures too.
+  pop-over position. They live in the transitions testFixtures too. `transformToActivity` and `popOverOrTransformToActivity` started
+  from an activity that is itself a pop-over (`WindowKind.PopOver`) start a pop-over page, so `shouldBePopOverTo` holds there, not the
+  transform assertion.
 - `idleMainLooper`, `awaitMainLooperUntil`, `ActivityScenario.read` and `returnFromLaunchedScreen` (Robolectric);
   `ActivityScenario.waitUntil` and `RecyclerView.isSettled` (instrumented).
 - `ViewModel.clearForTest()` — cancels `viewModelScope` and calls `onCleared`.

@@ -16,11 +16,12 @@
 package de.lemke.commonutils.ui.utils
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.res.Configuration
 import androidx.reflect.SeslBaseReflector
 
-/** The kind of window a screen runs in, which decides whether the screen draws its own back preview. */
-internal enum class BackPreviewWindow {
+/** The kind of window a screen runs in. It decides how the screen draws its back preview and how it starts the next page. */
+internal enum class WindowKind {
     /** A window that fills the screen. */
     FullScreen,
 
@@ -29,12 +30,14 @@ internal enum class BackPreviewWindow {
 }
 
 /**
- * Returns [BackPreviewWindow.PopOver] when `Configuration.semIsPopOver()` returns `true`, else
- * [BackPreviewWindow.FullScreen]. One UI declares that method outside the SDK, and sesl8 has no
- * `SeslConfigurationCompat` wrapper for it.
+ * Returns [WindowKind.PopOver] when `Configuration.semIsPopOver()` returns `true`, else [WindowKind.FullScreen]. One UI
+ * declares that method outside the SDK, and sesl8 has no `SeslConfigurationCompat` wrapper for it.
  */
 @SuppressLint("RestrictedApi")
-internal fun Configuration.backPreviewWindow(): BackPreviewWindow {
+internal fun Configuration.windowKind(): WindowKind {
     val semIsPopOver = SeslBaseReflector.getDeclaredMethod(Configuration::class.java, "semIsPopOver")
-    return if (SeslBaseReflector.invoke(this, semIsPopOver) == true) BackPreviewWindow.PopOver else BackPreviewWindow.FullScreen
+    return if (SeslBaseReflector.invoke(this, semIsPopOver) == true) WindowKind.PopOver else WindowKind.FullScreen
 }
+
+/** The [WindowKind] of this activity's own window. */
+internal fun Activity.windowKind(): WindowKind = resources.configuration.windowKind()

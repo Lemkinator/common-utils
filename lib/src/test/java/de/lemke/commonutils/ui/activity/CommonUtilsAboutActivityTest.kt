@@ -20,6 +20,7 @@ import android.app.Activity.RESULT_OK
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
 import android.os.Looper
@@ -29,6 +30,8 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
+import androidx.reflect.DeviceInfo
+import androidx.reflect.SeslBaseReflector
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.Tasks
@@ -45,6 +48,8 @@ import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
+import de.lemke.commonutils.shouldBePopOverTo
+import de.lemke.commonutils.shouldHaveNoContainerTransform
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
 import dev.oneuiproject.oneui.layout.AppInfoLayout.Status.Loading
@@ -193,6 +198,25 @@ class CommonUtilsAboutActivityTest {
             shadowOf(Looper.getMainLooper()).idle()
             shadowOf(activity).nextStartedActivity.component?.className shouldBe
                 CommonUtilsLibsActivity::class.java.name
+        }
+    }
+
+    @Test
+    fun `openSourceLicenses button click inside a pop-over starts CommonUtilsLibsActivity as a pop-over page`() {
+        val semIsPopOver = Configuration::class.java.getMethod("toString")
+        launchActivity { activity ->
+            mockkStatic(DeviceInfo::class)
+            every { DeviceInfo.isOneUI() } returns true
+            mockkStatic(SeslBaseReflector::class)
+            every { SeslBaseReflector.getDeclaredMethod(Configuration::class.java, "semIsPopOver") } returns semIsPopOver
+            every { SeslBaseReflector.invoke(any(), semIsPopOver) } returns true
+
+            activity.findViewById<Button>(R.id.aboutButtonOpenSourceLicenses).performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+
+            val started = shadowOf(activity).nextStartedActivityForResult
+            started.intent.shouldBePopOverTo(CommonUtilsLibsActivity::class.java, started.options)
+            started.intent.shouldHaveNoContainerTransform()
         }
     }
 

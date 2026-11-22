@@ -61,6 +61,10 @@ public inline fun <reified T : Activity> View.transformToActivity(
  * The view is the shared element only while it is attached to a window and, inside the `then` of a
  * [singleLaunchSuspending] input, only if the activity did not stop since that input. Otherwise the activity starts
  * without the transition.
+ *
+ * If the launching activity is itself a One UI pop-over, the activity starts as a pop-over page instead, without a
+ * container transform or scene transition and with the default pop-over options. Inside a pop-over a transform would
+ * clip to the pop-over window, and its return transition would never run. The view stays unchanged.
  * @receiver View The view to transition from.
  * @param intent The intent to start the new activity.
  * @param transitionName The name of the shared element transition.
@@ -75,18 +79,21 @@ public fun View.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean {
-    val activity =
-        context.activity?.takeIf { isAttachedToWindow && it.inputViewsCurrent() }
-            ?: return context.singleLaunchActivity(intent)
-    return activity.launchGated {
-        suspendStateListAnimator()
-        this.transitionName = transitionName
-        val bundle = ActivityOptions.makeSceneTransitionAnimation(activity, this, transitionName).toBundle()
-        intent
-            .putExtra(TRANSITION_NAME_KEY, transitionName)
-            .putExtra(DURATION_KEY, duration)
-            .putExtra(FADE_MODE_KEY, fadeMode)
-        context.startActivity(intent, bundle)
+    val launcher = context.activity
+    return when {
+        launcher?.windowKind() == WindowKind.PopOver -> launcher.launchPopOver(intent)
+        launcher != null && isAttachedToWindow && launcher.inputViewsCurrent() ->
+            launcher.launchGated {
+                suspendStateListAnimator()
+                this.transitionName = transitionName
+                val bundle = ActivityOptions.makeSceneTransitionAnimation(launcher, this, transitionName).toBundle()
+                intent
+                    .putExtra(TRANSITION_NAME_KEY, transitionName)
+                    .putExtra(DURATION_KEY, duration)
+                    .putExtra(FADE_MODE_KEY, fadeMode)
+                context.startActivity(intent, bundle)
+            }
+        else -> context.singleLaunchActivity(intent)
     }
 }
 
@@ -130,7 +137,7 @@ public inline fun <reified T : Activity> Activity.transformToActivity(
 /**
  * Starts an activity with a shared element transition from the view identified by [viewId].
  * Falls back to a launch without a transition if the view is not found (e.g., recycled drawer item) or stale; see
- * [View.transformToActivity].
+ * [View.transformToActivity], which also starts a pop-over page instead of a transform when this activity is a pop-over.
  * @receiver The activity that owns the view hierarchy.
  * @param viewId The ID of the view to transition from.
  * @param intent The intent to start the new activity.

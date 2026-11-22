@@ -59,10 +59,11 @@ public inline fun <reified T : Activity> View.popOverOrTransformToActivity(
  * Opens [intent] as a gated launch.
  * This view is the container transform origin; the pop-over position comes from [popOverOptions].
  *
- * On a One UI device whose launching activity has a smallest width of at least 600dp, the activity starts as a pop-over
- * with [popOverOptions] and [Intent.FLAG_ACTIVITY_SINGLE_TOP]. Every other device, phones and non-One UI large
- * screens included, gets the container transform of [transformToActivity] with [transitionName]. [intent] stays
- * unchanged by the pop-over launch.
+ * If the launching activity is itself a One UI pop-over, or runs on a One UI device with a smallest width of at least
+ * 600dp, the activity starts as a pop-over with [popOverOptions] and [Intent.FLAG_ACTIVITY_SINGLE_TOP], without a
+ * container transform or scene transition. Inside a pop-over a transform would clip to the pop-over window, and its
+ * return transition would never run. Every other device, phones and non-One UI large screens included, gets the
+ * container transform of [transformToActivity] with [transitionName]. [intent] stays unchanged by the pop-over launch.
  * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
  * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
@@ -76,7 +77,7 @@ public fun View.popOverOrTransformToActivity(
     fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean {
     val activity = context.activity
-    return if (activity != null && activity.showsPopOver()) {
+    return if (activity != null && activity.startsPopOver()) {
         activity.launchPopOver(intent, popOverOptions)
     } else {
         transformToActivity(intent, transitionName, duration, fadeMode)
@@ -119,8 +120,9 @@ public inline fun <reified T : Activity> Activity.popOverOrTransformToActivity(
  * Opens [intent] as a gated launch.
  * The view identified by [viewId] is the container transform origin; the pop-over position comes from [popOverOptions].
  *
- * The pop-over condition of the [View] overload reads this activity's resources. Without a pop-over, the activity gets
- * the container transform of [transformToActivity], which launches without a transition if the view is not found.
+ * The pop-over condition of the [View] overload reads this activity's resources, so it also holds when this activity
+ * is itself a pop-over. Without a pop-over, the activity gets the container transform of [transformToActivity], which
+ * launches without a transition if the view is not found.
  * @param duration The container transform duration in milliseconds; ignored on the pop-over arm.
  * @param fadeMode The container transform fade mode; ignored on the pop-over arm.
  * @return true if the activity was started, false if the launch latch dropped it; see [singleLaunchActivity].
@@ -135,16 +137,23 @@ public fun Activity.popOverOrTransformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean =
-    if (showsPopOver()) {
+    if (startsPopOver()) {
         launchPopOver(intent, popOverOptions)
     } else {
         transformToActivity(viewId, intent, transitionName, duration, fadeMode)
     }
 
-private fun Activity.launchPopOver(
+/**
+ * Starts [intent] as a gated pop-over launch: single-top, no container transform and no scene transition, so One UI
+ * animates the open and the close. A page started from inside a pop-over lands in that pop-over.
+ */
+internal fun Activity.launchPopOver(
     intent: Intent,
-    popOverOptions: PopOverOptions,
+    popOverOptions: PopOverOptions = PopOverOptions.topCenterAnchored(this),
 ): Boolean = launchGated { startPopOverActivity(Intent(intent).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), popOverOptions) }
+
+// A pop-over has a smallest width of 360dp, so the width check alone misses a launch from inside one.
+private fun Activity.startsPopOver(): Boolean = windowKind() == WindowKind.PopOver || showsPopOver()
 
 // One UI starts a pop-over only in a task whose smallest width is at least 600dp.
 private fun Activity.showsPopOver(): Boolean = DeviceInfo.isOneUI() && DeviceLayoutUtil.isTabletLayout(resources)
