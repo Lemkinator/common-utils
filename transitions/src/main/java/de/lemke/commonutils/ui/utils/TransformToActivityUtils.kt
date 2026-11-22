@@ -17,7 +17,6 @@ package de.lemke.commonutils.ui.utils
 
 import android.app.Activity
 import android.app.ActivityOptions
-import android.content.Context
 import android.content.Intent
 import android.view.View
 import androidx.annotation.IdRes
@@ -80,37 +79,27 @@ public fun View.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean {
-    val spec = ContainerTransformSpec(transitionName, duration, fadeMode)
-    val launcher = context.activity ?: return transformFrom(WindowKind.FullScreen, intent, spec)
-    return transformFrom(launcher.windowKind(), intent, spec)
+    val activity = context.activity ?: return context.singleLaunchActivity(intent)
+    return activity.transformToActivity(this, intent, transitionName, duration, fadeMode)
 }
 
-internal data class ContainerTransformSpec(
-    val transitionName: String,
-    val duration: Long,
-    val fadeMode: Int,
-)
-
-internal fun View.transformFrom(
-    windowKind: WindowKind,
+internal fun View.containerTransform(
+    activity: Activity,
     intent: Intent,
-    spec: ContainerTransformSpec,
+    transitionName: String,
+    duration: Long,
+    fadeMode: Int,
 ): Boolean {
-    val launcher = context.activity
-    return when {
-        windowKind == WindowKind.PopOver || launcher == null -> context.startWithoutTransform(windowKind, intent)
-        isAttachedToWindow && launcher.inputViewsCurrent() ->
-            launcher.launchGated {
-                suspendStateListAnimator()
-                this.transitionName = spec.transitionName
-                val bundle = ActivityOptions.makeSceneTransitionAnimation(launcher, this, spec.transitionName).toBundle()
-                intent
-                    .putExtra(TRANSITION_NAME_KEY, spec.transitionName)
-                    .putExtra(DURATION_KEY, spec.duration)
-                    .putExtra(FADE_MODE_KEY, spec.fadeMode)
-                context.startActivity(intent, bundle)
-            }
-        else -> context.startWithoutTransform(windowKind, intent)
+    if (!isAttachedToWindow || !activity.inputViewsCurrent()) return context.singleLaunchActivity(intent)
+    return activity.launchGated {
+        suspendStateListAnimator()
+        this.transitionName = transitionName
+        val bundle = ActivityOptions.makeSceneTransitionAnimation(activity, this, transitionName).toBundle()
+        intent
+            .putExtra(TRANSITION_NAME_KEY, transitionName)
+            .putExtra(DURATION_KEY, duration)
+            .putExtra(FADE_MODE_KEY, fadeMode)
+        context.startActivity(intent, bundle)
     }
 }
 
@@ -190,19 +179,14 @@ public fun Activity.transformToActivity(
     transitionName: String = DEFAULT_TRANSITION_NAME,
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
-): Boolean = transformFrom(windowKind(), view, intent, ContainerTransformSpec(transitionName, duration, fadeMode))
-
-internal fun Activity.transformFrom(
-    windowKind: WindowKind,
-    view: View?,
-    intent: Intent,
-    spec: ContainerTransformSpec,
-): Boolean =
-    if (view != null) {
-        view.transformFrom(windowKind, intent, spec)
-    } else {
-        startWithoutTransform(windowKind, intent)
+): Boolean {
+    val windowKind = windowKind()
+    return when {
+        windowKind == WindowKind.PopOver -> launchPopOver(intent, windowKind)
+        view != null -> view.containerTransform(this, intent, transitionName, duration, fadeMode)
+        else -> singleLaunchActivity(intent)
     }
+}
 
 /**
  * Starts an activity with a shared element transition from [view].
@@ -221,22 +205,6 @@ public inline fun <reified T : Activity> Activity.transformToActivity(
     duration: Long = DEFAULT_DURATION,
     fadeMode: Int = DEFAULT_FADE_MODE,
 ): Boolean = transformToActivity(view, Intent(this, T::class.java), transitionName, duration, fadeMode)
-
-/**
- * Starts [intent] without a container transform: a pop-over page inside a pop-over window, else a plain launch. Every
- * fallback of the transform launches ends here, so the rule has one home.
- */
-internal fun Context.startWithoutTransform(
-    windowKind: WindowKind,
-    intent: Intent,
-): Boolean {
-    val launcher = activity
-    return if (launcher != null && windowKind == WindowKind.PopOver) {
-        launcher.launchPopOver(intent, windowKind)
-    } else {
-        singleLaunchActivity(intent)
-    }
-}
 
 /**
  * Workaround: Temporary disable item view's StateListAnimator
