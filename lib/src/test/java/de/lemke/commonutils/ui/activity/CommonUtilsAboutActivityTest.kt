@@ -48,7 +48,7 @@ import dagger.hilt.android.testing.HiltTestApplication
 import de.lemke.commonutils.R
 import de.lemke.commonutils.data.SettingsRepository
 import de.lemke.commonutils.freshTestPreferences
-import de.lemke.commonutils.shouldBePopOverTo
+import de.lemke.commonutils.shouldBePopOverFromPopOverTo
 import de.lemke.commonutils.shouldHaveNoContainerTransform
 import de.lemke.commonutils.ui.utils.setupCommonUtilsAboutActivity
 import dev.oneuiproject.oneui.layout.AppInfoLayout
@@ -215,7 +215,7 @@ class CommonUtilsAboutActivityTest {
             shadowOf(Looper.getMainLooper()).idle()
 
             val started = shadowOf(activity).nextStartedActivityForResult
-            started.intent.shouldBePopOverTo(CommonUtilsLibsActivity::class.java, started.options)
+            started.intent.shouldBePopOverFromPopOverTo(CommonUtilsLibsActivity::class.java, started.options)
             started.intent.shouldHaveNoContainerTransform()
         }
     }
