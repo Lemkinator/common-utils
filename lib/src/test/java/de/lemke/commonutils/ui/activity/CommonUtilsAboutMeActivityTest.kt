@@ -529,6 +529,11 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
+    fun `applyInsetIfNeeded on API 36 without fitsSystemWindows pads the root by the system bar insets`() {
+        launchActivity().paddingAfter(systemBarInsets()) shouldBe listOf(11, 22, 33, 44)
+    }
+
+    @Test
     fun `applyInsetIfNeeded with fitsSystemWindows=true skips listener setup`() {
         setupCommonUtilsAboutMeActivity()
         val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).track(destroyActivities)
