@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <issue id="Overdraw">
+        <ignore path="src/main/res/layout/activity_about.xml" />
+        <ignore path="src/main/res/layout/activity_about_me.xml" />
+        <ignore path="src/main/res/layout/activity_settings_common_utils.xml" />
+    </issue>
+</lint>
