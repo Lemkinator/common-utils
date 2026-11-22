@@ -20,6 +20,7 @@ import androidx.activity.BackEventCompat
 import androidx.appcompat.R.color.sesl_round_and_bgcolor_dark
 import androidx.appcompat.R.color.sesl_round_and_bgcolor_light
 import androidx.appcompat.app.AppCompatActivity
+import androidx.reflect.DeviceInfo
 import androidx.reflect.SeslBaseReflector
 import de.lemke.commonutils.data.InAppReviewCooldown
 import de.lemke.commonutils.ui.utils.BackAnimationOutlineProvider
@@ -72,10 +73,13 @@ class PredictiveBackGestureUtilsRobolectricTest {
 
     @After
     fun tearDown() {
+        unmockkStatic(DeviceInfo::class)
         unmockkStatic(SeslBaseReflector::class)
     }
 
     private fun reportPopOver(isPopOver: Boolean) {
+        mockkStatic(DeviceInfo::class)
+        every { DeviceInfo.isOneUI() } returns true
         mockkStatic(SeslBaseReflector::class)
         every { SeslBaseReflector.invoke(any(), any()) } returns isPopOver
     }

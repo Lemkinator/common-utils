@@ -101,11 +101,7 @@ public fun Activity.prepareActivityTransformationFrom() {
  */
 public fun Activity.prepareActivityTransformationTo() {
     window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
-    val transitionName =
-        intent.getStringExtra(TRANSITION_NAME_KEY) ?: run {
-            Log.w(TAG, "No transition name found. Skipping transformation.")
-            return
-        }
+    val transitionName = intent.getStringExtra(TRANSITION_NAME_KEY) ?: return
     ViewCompat.setTransitionName(findViewById(android.R.id.content), transitionName)
     setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
     window.sharedElementEnterTransition = getTransitionContainerTransform()

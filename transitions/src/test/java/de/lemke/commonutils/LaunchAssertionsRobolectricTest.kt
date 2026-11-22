@@ -81,6 +81,29 @@ class LaunchAssertionsRobolectricTest {
     }
 
     @Test
+    fun `a launch without the single-top flag is a pop-over from a pop-over`() {
+        launch().shouldBePopOverFromPopOverTo(TargetActivity::class.java, plainOptions)
+    }
+
+    @Test
+    fun `a pop-over from a pop-over that carries the single-top flag fails`() {
+        val error =
+            shouldThrow<AssertionError> {
+                launch(Intent.FLAG_ACTIVITY_SINGLE_TOP).shouldBePopOverFromPopOverTo(TargetActivity::class.java, plainOptions)
+            }
+
+        error.message shouldContain "without single-top"
+    }
+
+    @Test
+    fun `a pop-over from a pop-over with a scene transition fails`() {
+        val error =
+            shouldThrow<AssertionError> { launch().shouldBePopOverFromPopOverTo(TargetActivity::class.java, sceneOptions) }
+
+        error.message shouldContain "with plain activity options but options were"
+    }
+
+    @Test
     fun `a pop-over without the single-top flag fails`() {
         val error = shouldThrow<AssertionError> { launch().shouldBePopOverTo(TargetActivity::class.java, plainOptions) }
 

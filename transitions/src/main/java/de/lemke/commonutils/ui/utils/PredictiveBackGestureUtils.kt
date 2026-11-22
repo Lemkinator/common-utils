@@ -128,7 +128,7 @@ public fun AppCompatActivity.setCustomBackAnimation(
     animatedView.clipToOutline = true
     animatedView.outlineProvider = outlineProvider
     val review = inAppReview?.takeIf { it.canShow() }
-    var windowKind = BackPreviewWindow.FullScreen
+    var windowKind = WindowKind.FullScreen
     val callback =
         object : OnBackPressedCallback(backEnabled?.value != false) {
             override fun handleOnBackPressed() {
@@ -140,11 +140,11 @@ public fun AppCompatActivity.setCustomBackAnimation(
             }
 
             override fun handleOnBackStarted(backEvent: BackEventCompat) {
-                windowKind = resources.configuration.backPreviewWindow()
+                windowKind = resources.configuration.windowKind()
             }
 
             override fun handleOnBackProgressed(backEvent: BackEventCompat) {
-                if (review != null || windowKind == BackPreviewWindow.PopOver) return
+                if (review != null || windowKind == WindowKind.PopOver) return
                 val progress = GestureInterpolator.getInterpolation(backEvent.progress)
                 if (initialTouchY < 0f) initialTouchY = backEvent.touchY
                 val progressY = GestureInterpolator.getInterpolation((backEvent.touchY - initialTouchY) / animatedView.height)

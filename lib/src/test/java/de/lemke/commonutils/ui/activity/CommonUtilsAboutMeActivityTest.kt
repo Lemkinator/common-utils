@@ -19,11 +19,15 @@ import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Insets
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
+import android.view.WindowInsets
 import androidx.activity.BackEventCompat
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.IntentCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import com.google.android.material.appbar.AppBarLayout
 import de.lemke.commonutils.DestroyActivitiesRule
@@ -47,6 +51,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
+import androidx.core.graphics.Insets as CompatInsets
 import dev.oneuiproject.oneui.design.R as designR
 
 @RunWith(RobolectricTestRunner::class)
@@ -524,6 +529,11 @@ class CommonUtilsAboutMeActivityTest {
     }
 
     @Test
+    fun `applyInsetIfNeeded on API 36 without fitsSystemWindows pads the root by the system bar insets`() {
+        launchActivity().paddingAfter(systemBarInsets()) shouldBe listOf(11, 22, 33, 44)
+    }
+
+    @Test
     fun `applyInsetIfNeeded with fitsSystemWindows=true skips listener setup`() {
         setupCommonUtilsAboutMeActivity()
         val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).track(destroyActivities)
@@ -532,8 +542,25 @@ class CommonUtilsAboutMeActivityTest {
             .window.decorView.fitsSystemWindows = true
         controller.setup()
         shadowOf(Looper.getMainLooper()).idle()
-        controller.get() shouldNotBe null
+        controller.get().paddingAfter(systemBarInsets()) shouldBe listOf(0, 0, 0, 0)
     }
+}
+
+private fun systemBarInsets(): WindowInsets =
+    WindowInsets.Builder().setInsets(WindowInsets.Type.systemBars(), Insets.of(11, 22, 33, 44)).build()
+
+private fun legacySystemWindowInsets(): WindowInsets =
+    WindowInsetsCompat
+        .Builder()
+        .setInsets(WindowInsetsCompat.Type.systemBars(), CompatInsets.of(11, 22, 33, 44))
+        .build()
+        .toWindowInsets()
+        .shouldNotBeNull()
+
+private fun Activity.paddingAfter(insets: WindowInsets): List<Int> {
+    val root = findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+    root.dispatchApplyWindowInsets(insets)
+    return listOf(root.paddingLeft, root.paddingTop, root.paddingRight, root.paddingBottom)
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -551,6 +578,6 @@ class CommonUtilsAboutMeActivitySdk29Test {
     fun `applyInsetIfNeeded SDK_INT less than R skips listener setup`() {
         val controller = Robolectric.buildActivity(CommonUtilsAboutMeActivity::class.java).setup().track(destroyActivities)
         shadowOf(Looper.getMainLooper()).idle()
-        controller.get() shouldNotBe null
+        controller.get().paddingAfter(legacySystemWindowInsets()) shouldBe listOf(0, 0, 0, 0)
     }
 }

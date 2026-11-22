@@ -114,13 +114,28 @@ class FragmentLaunchAndRepeatTest {
     }
 
     @Test
-    fun `launchAndRepeatWithViewLifecycle with RESUMED runs the block once the view is resumed`() {
-        val fragment = attachedFragment(destroyActivities)
-        var runs = 0
-
-        fragment.launchAndRepeatWithViewLifecycle(Lifecycle.State.RESUMED) { runs++ }
+    fun `launchAndRepeatWithViewLifecycle runs the STARTED block on start and the RESUMED block on resume`() {
+        val controller =
+            Robolectric
+                .buildActivity(AppCompatActivity::class.java)
+                .create()
+                .start()
+                .track(destroyActivities)
+        val fragment = ViewFragment()
+        controller
+            .get()
+            .supportFragmentManager
+            .beginTransaction()
+            .add(android.R.id.content, fragment)
+            .commitNow()
+        val events = mutableListOf<String>()
+        fragment.launchAndRepeatWithViewLifecycle(Lifecycle.State.STARTED) { events.add("started") }
+        fragment.launchAndRepeatWithViewLifecycle(Lifecycle.State.RESUMED) { events.add("resumed") }
         Shadows.shadowOf(Looper.getMainLooper()).idle()
+        events shouldBe listOf("started")
 
-        runs shouldBe 1
+        controller.resume()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+        events shouldBe listOf("started", "resumed")
     }
 }

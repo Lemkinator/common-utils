@@ -16,9 +16,10 @@
 package de.lemke.commonutils
 
 import android.content.res.Configuration
+import androidx.reflect.DeviceInfo
 import androidx.reflect.SeslBaseReflector
-import de.lemke.commonutils.ui.utils.BackPreviewWindow
-import de.lemke.commonutils.ui.utils.backPreviewWindow
+import de.lemke.commonutils.ui.utils.WindowKind
+import de.lemke.commonutils.ui.utils.windowKind
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -31,50 +32,70 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
-class BackPreviewWindowRobolectricTest {
+class WindowKindRobolectricTest {
     private val method = Configuration::class.java.getMethod("toString")
 
-    private fun windowWhenReflectorReturns(value: Any?): BackPreviewWindow {
+    private fun oneUi(isOneUi: Boolean) {
+        mockkStatic(DeviceInfo::class)
+        every { DeviceInfo.isOneUI() } returns isOneUi
+    }
+
+    private fun reflectorReturns(value: Any?) {
         mockkStatic(SeslBaseReflector::class)
         every { SeslBaseReflector.invoke(any(), any()) } returns value
-        return Configuration().backPreviewWindow()
+    }
+
+    private fun windowWhenReflectorReturns(value: Any?): WindowKind {
+        oneUi(true)
+        reflectorReturns(value)
+        return Configuration().windowKind()
     }
 
     @After
     fun tearDown() {
+        unmockkStatic(DeviceInfo::class)
         unmockkStatic(SeslBaseReflector::class)
     }
 
     @Test
     fun `a reflector result of true is a pop-over`() {
-        windowWhenReflectorReturns(true) shouldBe BackPreviewWindow.PopOver
+        windowWhenReflectorReturns(true) shouldBe WindowKind.PopOver
     }
 
     @Test
     fun `a reflector result of false is a full-screen window`() {
-        windowWhenReflectorReturns(false) shouldBe BackPreviewWindow.FullScreen
+        windowWhenReflectorReturns(false) shouldBe WindowKind.FullScreen
     }
 
     @Test
     fun `a null reflector result is a full-screen window`() {
-        windowWhenReflectorReturns(null) shouldBe BackPreviewWindow.FullScreen
+        windowWhenReflectorReturns(null) shouldBe WindowKind.FullScreen
     }
 
     @Test
     fun `a reflector result that is no Boolean is a full-screen window`() {
-        windowWhenReflectorReturns("true") shouldBe BackPreviewWindow.FullScreen
+        windowWhenReflectorReturns("true") shouldBe WindowKind.FullScreen
     }
 
     @Test
     fun `the lookup asks the Configuration class for semIsPopOver`() {
+        oneUi(true)
         mockkStatic(SeslBaseReflector::class)
         every { SeslBaseReflector.getDeclaredMethod(Configuration::class.java, "semIsPopOver") } returns method
         every { SeslBaseReflector.invoke(any(), method) } returns true
-        Configuration().backPreviewWindow() shouldBe BackPreviewWindow.PopOver
+        Configuration().windowKind() shouldBe WindowKind.PopOver
     }
 
     @Test
-    fun `a system without semIsPopOver is a full-screen window`() {
-        Configuration().backPreviewWindow() shouldBe BackPreviewWindow.FullScreen
+    fun `a One UI system without semIsPopOver is a full-screen window`() {
+        oneUi(true)
+        Configuration().windowKind() shouldBe WindowKind.FullScreen
+    }
+
+    @Test
+    fun `a device other than One UI is a full-screen window although the reflector reports a pop-over`() {
+        oneUi(false)
+        reflectorReturns(true)
+        Configuration().windowKind() shouldBe WindowKind.FullScreen
     }
 }
