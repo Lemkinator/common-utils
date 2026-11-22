@@ -188,6 +188,8 @@ Enable local static-analysis checks before every commit:
 git config core.hooksPath .githooks
 ```
 
+`lib/lint.xml` lists the approved Overdraw files.
+
 Detekt runs with type resolution through `./gradlew detektMain detektTest`: together they analyze every source set once.
 The `release` tasks skip the source sets `debug` already analyzes. `build-logic/src/main/kotlin/commonutils.android-library.gradle.kts`
 adds each component's javac output to its task classpath, so generated view binding, `BuildConfig` and Hilt classes
