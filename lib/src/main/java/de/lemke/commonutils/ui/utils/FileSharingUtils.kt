@@ -53,8 +53,6 @@ public fun List<File>.share(
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
         return LaunchOutcome.Failed
     }
-    // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
-    @Suppress("TooGenericExceptionCaught")
     return try {
         val contentUris = map { f -> f.getFileUri(context) }
         val intent =
@@ -70,7 +68,7 @@ public fun List<File>.share(
                 }
             }
         context.startShareActivity(Intent.createChooser(intent, title))
-    } catch (e: Exception) {
+    } catch (e: IllegalArgumentException) {
         Log.e(TAG, "Error sharing files", e)
         context.toast(R.string.commonutils_error_share_content_not_supported_on_device)
         LaunchOutcome.Failed
