@@ -108,12 +108,7 @@ public suspend fun Context.createBitmapClip(
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ): ClipData? =
     withContext(ioDispatcher) {
-        // Providers and the file system throw an open-ended exception set; a failure must yield no clip, not crash.
-        @Suppress("TooGenericExceptionCaught")
-        try {
+        runContained(TAG, "Writing bitmap clip", null) {
             writePngCacheUri(bitmap, CacheFileKind.CLIPBOARD, fileName) { ClipData.newUri(contentResolver, label, it) }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error writing bitmap clip", e)
-            null
         }
     }

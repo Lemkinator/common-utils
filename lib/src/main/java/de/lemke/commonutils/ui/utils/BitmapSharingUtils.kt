@@ -90,13 +90,8 @@ public suspend fun Context.createBitmapShareFile(
 ): BitmapShareFile {
     if (!admitsLaunchPreparation()) return BitmapShareFile.Dropped
     return withContext(ioDispatcher) {
-        // Providers and the file system throw an open-ended exception set; a failure must yield Failed, not crash.
-        @Suppress("TooGenericExceptionCaught")
-        try {
+        runContained(TAG, "Writing bitmap share file", BitmapShareFile.Failed) {
             writePngCacheUri(bitmap, CacheFileKind.SHARE, fileName, BitmapShareFile::Written) ?: BitmapShareFile.Failed
-        } catch (e: Exception) {
-            Log.e(TAG, "Error writing bitmap share file", e)
-            BitmapShareFile.Failed
         }
     }
 }

@@ -21,6 +21,7 @@ import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import de.lemke.commonutils.di.IoDispatcher
 import de.lemke.commonutils.ui.utils.deleteDocument
+import de.lemke.commonutils.ui.utils.runContained
 import java.io.InputStream
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -63,14 +64,12 @@ public class DefaultBackupDocuments @Inject constructor(
     @param:ApplicationContext private val context: Context,
     @param:IoDispatcher private val io: CoroutineDispatcher,
 ) : BackupDocuments {
-    // Providers and system services throw an open-ended exception set; every failure must return a result, not crash.
-    @Suppress("TooGenericExceptionCaught")
     override suspend fun write(
         uri: Uri,
         bytes: ByteArray,
     ): Boolean =
         withContext(io) {
-            try {
+            runContained(TAG, "Writing backup", false) {
                 val output = context.contentResolver.openOutputStream(uri)
                 if (output == null) {
                     false
@@ -78,9 +77,6 @@ public class DefaultBackupDocuments @Inject constructor(
                     output.use { it.write(bytes) }
                     true
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error writing backup", e)
-                false
             }
         }
 
