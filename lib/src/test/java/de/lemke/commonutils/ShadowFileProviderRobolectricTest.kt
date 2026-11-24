@@ -34,7 +34,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import java.io.File
@@ -126,7 +128,11 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
     @Test
     fun `malformed paths meta-data throws IllegalArgumentException wrapping the XmlPullParserException`() {
         val parseError = XmlPullParserException("unexpected end of document")
-        val parser = mockk<XmlResourceParser>(relaxUnitFun = true) { every { next() } throws parseError }
+        val parser =
+            mockk<XmlResourceParser> {
+                every { next() } throws parseError
+                every { close() } just Runs
+            }
 
         val e =
             shouldThrow<IllegalArgumentException> {
@@ -140,7 +146,11 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
     @Test
     fun `unreadable paths meta-data throws IllegalArgumentException wrapping the IOException`() {
         val readError = IOException("resource stream closed")
-        val parser = mockk<XmlResourceParser>(relaxUnitFun = true) { every { next() } throws readError }
+        val parser =
+            mockk<XmlResourceParser> {
+                every { next() } throws readError
+                every { close() } just Runs
+            }
 
         val e =
             shouldThrow<IllegalArgumentException> {
