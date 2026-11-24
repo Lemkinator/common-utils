@@ -126,7 +126,7 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
     @Test
     fun `malformed paths meta-data throws IllegalArgumentException wrapping the XmlPullParserException`() {
         val parseError = XmlPullParserException("unexpected end of document")
-        val parser = mockk<XmlResourceParser> { every { next() } throws parseError }
+        val parser = mockk<XmlResourceParser>(relaxUnitFun = true) { every { next() } throws parseError }
 
         val e =
             shouldThrow<IllegalArgumentException> {
@@ -140,7 +140,7 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
     @Test
     fun `unreadable paths meta-data throws IllegalArgumentException wrapping the IOException`() {
         val readError = IOException("resource stream closed")
-        val parser = mockk<XmlResourceParser> { every { next() } throws readError }
+        val parser = mockk<XmlResourceParser>(relaxUnitFun = true) { every { next() } throws readError }
 
         val e =
             shouldThrow<IllegalArgumentException> {
