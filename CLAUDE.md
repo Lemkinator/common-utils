@@ -215,7 +215,8 @@ Code is organized into:
   OOBE, LibraryInfo, and AboutMe screens.
 - **Screen setup** (`setupCommonUtilsSettingsActivity`, `setupCommonUtilsAboutMeActivity` and
   `setupCommonUtilsAboutActivity`, `ActivityUtils.kt`): call each in `Application.onCreate`. A screen that the system recreates
-  after process death reads the setup, and a later call leaves it at the default.
+  after process death reads the setup when it is created, so a later call misses it. The About Me share action reads
+  its callback at tap time, so a later call applies there.
 - **UI Widgets** (`ui/widget/`, `ui/fragment/`): Reusable components like
   `InfoBottomSheet`, `NoEntryView`, `DimmingView`.
 - **Data layer** (`data/`): `SettingsRepository.kt`
