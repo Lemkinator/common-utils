@@ -489,7 +489,7 @@ class SharingUtilsBitmapRobolectricTest {
             ctx.createBitmapClip(bitmap, "label", "test.png") shouldBe null
             File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
             val log = ShadowLog.getLogsForTag("ClipboardUtils").single()
-            log.type to log.msg shouldBe (Log.ERROR to "Error writing bitmap clip")
+            log.type to log.msg shouldBe (Log.ERROR to "Writing bitmap clip failed")
             log.throwable shouldBeSameInstanceAs error
         }
 
@@ -508,7 +508,7 @@ class SharingUtilsBitmapRobolectricTest {
 
             File(ctx.cacheDir, "clipboard").listFiles()!!.shouldBeEmpty()
             val log = ShadowLog.getLogsForTag("ClipboardUtils").single()
-            log.type to log.msg shouldBe (Log.ERROR to "Error writing bitmap clip")
+            log.type to log.msg shouldBe (Log.ERROR to "Writing bitmap clip failed")
             log.throwable.shouldBeInstanceOf<FileNotFoundException>()
         }
 

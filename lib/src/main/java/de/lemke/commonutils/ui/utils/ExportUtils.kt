@@ -211,14 +211,9 @@ public suspend fun saveBitmapToDirectory(
 ): BitmapSaveResult.DirectoryResult {
     val directoryType = saveLocation.publicDirectoryType?.takeUnless { saveLocation.needsPicker } ?: return BitmapSaveResult.NeedsPicker
     return withContext(ioDispatcher) {
-        // Scoped storage and the file system throw an open-ended exception set; every failure must return a result, not crash.
-        @Suppress("TooGenericExceptionCaught")
-        try {
+        runContained(TAG, "Saving bitmap to directory", BitmapSaveResult.WriteFailed) {
             val file = File(Environment.getExternalStoragePublicDirectory(directoryType), filename.toSafeFileName(EXTENSION_PNG))
             if (file.writePngOrDelete(bitmap)) BitmapSaveResult.Saved(saveLocation) else BitmapSaveResult.EncodingFailed
-        } catch (e: Exception) {
-            Log.e(TAG, "Error saving bitmap to directory", e)
-            BitmapSaveResult.WriteFailed
         }
     }
 }

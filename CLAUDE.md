@@ -69,7 +69,7 @@ for architecture rules.
 `@Config(shadows = [ShadowFileProvider::class])` instead of `mockkStatic(FileProvider::class)`
 whenever a test needs a real (not stubbed) URI or reads one back through a `ContentResolver`, since
 the stock implementation compares raw `getCanonicalPath()` strings and throws on Windows. The shadow
-resolves roots per call and keeps no strategy cache. `FileProviderContentContract` calls
+resolves roots per call and keeps no strategy cache. It throws for the `external-path` and `external-media-path` tags, which stock supports. `FileProviderContentContract` calls
 `resetFileProviderCache()` in its own `@After`, so no subclass can drop it: stock `getUriForFile` caches the path strategy per authority
 and Robolectric does not attach the provider again for the next test, so a root cached by the previous test makes it throw.
 `resetFileProviderCache()` attaches a fresh `FileProvider` to each declared provider that is not exported and grants URI
@@ -213,6 +213,10 @@ Code is organized into:
   (e.g., `SharingUtils.kt`, `URLUtils.kt`, `EmailUtils.kt`).
 - **Pre-built Activities** (`ui/activity/`): Drop-in About, Settings,
   OOBE, LibraryInfo, and AboutMe screens.
+- **Screen setup** (`setupCommonUtilsSettingsActivity`, `setupCommonUtilsAboutMeActivity` and
+  `setupCommonUtilsAboutActivity`, `ActivityUtils.kt`): call each in `Application.onCreate`. A screen that the system recreates
+  after process death reads the setup when it is created, so a later call misses it. The About Me share action reads
+  its callback at tap time, so a later call applies there.
 - **UI Widgets** (`ui/widget/`, `ui/fragment/`): Reusable components like
   `InfoBottomSheet`, `NoEntryView`, `DimmingView`.
 - **Data layer** (`data/`): `SettingsRepository.kt`
