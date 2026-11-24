@@ -20,7 +20,6 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
-import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.os.ParcelFileDescriptor.MODE_APPEND
 import android.os.ParcelFileDescriptor.MODE_CREATE
@@ -55,7 +54,8 @@ import org.xmlpull.v1.XmlPullParserException
  *
  * The shadow always reads the authority's `android.support.FILE_PROVIDER_PATHS` `<meta-data>`. It does
  * not support a FileProvider subclass that supplies its paths through the `FileProvider(@XmlRes int)`
- * constructor without that `<meta-data>`.
+ * constructor without that `<meta-data>`. It does not support the `external-path` and `external-media-path`
+ * tags, which stock FileProvider supports; a paths XML that declares one throws [UnsupportedOperationException].
  */
 @Implements(FileProvider::class, isInAndroidSdk = false)
 public open class ShadowFileProvider {
@@ -211,23 +211,39 @@ public open class ShadowFileProvider {
         }
 
         private fun Context.rootEntry(parser: XmlPullParser): Pair<String, File>? {
-            val target = rootOf(parser.name) ?: return null
+            val target = RootTag.of(parser.name)?.let { rootOf(it) } ?: return null
             val name = parser.getAttributeValue(null, "name")
             require(!name.isNullOrEmpty()) { "Name must not be empty" }
             val path = parser.getAttributeValue(null, "path")
             return name to (if (path == null) target else File(target, path)).resolvedCanonical()
         }
 
-        private fun Context.rootOf(tag: String): File? =
+        private fun Context.rootOf(tag: RootTag): File? =
             when (tag) {
-                "root-path" -> File("/")
-                "files-path" -> filesDir
-                "cache-path" -> cacheDir
-                "external-path" -> @Suppress("DEPRECATION") Environment.getExternalStorageDirectory()
-                "external-files-path" -> getExternalFilesDirs(null).firstOrNull()
-                "external-cache-path" -> externalCacheDirs.firstOrNull()
-                "external-media-path" -> @Suppress("DEPRECATION") externalMediaDirs.firstOrNull()
-                else -> null
+                RootTag.Root -> File("/")
+                RootTag.Files -> filesDir
+                RootTag.Cache -> cacheDir
+                RootTag.ExternalFiles -> getExternalFilesDirs(null).firstOrNull()
+                RootTag.ExternalCache -> externalCacheDirs.firstOrNull()
+                RootTag.ExternalStorage, RootTag.ExternalMedia ->
+                    throw UnsupportedOperationException("${tag.xmlName} is not supported by ShadowFileProvider")
             }
+    }
+}
+
+private enum class RootTag(
+    val xmlName: String,
+) {
+    Root("root-path"),
+    Files("files-path"),
+    Cache("cache-path"),
+    ExternalFiles("external-files-path"),
+    ExternalCache("external-cache-path"),
+    ExternalStorage("external-path"),
+    ExternalMedia("external-media-path"),
+    ;
+
+    companion object {
+        fun of(xmlName: String): RootTag? = entries.firstOrNull { it.xmlName == xmlName }
     }
 }

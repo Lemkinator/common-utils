@@ -15,14 +15,6 @@
     limitations under the License.
 -->
 <paths>
-    <root-path
-        name="device_root" />
     <external-path
-        name="external_root" />
-    <external-files-path
-        name="external_files_root" />
-    <external-cache-path
-        name="external_cache_root" />
-    <external-media-path
-        name="external_media_root" />
+        name="unsupported_root" />
 </paths>

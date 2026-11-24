@@ -24,7 +24,6 @@ import android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
 import android.content.pm.PackageManager.DONT_KILL_APP
 import android.content.res.XmlResourceParser
 import android.net.Uri
-import android.os.Environment
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import de.lemke.commonutils.test.R
@@ -164,23 +163,15 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
 
     @Test
     fun `root-path maps a file under the device root`() {
-        ctx.declarePaths(R.xml.test_file_provider_paths_all_roots)
+        ctx.declarePaths(R.xml.test_file_provider_paths_supported_roots)
 
         FileProvider.getUriForFile(ctx, TEST_AUTHORITY, File("/device.txt")).toString() shouldBe
             "content://$TEST_AUTHORITY/device_root/device.txt"
     }
 
     @Test
-    fun `external-path maps a file under the external storage directory`() {
-        ctx.declarePaths(R.xml.test_file_provider_paths_all_roots)
-
-        FileProvider.getUriForFile(ctx, TEST_AUTHORITY, ctx.fileInExternalStorage()).toString() shouldBe
-            "content://$TEST_AUTHORITY/external_root/external.txt"
-    }
-
-    @Test
     fun `external-files-path maps a file under the first external files directory`() {
-        ctx.declarePaths(R.xml.test_file_provider_paths_all_roots)
+        ctx.declarePaths(R.xml.test_file_provider_paths_supported_roots)
 
         FileProvider.getUriForFile(ctx, TEST_AUTHORITY, ctx.fileInExternalFiles()).toString() shouldBe
             "content://$TEST_AUTHORITY/external_files_root/external-files.txt"
@@ -188,18 +179,28 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
 
     @Test
     fun `external-cache-path maps a file under the first external cache directory`() {
-        ctx.declarePaths(R.xml.test_file_provider_paths_all_roots)
+        ctx.declarePaths(R.xml.test_file_provider_paths_supported_roots)
 
         FileProvider.getUriForFile(ctx, TEST_AUTHORITY, ctx.fileInExternalCache()).toString() shouldBe
             "content://$TEST_AUTHORITY/external_cache_root/external-cache.txt"
     }
 
     @Test
-    fun `external-media-path maps a file under the first external media directory`() {
-        ctx.declarePaths(R.xml.test_file_provider_paths_all_roots)
+    fun `external-path throws UnsupportedOperationException naming the tag`() {
+        ctx.declarePaths(R.xml.test_file_provider_paths_external_path)
 
-        FileProvider.getUriForFile(ctx.withExternalMediaDir(), TEST_AUTHORITY, ctx.fileInExternalMedia()).toString() shouldBe
-            "content://$TEST_AUTHORITY/external_media_root/external-media.txt"
+        val e = shouldThrow<UnsupportedOperationException> { cacheUri("photo.png") }
+
+        e.message shouldBe "external-path is not supported by ShadowFileProvider"
+    }
+
+    @Test
+    fun `external-media-path throws UnsupportedOperationException naming the tag`() {
+        ctx.declarePaths(R.xml.test_file_provider_paths_external_media_path)
+
+        val e = shouldThrow<UnsupportedOperationException> { cacheUri("photo.png") }
+
+        e.message shouldBe "external-media-path is not supported by ShadowFileProvider"
     }
 
     @Test
@@ -294,19 +295,16 @@ class ShadowFileProviderParityRobolectricTest : FileProviderContentContract() {
     }
 
     @Test
-    fun `shadow produces the same uri as the real FileProvider for every root tag`() {
-        ctx.declarePaths(R.xml.test_file_provider_paths_all_roots)
-        val context = ctx.withExternalMediaDir()
+    fun `shadow produces the same uri as the real FileProvider for every supported root tag`() {
+        ctx.declarePaths(R.xml.test_file_provider_paths_supported_roots)
 
         listOf(
             File("/device.txt"),
-            ctx.fileInExternalStorage(),
             ctx.fileInExternalFiles(),
             ctx.fileInExternalCache(),
-            ctx.fileInExternalMedia(),
         ).forEach { file ->
-            val real = FileProvider.getUriForFile(context, TEST_AUTHORITY, file)
-            ShadowFileProvider.getUriForFile(context, TEST_AUTHORITY, file) shouldBe real
+            val real = FileProvider.getUriForFile(ctx, TEST_AUTHORITY, file)
+            ShadowFileProvider.getUriForFile(ctx, TEST_AUTHORITY, file) shouldBe real
         }
     }
 
@@ -352,23 +350,9 @@ private fun Context.declarePaths(resource: Int?) {
     shadowOf(packageManager).addOrUpdateProvider(provider)
 }
 
-private fun Context.fileInExternalStorage(): File {
-    @Suppress("DEPRECATION")
-    val storage = Environment.getExternalStorageDirectory()
-    return File(storage, "external.txt")
-}
-
 private fun Context.fileInExternalFiles(): File = File(getExternalFilesDirs(null).first(), "external-files.txt")
 
 private fun Context.fileInExternalCache(): File = File(externalCacheDirs.first(), "external-cache.txt")
-
-private fun Context.fileInExternalMedia(): File = File(dataDir, "media/external-media.txt")
-
-private fun Context.withExternalMediaDir(): Context =
-    object : ContextWrapper(this) {
-        @Suppress("DEPRECATION")
-        override fun getExternalMediaDirs(): Array<File> = arrayOf(File(dataDir, "media"))
-    }
 
 /** Exercises the reset on the stock provider; it needs POSIX separators to resolve roots, like the parity class above. */
 @RunWith(RobolectricTestRunner::class)

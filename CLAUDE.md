@@ -69,7 +69,7 @@ for architecture rules.
 `@Config(shadows = [ShadowFileProvider::class])` instead of `mockkStatic(FileProvider::class)`
 whenever a test needs a real (not stubbed) URI or reads one back through a `ContentResolver`, since
 the stock implementation compares raw `getCanonicalPath()` strings and throws on Windows. The shadow
-resolves roots per call and keeps no strategy cache. `FileProviderContentContract` calls
+resolves roots per call and keeps no strategy cache. It throws for the `external-path` and `external-media-path` tags, which stock supports. `FileProviderContentContract` calls
 `resetFileProviderCache()` in its own `@After`, so no subclass can drop it: stock `getUriForFile` caches the path strategy per authority
 and Robolectric does not attach the provider again for the next test, so a root cached by the previous test makes it throw.
 `resetFileProviderCache()` attaches a fresh `FileProvider` to each declared provider that is not exported and grants URI
