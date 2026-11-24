@@ -30,7 +30,6 @@ import android.os.ParcelFileDescriptor.MODE_TRUNCATE
 import android.os.ParcelFileDescriptor.MODE_WRITE_ONLY
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.IOException
@@ -219,16 +218,15 @@ public open class ShadowFileProvider {
             return name to (if (path == null) target else File(target, path)).resolvedCanonical()
         }
 
-        @Suppress("DEPRECATION")
         private fun Context.rootOf(tag: String): File? =
             when (tag) {
                 "root-path" -> File("/")
                 "files-path" -> filesDir
                 "cache-path" -> cacheDir
-                "external-path" -> Environment.getExternalStorageDirectory()
-                "external-files-path" -> ContextCompat.getExternalFilesDirs(this, null).firstOrNull()
-                "external-cache-path" -> ContextCompat.getExternalCacheDirs(this).firstOrNull()
-                "external-media-path" -> externalMediaDirs.firstOrNull()
+                "external-path" -> @Suppress("DEPRECATION") Environment.getExternalStorageDirectory()
+                "external-files-path" -> getExternalFilesDirs(null).firstOrNull()
+                "external-cache-path" -> externalCacheDirs.firstOrNull()
+                "external-media-path" -> @Suppress("DEPRECATION") externalMediaDirs.firstOrNull()
                 else -> null
             }
     }
