@@ -213,6 +213,9 @@ Code is organized into:
   (e.g., `SharingUtils.kt`, `URLUtils.kt`, `EmailUtils.kt`).
 - **Pre-built Activities** (`ui/activity/`): Drop-in About, Settings,
   OOBE, LibraryInfo, and AboutMe screens.
+- **Screen setup** (`setupCommonUtilsSettingsActivity`, `setupCommonUtilsAboutMeActivity` and
+  `setupCommonUtilsAboutActivity`, `ActivityUtils.kt`): call each in `Application.onCreate`. A screen that the system recreates
+  after process death reads the setup, and a later call leaves it at the default.
 - **UI Widgets** (`ui/widget/`, `ui/fragment/`): Reusable components like
   `InfoBottomSheet`, `NoEntryView`, `DimmingView`.
 - **Data layer** (`data/`): `SettingsRepository.kt`

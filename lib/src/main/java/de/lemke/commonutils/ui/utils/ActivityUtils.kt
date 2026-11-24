@@ -24,6 +24,7 @@ import de.lemke.commonutils.ui.activity.CommonUtilsSettingsActivity
 /**
  * Configures the settings activity with the given preference XML resources.
  * [relativeLinksCard] adds the share and rate card; it needs a preference screen, so it stays off without [preferences].
+ * Call it in `Application.onCreate`: a screen that the system recreates after process death reads this setup.
  */
 @JvmOverloads
 public fun setupCommonUtilsSettingsActivity(
@@ -36,6 +37,7 @@ public fun setupCommonUtilsSettingsActivity(
 /**
  * Configures the settings activity with the given preference XML resource list.
  * [relativeLinksCard] adds the share and rate card; it needs a preference screen, so it stays off without [preferences].
+ * Call it in `Application.onCreate`: a screen that the system recreates after process death reads this setup.
  */
 @JvmOverloads
 public fun setupCommonUtilsSettingsActivity(
@@ -46,12 +48,18 @@ public fun setupCommonUtilsSettingsActivity(
     CommonUtilsSettingsActivity.relativeLinksCard = relativeLinksCard
 }
 
-/** Configures the About Me activity with an optional share-app callback. */
+/**
+ * Configures the About Me activity with an optional share-app callback.
+ * Call it in `Application.onCreate`: a screen that the system recreates after process death reads this setup.
+ */
 public fun setupCommonUtilsAboutMeActivity(onShareApp: (activity: Activity) -> Unit = {}) {
     CommonUtilsAboutMeActivity.onShareApp = onShareApp
 }
 
-/** Configures the About activity with a static version string and optional extra text. */
+/**
+ * Configures the About activity with a static version string and optional extra text.
+ * Call it in `Application.onCreate`: a screen that the system recreates after process death reads this setup.
+ */
 public fun setupCommonUtilsAboutActivity(
     appVersion: String,
     optionalText: SpannableString? = null,
