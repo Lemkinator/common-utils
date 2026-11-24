@@ -16,9 +16,11 @@
 package de.lemke.commonutils
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.os.ParcelFileDescriptor.MODE_APPEND
 import android.os.ParcelFileDescriptor.MODE_CREATE
@@ -28,13 +30,14 @@ import android.os.ParcelFileDescriptor.MODE_TRUNCATE
 import android.os.ParcelFileDescriptor.MODE_WRITE_ONLY
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.IOException
-import java.lang.reflect.InvocationTargetException
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
 import org.robolectric.annotation.RealObject
+import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 
 /**
@@ -117,6 +120,7 @@ public open class ShadowFileProvider {
 
     public companion object {
         private const val DISPLAY_NAME_PARAMETER = "displayName"
+        private const val FILE_PROVIDER_PATHS = "android.support.FILE_PROVIDER_PATHS"
 
         @Implementation
         @JvmStatic
@@ -175,39 +179,57 @@ public open class ShadowFileProvider {
                 else -> throw IllegalArgumentException("Invalid mode: $mode")
             }
 
-        // getPathStrategy returns FileProvider's static per-authority cache, whose roots outlive the Robolectric test that filled it.
         private fun pathStrategyRoots(
             context: Context,
             authority: String,
-        ): Map<String, File> =
-            try {
-                val parsePathStrategy =
-                    FileProvider::class.java.getDeclaredMethod(
-                        "parsePathStrategy",
-                        Context::class.java,
-                        String::class.java,
-                        Int::class.javaPrimitiveType,
-                    )
-                parsePathStrategy.isAccessible = true
-                val strategy = parsePathStrategy.invoke(null, context, authority, 0)
-                val mRoots = strategy.javaClass.getDeclaredField("mRoots")
-                mRoots.isAccessible = true
-                @Suppress("UNCHECKED_CAST")
-                mRoots.get(strategy) as Map<String, File>
-            } catch (e: InvocationTargetException) {
-                throw when (val cause = e.cause) {
-                    // Stock getPathStrategy rethrows these parse errors as IllegalArgumentException.
-                    is IOException, is XmlPullParserException ->
-                        IllegalArgumentException("Failed to parse android.support.FILE_PROVIDER_PATHS meta-data", cause)
-                    null -> e
-                    else -> cause
+        ): Map<String, File> {
+            val packageManager = context.packageManager
+            val provider =
+                requireNotNull(packageManager.resolveContentProvider(authority, PackageManager.GET_META_DATA)) {
+                    "Couldn't find meta-data for provider with authority $authority"
                 }
-            } catch (e: ReflectiveOperationException) {
-                throw IllegalStateException(
-                    "FileProvider internals changed: expected private static " +
-                        "parsePathStrategy(Context,String,int) and SimplePathStrategy.mRoots",
-                    e,
-                )
+            val parser =
+                requireNotNull(provider.loadXmlMetaData(packageManager, FILE_PROVIDER_PATHS)) {
+                    "Missing $FILE_PROVIDER_PATHS meta-data"
+                }
+            try {
+                return parser.readRoots(context)
+            } catch (e: IOException) {
+                throw IllegalArgumentException("Failed to parse $FILE_PROVIDER_PATHS meta-data", e)
+            } catch (e: XmlPullParserException) {
+                throw IllegalArgumentException("Failed to parse $FILE_PROVIDER_PATHS meta-data", e)
+            } finally {
+                parser.close()
+            }
+        }
+
+        private fun XmlPullParser.readRoots(context: Context): Map<String, File> {
+            val roots = mutableMapOf<String, File>()
+            while (next() != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG) context.rootEntry(this)?.let { roots += it }
+            }
+            return roots
+        }
+
+        private fun Context.rootEntry(parser: XmlPullParser): Pair<String, File>? {
+            val target = rootOf(parser.name) ?: return null
+            val name = parser.getAttributeValue(null, "name")
+            require(!name.isNullOrEmpty()) { "Name must not be empty" }
+            val path = parser.getAttributeValue(null, "path")
+            return name to (if (path == null) target else File(target, path)).resolvedCanonical()
+        }
+
+        @Suppress("DEPRECATION")
+        private fun Context.rootOf(tag: String): File? =
+            when (tag) {
+                "root-path" -> File("/")
+                "files-path" -> filesDir
+                "cache-path" -> cacheDir
+                "external-path" -> Environment.getExternalStorageDirectory()
+                "external-files-path" -> ContextCompat.getExternalFilesDirs(this, null).firstOrNull()
+                "external-cache-path" -> ContextCompat.getExternalCacheDirs(this).firstOrNull()
+                "external-media-path" -> externalMediaDirs.firstOrNull()
+                else -> null
             }
     }
 }
