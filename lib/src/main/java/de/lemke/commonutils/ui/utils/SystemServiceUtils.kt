@@ -45,6 +45,7 @@ public fun View.showSoftInput(flags: Int = 0) {
 
 /**
  * Sets [clip] as the current primary clipboard content.
+ * An exception of `setPrimaryClip` reaches the caller.
  * @return true if the clipboard took [clip], false if the device has no clipboard service.
  */
 public fun Context.setClip(clip: ClipData): Boolean =
