@@ -204,6 +204,13 @@ class ShadowFileProviderRobolectricTest : FileProviderContentContract() {
     }
 
     @Test
+    fun `an unknown tag is skipped and a known root next to it still resolves`() {
+        ctx.declarePaths(R.xml.test_file_provider_paths_unknown_tag)
+
+        cacheUri("photo.png").toString() shouldBe "content://$TEST_AUTHORITY/cache_root/photo.png"
+    }
+
+    @Test
     fun `an empty name attribute throws IllegalArgumentException like stock`() {
         ctx.declarePaths(R.xml.test_file_provider_paths_empty_name)
 
