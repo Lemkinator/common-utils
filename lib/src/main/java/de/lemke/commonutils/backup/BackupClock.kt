@@ -16,9 +16,7 @@
 package de.lemke.commonutils.backup
 
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 /** The export time as ISO-8601 text with the UTC offset, cut to seconds. It feeds the clock of the [BackupEngine]. */
-internal fun backupTimestamp(now: OffsetDateTime): String =
-    now.truncatedTo(ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+internal fun backupTimestamp(now: OffsetDateTime): String = formatOffsetStamp(now.truncatedTo(ChronoUnit.SECONDS))
