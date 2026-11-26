@@ -41,8 +41,7 @@ private const val TAG = "TransformationUtils"
 internal const val TRANSITION_NAME_KEY = "commonUtilsTransitionNameKey"
 
 /** Default shared-element transition name used when no explicit name is supplied. */
-@PublishedApi
-internal const val DEFAULT_TRANSITION_NAME: String = "commonUtilsActivityTransitionName"
+public const val DEFAULT_TRANSITION_NAME: String = "commonUtilsActivityTransitionName"
 internal const val DURATION_KEY = "commonUtilsDurationKey"
 
 /** Default transition duration in milliseconds. */
