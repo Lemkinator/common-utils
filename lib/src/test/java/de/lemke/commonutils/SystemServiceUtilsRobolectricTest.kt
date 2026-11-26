@@ -73,7 +73,7 @@ class SystemServiceUtilsRobolectricTest {
 
     @Test
     fun `setClip sets the primary clip`() {
-        ctx.setClip(ClipData.newPlainText("label", "x"))
+        ctx.setClip(ClipData.newPlainText("label", "x")) shouldBe true
 
         val clip = ctx.getSystemService(ClipboardManager::class.java).primaryClip
         clip?.getItemAt(0)?.text shouldBe "x"

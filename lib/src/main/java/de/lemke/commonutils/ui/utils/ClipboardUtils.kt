@@ -41,14 +41,14 @@ public fun Context.copyToClipboard(
 
 /**
  * Sets [clip] as the primary clip and shows a confirmation toast; a null [clip], from a failed [createBitmapClip],
- * shows the error toast instead.
+ * shows the error toast instead. A device without a clipboard service shows the error toast too.
  * @return true if the clipboard holds [clip].
  */
 public fun Fragment.copyToClipboard(clip: ClipData?): Boolean = requireContext().copyToClipboard(clip)
 
 /**
  * Sets [clip] as the primary clip and shows a confirmation toast; a null [clip], from a failed [createBitmapClip],
- * shows the error toast instead.
+ * shows the error toast instead. A device without a clipboard service shows the error toast too.
  * @return true if the clipboard holds [clip].
  */
 public fun Context.copyToClipboard(clip: ClipData?): Boolean {
@@ -59,9 +59,13 @@ public fun Context.copyToClipboard(clip: ClipData?): Boolean {
     // Providers and system services throw an open-ended exception set; every failure must toast, not crash.
     @Suppress("TooGenericExceptionCaught")
     return try {
-        setClip(clip)
-        toast(R.string.commonutils_copied_to_clipboard)
-        true
+        if (setClip(clip)) {
+            toast(R.string.commonutils_copied_to_clipboard)
+            true
+        } else {
+            toast(R.string.commonutils_error_share_content_not_supported_on_device)
+            false
+        }
     } catch (e: Exception) {
         Log.e(TAG, "Error copying to clipboard", e)
         toast(R.string.commonutils_error_share_content_not_supported_on_device)

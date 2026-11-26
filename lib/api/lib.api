@@ -1234,7 +1234,7 @@ public final class de/lemke/commonutils/ui/utils/SnackBarUtilsKt {
 }
 
 public final class de/lemke/commonutils/ui/utils/SystemServiceUtilsKt {
-	public static final fun setClip (Landroid/content/Context;Landroid/content/ClipData;)V
+	public static final fun setClip (Landroid/content/Context;Landroid/content/ClipData;)Z
 	public static final fun showSoftInput (Landroid/view/View;I)V
 	public static synthetic fun showSoftInput$default (Landroid/view/View;IILjava/lang/Object;)V
 	public static final fun withSystemService (Landroid/content/Context;Ljava/lang/Class;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
