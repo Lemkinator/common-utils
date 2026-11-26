@@ -184,6 +184,21 @@ public final class de/lemke/commonutils/backup/HmacSha256BackupSigner : de/lemke
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class de/lemke/commonutils/backup/OffsetDateTimeSerializer : kotlinx/serialization/KSerializer {
+	public static final field $stable I
+	public static final field INSTANCE Lde/lemke/commonutils/backup/OffsetDateTimeSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/time/OffsetDateTime;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/time/OffsetDateTime;)V
+}
+
+public final class de/lemke/commonutils/backup/OffsetStampKt {
+	public static final fun formatOffsetStamp (Ljava/time/OffsetDateTime;)Ljava/lang/String;
+	public static final fun parseOffsetStamp (Ljava/lang/String;)Ljava/time/OffsetDateTime;
+}
+
 public final class de/lemke/commonutils/backup/core/BackupApp {
 	public static final field $stable I
 	public synthetic fun <init> (Ljava/lang/String;JLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
