@@ -43,7 +43,12 @@ public fun View.showSoftInput(flags: Int = 0) {
     context.withSystemService(InputMethodManager::class.java) { it.showSoftInput(this, flags) }
 }
 
-/** Sets [clip] as the current primary clipboard content. */
-public fun Context.setClip(clip: ClipData) {
-    withSystemService(ClipboardManager::class.java) { it.setPrimaryClip(clip) }
-}
+/**
+ * Sets [clip] as the current primary clipboard content.
+ * @return true if the clipboard took [clip], false if the device has no clipboard service.
+ */
+public fun Context.setClip(clip: ClipData): Boolean =
+    withSystemService(ClipboardManager::class.java, onMissing = { false }) {
+        it.setPrimaryClip(clip)
+        true
+    }

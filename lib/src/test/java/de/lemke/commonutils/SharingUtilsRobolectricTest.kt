@@ -126,6 +126,19 @@ class SharingUtilsRobolectricTest {
     }
 
     @Test
+    fun `copyToClipboard on a device without a clipboard shows the error toast and returns false`() {
+        val withoutClipboard =
+            object : ContextWrapper(ctx) {
+                override fun getSystemService(name: String): Any? = if (name == CLIPBOARD_SERVICE) null else super.getSystemService(name)
+            }
+
+        withoutClipboard.copyToClipboard("hello clipboard", "myLabel").shouldBeFalse()
+
+        ShadowToast.shownToastCount() shouldBe 1
+        ShadowToast.getTextOfLatestToast() shouldBe "Error: Sharing content is not supported on your device."
+    }
+
+    @Test
     fun `shareText from activity returns Started`() {
         activity().shareText("some text", "title") shouldBe LaunchOutcome.Started
     }
