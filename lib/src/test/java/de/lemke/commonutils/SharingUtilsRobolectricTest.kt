@@ -123,6 +123,7 @@ class SharingUtilsRobolectricTest {
             ?.getItemAt(0)
             ?.text
             .toString() shouldBe "hello clipboard"
+        ShadowToast.getTextOfLatestToast() shouldBe "Copied to clipboard"
     }
 
     @Test
