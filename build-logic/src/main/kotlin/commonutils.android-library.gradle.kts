@@ -63,16 +63,6 @@ extensions.configure<LibraryExtension> {
 
     packaging.resources.excludes +=
         setOf("META-INF/AL2.0", "META-INF/LGPL2.1", "META-INF/LICENSE*", "META-INF/licenses/**")
-
-    @Suppress("UnstableApiUsage")
-    testOptions.managedDevices.localDevices {
-        register("pixel9Api35") {
-            device = "Pixel 9"
-            apiLevel = 35
-            systemImageSource = "aosp"
-            testedAbi = "x86_64"
-        }
-    }
 }
 
 extensions.configure<KotlinAndroidProjectExtension> {

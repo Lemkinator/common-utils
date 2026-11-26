@@ -24,6 +24,7 @@ plugins {
     id("commonutils.publishing")
     id("commonutils.api-validation")
     id("commonutils.coverage")
+    id("commonutils.managed-device")
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)

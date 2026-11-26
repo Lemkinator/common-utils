@@ -191,7 +191,7 @@ jobs:
         run: |
           set -o pipefail
           chmod +x ./gradlew
-          ./gradlew pixel9Api35DebugAndroidTest \
+          ./gradlew :lib:pixel9Api35DebugAndroidTest \
             -Pandroid.experimental.testOptions.managedDevices.emulator.showKernelLogging=true \
             --info \
             --stacktrace \

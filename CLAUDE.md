@@ -36,8 +36,9 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 - `build-logic/` is an included build with the convention plugins: `commonutils.android-library` (Android, lint,
   Spotless, Detekt, explicit API, opt-in marker, SESL exclusions), `commonutils.publishing` (the Maven publication; a
   module sets `description` and `commonUtilsPublishing { artifactId }`), `commonutils.api-validation` (the `apiBuild`,
-  `apiCheck` and `apiDump` tasks), `commonutils.coverage` (the 100 % Kover floor of the debug variant) and
-  `commonutils.root`. The `unitTests.all` block stays in each module's build file.
+  `apiCheck` and `apiDump` tasks), `commonutils.coverage` (the 100 % Kover floor of the debug variant),
+  `commonutils.managed-device` (the one Gradle Managed Device, `pixel9Api35`; only `:lib` applies it, because only `:lib` holds device tests)
+  and `commonutils.root`. The `unitTests.all` block stays in each module's build file.
 - Each published module has its own ABI dump (`lib/api`, `transitions/api`) and Kover floor, and its own internal
   `NoCoverage` annotation in its own package.
 
@@ -54,6 +55,7 @@ See `gradle/libs.versions.toml` for SDK and language versions.
 ./gradlew apiDump        # Rewrite the api dumps after an intended API change
 ./gradlew buildHealth    # Dependency analysis report and gate
 ./gradlew detektMain detektTest  # Detekt with type resolution; check and CI run these
+./gradlew :lib:pixel9Api35DebugAndroidTest  # Device tests on the managed device
 ```
 
 Tests live under `lib/src/test/java/de/lemke/commonutils/` and `transitions/src/test/java/de/lemke/commonutils/`; their shared
